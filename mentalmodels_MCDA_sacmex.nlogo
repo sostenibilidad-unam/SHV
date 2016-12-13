@@ -1,24 +1,24 @@
 globals [
 ]
 
-breed [Alternatives action]
-breed [Criterias criteria]
+breed [Alternatives_SACMEX action_S]
+breed [Criterias_SACMEX criteria_S]
 
-criterias-own [
+criterias_SACMEX-own [
   variable_name
   value_per_agebs
   max_val
   min_val
 ]
 
-Alternatives-own[
+Alternatives_SACMEX-own[
   name_action
   C1
   C2
   C3
   C4
 ]
-links-own [w]
+links-own [w V_function]
 @#$#@#$#@
 GRAPHICS-WINDOW
 210

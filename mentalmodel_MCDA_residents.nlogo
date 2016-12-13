@@ -4,7 +4,7 @@ globals [
 
 breed [Alternatives action]
 breed [Criterias criteria]
-directed-link-breed [weights weight]
+directed-link-breed [CA_links CA_link]
 criterias-own [
   variable_name
   value_per_agebs
@@ -19,7 +19,7 @@ Alternatives-own[
   C3
   C4
 ]
-links-own [w]
+links-own [w Value_function]
   to go
 
 clear-all
@@ -74,6 +74,7 @@ to Iz_resident_SuperMatrix
   create-Criterias 1[
     set variable_name "Contaminacion_agua"
     set shape "square"
+    ;set value_per_agebs [calidad_agua] of agebs
     set color sky
     set xcor 10
     set ycor 20
@@ -82,6 +83,7 @@ to Iz_resident_SuperMatrix
   create-Criterias 1[
     set variable_name "Crecimiento_urbano"
     set shape "square"
+    ;set value_per_agebs [pop_growth] of agebs
     set color sky
     set xcor 15
     set ycor 25
@@ -90,14 +92,26 @@ to Iz_resident_SuperMatrix
   create-Criterias 1[
     set variable_name "obstruccion_alcantarillado"
     set shape "square"
+    ;set value_per_agebs [garbage] of agebs  ;;use garbage as a
     set color sky
     set xcor random 59
     set ycor 30
     set label variable_name
   ]
   create-Criterias 1[
-    set variable_name "infrastructura_insuficiente"
+    set variable_name "infrastructura_insuficiente_supply"
      set shape "square"
+    ;set value_per_agebs [houses_with_abastecimiento] of agebs  ;;use garbage as a
+     set color sky
+     set xcor random 59
+     set ycor 30
+     set label variable_name
+  ]
+
+  create-Criterias 1[
+    set variable_name "infrastructura_insuficiente_dranag"
+     set shape "square"
+    ;set value_per_agebs [houses_with_dranage] of agebs  ;;use garbage as a
      set color sky
      set xcor random 59
      set ycor 30
@@ -114,53 +128,54 @@ to Iz_resident_SuperMatrix
   create-Criterias 1[
     set variable_name "Eficacia_servicio"
     set shape "square"
+    ;set value_per_agebs [tandeo] of agebs
     set color sky
     set xcor random 59
     set ycor 30
     set label variable_name
   ]
 ask Alternatives with [name_action = "Movilizaciones"][
-  create-weights-from Criterias with [variable_name = "Despedicio_agua"][
+  create-CA_links-from Criterias with [variable_name = "Despedicio_agua"][
     set w 1]
-    create-weights-from Criterias with [variable_name = "Eficacia_servicio"][
+    create-CA_links-from Criterias with [variable_name = "Eficacia_servicio"][
       set w 1]
 ]
 
 ask Alternatives with [name_action = "Accion_colectiva"][
-  create-weights-from Criterias with [variable_name = "obstruccion_alcantarillado"][
+  create-CA_links-from Criterias with [variable_name = "obstruccion_alcantarillado"][
     set w 0.25
   ]
 ]
 
 
 ask Alternatives with [name_action = "Captacion_agua"][
-  create-weights-from Criterias with [variable_name = "Eficacia_servicio"][
+  create-CA_links-from Criterias with [variable_name = "Eficacia_servicio"][
     set w 1
   ]
 ]
 
 ask Alternatives with [name_action = "Modificacion_vivienda"][
-  create-weights-from Criterias with [variable_name = "Crecimiento_urbano"][
+  create-CA_links-from Criterias with [variable_name = "Crecimiento_urbano"][
     set w 0.75
   ]
-    create-weights-from Criterias with [variable_name = "obstruccion_alcantarillado"][
+    create-CA_links-from Criterias with [variable_name = "obstruccion_alcantarillado"][
       set w 0.25
     ]
-    create-weights-from Criterias with [variable_name = "Eficacia_servicio"][
+    create-CA_links-from Criterias with [variable_name = "Eficacia_servicio"][
       set w 0.25
     ]
 ]
 ask Alternatives with [name_action = "Compra_agua"][
-  create-weights-from Criterias with [variable_name = "Eficacia_servicio"][
+  create-CA_links-from Criterias with [variable_name = "Eficacia_servicio"][
     set w 1
   ]
-    create-weights-from Criterias with [variable_name = "Contaminacion_agua"][
+    create-CA_links-from Criterias with [variable_name = "Contaminacion_agua"][
       set w 1
     ]
 ]
 
 
-show [w] of weights
+show [w] of CA_links
 end
 @#$#@#$#@
 GRAPHICS-WINDOW

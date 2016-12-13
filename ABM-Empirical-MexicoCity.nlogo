@@ -8,8 +8,10 @@ globals [
 ;;Importacion de agua
   Tot_water_Imported_Cutzamala ;;total water that enter to MC every day by importation from Cutzamala. for now a constant int he future connected as a network
   Tot_water_Imported_Lerma     ;;total water that enter to MC every day by importation from Lerma system. for now a constant int he future connected as a network
+  water_produced               ;;Water produced by the city wells
+
 ;; agua en tuberias
-  water_in_pipes               ;; total water in the dystribution system, including imported and locally produced sources
+
   background_fugas             ;; % water lost every day by fugas
   max-elevation                ;;max altitude
   min-elevation                ;;max altitude
@@ -22,7 +24,8 @@ globals [
 ;;Alternative 4 Water extraction
 ;;Alternative 5 Water importation
 
-  SS
+  SM   ;standarized measure from the value function
+  dist ;the reported value of distance from the ideal point function
 ;#####################################################################################
 ;;Government decition making process water supply
 ;#####################################################################################
@@ -85,12 +88,13 @@ globals [
   pozos_sacmex                                                       ;weels for the water supply (piece of infratructure)
   elevation                                                          ;elevation of the city
   ;need
-  network_cutzamala
-  network_lerma
-  Groups_neighs ;;group of neighbourhoods grouped by socio-hydrological characteristics (five types)
+  network_cutzamala                                                  ;large-scale supply network
+  network_lerma                                                      ;large-scale supply network
+  Groups_neighs                                                      ;group of neighbourhoods grouped by socio-hydrological characteristics (five types)
   Water_contamination
-  Urban_growth
-  failure_of_dranage ;(translated from residents mental model concept "obstruccion de alcantarillado")
+  Urban_growth                                                       ;change in population, urban coverage, or other perception of more pressure to the service of water
+  failure_of_dranage                                                 ;(translated from residents mental model concept "obstruccion de alcantarillado")
+  presion_hidraulica                                                 ;water in the pipes. related to tandeo and fugas. places with more fugas may have less pressure. places with less pressure would have more tandeo.
 
 ]
 ;#############################################################################################################################################
@@ -102,7 +106,10 @@ breed [Criterias criteria]
 breed [Agebs Ageb]
 breed [Pozos pozo]
 breed [Cutzamala tramo]
+breed [Lumbreras Lumbrera]
+breed [drenaje_profundo tramo]
 breed [Delegaciones Delegacion]
+directed-link-breed [active-links active-link]
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 ;define patch variables
@@ -136,26 +143,27 @@ Alternatives-own[
 ;define AGEBS
 Agebs-own[
   ID                                  ;;ID from shape file
+  group_kmean
   pozos_agebs                         ;;set the pozos in ageb
   name_delegation                     ;;the name of the delegation the ageb belongs to
   paches_set_agebs                    ;;the set of patches that bellow to the ageb
 
   Num_protestas_pAgeb                 ;;social pressure index per ageb
   production_water_perageb            ;; produccion de agua {definir escala e.g resolucion temporal !!!!}
-  presion_hidraulica
   waterNeeds_perageb                  ;;lts 3 de agua needed given population there definir escala e.g resolucion temporal !!!!}
   Antiguedad-pozos                    ;;mean age of wells in ageb
   Cost_perHab                         ;;cost per habitante that would be invested if infra is repare
   Num_fallas
+  hundimientos
 
-
-  dist_waterextraction
+  dist_water_extraction
   dist_reparation                     ;;distance from ideal point for decision to repare infrastructure
   dist_new                            ;;distance from ideal point for decision to create new infrastructure
   dist_waterdistribution              ;;distance from ideal point for decision to distribute water
 
   ; variables that define residents
   poblacion                    ;; Population size ageb
+  pop_growth                   ;; Population growth
   av_inc                       ;; Average montly income
   Income-index                 ;; Actual income
   alpha                        ;; % water_in that is storaged acording to AGEB capasity (e.g. adaptation rate)
@@ -163,29 +171,32 @@ Agebs-own[
   SC                           ;; Social capital 1 high 0 lowest
 
   damage                       ;; Cost of harm
-
   Flooding                     ;; mean number of encharcamientos during between 2004 and 2014
   days_wno_water               ;; Days with no water
 
   houses_with_dranage          ;; % of houses connected to the dranage from ENEGI survey instrument
   houses_with_abastecimiento   ;; % houses connected to distribution network
-  disease_burden               ;; number of gastrointestinal cases per ageb (from disease model)
+  disease_burden               ;; Number of gastrointestinal cases per ageb (from disease model)
+  calidad_agua                 ;; Perception fo water quality
+  garbage                      ;; Garbage as the perception of the cause behind obstruction of dranages
+  water_needed                 ;; Total water needed based on population size of colonia and water requirements per peson
+  water_in                     ;; Water that enters to the colonias
+  water_distributed_pipes      ;; Water imported (not produced in) to the colonia
+  water_distributed_trucks     ;; Water imported (not produced in) to the colonia
+  tandeo                       ;; Hours a week without water?
+  deficit                      ;; When water_needed >  water_produced, deficit > 0
+  surplus                      ;; When water_needed <  water_produced, surplus > 0
+  eficacia_servicio            ;; Gestión del servicio de Drenaje y agua potable (ej. interferencia política, no llega la pipa, horario del tandeo, etc)
+  desperdicio_agua             ;;Por fugas, falta de conciencia del uso del agua
 
-  water_needed                 ;; total water needed based on population size of colonia and water requirements per peson
-  water_produced               ;; water produce in a colonia
-  water_in                     ;; water that enters to the colonias
-  water_distributed            ;; water imported (not produced in) to the colonia
 
-  deficit                      ;; when water_needed >  water_produced, deficit > 0
-  surplus                      ;; when water_needed <  water_produced, surplus > 0
+;#residents decisions metrics
 
-#residents decisions metrics
-
-  d_1                          ;;distance from ideal point for buying water
-  d_2                          ;;distance from ideal point for buying tinaco
-  d_3                          ;;distance from ideal point for protesting
-  d_4                          ;;distance from ideal point for house modifications
-  d_5                          ;;distance from ideal point for accion colectiva
+  d_Compra_agua                          ;;distance from ideal point for Compra_agua (buying water)
+  d_Captacion_agua                       ;;distance from ideal point for Captacion_agua (buying tinaco, ranfall storage)
+  d_Movilizaciones                       ;;distance from ideal point for Movilizaciones
+  d_Modificacion_vivienda                ;;distance from ideal point for Modificacion_vivienda
+  d_Accion_colectiva                     ;;distance from ideal point for Accion_colectiva
 ]
 
 ;#############################################################################################################################################
@@ -196,6 +207,7 @@ Pozos-own[
   col_ID           ;;location of well in neighborhood
   ageb_ID_pz       ;;location of well in AGEB
   Production       ;;water production [ m3/day]
+  extraction_rate  ;;total extraction (defined by zones 1 to 32)
   age_pozo         ;;age of well
   p_failure        ;;probability of infrastructure failure here 1 if not infra here
   H                ;;1 if the well is working 0 otherwise
@@ -248,21 +260,21 @@ end
 to GO
   ;if ticks = 1 [movie-start "out.mov"]
   tick
+  profiler:start
   update_globals
+  produce_water
   ask agebs [
-    water_balance
-    collect-info-system
-    ]  ;;gobertment colect information at the level of ageb to take decitions
+    residents_needs
+    collect-info-system            ;;gobertment colect information at the level of ageb to take decitions
+    ]
 
   counter_days
-  ;export_view
   goverment_decisions               ;;decisions by government
- ask agebs [
-   residents_needs
-   satisfaction_residents
-   residents_actions                ;;action from residents
-   Landscape_visualization          ;;visualization of social and physical processes
- ]
+  ask agebs [
+    satisfaction_residents
+    residents_actions                ;;action from residents
+    Landscape_visualization          ;;visualization of social and physical processes
+  ]
   ask pozos [
     cal-exposure
     update_Infrastructure_state           ;;to update the state of infra and the probability of failure of wells
@@ -272,9 +284,12 @@ to GO
     bitmap:copy-to-pcolors City_image false
   ]
 ;print sum [H] of pozos / count pozos
+ profiler:stop          ;; stop profiling
+ print profiler:report  ;; view the results
+ profiler:reset         ;; clear the data
+ reset-ticks
 end
-;#############################################################################################################################################
-;#############################################################################################################################################
+
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 to show_limitesDelegaciones
@@ -282,8 +297,7 @@ to show_limitesDelegaciones
   ;gis:draw desalojo_profundo 1
   gis:draw Limites_delegacionales 2
 end
-;#############################################################################################################################################
-;#############################################################################################################################################
+
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 to show_AGEBS
@@ -291,45 +305,33 @@ to show_AGEBS
   ;gis:draw desalojo_profundo 1
   gis:draw Agebs_map 0.3
 end
+
 ;#############################################################################################################################################
 ;#############################################################################################################################################
-to cal-exposure  ;;to define based on the probability of failure if a well si working or is not
+to cal-exposure  ;;to define based on the probability of failure if a well si working or is not (define here a probability of falla from pressure (leakages) age (wells)
   let rn random-float 1
      if (P_failure > rn and H = 1)[
        set H 0]
 end
+
 ;#############################################################################################################################################
 ;#############################################################################################################################################
-to water_balance ;define production of water per area, the needs for the population and any surplus in production
-  set water_needed poblacion * water_requirement_perPerson
-  set water_produced sum [H * production] of pozos_agebs
-
-  ifelse water_produced < water_needed [
-    set deficit precision (water_needed - water_produced) 0
-    set surplus 0]
-  [
-    set deficit 0
-    set surplus water_produced - water_needed
-    set water_in_pipes water_in_pipes + surplus ;(incluir fugas por ageb)
-
-  ]
+to produce_water ;define production of water per area, the needs for the population and any surplus in production
+  set water_produced sum [H * production] of pozos + Tot_water_Imported_Cutzamala + Tot_water_Imported_Lerma
+  ;print water_produced
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 
-
-;#############################################################################################################################################
-;#############################################################################################################################################
-
-
 to residents_needs                                                              ;; to define if population is gettign the water they need
+  set water_needed poblacion * water_requirement_perPerson
+  set water_distributed_pipes  water_needed * houses_with_abastecimiento
+  set water_produced water_produced - water_distributed_pipes
+  ifelse water_distributed_pipes < water_needed[
 
-  set water_in water_in + water_produced + water_distributed                    ;;sum of water
-
-  ifelse water_in < water_needed[
-    set days_wno_water days_wno_water + 1]
+    set deficit water_needed - water_distributed_pipes]
   [
-    set days_wno_water 0
+    set deficit 0
   ]
 
 end
@@ -338,74 +340,61 @@ end
 
 to satisfaction_residents                                                       ;;to define based on value fucntiona nd compromize programing the probability they will act acording to the value of the criteria
 
+  set water_in water_in + water_distributed_pipes + water_distributed_trucks               ;;update total water obtained from pipes and trucks
+
+  let final_deficit water_needed - water_in
+  ifelse final_deficit > 0[
+    set days_wno_water days_wno_water + (1 - houses_with_abastecimiento)
+  ]
+  [
+    set days_wno_water 0
+    set final_deficit 0
+  ]
+
+
+
+
   let w_12 1 - w_11                                                             ;set weights
   let w_22 1 - w_21
   let w_32 1 - w_31
 
 
-;Accion compra de agua
- ;C1 : Contaminacion   W11
- ;C2 : Efficacia       W12
- ;C3 : falta de infra  W13
 
- ;C4 costo?
 
-;Accion Mobilizaciones
- ;C1 desperdicio de agua W21
- ;C2 desviacion de agua  W22
- ;C3 Eficacia del servicio W23
- ;C4 falta de infrastructura W24
- ;C5 costo/ingreso?
-
-;Accion captacion agua
- ;C1 Efficacia del servicio  W31
- ;C2 Falta de Infra (supply?)         W21
- ;C3 costo storage devide?
-
-;Action modificar house
-
-;C1 crecimiento urbano
-;C2 Eficiencia del servicio
-;C3 Falta de infrastructura (conexion al dranage syst?)
-;C4 Obstruccion alcantarillado
 
   let tau_11 water_needed                                                                       ;define and compute value functions
 
 
-  let V11 ifelse-value (water_in < tau_11)[1][0]                                                ;value function water needs
+  let V11 VF water_in [0.1 0.3 0.7 0.9] ["" "" "" ""] water_needed [1 0.5 0.25 0.125 0.0625] ; ifelse-value (water_in < tau_11)[1][0]                                                ;value function water needs
 
 ;critico 20 days without supply
 
-  let V12 ifelse-value ( (deficit * price_garrafon) / (Income-index / 30) < 1)[1][0]                 ;value function
+  let V12 VF ((final_deficit * price_garrafon) / (Income-index / 30)) [0.1 0.3 0.7 0.9]  ["" "" "" ""] max [(final_deficit * price_garrafon) / (Income-index / 30)] of agebs [1 0.5 0.25 0.125 0.0625] ;ifelse-value ( (final_deficit * price_garrafon) / (Income-index / 30) < 1)[1][0]                 ;value function
                                                                            ;limit_tolerance  days
 ;;Empirical information for the level of water tolerance
 ;;Manejable 800
 ;;Inconvetiente 400
 ;;Grave < 400
 
-  let tau_21 20
-  let tau_21-grave  400
-  let tau_21-inconvetiente  800
+ ; let tau_21 20
+  ;let tau_21-grave  400
+ ; let tau_21-inconvetiente  800
 
 
-  let V21 ifelse-value (days_wno_water > tau_21)[1][0]                                        ;value function water tolerance before considering buying a storage device
-
-
-
-  let tau_22 10 ;limit_cost  days
-  let V22 ifelse-value (price_tinaco / Income-index < tau_22)[1][0]
+  let V21 VF (days_wno_water) [1 3 7 9]  ["" "" "" ""] 1 [0.0625 0.125 0.25 0.5 1] ;ifelse-value (days_wno_water > tau_21)[1][0]                                        ;value function water tolerance before considering buying a storage device
+  let V22 VF (price_tinaco / Income-index) [0.1 0.3 0.7 0.9]  ["" "" "" ""] (max [price_tinaco / Income-index] of agebs) [1 0.5 0.25 0.125 0.0625] ;ifelse-value (price_tinaco / Income-index < tau_32)[1][0]                                         ;value function as meaure of the average price of storage relative to income (consumer) index
 
 ;;protesting
   let tau_31 5                                                                                       ;limit_tolerance  days
-  let V31 ifelse-value (days_wno_water > tau_31)[1][0]
-  let tau_32 10                                                                                       ;limit_cost relative to income (consumer) index
-  let V32 ifelse-value (price_tinaco / Income-index < tau_32)[1][0]                                         ;value function as meaure of the average price of storage relative to income (consumer) index
+  let V31 VF days_wno_water [1 3 7 10]  ["" "" "" ""] 1  [0.0625 0.125 0.25 0.5 1] ; VF ifelse-value (days_wno_water > tau_31)[1][0]
+                                                                                    ;limit_cost relative to income (consumer) index
+  let V32 VF (price_tinaco / Income-index) [0.1 0.3 0.7 0.9]  ["" "" "" ""] (max [price_tinaco / Income-index] of agebs) [1 0.5 0.25 0.125 0.0625] ;ifelse-value (price_tinaco / Income-index < tau_32)[1][0]                                         ;value function as meaure of the average price of storage relative to income (consumer) index
 
   let h_Cp 1
 
-  set d_1 (((w_11 ^ h_Cp) * (V11 ^ h_Cp)) + ((w_12 ^ h_Cp) * (V12 ^ h_Cp))) ^ (1 / h_Cp)  ;;compute satisfaction emasure as a distance from ideal point
-  set d_2 (((w_21 ^ h_Cp) * (V21 ^ h_Cp)) + ((w_22 ^ h_Cp) * (V22 ^ h_Cp))) ^ (1 / h_Cp)
-  set d_3 (((w_31 ^ h_Cp) * (V31 ^ h_Cp)) + ((w_32 ^ h_Cp) * (V32 ^ h_Cp))) ^ (1 / h_Cp)
+  set d_Compra_agua (((w_11 ^ h_Cp) * (V11 ^ h_Cp)) + ((w_12 ^ h_Cp) * (V12 ^ h_Cp))) ^ (1 / h_Cp)  ;;compute satisfaction emasure as a distance from ideal point
+  set d_Captacion_agua (((w_21 ^ h_Cp) * (V21 ^ h_Cp)) + ((w_22 ^ h_Cp) * (V22 ^ h_Cp))) ^ (1 / h_Cp)
+  set d_Movilizaciones (((w_31 ^ h_Cp) * (V31 ^ h_Cp)) + ((w_32 ^ h_Cp) * (V32 ^ h_Cp))) ^ (1 / h_Cp)
 
 end
 ;#############################################################################################################################################
@@ -413,18 +402,18 @@ end
 
 to residents_actions
   if poblacion  > 1[
-    if d_1 > random-float 1 and (water_needed - water_in) > 0 [   ;buy water
+    if d_Compra_agua > random-float 1 and (water_needed - water_in) > 0 [   ;buy water
       set damage (water_needed - water_in) * price_garrafon
     ]
 
 
-    if d_2 > random-float 1[ ; buy tinaco (adaptation)
+    if d_Captacion_agua > random-float 1[ ; buy tinaco (adaptation)
       set alpha alpha + 0.01
       if alpha > 1 [set alpha 1]
       set damage price_tinaco
     ]
 
-    ifelse d_3 > random-float 1 and poblacion > 0[   ;;protest
+    ifelse d_Movilizaciones > random-float 1 and poblacion > 0[   ;;protest
       set protest_magnitude protest_magnitude + 1
     ]
     [
@@ -462,7 +451,6 @@ to update_globals
       set C1A3_max C2A1_max
       set C2A3_max max [waterNeeds_perageb] of agebs
       set max_water_in max [water_in] of agebs   ;;for visualization max water recieved
-      set water_in_pipes  Tot_water_Imported_Lerma + Tot_water_Imported_cutzamala  ;;update water in the pipe system (to link to supply netwotrk )
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -529,12 +517,15 @@ to define_agebs
           set poblacion ifelse-value (gis:property-value ?1 "POBTOT" > 0)[gis:property-value ?1 "POBTOT"][1]        ;;population size per ageb
           set ID gis:property-value ?1 "POLY_ID"                                                                   ;;ageb ID
           set houses_with_abastecimiento gis:property-value ?1 "VPH_AGUADV" / (1 + gis:property-value ?1 "VPH_AGUADV" + gis:property-value ?1 "VPH_AGUAFV")  ;;houses with abastecimiento
+          set houses_with_dranage gis:property-value ? "VPH_DRENAJ" / (1 + gis:property-value ? "VPH_DRENAJ" + gis:property-value ? "VPH_NODREN")         ;; numero de casas con toma de drenage from encuesta ENGHI
+          set hundimientos gis:property-value ?2 "HUND"
+          set group_kmean gis:property-value ?2 "KMEANS5"
           set color grey
           set shape "house"
           set size 0.5
           set hidden? false
           set av_inc ifelse-value ((gis:property-value ?1 "I05_INGRES") = nobody )[0][(gis:property-value ?1 "I05_INGRES")]
-          set Income-index  ifelse-value (av_inc > 0) [1000 * av_inc][1] ;;average income from normal distribution with mean proportional to altitute
+          set Income-index  ifelse-value (av_inc > 0) [av_inc][1] ;;average income from normal distribution with mean proportional to altitute
           set ageb_encharc ifelse-value ((gis:property-value ?2 "Mean_encha") = nobody )[0][(gis:property-value ?2 "Mean_encha")]
           set alpha 0
           set SC random 2
@@ -560,11 +551,12 @@ to define_agebs
           set age_pozo (1 + random 20) * 365
           set P_failure 1 - exp(- age_pozo / (365 * 200))
           set H 1
+          set extraction_rate 87225 ;m3/dia
           ]
       ]
     ]
 
-    ask pozos [set production water_production * 60 * 60 * 24 * (1 / count pozos)] ; set daily production of water in [mts^3/s]*[s/min]*[min/hour]*[hours/day]*[1/tot pozos]=[mts^3/(day*pozo)]
+    ask pozos [set production extraction_rate * (1 / count pozos)] ; set daily production of water in [mts^3/s]*[s/min]*[min/hour]*[hours/day]*[1/tot pozos]=[mts^3/(day*pozo)]
     ;let tpz 0
     ask agebs [set pozos_agebs turtle-set pozos with [ageb_ID_pz = [ID] of myself]
 
@@ -655,101 +647,42 @@ to goverment_decisions
     ;#################################################################################################################################################
 
 
+;#Alternative 1 Mantenimiento Infrastructura
 
-  ;  if production_water_perageb > 0.8 * C1A1_max [set scarcity_rep_stand 0.0625]
-  ;  if production_water_perageb > 0.6 * C1A1_max and production_water_perageb <= 0.8 * C1A1_max [set scarcity_rep_stand 0.125]
-  ;  if production_water_perageb > 0.5 * C1A1_max and production_water_perageb <= 0.6 * C1A1_max [set scarcity_rep_stand 0.25]
-   ; if production_water_perageb > 0.3 * C1A1_max and production_water_perageb <= 0.5 [set scarcity_rep_stand  0.5]
-   ; if production_water_perageb <= 0.3 * C1A1_max [set scarcity_rep_stand 1]
-
- let V11 VF production_water_perageb [0.3 0.5 0.6 0.8] C1A1_max [1 0.5 0.25 0.125 0.0625]
-
-    ;;C2 ;;from number of protest
-   ; if Num_protestas_pAgeb > 0.6 * C2A1_max [set PS_rep_stand 1]
-   ;if Num_protestas_pAgeb > 0.5 * C2A1_max and Num_protestas_pAgeb <= 0.6 * C2A1_max [set PS_rep_stand 0.5]
-   ; if Num_protestas_pAgeb > 0.3 * C2A1_max and Num_protestas_pAgeb <= 0.5 * C2A1_max [set PS_rep_stand 0.25]
-   ; if Num_protestas_pAgeb > 0.1 * C2A1_max and Num_protestas_pAgeb <= 0.3 * C2A1_max [set PS_rep_stand 0.125]
-   ; if Num_protestas_pAgeb <= 0.1 * C2A1_max [set PS_rep_stand 0.0625]
-
- let V12 VF Num_protestas_pAgeb [0.1 0.3 0.5 0.6] C2A1_max [0.0625 0.125 0.25 0.5 1]
-
-    ;;C3 ;;from antiguedad
-  ;  if Antiguedad-pozos > 0.8 * C3A1_max [set Antiguedad_rep_stand 0.025]
-  ;  if Antiguedad-pozos > 0.5 * C3A1_max and Antiguedad-pozos <= 0.8 * C3A1_max[set Antiguedad_rep_stand 0.25]
-  ;  if Antiguedad-pozos > 0.25 * C3A1_max and Antiguedad-pozos <= 0.5 * C3A1_max [set Antiguedad_rep_stand 1]
-  ;  if Antiguedad-pozos > 0.1 * C3A1_max and Antiguedad-pozos <= 0.25 * C3A1_max [set Antiguedad_rep_stand 0.25]
-  ;  if Antiguedad-pozos < 0.1 * C3A1_max [set Antiguedad_rep_stand 0.025]
+ let V11 VF production_water_perageb [0.3 0.5 0.6 0.8] ["" "" "" ""] C1A1_max  [1 0.5 0.25 0.125 0.0625]
+ let V12 VF Num_protestas_pAgeb [0.1 0.3 0.5 0.6]  ["" "" "" ""] C2A1_max [0.0625 0.125 0.25 0.5 1]
+ let V13 VF Antiguedad-pozos [0.1 0.25 0.5 0.8]  ["" "" "" ""] C3A1_max [0.025 0.25 1 0.25 0.025]
 
 
- let V13 VF Antiguedad-pozos [0.1 0.25 0.5 0.8] C3A1_max [0.025 0.25 1 0.25 0.025]
-
+;#Alternative 2 New Infrastructure
 
     ;#################################################################################################################################################
     ;;Tranform from natural scale to standarized scale given action 2 (New pozos)
 
-    ;;C1 ;;from water per habitante
-  ;  if production_water_perageb > 0.6 * C1A2_max [set scarcity_new_stand 0.0625]
-  ;  if production_water_perageb > 0.4 * C1A2_max and production_water_perageb <= 0.6 * C1A2_max [set scarcity_new_stand 0.125]
-  ;  if production_water_perageb > 0.3 * C1A2_max and production_water_perageb <= 0.4 * C1A2_max [set scarcity_new_stand 0.25]
-  ;  if production_water_perageb > 0.1 * C1A2_max and production_water_perageb <= 0.3 * C1A2_max [set scarcity_new_stand  0.5]
-  ;  if production_water_perageb <= 0.1 * C1A2_max [set scarcity_new_stand 1]
-
- let V21 VF production_water_perageb [0.1 0.3 0.4 0.6] C1A2_max [1 0.5 1 0.25 0.125 0.0625]
+ let V21 VF production_water_perageb [0.1 0.3 0.4 0.6]  ["" "" "" ""]  C1A2_max [1 0.5 1 0.25 0.125 0.0625]
+ let V22 VF Num_protestas_pAgeb [0.1 0.3 0.8 0.9]  ["" "" "" ""]  C2A2_max [0.0625 0.125 0.25 0.5 1]
+ let V23 VF Antiguedad-pozos [0.2 0.35 0.7 0.8]  ["" "" "" ""]   C3A2_max [0.025 0.25 0.5 0.8 1]
 
 
-
-    ;;C2 ;;from number of protest
-   ; if Num_protestas_pAgeb > 0.9 * C2A2_max [set PS_new_stand 1]
-   ; if Num_protestas_pAgeb > 0.8 * C2A2_max and Num_protestas_pAgeb <= 0.9 * C2A2_max [set PS_new_stand 0.5]
-   ; if Num_protestas_pAgeb > 0.3 * C2A2_max and Num_protestas_pAgeb <= 0.8 * C2A2_max [set PS_new_stand 0.25]
-   ; if Num_protestas_pAgeb > 0.1 * C2A2_max and Num_protestas_pAgeb <= 0.3 * C2A2_max  [set PS_new_stand 0.125]
-   ; if Num_protestas_pAgeb <= 0.1 * C2A2_max [set PS_new_stand 0.0625]
-
- let V22 VF Num_protestas_pAgeb [0.1 0.3 0.8 0.9] C2A2_max [0.0625 0.125 0.25 0.5 1]
-
-    ;;C3 ;;from antiguedad
-   ; if Antiguedad-pozos > 0.8 * C3A2_max [set Antiguedad_new_stand 1]
-   ; if Antiguedad-pozos > 0.7 * C3A2_max and  Antiguedad-pozos <= 0.8 * C3A2_max[set Antiguedad_new_stand 0.8]
-   ; if Antiguedad-pozos > 0.35 * C3A2_max and  Antiguedad-pozos <= 0.7 * C3A2_max[set Antiguedad_new_stand 0.5]
-   ; if Antiguedad-pozos > 0.2 * C3A2_max  and  Antiguedad-pozos <= 0.35 * C3A2_max [set Antiguedad_new_stand 0.25]
-   ; if Antiguedad-pozos < 0.2 * C3A2_max [set Antiguedad_new_stand 0.025]
-
- let V23 VF Antiguedad-pozos [0.2 0.35 0.7 0.8] C3A2_max [0.025 0.25 0.5 0.8 1]
-
+;#Alternativa 3 Distribution of water
     ;#################################################################################################################################################
     ;;Tranform from natural scale to standarized scale given action 3 (water distribution)
 
-    ;;C1 ;;from number of protest
-    ;if Num_protestas_pAgeb > 0.9 * C1A3_max [set PS_dist_stand 1]
-    ;if Num_protestas_pAgeb > 0.7 * C1A3_max and  Num_protestas_pAgeb <= 0.9 * C1A3_max [set PS_dist_stand 0.5]
-    ;if Num_protestas_pAgeb > 0.3 * C1A3_max and  Num_protestas_pAgeb <= 0.7 * C1A3_max [set PS_dist_stand 0.25]
-    ;if Num_protestas_pAgeb > 0.1 * C1A3_max and  Num_protestas_pAgeb <= 0.3 * C1A3_max [set PS_dist_stand 0.125]
-    ;if Num_protestas_pAgeb <= 0.1 * C1A3_max [set PS_dist_stand 0.0625]
-
- let V31 VF Num_protestas_pAgeb [0.1 0.3 0.7 0.9] C1A3_max [0.0625 0.125 0.25 0.5 1]
+ let V31 VF Num_protestas_pAgeb [0.1 0.3 0.7 0.9]  ["" "" "" ""] C1A3_max  [0.0625 0.125 0.25 0.5 1]
+ let V32 VF waterNeeds_perageb [0.1 0.4 0.8 0.9]  ["" "" "" ""]  C2A3_max [0.0625 0.125 0.25 0.5 1]
 
 
-    ;;C2 ;;from water needs
-   ; if waterNeeds_perageb > 0.9 * C2A3_max [set Production_stand 1]
-   ; if waterNeeds_perageb > 0.8 * C2A3_max and Num_protestas_pAgeb <= 0.9 * C2A3_max [set Production_stand 0.5]
-   ; if waterNeeds_perageb > 0.4 * C2A3_max and Num_protestas_pAgeb <= 0.8 * C2A3_max [set Production_stand 0.25]
-   ; if waterNeeds_perageb > 0.1 * C2A3_max and Num_protestas_pAgeb <= 0.4 * C2A3_max [set Production_stand 0.125]
-   ; if waterNeeds_perageb <= 0.1 * C2A3_max [set Production_stand 0.0625]
-
- let V32 VF waterNeeds_perageb [0.1 0.4 0.8 0.9] C2A3_max [0.0625 0.125 0.25 0.5 1]
+;#Alternativa 4 Importacion agua
+;#Alternativa 5 Extraccion agua
 
 
-    ;;Aca calculamos la distancia a cada decision con respecto al punto ideal.
-    let h_Cp 2
+    ;;Aca calculamos la distancia a cada decision con respecto al punto ideal
 
-    set dist_reparation (((w_SP_Repara ^ h_Cp) * (V11 ^ h_Cp)) + ((w_Abast_Repara ^ h_Cp)  * (V12 ^ h_Cp)) + ((w_age_Repara  ^ h_Cp) * (V13 ^ h_Cp))) ^ (1 / h_Cp)
-    set dist_new (((w_SP_new ^ h_Cp) * (V21 ^ h_Cp)) + ((w_Abast_new ^ h_Cp)  * (V22 ^ h_Cp)) + ((w_age_new  ^ h_Cp) * (V23 ^ h_Cp))) ^ (1 / h_Cp)
-    set dist_waterdistribution (((w_Abast_dist ^ h_Cp) * (V31 ^ h_Cp)) + ((w_SP_dist ^ h_Cp) * (V32 ^ h_Cp))) ^ (1 / h_Cp)
-
-    ;;w_ij is the weight that coonects criteria i for activity j.
+    set dist_reparation distance_ideal (list w_SP_Repara w_Abast_Repara w_age_Repara) (list V11 V12 V13)  2
+    set dist_new distance_ideal (list w_SP_new w_Abast_new w_age_new) (list V21 V22 V23)  2
+    set dist_waterdistribution distance_ideal (list w_Abast_dist w_SP_dist) (list V31 V32)  2
 
   ]
-
 
   ;;sort agebs based on distance from ideal point
   let counters 0
@@ -791,10 +724,9 @@ to goverment_decisions
   ;;water distribution decition per ageb
   foreach sort-on [1 - dist_waterdistribution] agebs[
     ask ? [
-      if water_in_pipes > 0 and poblacion > 1 and deficit > 0 [
-        set water_distributed deficit
-        set water_in_pipes water_in_pipes - deficit
-        set deficit 0
+      if water_produced > 0 and poblacion > 1 [
+        set water_distributed_trucks deficit
+        set water_produced water_produced - water_distributed_trucks
       ]
     ]
   ]
@@ -848,22 +780,42 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
-;to report a standarized value for the relationship between value of criteria and motivation to act
-to-report VF [A B C D]
-  ;A the value of the biophysical variable in its natural scale
-  ;B a list of cut-off points to define the mapping from the linguistic scale to a standard value between 0 and 1
-  ;C the ideal point of the criteria
-  ;D a list of standard values to map the natural scale
+to-report VF [A B C D EE]
+  ;This function reports a standarized value for the relationship between value of criteria and motivation to act
+  ;A the value of a biophysical variable in its natural scale
+  ;B list of streengs that define the lisguistice scale associate with a viobisical variable
+  ;C a list of percentage values of the biofisical variable that reflexts on the cut-offs to define the limits of the range in the linguistic scale
+  ;D the ideal or anti ideal point of the criteria define based ont he linguistic scale (e.g. intolerable ~= anty-ideal)
+  ;EE a list of standard values to map the natural scales
 
-;The function reports the standarize measure of a decition criteria  SD
-    if A > (item 3 B) * C [set SS (item 4 D)]
-    if A > (item 2 B) * C and  A <= (item 3 B) * C [set SS(item 3 D)]
-    if A > (item 1 B) * C and  A <= (item 2 B) * C [set SS (item 2 D)]
-    if A > (item 0 B) * C and  A <= (item 1 B) * C [set SS (item 1 D)]
-    if A <= (item 0 B) * C [set SS (item 0 D)]
-Report SS
+    if A > (item 3 B) * D [set SM (item 4 EE)]
+    if A > (item 2 B) * D and  A <= (item 3 B) * D [set SM(item 3 EE)]
+    if A > (item 1 B) * D and  A <= (item 2 B) * D [set SM (item 2 EE)]
+    if A > (item 0 B) * D and  A <= (item 1 B) * D [set SM (item 1 EE)]
+    if A <= (item 0 B) * D [set SM (item 0 EE)]
+Report SM
   ;return a list of
 end
+;#############################################################################################################################################
+;#############################################################################################################################################
+to-report distance_ideal[VF_list weight_list h_Cp]
+  ;this function calcualte a distance to ideal point using compromized programing metric
+  ;arguments:
+     ;VF_list: a list of value functions
+     ;weight_list a list of weights from the alternatives criteria links (CA_links)
+     ;h_Cp to control the type of distance h_Cp=2 euclidian; h_Cp=1 manhattan
+     if length VF_list = 1 [set dist item 0 VF_list]
+     if length VF_list = 2 [set dist ((((item 0 weight_list) ^ h_Cp) * ((item 0 VF_list) ^ h_Cp)) + (((item 1 weight_list) ^ h_Cp)  * ((item 1 VF_list) ^ h_Cp))) ^ (1 / h_Cp)]
+     if length VF_list = 3 [set dist ((((item 0 weight_list) ^ h_Cp) * ((item 0 VF_list) ^ h_Cp)) + (((item 1 weight_list) ^ h_Cp)  * ((item 1 VF_list) ^ h_Cp)) + (((item 2 weight_list) ^ h_Cp)  * ((item 2 VF_list) ^ h_Cp))) ^ (1 / h_Cp)]
+     if length VF_list = 4 [set dist ((((item 0 weight_list) ^ h_Cp) * ((item 0 VF_list) ^ h_Cp)) + (((item 1 weight_list) ^ h_Cp)  * ((item 1 VF_list) ^ h_Cp)) + (((item 2 weight_list) ^ h_Cp)  * ((item 2 VF_list) ^ h_Cp)) + (((item 3 weight_list) ^ h_Cp)  * ((item 3 VF_list) ^ h_Cp))) ^ (1 / h_Cp)]
+     report dist
+end
+;#############################################################################################################################################
+;#############################################################################################################################################
+;code ends here
+;#############################################################################################################################################
+;#############################################################################################################################################
+
 ;;coodinates google image
 
 ;              lat              long
@@ -959,7 +911,7 @@ CHOOSER
 Visualization
 Visualization
 "Altura" "Vulnerability" "Social Pressure" "Abastecimiento" "Adaptation" "Distribution Priorities" "GoogleEarth"
-5
+3
 
 CHOOSER
 19
@@ -1057,7 +1009,7 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot mean [water_produced + water_distributed] of agebs"
+"default" 1.0 0 -16777216 true "" "plot water_produced"
 
 BUTTON
 157
@@ -1135,7 +1087,7 @@ w_11
 w_11
 0
 1
-0.7
+0.3
 0.1
 1
 NIL
@@ -1150,7 +1102,7 @@ w_21
 w_21
 0
 1
-0.6
+0.4
 0.1
 1
 NIL
@@ -1165,7 +1117,7 @@ w_31
 w_31
 0
 1
-0.3
+0.1
 0.1
 1
 NIL
