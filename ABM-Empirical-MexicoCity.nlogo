@@ -27,7 +27,7 @@ globals [
   SM   ;standarized measure from the value function
   dist ;the reported value of distance from the ideal point function
 ;#####################################################################################
-;;Government decition making process water supply
+;;Government decision-making process
 ;#####################################################################################
   ;;Pesos para decisiones Government priorizations
   w_Abast_Repara             ;;importance of water scarcity
@@ -47,6 +47,7 @@ globals [
   w_PH_dist                  ;;importance of hydraulic pressure
 
 ;;auxiliar variables that define limits of value functions for all criteria
+ ;;Mobilizations
   C1A1_max                  ;;max production_water_perageb
   C2A1_max                  ;;max protests recorded
   C3A1_max                  ;;max age infra recorded
@@ -60,8 +61,11 @@ globals [
   C1A3_max
   C2A3_max                  ;;max need of water in each colonia for action "distribution of water
   C3A3_max                  ;;max water needed
+
   C4A3_max                  ;;min hydraulic pressure
 
+  C_flooding_max            ;;max level of flooding (encharcamientos) recored over the last 10 years
+  C_desviacion_agua_max     ;;max level of perception of deviation
 ;#####################################################################################
 ;#####################################################################################
 ;#####################################################################################
@@ -90,7 +94,6 @@ globals [
   ;need
   network_cutzamala                                                  ;large-scale supply network
   network_lerma                                                      ;large-scale supply network
-  Groups_neighs                                                      ;group of neighbourhoods grouped by socio-hydrological characteristics (five types)
   Water_contamination
   Urban_growth                                                       ;change in population, urban coverage, or other perception of more pressure to the service of water
   failure_of_dranage                                                 ;(translated from residents mental model concept "obstruccion de alcantarillado")
@@ -101,14 +104,14 @@ globals [
 ;#############################################################################################################################################
 ;create Agents
 breed [Colonias Colonia]
-breed [Alternatives action]
-breed [Criterias criteria]
 breed [Agebs Ageb]
 breed [Pozos pozo]
 breed [Cutzamala tramo]
 breed [Lumbreras Lumbrera]
 breed [drenaje_profundo tramo]
 breed [Delegaciones Delegacion]
+breed [Alternatives_IZ action_IZ]
+breed [Alternatives_Xo action_Xo]
 directed-link-breed [active-links active-link]
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -121,21 +124,6 @@ patches-own[
   LU_type           ;;land use type [Regular, irregular] (not included yet)
 ]
 
-criterias-own [
-  variable_name
-  max_val
-  min_val
-  Actions
-  weights
-]
-
-Alternatives-own[
-  name_action
-  C1
-  C2
-  C3
-  C4
-]
 
 
 ;#############################################################################################################################################
@@ -143,7 +131,7 @@ Alternatives-own[
 ;define AGEBS
 Agebs-own[
   ID                                  ;;ID from shape file
-  group_kmean
+  group_kmean                         ;; define to witch group an ageb belongs to, based on sosio-economic charactersitics
   pozos_agebs                         ;;set the pozos in ageb
   name_delegation                     ;;the name of the delegation the ageb belongs to
   paches_set_agebs                    ;;the set of patches that bellow to the ageb
@@ -174,6 +162,7 @@ Agebs-own[
   Flooding                     ;; mean number of encharcamientos during between 2004 and 2014
   days_wno_water               ;; Days with no water
 
+;;Charactersitics of the agebs that define criteria
   houses_with_dranage          ;; % of houses connected to the dranage from ENEGI survey instrument
   houses_with_abastecimiento   ;; % houses connected to distribution network
   disease_burden               ;; Number of gastrointestinal cases per ageb (from disease model)
@@ -188,7 +177,7 @@ Agebs-own[
   surplus                      ;; When water_needed <  water_produced, surplus > 0
   eficacia_servicio            ;; Gestión del servicio de Drenaje y agua potable (ej. interferencia política, no llega la pipa, horario del tandeo, etc)
   desperdicio_agua             ;;Por fugas, falta de conciencia del uso del agua
-
+  desviacion_agua              ;;Se llevan el agua a otros lugares
 
 ;#residents decisions metrics
 
@@ -201,7 +190,7 @@ Agebs-own[
 
 ;#############################################################################################################################################
 ;#############################################################################################################################################
-;define drenaje profundo variables
+
 Pozos-own[
   Name
   col_ID           ;;location of well in neighborhood
@@ -215,13 +204,38 @@ Pozos-own[
 
 ;#############################################################################################################################################
 ;#############################################################################################################################################
+;define alternatives for residents using MM Iz
+Alternatives_IZ-own[
+  name_action
+  C1
+  C2
+  C3
+  C4
+  w_C1
+  w_C2
+  w_C3
+  w_C4
+]
+Alternatives_Xo-own[
+  name_action
+  C1
+  C2
+  C3
+  C4
+  w_C1
+  w_C2
+  w_C3
+  w_C4
+]
+;#############################################################################################################################################
+;#############################################################################################################################################
 Cutzamala-own [val new-val from_lumb to_lumb diameter_entrada valbula] ; a node's past and current quantity, represented as size
 
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 to setup
   clear-all
-  profiler:start
+  ;profiler:start
   load-gis
   ;;set global variables
   set max-elevation gis:maximum-of elevation           ;;to visualize elevation
@@ -238,16 +252,16 @@ to setup
 
 
   define_agebs       ;;to create the agebs
-
+  resident_alternativesCriteria
 
  set background_fugas (8 * 60 * 60 * 24) / (count agebs)  ;;asuming fugas are homogeneously happening (not realistic)
 
 
 
 
- profiler:stop          ;; stop profiling
- print profiler:report  ;; view the results
- profiler:reset         ;; clear the data
+ ;profiler:stop          ;; stop profiling
+ ;print profiler:report  ;; view the results
+ ;profiler:reset         ;; clear the data
  reset-ticks
 
 end
@@ -260,20 +274,22 @@ end
 to GO
   ;if ticks = 1 [movie-start "out.mov"]
   tick
-  profiler:start
+  ;profiler:start
   update_globals
   produce_water
   ask agebs [
     residents_needs
-    collect-info-system            ;;gobertment colect information at the level of ageb to take decitions
+    collect-info-system            ;;government (SACMEX) collect information at the level of Agebs to take decitions
     ]
 
   counter_days
-  goverment_decisions               ;;decisions by government
+  SACMEX_decisions               ;;decisions by government
   ask agebs [
-    satisfaction_residents
+    residents_satisfaction
+    residents_define_distance_metric
     residents_actions                ;;action from residents
     Landscape_visualization          ;;visualization of social and physical processes
+   ; print hundimientos
   ]
   ask pozos [
     cal-exposure
@@ -283,11 +299,10 @@ to GO
   if visualization = "GoogleEarth" [
     bitmap:copy-to-pcolors City_image false
   ]
-;print sum [H] of pozos / count pozos
- profiler:stop          ;; stop profiling
- print profiler:report  ;; view the results
- profiler:reset         ;; clear the data
- reset-ticks
+ ;profiler:stop          ;; stop profiling
+ ;print profiler:report  ;; view the results
+ ;profiler:reset         ;; clear the data
+ ;reset-ticks
 end
 
 ;#############################################################################################################################################
@@ -338,7 +353,7 @@ end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 
-to satisfaction_residents                                                       ;;to define based on value fucntiona nd compromize programing the probability they will act acording to the value of the criteria
+to residents_satisfaction    ;;define based on value fucntiona nd compromize programing the probability they will act acording to the value of the criteria
 
   set water_in water_in + water_distributed_pipes + water_distributed_trucks               ;;update total water obtained from pipes and trucks
 
@@ -350,51 +365,52 @@ to satisfaction_residents                                                       
     set days_wno_water 0
     set final_deficit 0
   ]
+  set desviacion_agua ifelse-value (water_in > 0)[(count pozos_agebs) / water_in][0]
+
+end
+
+to residents_define_distance_metric
+;VF [A B C D EE]    ;This function reports a standarized value for the relationship between value of criteria and motivation to act
+  ;A the value of a biophysical variable in its natural scale
+  ;B list of streengs that define the lisguistice scale associate with a viobisical variable
+  ;C a list of percentage values of the biofisical variable that reflexts on the cut-offs to define the limits of the range in the linguistic scale
+  ;D the ideal or anti ideal point of the criteria define based ont he linguistic scale (e.g. intolerable ~= anty-ideal)
+  ;EE a list of standard values to map the natural scales
 
 
 
+  ; Movilizaciones
+  let V1_protest VF desperdicio_agua [0.1 0.3 0.7 0.9] ["" "" "" ""] 1 [0.1 0.2 0.5 0.7 0.9]
+  let V2_protest VF desviacion_agua [0.1 0.3 0.7 0.9] ["" "" "" ""] C_desviacion_agua_max [0.1 0.2 0.5 0.7 0.9]
+  let V3_protest VF water_in [0.1 0.3 0.7 0.9] ["" "" "" ""] water_needed [1 0.5 0.25 0.125 0.0625]
+  let V4_protest VF houses_with_abastecimiento [0.5 0.6 0.7 0.99] ["" "" "" ""] 1 [1 0.5 0.25 0.125 0.0625] ; ifelse-value (water_in < tau_11)[1][0]                                                ;value function water needs
 
-  let w_12 1 - w_11                                                             ;set weights
-  let w_22 1 - w_21
-  let w_32 1 - w_31
+  set d_Movilizaciones (distance_ideal (list V1_protest V2_protest V3_protest V4_protest) (item 0 [(list w_C1 w_C2 w_C3 w_C4)] of Alternatives_Xo with [name_action = "Movilizaciones"]) 1)
 
+  ;Modificacion Vivienda
+  Let V1_MV VF pop_growth [0.1 0.3 0.7 0.9] ["" "" "" ""] 1 [0.1 0.3 0.7 0.9]
+  Let V2_MV VF garbage [0.1 0.3 0.7 0.9] ["" "" "" ""] 1 [0.1 0.3 0.7 0.9]
+  Let V3_MV VF eficacia_servicio [0.1 0.3 0.7 0.9] ["" "" "" ""] 1 [0.1 0.3 0.7 0.9]
 
-
-
-
-  let tau_11 water_needed                                                                       ;define and compute value functions
-
-
-  let V11 VF water_in [0.1 0.3 0.7 0.9] ["" "" "" ""] water_needed [1 0.5 0.25 0.125 0.0625] ; ifelse-value (water_in < tau_11)[1][0]                                                ;value function water needs
-
-;critico 20 days without supply
-
-  let V12 VF ((final_deficit * price_garrafon) / (Income-index / 30)) [0.1 0.3 0.7 0.9]  ["" "" "" ""] max [(final_deficit * price_garrafon) / (Income-index / 30)] of agebs [1 0.5 0.25 0.125 0.0625] ;ifelse-value ( (final_deficit * price_garrafon) / (Income-index / 30) < 1)[1][0]                 ;value function
-                                                                           ;limit_tolerance  days
-;;Empirical information for the level of water tolerance
-;;Manejable 800
-;;Inconvetiente 400
-;;Grave < 400
-
- ; let tau_21 20
-  ;let tau_21-grave  400
- ; let tau_21-inconvetiente  800
+  set d_Modificacion_vivienda (distance_ideal (list V1_MV V2_MV V3_MV) (item 0 [(list w_C1 w_C2 w_C3)] of Alternatives_IZ with [name_action = "Modificacion_vivienda" ]) 1)
 
 
-  let V21 VF (days_wno_water) [1 3 7 9]  ["" "" "" ""] 1 [0.0625 0.125 0.25 0.5 1] ;ifelse-value (days_wno_water > tau_21)[1][0]                                        ;value function water tolerance before considering buying a storage device
-  let V22 VF (price_tinaco / Income-index) [0.1 0.3 0.7 0.9]  ["" "" "" ""] (max [price_tinaco / Income-index] of agebs) [1 0.5 0.25 0.125 0.0625] ;ifelse-value (price_tinaco / Income-index < tau_32)[1][0]                                         ;value function as meaure of the average price of storage relative to income (consumer) index
+  ;Captacion de Agua
+  Let V1_CA VF eficacia_servicio [0.1 0.3 0.7 0.9] ["" "" "" ""] 1 [0.1 0.3 0.7 0.9]
+  set d_Captacion_agua (distance_ideal (list V1_CA)  (item 0 [w_C1] of Alternatives_IZ with [name_action = "Captacion_agua"]) 1)
 
-;;protesting
-  let tau_31 5                                                                                       ;limit_tolerance  days
-  let V31 VF days_wno_water [1 3 7 10]  ["" "" "" ""] 1  [0.0625 0.125 0.25 0.5 1] ; VF ifelse-value (days_wno_water > tau_31)[1][0]
-                                                                                    ;limit_cost relative to income (consumer) index
-  let V32 VF (price_tinaco / Income-index) [0.1 0.3 0.7 0.9]  ["" "" "" ""] (max [price_tinaco / Income-index] of agebs) [1 0.5 0.25 0.125 0.0625] ;ifelse-value (price_tinaco / Income-index < tau_32)[1][0]                                         ;value function as meaure of the average price of storage relative to income (consumer) index
 
-  let h_Cp 1
+  ;Accion Colectiva
+  Let V1_AC VF garbage [0.1 0.3 0.7 0.9] ["" "" "" ""] 1 [0.1 0.3 0.7 0.9]
+  set d_Accion_colectiva (distance_ideal (list V1_AC)  (item 0 [w_C1] of Alternatives_IZ with [name_action = "Accion_colectiva"]) 1)
 
-  set d_Compra_agua (((w_11 ^ h_Cp) * (V11 ^ h_Cp)) + ((w_12 ^ h_Cp) * (V12 ^ h_Cp))) ^ (1 / h_Cp)  ;;compute satisfaction emasure as a distance from ideal point
-  set d_Captacion_agua (((w_21 ^ h_Cp) * (V21 ^ h_Cp)) + ((w_22 ^ h_Cp) * (V22 ^ h_Cp))) ^ (1 / h_Cp)
-  set d_Movilizaciones (((w_31 ^ h_Cp) * (V31 ^ h_Cp)) + ((w_32 ^ h_Cp) * (V32 ^ h_Cp))) ^ (1 / h_Cp)
+
+  ;accion Compra Agua
+
+   Let V1_CoA VF eficacia_servicio [0.1 0.3 0.7 0.9] ["" "" "" ""] 1 [0.1 0.3 0.7 0.9]
+   Let V2_CoA VF calidad_agua [0.1 0.3 0.7 0.9] ["" "" "" ""] 1 [0.1 0.3 0.7 0.9]
+
+   set d_Compra_agua (distance_ideal (list V1_CoA V2_CoA)  (item 0 [list w_C1 w_C2] of Alternatives_IZ with [name_action = "Compra_agua"]) 1)
 
 end
 ;#############################################################################################################################################
@@ -451,6 +467,9 @@ to update_globals
       set C1A3_max C2A1_max
       set C2A3_max max [waterNeeds_perageb] of agebs
       set max_water_in max [water_in] of agebs   ;;for visualization max water recieved
+      set C_flooding_max max [flooding] of agebs
+      set C_desviacion_agua_max max [desperdicio_agua] of agebs
+
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -477,16 +496,14 @@ end
 ;; read GIS layers
 to load-gis
   set elevation gis:load-dataset "c:/Users/abaezaca/Documents/MEGADAPT/rastert_dem1.asc"                                                             ;elevation
+  set pozos_sacmex gis:load-dataset  "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/Join_pozosColoniasAgebs.shp"                                 ;wells
+  set Limites_delegacionales gis:load-dataset  "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/limites_deleg_DF_2013.shp"
+  set agebs_map gis:load-dataset "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/ageb7.shp";                                                      ;AGEB shape file
 
-   set pozos_sacmex gis:load-dataset  "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/Join_pozosColoniasAgebs.shp"                                 ;wells
-   set Limites_delegacionales gis:load-dataset  "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/limites_deleg_DF_2013.shp"
-   set agebs_map gis:load-dataset "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/ageb7.shp";                                                      ;AGEB shape file
-
-   set ageb_encharc gis:load-dataset "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/DF_agebs_escalante_Project_withEncharcamientos.shp"
-   set mascara gis:load-dataset "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/mask.shp"                                                          ;Mask of study area
-   ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
-   gis:set-world-envelope-ds gis:envelope-of mascara
-  ;; set flood gis:load-dataset "/GIS_layers/colonias_encharcamientos_2007.asc"
+  set ageb_encharc gis:load-dataset "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/DF_agebs_escalante_Project_withEncharcamientos.shp"
+  set mascara gis:load-dataset "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/mask.shp"                                                          ;Mask of study area
+                                                                                                                                                   ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
+  gis:set-world-envelope-ds gis:envelope-of mascara
 
   set city_image  bitmap:import "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/DF_googleB.jpg"                                                   ; google earth image
   bitmap:copy-to-pcolors City_image false
@@ -497,7 +514,6 @@ to load-gis
   gis:apply-raster  elevation altitude
   gis:apply-coverage agebs_map "POLY_ID" ageb_ID
   gis:apply-coverage agebs_map "NOM_MUN" delegation_ID
-
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -505,9 +521,6 @@ end
 to define_agebs
   (foreach gis:find-features agebs_map "NOM_LOC" "Total AGEB urbana"   gis:find-features ageb_encharc "NOM_LOC" "Total AGEB urbana"
     [ let centroid gis:location-of gis:centroid-of ?
-      ; centroid will be an empty list if it lies outside the bounds
-      ; of the current NetLogo world, as defined by our current GIS
-      ; coordinate transformation
       if not empty? centroid
       [
         create-agebs 1
@@ -526,10 +539,12 @@ to define_agebs
           set hidden? false
           set av_inc ifelse-value ((gis:property-value ?1 "I05_INGRES") = nobody )[0][(gis:property-value ?1 "I05_INGRES")]
           set Income-index  ifelse-value (av_inc > 0) [av_inc][1] ;;average income from normal distribution with mean proportional to altitute
-          set ageb_encharc ifelse-value ((gis:property-value ?2 "Mean_encha") = nobody )[0][(gis:property-value ?2 "Mean_encha")]
+
+          set flooding ifelse-value ((gis:property-value ?2 "Mean_encha") = nobody )[0][(gis:property-value ?2 "Mean_encha")]
           set alpha 0
           set SC random 2
           set protest_magnitude 0
+          set desviacion_agua 0
         ]
       ]
     ])
@@ -558,21 +573,11 @@ to define_agebs
 
     ask pozos [set production extraction_rate * (1 / count pozos)] ; set daily production of water in [mts^3/s]*[s/min]*[min/hour]*[hours/day]*[1/tot pozos]=[mts^3/(day*pozo)]
     ;let tpz 0
-    ask agebs [set pozos_agebs turtle-set pozos with [ageb_ID_pz = [ID] of myself]
+    ask agebs [
+      set pozos_agebs turtle-set pozos with [ageb_ID_pz = [ID] of myself]
 
     ]
 end
-;#############################################################################################################################################
-;#############################################################################################################################################
-
-
-;#############################################################################################################################################
-;#############################################################################################################################################
-
-;#############################################################################################################################################
-;#############################################################################################################################################
-
-
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 to show_pozos
@@ -588,12 +593,7 @@ to show_pozos
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
-
-
-
-;#############################################################################################################################################
-;#############################################################################################################################################
-to goverment_decisions
+to SACMEX_decisions
 
 
   ;weights of criterias
@@ -674,13 +674,14 @@ to goverment_decisions
 
 ;#Alternativa 4 Importacion agua
 ;#Alternativa 5 Extraccion agua
-
+let V41 VF flooding [0.05 0.2 0.3 0.4]["" "" "" ""] C_flooding_max [1 0.5 1 0.25 0.125 0.0625]
 
     ;;Aca calculamos la distancia a cada decision con respecto al punto ideal
 
     set dist_reparation distance_ideal (list w_SP_Repara w_Abast_Repara w_age_Repara) (list V11 V12 V13)  2
     set dist_new distance_ideal (list w_SP_new w_Abast_new w_age_new) (list V21 V22 V23)  2
     set dist_waterdistribution distance_ideal (list w_Abast_dist w_SP_dist) (list V31 V32)  2
+    set dist_water_extraction V41
 
   ]
 
@@ -756,9 +757,6 @@ to collect-info-system  ;;govertment information to take decisions
   set waterNeeds_perageb poblacion * water_requirement_perPerson - sum [H * production] of pozos_agebs               ;;;C4_A1;;;
 end
 
-
-to resident-collect-info
-end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 
@@ -769,23 +767,23 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
   if visualization != "GoogleEarth"[
     ask paches_set_agebs [
 
-      if Visualization = "Abastecimiento"and ticks > 1 and max_water_in > 0[set pcolor scale-color green [water_in] of myself 0 max_water_in]    ;; harmful events
-      if Visualization = "Vulnerability" and ticks > 1 and max_damage > 0[set pcolor scale-color blue ([damage] of myself) 0 max_damage] ;;visualize vulnerability
-      if visualization = "Social Pressure"and ticks > 1 and C2A1_max > 0 [set pcolor scale-color red [protest_magnitude] of myself 0 C2A1_max] ;;visualized social pressure
-      if visualization = "Adaptation"and ticks > 1 [set pcolor scale-color magenta [alpha] of myself 0 1] ;;visualized social pressure
-      if visualization = "Distribution Priorities" and ticks > 1 [set pcolor scale-color magenta [dist_waterdistribution] of myself 0 1] ;;visualized social pressure
+
+      if Visualization = "Accion_Colectiva" and ticks > 1[set pcolor scale-color green [d_Accion_colectiva] of myself 0 1]    ;; harmful events
+      if Visualization = "Movilizaciones" and ticks > 1 [set pcolor scale-color red ([d_Movilizaciones] of myself) 0 1] ;;visualize vulnerability
+      if visualization = "Compra_Agua" and ticks > 1 [set pcolor scale-color red [d_Compra_agua] of myself 0 1] ;;visualized social pressure
+      if visualization = "Modificacion_vivienda"and ticks > 1 [set pcolor scale-color magenta [d_Modificacion_vivienda] of myself 0 1] ;;visualized social pressure
+      if visualization = "Extraction Priorities" and ticks > 1 [set pcolor scale-color sky [dist_water_extraction] of myself 0 1] ;;visualized social pressure
     ]
   ]
 
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
-to-report VF [A B C D EE]
-  ;This function reports a standarized value for the relationship between value of criteria and motivation to act
+to-report VF [A B C D EE]    ;This function reports a standarized value for the relationship between value of criteria and motivation to act
   ;A the value of a biophysical variable in its natural scale
-  ;B list of streengs that define the lisguistice scale associate with a viobisical variable
-  ;C a list of percentage values of the biofisical variable that reflexts on the cut-offs to define the limits of the range in the linguistic scale
-  ;D the ideal or anti ideal point of the criteria define based ont he linguistic scale (e.g. intolerable ~= anty-ideal)
+  ;B a list of percentage values of the biofisical variable that reflexts on the cut-offs to define the limits of the range in the linguistic scale
+  ;C list of streengs that define the lisguistice scale associate with a viobisical variable
+  ;D the ideal or anti ideal point of the criteria define based on the linguistic scale (e.g. intolerable ~= anti-ideal)
   ;EE a list of standard values to map the natural scales
 
     if A > (item 3 B) * D [set SM (item 4 EE)]
@@ -810,6 +808,105 @@ to-report distance_ideal[VF_list weight_list h_Cp]
      if length VF_list = 4 [set dist ((((item 0 weight_list) ^ h_Cp) * ((item 0 VF_list) ^ h_Cp)) + (((item 1 weight_list) ^ h_Cp)  * ((item 1 VF_list) ^ h_Cp)) + (((item 2 weight_list) ^ h_Cp)  * ((item 2 VF_list) ^ h_Cp)) + (((item 3 weight_list) ^ h_Cp)  * ((item 3 VF_list) ^ h_Cp))) ^ (1 / h_Cp)]
      report dist
 end
+
+;#############################################################################################################################################
+;#############################################################################################################################################
+
+to resident_alternativesCriteria
+
+  create-Alternatives_IZ 1[
+    set name_action "Movilizaciones"
+    set label name_action
+    set C1 "Despedicio_agua"
+    set C2 "Eficacia_servicio"
+    set w_C1 0.11
+    set w_C2 0.89
+  ]
+  create-Alternatives_IZ 1[
+    set name_action "Accion_colectiva"
+    set label name_action
+    set C1 "obstruccion_alcantarillado"
+    set w_C1 1
+  ]
+  create-Alternatives_IZ 1[
+    set name_action "Captacion_agua"
+    set label name_action
+    set C1 "Eficacia_servicio"
+    set w_C1 1
+  ]
+  create-Alternatives_IZ 1[
+    set name_action "Modificacion_vivienda"
+    set label name_action
+    set C1 "Crecimiento_urbano"
+    set C2 "obstruccion_alcantarillado"
+    set C3 "Eficacia_servicio"
+    set w_C1 0.07
+    set w_C2 0.58
+    set w_C3 0.34
+  ]
+  create-Alternatives_IZ 1[
+    set name_action "Compra_agua"
+    set label name_action
+    set C1 "Eficacia_servicio"
+    set C2 "Contaminacion_agua"
+    set w_C1 0.25
+    set w_C2 0.75
+  ]
+
+create-Alternatives_Xo 1[
+    set name_action "Movilizaciones"
+    set label name_action
+    set C1 "Despedicio_agua"
+    set C2 "Desviacion_agua"
+    set C3 "Eficacia_servicio"
+    set C4 "Falta_infrastructura"
+    set w_C1 0.04
+    set w_C2 0.3
+    set W_C3 0.51
+    set W_C4 0.15
+  ]
+  create-Alternatives_Xo 1[
+    set name_action "Accion_colectiva"
+    set label name_action
+    set C1 "Falta_infrastructura"
+    set C2 "obstruccion_alcantarillado"
+    set w_C2 0.75
+    set w_C1 0.25
+  ]
+  create-Alternatives_Xo 1[
+    set name_action "Captacion_agua"
+    set label name_action
+    set C1 "Eficacia_servicio"
+    set C2 "Falta_infrastructura"
+    set w_C1 0.25
+    set w_C2 0.75
+  ]
+  create-Alternatives_Xo 1[
+    set name_action "Modificacion_vivienda"
+    set label name_action
+    set C1 "Crecimiento_urbano"
+    set C2 "Falta_infrastructura"
+    set C3 "Eficacia_servicio"
+    set C4 "obstruccion_alcantarillado"
+
+    set w_C1 0.05
+    set w_C2 0.18
+    set w_C3 0.33
+    set w_C4 0.44
+  ]
+  create-Alternatives_Xo 1[
+    set name_action "Compra_agua"
+    set label name_action
+    set C1 "Eficacia_servicio"
+    set C2 "Contaminacion_agua"
+    set C3 "Falta_infrastructura"
+    set w_C1 0.27
+    set w_C2 0.63
+    set w_C3 0.1
+
+  ]
+end
+
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 ;code ends here
@@ -904,42 +1001,24 @@ NIL
 1
 
 CHOOSER
-23
-577
-221
-622
+54
+223
+252
+268
 Visualization
 Visualization
-"Altura" "Vulnerability" "Social Pressure" "Abastecimiento" "Adaptation" "Distribution Priorities" "GoogleEarth"
-3
+"Accion_Colectiva" "Movilizaciones" "Compra_Agua" "Modificacion_vivienda" "Extraction Priorities" "GoogleEarth"
+4
 
 CHOOSER
-19
-490
-216
-535
+50
+136
+247
+181
 Prioridades
 Prioridades
 "BAU" "State of Infra" "Social responsability/pressure"
 1
-
-PLOT
-1077
-50
-1363
-225
-Edad Promedio Pozos [An~os]
-NIL
-NIL
-0.0
-10.0
-0.0
-1.0
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -16777216 true "" "plot mean [age_pozo] of pozos / 365"
 
 PLOT
 1077
@@ -960,10 +1039,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot mean [protest_magnitude] of agebs"
 
 BUTTON
-159
-640
-331
-709
+278
+429
+450
+498
 NIL
 show_limitesDelegaciones
 NIL
@@ -977,10 +1056,10 @@ NIL
 1
 
 BUTTON
-157
-715
-329
-782
+276
+504
+448
+571
 NIL
 show_pozos
 NIL
@@ -998,7 +1077,7 @@ PLOT
 403
 1361
 578
-average water received by a neighborhood
+average water receive by district
 NIL
 NIL
 0.0
@@ -1009,13 +1088,13 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot water_produced"
+"default" 1.0 0 -16777216 true "" "plot mean [water_in] of agebs"
 
 BUTTON
-157
-790
-327
-854
+276
+579
+446
+643
 NIL
 show_AGEBS
 NIL
@@ -1029,30 +1108,30 @@ NIL
 1
 
 TEXTBOX
-24
-452
-311
-486
+55
+98
+342
+132
 Government Policies
 20
 0.0
 1
 
 TEXTBOX
-33
-544
-283
-579
+64
+190
+314
+225
 Visualización
 18
 0.0
 1
 
 SLIDER
-644
-762
-844
-795
+58
+319
+258
+352
 water_requirement_perPerson
 water_requirement_perPerson
 0.007
@@ -1064,10 +1143,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-644
-726
-844
-759
+58
+283
+258
+316
 recursos_para_mantencion
 recursos_para_mantencion
 1
@@ -1079,145 +1158,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-123
-110
-295
-143
-w_11
-w_11
-0
-1
-0.3
-0.1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-128
-177
-300
-210
-w_21
-w_21
-0
-1
-0.4
-0.1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-121
-258
-293
-291
-w_31
-w_31
-0
-1
-0.1
-0.1
-1
-NIL
-HORIZONTAL
-
-TEXTBOX
-327
-105
-415
-148
-water needs
-15
-0.0
-1
-
-TEXTBOX
-160
-81
-348
-104
-Buying water
-15
-0.0
-1
-
-TEXTBOX
-17
-114
-136
-137
-Cost of water
-15
-0.0
-1
-
-TEXTBOX
-136
-148
-324
-171
-Buy storage for water
-15
-0.0
-1
-
-TEXTBOX
-318
-185
-422
-249
-Days without enough water supply
-15
-0.0
-1
-
-TEXTBOX
-31
-183
-110
-238
-Cost of storage
-15
-0.0
-1
-
-TEXTBOX
-315
-263
-448
-331
-Days without enough water supply
-15
-0.0
-1
-
-TEXTBOX
-28
-255
-97
-298
-Cost of storage
-15
-0.0
-1
-
-TEXTBOX
-172
-228
-360
-251
-Protesting
-15
-0.0
-1
-
-SLIDER
-645
-802
-847
-835
+59
+359
+261
+392
 water_production
 water_production
 1
