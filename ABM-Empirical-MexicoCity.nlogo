@@ -674,7 +674,7 @@ to SACMEX_decisions
 
 ;#Alternativa 4 Importacion agua
 ;#Alternativa 5 Extraccion agua
-let V41 VF flooding [0.05 0.2 0.3 0.4]["" "" "" ""] C_flooding_max [1 0.5 1 0.25 0.125 0.0625]
+let V41 VF flooding [0.1 0.3 0.6 0.8]["" "" "" ""] C_flooding_max [1 0.5 1 0.25 0.125 0.0625]
 
     ;;Aca calculamos la distancia a cada decision con respecto al punto ideal
 
@@ -1008,7 +1008,7 @@ CHOOSER
 Visualization
 Visualization
 "Accion_Colectiva" "Movilizaciones" "Compra_Agua" "Modificacion_vivienda" "Extraction Priorities" "GoogleEarth"
-4
+1
 
 CHOOSER
 50
@@ -1019,24 +1019,6 @@ Prioridades
 Prioridades
 "BAU" "State of Infra" "Social responsability/pressure"
 1
-
-PLOT
-1077
-225
-1360
-400
-Protestas
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -16777216 true "" "plot mean [protest_magnitude] of agebs"
 
 BUTTON
 278
@@ -1071,24 +1053,6 @@ NIL
 NIL
 NIL
 1
-
-PLOT
-1074
-403
-1361
-578
-average water receive by district
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -16777216 true "" "plot mean [water_in] of agebs"
 
 BUTTON
 276
