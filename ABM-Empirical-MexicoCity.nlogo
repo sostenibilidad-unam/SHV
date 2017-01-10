@@ -64,9 +64,16 @@ globals [
 
   C4A3_max                  ;;min hydraulic pressure
 
-  C_flooding_max            ;;max level of flooding (encharcamientos) recored over the last 10 years
-  C_desviacion_agua_max     ;;max level of perception of deviation
-;#####################################################################################
+  desviacion_agua_ideal ;;max level of perception of deviation
+  pop_growth_ideal
+  desperdicio_agua_ideal
+  eficacia_servicio_ideal
+  garbage_ideal
+  calidad_agua_ideal
+  infra_abast_ideal
+  infra_dranage_ideal
+  flooding_ideal  ;;max level of flooding (encharcamientos) recored over the last 10 years
+  ;#####################################################################################
 ;#####################################################################################
 ;#####################################################################################
 ;;Resident decition making process
@@ -112,6 +119,7 @@ breed [drenaje_profundo tramo]
 breed [Delegaciones Delegacion]
 breed [Alternatives_IZ action_IZ]
 breed [Alternatives_Xo action_Xo]
+breed [Alternatives_MC action_MC]
 directed-link-breed [active-links active-link]
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -179,6 +187,7 @@ Agebs-own[
   desperdicio_agua             ;;Por fugas, falta de conciencia del uso del agua
   desviacion_agua              ;;Se llevan el agua a otros lugares
 
+
 ;#residents decisions metrics
 
   d_Compra_agua                          ;;distance from ideal point for Compra_agua (buying water)
@@ -204,17 +213,25 @@ Pozos-own[
 
 ;#############################################################################################################################################
 ;#############################################################################################################################################
-;define alternatives for residents using MM Iz
+;define alternatives for residents using MC Iz Xo
 Alternatives_IZ-own[
   name_action
   C1
   C2
   C3
   C4
+  C1_MAX
+  C2_MAX
+  C3_MAX
+  C4_MAX
   w_C1
   w_C2
   w_C3
   w_C4
+  V1
+  V2
+  V3
+  V4
 ]
 Alternatives_Xo-own[
   name_action
@@ -222,10 +239,37 @@ Alternatives_Xo-own[
   C2
   C3
   C4
+  C1_MAX
+  C2_MAX
+  C3_MAX
+  C4_MAX
   w_C1
   w_C2
   w_C3
   w_C4
+  V1
+  V2
+  V3
+  V4
+]
+Alternatives_MC-own[
+  name_action
+  C1
+  C2
+  C3
+  C4
+  C1_MAX
+  C2_MAX
+  C3_MAX
+  C4_MAX
+  w_C1
+  w_C2
+  w_C3
+  w_C4
+  V1
+  V2
+  V3
+  V4
 ]
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -340,7 +384,7 @@ end
 
 to residents_needs                                                              ;; to define if population is gettign the water they need
   set water_needed poblacion * water_requirement_perPerson
-  set water_distributed_pipes  water_needed * houses_with_abastecimiento
+  set water_distributed_pipes  water_needed * houses_with_abastecimiento   ;;this can be updated using tandeo
   set water_produced water_produced - water_distributed_pipes
   ifelse water_distributed_pipes < water_needed[
 
@@ -379,38 +423,223 @@ to residents_define_distance_metric
 
 
 
-  ; Movilizaciones
-  let V1_protest VF desperdicio_agua [0.1 0.3 0.7 0.9] ["" "" "" ""] 1 [0.1 0.2 0.5 0.7 0.9]
-  let V2_protest VF desviacion_agua [0.1 0.3 0.7 0.9] ["" "" "" ""] C_desviacion_agua_max [0.1 0.2 0.5 0.7 0.9]
-  let V3_protest VF water_in [0.1 0.3 0.7 0.9] ["" "" "" ""] water_needed [1 0.5 0.25 0.125 0.0625]
-  let V4_protest VF houses_with_abastecimiento [0.5 0.6 0.7 0.99] ["" "" "" ""] 1 [1 0.5 0.25 0.125 0.0625] ; ifelse-value (water_in < tau_11)[1][0]                                                ;value function water needs
+;###############################################################################################################################
+if group_kmean = 1 or group_kmean = 3[ ;#residents Xochimilco
 
-  set d_Movilizaciones (distance_ideal (list V1_protest V2_protest V3_protest V4_protest) (item 0 [(list w_C1 w_C2 w_C3 w_C4)] of Alternatives_Xo with [name_action = "Movilizaciones"]) 1)
+ ask Alternatives_Xo with [name_action = "Movilizaciones"][
+    set C1 [desperdicio_agua] of myself
+    set C2 [desviacion_agua] of myself
+    set C3 [water_in] of myself ; eficacia_servicio
+    set C4 [houses_with_abastecimiento] of myself
 
-  ;Modificacion Vivienda
-  Let V1_MV VF pop_growth [0.1 0.3 0.7 0.9] ["" "" "" ""] 1 [0.1 0.3 0.7 0.9]
-  Let V2_MV VF garbage [0.1 0.3 0.7 0.9] ["" "" "" ""] 1 [0.1 0.3 0.7 0.9]
-  Let V3_MV VF eficacia_servicio [0.1 0.3 0.7 0.9] ["" "" "" ""] 1 [0.1 0.3 0.7 0.9]
+    set C1_MAX desperdicio_agua_ideal
+    set C2_MAX desviacion_agua_ideal ;;max level of perception of deviation
+    set C3_MAX eficacia_servicio_ideal
+    set C4_MAX Infra_abast_ideal
 
-  set d_Modificacion_vivienda (distance_ideal (list V1_MV V2_MV V3_MV) (item 0 [(list w_C1 w_C2 w_C3)] of Alternatives_IZ with [name_action = "Modificacion_vivienda" ]) 1)
+    set V1 VF C1 [0.1 0.3 0.7 0.9] ["" "" "" ""]  C1_MAX [1 0.5 0.25 0.125 0.0625]
+    set V2 VF C2 [0.1 0.3 0.7 0.9] ["" "" "" ""] C2_MAX [1 0.5 0.25 0.125 0.0625]
+    set V3 VF C3 [0.1 0.3 0.7 0.9] ["" "" "" ""] C3_MAX [1 0.5 0.25 0.125 0.0625]
+    set V4 VF C4 [0.5 0.6 0.7 0.99] ["" "" "" ""] C4_MAX [1 0.5 0.25 0.125 0.0625] ; ifelse-value (water_in < tau_11)[1][0]                                                ;value function water needs
+    let ddd (distance_ideal (list V1 V2 V3 V4) (list w_C1 w_C2 w_C3 w_C4) 1)
+    ask myself [set d_Movilizaciones ddd]
+ ]
+
+ ask  Alternatives_Xo with [name_action = "Modificacion_vivienda" ] [
+   set C1 [pop_growth] of myself
+   set C2 [garbage] of myself
+   set C3 [water_in] of myself ; eficacia_servicio
+   set C4 [houses_with_abastecimiento] of myself
+
+   set C1_MAX pop_growth_ideal
+   set C2_MAX garbage_ideal ;;max level of perception of deviation
+   set C3_MAX eficacia_servicio_ideal
+   set C4_MAX Infra_abast_ideal
 
 
-  ;Captacion de Agua
-  Let V1_CA VF eficacia_servicio [0.1 0.3 0.7 0.9] ["" "" "" ""] 1 [0.1 0.3 0.7 0.9]
-  set d_Captacion_agua (distance_ideal (list V1_CA)  (item 0 [w_C1] of Alternatives_IZ with [name_action = "Captacion_agua"]) 1)
+   set V1 VF C1 [0.1 0.3 0.7 0.9] ["" "" "" ""] C1_MAX [1 0.5 0.25 0.125 0.0625]
+   set V2 VF C2 [0.1 0.3 0.7 0.9] ["" "" "" ""] C2_MAX [1 0.5 0.25 0.125 0.0625]
+   set V3 VF C3 [0.1 0.3 0.7 0.9] ["" "" "" ""]  C3_MAX [1 0.5 0.25 0.125 0.0625]
+   set V4 VF C4 [0.5 0.6 0.7 0.99] ["" "" "" ""] C4_MAX [1 0.5 0.25 0.125 0.0625] ; ifelse-value (water_in < tau_11)[1][0]                                                ;value function water needs
+   let ddd (distance_ideal (list V1 V2 V3 V4) (list w_C1 w_C2 w_C3 w_C4) 1)
+   ask myself [set d_Modificacion_vivienda ddd]
+ ]
+
+ ask Alternatives_Xo with [name_action = "Captacion_agua" ][
+   set C1 [eficacia_servicio] of myself
+   set C1_MAX eficacia_servicio_ideal
+   set V1 VF C1 [0.1 0.3 0.7 0.9] ["" "" "" ""] C1_MAX [1 0.5 0.25 0.125 0.0625]
+   let ddd (distance_ideal (list V1) w_C1 1)
+   ask myself [set d_Captacion_agua ddd]
+ ]
+
+  ask Alternatives_Xo with [name_action = "Accion_colectiva" ][
+    set C1 [garbage] of myself
+    set C1_max garbage_ideal
+    set V1 VF C1 [0.1 0.3 0.7 0.9] ["" "" "" ""] C1_max [1 0.5 0.25 0.125 0.0625]
+    let ddd (distance_ideal (list V1)  w_C1 1)
+    ask myself [set d_Accion_colectiva ddd]
+  ]
+
+  ask Alternatives_Xo with [name_action = "Compra_agua" ][
+    set C1 [eficacia_servicio] of myself
+    set C2 [calidad_agua] of myself
+    set C1_max eficacia_servicio_ideal
+    set C2_max calidad_agua_ideal
+
+    set V1 VF C1 [0.1 0.3 0.7 0.9] ["" "" "" ""] C1_max [1 0.5 0.25 0.125 0.0625]
+    set V2 VF C2 [0.1 0.3 0.7 0.9] ["" "" "" ""] C2_max [1 0.5 0.25 0.125 0.0625]
+     let ddd (distance_ideal (list V1 V2)  list w_C1 w_C2 1)
+     ask myself [set d_Compra_agua ddd]
+  ]
+]
 
 
-  ;Accion Colectiva
-  Let V1_AC VF garbage [0.1 0.3 0.7 0.9] ["" "" "" ""] 1 [0.1 0.3 0.7 0.9]
-  set d_Accion_colectiva (distance_ideal (list V1_AC)  (item 0 [w_C1] of Alternatives_IZ with [name_action = "Accion_colectiva"]) 1)
+;###############################################################################################################################
+if group_kmean = 2 or group_kmean = 0[ ;#Residents Iztapalapa
+  ask Alternatives_Iz with [name_action = "Movilizaciones"][
+    set C1 [desperdicio_agua] of myself
+    set C2 [desviacion_agua] of myself
+    set C3 [water_in] of myself; eficacia_servicio
+    set C4 [houses_with_abastecimiento] of myself
+    set C1_max desperdicio_agua_ideal
+    set C2_max desviacion_agua_ideal
+    set C3_max eficacia_servicio_ideal
+    set C4_max infra_abast_ideal
+
+    set V1 VF C1 [0.1 0.3 0.7 0.9] ["" "" "" ""] C1_max [1 0.5 0.25 0.125 0.0625]
+    set V2 VF C2 [0.1 0.3 0.7 0.9] ["" "" "" ""] C2_max [1 0.5 0.25 0.125 0.0625]
+    set V3 VF C3 [0.1 0.3 0.7 0.9] ["" "" "" ""] C3_max [1 0.5 0.25 0.125 0.0625]
+    set V4 VF C4 [0.5 0.6 0.7 0.99] ["" "" "" ""] C4_max [1 0.5 0.25 0.125 0.0625] ; ifelse-value (water_in < tau_11)[1][0]                                                ;value function water needs
+    let  ddd (distance_ideal (list V1 V2) list w_C1 w_C2 1)
+    ask myself [set d_Movilizaciones ddd]
+  ]
+  ask Alternatives_Iz with [name_action = "Modificacion_vivienda"][
+    set C1 [pop_growth] of myself
+    set C2 [garbage] of myself
+    set C3 [eficacia_servicio] of myself
+    set C4 [houses_with_dranage] of myself
+    set C1_max pop_growth_ideal
+    set C2_max garbage_ideal
+    set C3_max eficacia_servicio_ideal
+    set C4_max infra_dranage_ideal
+    set V1 VF C1 [0.1 0.3 0.7 0.9] ["" "" "" ""] C1_max [1 0.5 0.25 0.125 0.0625]
+    set V2 VF C2 [0.1 0.3 0.7 0.9] ["" "" "" ""] C2_max [1 0.5 0.25 0.125 0.0625]
+    set V3 VF C3 [0.1 0.3 0.7 0.9] ["" "" "" ""] C3_max [1 0.5 0.25 0.125 0.0625]
+    set V4 VF C4 [0.5 0.6 0.7 0.99] ["" "" "" ""] C4_max [1 0.5 0.25 0.125 0.0625] ; ifelse-value (water_in < tau_11)[1][0]
+    let ddd (distance_ideal (list V1 V2 V3) (list w_C1 w_C2 w_C3) 1)                                             ;value function water needs
+    ask myself [set d_Modificacion_vivienda ddd]
+  ]
+
+  ask Alternatives_Iz with [name_action = "Captacion_agua"][
+    set C1 [eficacia_servicio] of myself
+    set C1_max eficacia_servicio_ideal
+
+    set V1 VF C1 [0.1 0.3 0.7 0.9] ["" "" "" ""] C1_max [1 0.5 0.25 0.125 0.0625]
+  let ddd (distance_ideal (list V1) w_C1 1)
+    ask myself [set d_Captacion_agua ddd]
+  ]
+  ask Alternatives_Iz with [name_action = "Accion_colectiva"][
+    set C1 [garbage] of myself
+    set C1_max garbage_ideal
+
+    set V1 VF C1 [0.1 0.3 0.7 0.9] ["" "" "" ""] C1_max [1 0.5 0.25 0.125 0.0625]
+    let ddd (distance_ideal (list V1)  w_C1 1)
+    ask myself [set d_Accion_colectiva ddd]
+  ]
+
+  ask Alternatives_Iz with [name_action = "Compra_agua"][
+    set C1 [eficacia_servicio] of myself
+    set C2 [calidad_agua] of myself
+
+    set C1_max eficacia_servicio_ideal
+    set C2_max calidad_agua_ideal
+
+    set V1 VF C1 [0.1 0.3 0.7 0.9] ["" "" "" ""] C1_max [1 0.5 0.25 0.125 0.0625]
+    set V2 VF C2 [0.1 0.3 0.7 0.9] ["" "" "" ""] C2_max [1 0.5 0.25 0.125 0.0625]
+  let ddd (distance_ideal (list V1 V2)  (list w_C1 w_C2) 1)
+    ask myself [set d_Compra_agua ddd]
+  ]
+]
+
+;###############################################################################################################################
+if group_kmean = 4 [ ;#Residents Magdalena Contreras
+  ask Alternatives_MC with [name_action = "Movilizaciones"] [
+    set C1 [desperdicio_agua] of myself
+    set C2 [desviacion_agua] of myself
+    set C3 [water_in] of myself ; eficacia_servicio
+    set C4 [houses_with_abastecimiento] of myself
+
+    set C1_max desperdicio_agua_ideal
+    set C2_max desviacion_agua_ideal
+    set C3_max eficacia_servicio_ideal
+    set C4_max infra_abast_ideal
+
+    set V1 VF C1 [0.1 0.3 0.7 0.9] ["" "" "" ""] C1_max [1 0.5 0.25 0.125 0.0625]
+    set V2 VF C2 [0.1 0.3 0.7 0.9] ["" "" "" ""] C2_max [1 0.5 0.25 0.125 0.0625]
+    set V3 VF C3 [0.1 0.3 0.7 0.9] ["" "" "" ""] C3_max [1 0.5 0.25 0.125 0.0625]
+    set V4 VF C4 [0.1 0.3 0.7 0.9] ["" "" "" ""] C4_max [1 0.5 0.25 0.125 0.0625]
+    let ddd (distance_ideal (list V1 V2 V3 V4) (list w_C1 w_C2 w_C3 w_C4) 1)
+    ask myself [set d_Movilizaciones ddd]
+  ]
 
 
-  ;accion Compra Agua
+  ask Alternatives_MC with [name_action = "Modificacion_vivienda"] [
 
-   Let V1_CoA VF eficacia_servicio [0.1 0.3 0.7 0.9] ["" "" "" ""] 1 [0.1 0.3 0.7 0.9]
-   Let V2_CoA VF calidad_agua [0.1 0.3 0.7 0.9] ["" "" "" ""] 1 [0.1 0.3 0.7 0.9]
+    set C1 [pop_growth] of myself
+    set C2 [flooding]  of myself
+    set C3 [houses_with_dranage] of myself
+    set C4 [garbage] of myself
 
-   set d_Compra_agua (distance_ideal (list V1_CoA V2_CoA)  (item 0 [list w_C1 w_C2] of Alternatives_IZ with [name_action = "Compra_agua"]) 1)
+    set C1_max pop_growth_ideal
+    set C2_max flooding_ideal
+    set C3_max infra_dranage_ideal
+    set C4_max garbage_ideal
+
+    set V1 VF C1 [0.1 0.3 0.7 0.9] ["" "" "" ""] 1 [1 0.5 0.25 0.125 0.0625]
+    set V2 VF C2 [0.1 0.3 0.7 0.9] ["" "" "" ""] 1 [1 0.5 0.25 0.125 0.0625]
+    set V3 VF C3 [0.1 0.3 0.7 0.9] ["" "" "" ""] 1 [1 0.5 0.25 0.125 0.0625]
+    set V4 VF C4 [0.1 0.3 0.7 0.9] ["" "" "" ""] 1 [1 0.5 0.25 0.125 0.0625]
+    let ddd (distance_ideal (list V1 V2 V3 V4) (list w_C1 w_C2 w_C3 w_C4) 1)
+    ask myself [set d_Modificacion_vivienda ddd]
+  ]
+  ask Alternatives_MC with [name_action = "Captacion_agua"] [
+
+    set C1 [water_in] of myself
+    set C2 [houses_with_abastecimiento] of myself
+    set C1_max eficacia_servicio_ideal
+    set C2_max infra_abast_ideal
+    set V1 VF C1 [0.1 0.3 0.7 0.9] ["" "" "" ""] C1_max [1 0.5 0.25 0.125 0.0625]
+    set V2 VF C2 [0.1 0.3 0.7 0.9] ["" "" "" ""] C2_max [1 0.5 0.25 0.125 0.0625]
+    let ddd (distance_ideal (list V1 V2) (list w_C1 w_C2) 1)
+    ask myself [set d_Captacion_agua ddd]
+  ]
+  ask Alternatives_MC with [name_action = "Accion_colectiva"] [
+
+    set C1 [houses_with_abastecimiento] of myself
+    set C2 [garbage] of myself
+    set C1_max infra_abast_ideal
+    set C2_max garbage_ideal
+
+    set V1 VF C1 [0.1 0.3 0.7 0.9] ["" "" "" ""] C1_max [1 0.5 0.25 0.125 0.0625]
+    set V2 VF C2 [0.1 0.3 0.7 0.9] ["" "" "" ""] C2_max [1 0.5 0.25 0.125 0.0625]
+    let ddd (distance_ideal (list V1 V2)  (list w_C1 w_C2) 1)
+    ask myself [set d_Accion_colectiva ddd]
+
+  ]
+
+  ask Alternatives_MC with [name_action = "Compra_agua"] [
+    set C1 [calidad_agua] of myself
+    set C2 [water_in] of myself
+    set C1_max calidad_agua_ideal
+    set C2_max eficacia_servicio_ideal
+
+    set V1 VF C1 [0.1 0.3 0.7 0.9] ["" "" "" ""] C1_max [1 0.5 0.25 0.125 0.0625]
+    set V2 VF C2 [0.1 0.3 0.7 0.9] ["" "" "" ""] C2_max [1 0.5 0.25 0.125 0.0625]
+    let ddd (distance_ideal (list V1 V2)  (list w_C1 w_C2) 1)
+    ask myself [set d_Compra_agua ddd]
+  ]
+]
 
 end
 ;#############################################################################################################################################
@@ -466,16 +695,25 @@ to update_globals
 
       set C1A3_max C2A1_max
       set C2A3_max max [waterNeeds_perageb] of agebs
-      set max_water_in max [water_in] of agebs   ;;for visualization max water recieved
-      set C_flooding_max max [flooding] of agebs
-      set C_desviacion_agua_max max [desperdicio_agua] of agebs
+
+      set desperdicio_agua_ideal min [desperdicio_agua] of agebs;;max level of perception of deviation
+
+      set desviacion_agua_ideal min [desviacion_agua] of agebs
+      set garbage_ideal 0
+      set calidad_agua_ideal 1
+      set infra_abast_ideal 0
+      set infra_dranage_ideal 0
+      set flooding_ideal min [flooding] of agebs ;;max level of flooding (encharcamientos) recored over the last 10 years
+
+
+
 
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 to update_Infrastructure_state    ;;update age and probability of failure and also is color if well is working
     set age_pozo age_pozo + 1
-     set P_failure 1 - exp(- age_pozo / (365 * 200))
+     set P_failure 1 - exp(- age_pozo / (365 * 500))
      if H = 0  [set color (1 - H) * 15
        set shape "x"
        ]
@@ -564,7 +802,7 @@ to define_agebs
           set size 2
           set color sky
           set age_pozo (1 + random 20) * 365
-          set P_failure 1 - exp(- age_pozo / (365 * 200))
+          set P_failure 1 - exp(- age_pozo / (365 * 500))
           set H 1
           set extraction_rate 87225 ;m3/dia
           ]
@@ -674,7 +912,7 @@ to SACMEX_decisions
 
 ;#Alternativa 4 Importacion agua
 ;#Alternativa 5 Extraccion agua
-let V41 VF flooding [0.1 0.3 0.6 0.8]["" "" "" ""] C_flooding_max [1 0.5 1 0.25 0.125 0.0625]
+let V41 VF flooding [0.1 0.3 0.6 0.8]["" "" "" ""] flooding_ideal [0.0625 0.125 0.25 0.5 1]
 
     ;;Aca calculamos la distancia a cada decision con respecto al punto ideal
 
@@ -694,7 +932,7 @@ let V41 VF flooding [0.1 0.3 0.6 0.8]["" "" "" ""] C_flooding_max [1 0.5 1 0.25 
         if dist_new > dist_reparation and counters < recursos_para_mantencion [
           ask pozos_agebs with [age_pozo > (365 * 30)][
             set age_pozo 1
-            set P_failure 1 - exp(- age_pozo / (365 * 200))
+            set P_failure 1 - exp(- age_pozo / (365 * 500))
             set H 1
             set counters counters + 1
           ]
@@ -712,7 +950,7 @@ let V41 VF flooding [0.1 0.3 0.6 0.8]["" "" "" ""] C_flooding_max [1 0.5 1 0.25 
      ;   print [H] of pozos_agebs
         ask pozos_agebs with [H = 0][
           set age_pozo age_pozo - age_pozo * 0.2
-          set P_failure 1 - exp(- age_pozo / (365 * 200))
+          set P_failure 1 - exp(- age_pozo / (365 * 500))
           set H 1
           set p_fix p_fix + 1
           set counters counters + 1
@@ -721,6 +959,9 @@ let V41 VF flooding [0.1 0.3 0.6 0.8]["" "" "" ""] C_flooding_max [1 0.5 1 0.25 
       ]
     ]
   ]
+
+
+
 
   ;;water distribution decition per ageb
   foreach sort-on [1 - dist_waterdistribution] agebs[
@@ -731,6 +972,9 @@ let V41 VF flooding [0.1 0.3 0.6 0.8]["" "" "" ""] C_flooding_max [1 0.5 1 0.25 
       ]
     ]
   ]
+
+  ;;;;water extraction
+    ask agebs [ask pozos_agebs [set production (extraction_rate * [dist_water_extraction] of myself) / (count pozos)]]
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -766,13 +1010,12 @@ end
 to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
   if visualization != "GoogleEarth"[
     ask paches_set_agebs [
-
-
       if Visualization = "Accion_Colectiva" and ticks > 1[set pcolor scale-color green [d_Accion_colectiva] of myself 0 1]    ;; harmful events
       if Visualization = "Movilizaciones" and ticks > 1 [set pcolor scale-color red ([d_Movilizaciones] of myself) 0 1] ;;visualize vulnerability
       if visualization = "Compra_Agua" and ticks > 1 [set pcolor scale-color red [d_Compra_agua] of myself 0 1] ;;visualized social pressure
       if visualization = "Modificacion_vivienda"and ticks > 1 [set pcolor scale-color magenta [d_Modificacion_vivienda] of myself 0 1] ;;visualized social pressure
       if visualization = "Extraction Priorities" and ticks > 1 [set pcolor scale-color sky [dist_water_extraction] of myself 0 1] ;;visualized social pressure
+      if visualization = "K_groups" and ticks > 1 [set pcolor  15 +  10 * [group_kmean] of myself] ;;visualized social pressure
     ]
   ]
 
@@ -817,29 +1060,22 @@ to resident_alternativesCriteria
   create-Alternatives_IZ 1[
     set name_action "Movilizaciones"
     set label name_action
-    set C1 "Despedicio_agua"
-    set C2 "Eficacia_servicio"
     set w_C1 0.11
     set w_C2 0.89
   ]
   create-Alternatives_IZ 1[
     set name_action "Accion_colectiva"
     set label name_action
-    set C1 "obstruccion_alcantarillado"
     set w_C1 1
   ]
   create-Alternatives_IZ 1[
     set name_action "Captacion_agua"
     set label name_action
-    set C1 "Eficacia_servicio"
     set w_C1 1
   ]
   create-Alternatives_IZ 1[
     set name_action "Modificacion_vivienda"
     set label name_action
-    set C1 "Crecimiento_urbano"
-    set C2 "obstruccion_alcantarillado"
-    set C3 "Eficacia_servicio"
     set w_C1 0.07
     set w_C2 0.58
     set w_C3 0.34
@@ -847,8 +1083,6 @@ to resident_alternativesCriteria
   create-Alternatives_IZ 1[
     set name_action "Compra_agua"
     set label name_action
-    set C1 "Eficacia_servicio"
-    set C2 "Contaminacion_agua"
     set w_C1 0.25
     set w_C2 0.75
   ]
@@ -856,10 +1090,6 @@ to resident_alternativesCriteria
 create-Alternatives_Xo 1[
     set name_action "Movilizaciones"
     set label name_action
-    set C1 "Despedicio_agua"
-    set C2 "Desviacion_agua"
-    set C3 "Eficacia_servicio"
-    set C4 "Falta_infrastructura"
     set w_C1 0.04
     set w_C2 0.3
     set W_C3 0.51
@@ -868,27 +1098,18 @@ create-Alternatives_Xo 1[
   create-Alternatives_Xo 1[
     set name_action "Accion_colectiva"
     set label name_action
-    set C1 "Falta_infrastructura"
-    set C2 "obstruccion_alcantarillado"
     set w_C2 0.75
     set w_C1 0.25
   ]
   create-Alternatives_Xo 1[
     set name_action "Captacion_agua"
     set label name_action
-    set C1 "Eficacia_servicio"
-    set C2 "Falta_infrastructura"
     set w_C1 0.25
     set w_C2 0.75
   ]
   create-Alternatives_Xo 1[
     set name_action "Modificacion_vivienda"
     set label name_action
-    set C1 "Crecimiento_urbano"
-    set C2 "Falta_infrastructura"
-    set C3 "Eficacia_servicio"
-    set C4 "obstruccion_alcantarillado"
-
     set w_C1 0.05
     set w_C2 0.18
     set w_C3 0.33
@@ -897,13 +1118,47 @@ create-Alternatives_Xo 1[
   create-Alternatives_Xo 1[
     set name_action "Compra_agua"
     set label name_action
-    set C1 "Eficacia_servicio"
-    set C2 "Contaminacion_agua"
-    set C3 "Falta_infrastructura"
     set w_C1 0.27
     set w_C2 0.63
     set w_C3 0.1
 
+  ]
+  ;#################################################
+    create-Alternatives_MC 1[
+    set name_action "Movilizaciones"
+    set label name_action
+    set w_C1 0.04
+    set w_C2 0.3
+    set W_C3 0.51
+    set W_C4 0.15
+  ]
+  create-Alternatives_MC 1[
+    set name_action "Accion_colectiva"
+    set label name_action
+    set w_C2 0.75
+    set w_C1 0.25
+  ]
+  create-Alternatives_MC 1[
+    set name_action "Captacion_agua"
+    set label name_action
+    set w_C1 0.25
+    set w_C2 0.75
+  ]
+  create-Alternatives_MC 1[
+    set name_action "Modificacion_vivienda"
+    set label name_action
+
+    set w_C1 0.05
+    set w_C2 0.18
+    set w_C3 0.33
+    set w_C4 0.44
+  ]
+  create-Alternatives_MC 1[
+    set name_action "Compra_agua"
+    set label name_action
+    set w_C1 0.27
+    set w_C2 0.63
+    set w_C3 0.1
   ]
 end
 
@@ -1007,7 +1262,7 @@ CHOOSER
 268
 Visualization
 Visualization
-"Accion_Colectiva" "Movilizaciones" "Compra_Agua" "Modificacion_vivienda" "Extraction Priorities" "GoogleEarth"
+"Accion_Colectiva" "Movilizaciones" "Compra_Agua" "Modificacion_vivienda" "Extraction Priorities" "GoogleEarth" "K_groups"
 1
 
 CHOOSER
