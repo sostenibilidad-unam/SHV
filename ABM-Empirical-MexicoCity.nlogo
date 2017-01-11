@@ -1,4 +1,4 @@
-extensions [GIS bitmap profiler];
+extensions [GIS bitmap profiler matrix csv];
 globals [
   exp_r;;                      ;; Wealth depresiation rate
   price_tinaco                 ;; Price adaptation measure (tinato to storage water)
@@ -50,18 +50,19 @@ globals [
  ;;Mobilizations
 
 
-  presion_hidraulica_max                  ;;min hydraulic pressure
-  Antiguedad-infra_max
-  desviacion_agua_max;;max level of perception of deviation
-  pop_growth_max
-  desperdicio_agua_max
-  eficacia_servicio_max
-  garbage_max
-  calidad_agua_max
-  infra_abast_max
-  infra_dranage_max
-  flooding_max  ;;max level of flooding (encharcamientos) recored over the last 10 years
-  Num_fallas_max
+  presion_hidraulica_max        ;;min hydraulic pressure
+  Antiguedad-infra_max          ;;the area with the oldest infrastructure
+  desviacion_agua_max           ;;max level of perception of deviation
+  pop_growth_max                ;;max change of popualtion per ageb
+  desperdicio_agua_max          ;;max perception of water being waste
+  eficacia_servicio_max         ;;ideal state of efficancy desired by actors
+  garbage_max                   ;;max level of garbage percived as intolerable
+  calidad_agua_max              ;;optimal value of water quality
+  infra_abast_max               ;;max % of houses per ageb covered by the water supply network
+  infra_dranage_max             ;;max % of houses per ageb covered by the water dranage network
+  flooding_max                  ;;max level of flooding (encharcamientos) recored over the last 10 years
+  Num_fallas_max                ;;max number of fugas
+  max_water_in                  ;;
 ;#####################################################################################
 ;#####################################################################################
 ;#####################################################################################
@@ -75,8 +76,8 @@ globals [
 ;;auxiliar variables
   days                         ;; Days counter
   counter
-  max_damage
-  max_water_in
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;GIS maps variables
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -87,13 +88,13 @@ globals [
   city_image                                                         ;a google image with the terrain
   pozos_sacmex                                                       ;weels for the water supply (piece of infratructure)
   elevation                                                          ;elevation of the city
-  ;need
+
   network_cutzamala                                                  ;large-scale supply network
   network_lerma                                                      ;large-scale supply network
   Water_contamination
   Urban_growth                                                       ;change in population, urban coverage, or other perception of more pressure to the service of water
   failure_of_dranage                                                 ;(translated from residents mental model concept "obstruccion de alcantarillado")
-  presion_hidraulica_map                                                 ;water in the pipes. related to tandeo and fugas. places with more fugas may have less pressure. places with less pressure would have more tandeo.
+  presion_hidraulica_map                                             ;water in the pipes. related to tandeo and fugas. places with more fugas may have less pressure. places with less pressure would have more tandeo.
 
 ]
 ;#############################################################################################################################################
@@ -205,9 +206,9 @@ Pozos-own[
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 ;define alternatives for residents using MC Iz Xo
-Alternatives_IZ-own[name_action C1  C2 C3 C4 C1_MAX C2_MAX C3_MAX C4_MAX w_C1 w_C2 w_C3 w_C4 V1 V2 V3 V4]
-Alternatives_Xo-own[name_action C1  C2 C3 C4 C1_MAX C2_MAX C3_MAX C4_MAX w_C1 w_C2 w_C3 w_C4 V1 V2 V3 V4]
-Alternatives_MC-own[name_action C1  C2 C3 C4 C1_MAX C2_MAX C3_MAX C4_MAX w_C1 w_C2 w_C3 w_C4 V1 V2 V3 V4]
+Alternatives_IZ-own[ID name_action C1_name C2_name C3_name C4_name C5_name C6_name C7_name C8_name C1 C2 C3 C4 C5 C6 C7 C8 C1_MAX C2_MAX C3_MAX C4_MAX C5_MAX C6_MAX C7_MAX C8_MAX w_C1 w_C2 w_C3 w_C4 w_C5 w_C6 w_C7 w_C8 V1 V2 V3 V4  V5 V6 V7 V8]
+Alternatives_Xo-own[ID name_action C1_name C2_name C3_name C4_name C5_name C6_name C7_name C8_name C1 C2 C3 C4 C5 C6 C7 C8 C1_MAX C2_MAX C3_MAX C4_MAX C5_MAX C6_MAX C7_MAX C8_MAX w_C1 w_C2 w_C3 w_C4 w_C5 w_C6 w_C7 w_C8 V1 V2 V3 V4 V5 V6 V7 V8]
+Alternatives_MC-own[ID name_action C1_name C2_name C3_name C4_name C5_name C6_name C7_name C8_name C1 C2 C3 C4 C5 C6 C7 C8 C1_MAX C2_MAX C3_MAX C4_MAX C5_MAX C6_MAX C7_MAX C8_MAX w_C1 w_C2 w_C3 w_C4 w_C5 w_C6 w_C7 w_C8 V1 V2 V3 V4 V5 V6 V7 V8]
 Alternatives_SACMEX-own[
   name_action
   C1
@@ -309,9 +310,7 @@ to GO
   ask agebs [
     residents_satisfaction
     residents_define_distance_metric
-    residents_actions                ;;action from residents
     Landscape_visualization          ;;visualization of social and physical processes
-   ; print hundimientos
   ]
   ask pozos [
     cal-exposure
@@ -392,7 +391,10 @@ to residents_satisfaction    ;;define based on value fucntiona nd compromize pro
 end
 
 to residents_define_distance_metric
+
+;We call the actions
 ;###############################################################################################################################
+
 if group_kmean = 1 or group_kmean = 3[ ;#residents Xochimilco
 
  ask Alternatives_Xo with [name_action = "Movilizaciones"][
@@ -614,30 +616,8 @@ if group_kmean = 4 [ ;#Residents Magdalena Contreras
 ]
 
 end
-;#############################################################################################################################################
-;#############################################################################################################################################
-
-to residents_actions
-  if poblacion  > 1[
-    if d_Compra_agua > random-float 1 and (water_needed - water_in) > 0 [   ;buy water
-      set damage (water_needed - water_in) * price_garrafon
-    ]
 
 
-    if d_Captacion_agua > random-float 1[ ; buy tinaco (adaptation)
-      set alpha alpha + 0.01
-      if alpha > 1 [set alpha 1]
-      set damage price_tinaco
-    ]
-
-    ifelse d_Movilizaciones > random-float 1 and poblacion > 0[   ;;protest
-      set protest_magnitude protest_magnitude + 1
-    ]
-    [
-      set protest_magnitude 0
-    ]
-  ]
-end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 to consume_water                          ;population consume water
@@ -654,8 +634,7 @@ to consume_water                          ;population consume water
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
-to update_globals
-      set max_damage max [damage] of agebs            ;;Calculate mean damage of city in a time-step
+to update_globals  ;; update the maximum or minimum of values use by the model to calculate the value function of different actors
       set Antiguedad-infra_max max [Antiguedad-infra] of agebs
       set desperdicio_agua_max max [desperdicio_agua] of agebs;;max level of perception of deviation
       set desviacion_agua_max max [desviacion_agua] of agebs
@@ -665,9 +644,6 @@ to update_globals
       set infra_dranage_max max [houses_with_dranage] of agebs
       set flooding_max max [flooding] of agebs ;;max level of flooding (encharcamientos) recored over the last 10 years
       set Num_fallas_max max [Num_fallas] of agebs
-
-
-
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -722,7 +698,7 @@ to define_agebs
       if not empty? centroid
       [
         create-agebs 1
-        [ set xcor item 0 centroid
+        [ set xcor item 0 centroid              ;define coodeantes of ageb at the center of the polygone
           set ycor item 1 centroid
           set name_delegation gis:property-value ?1 "NOM_MUN"                                                      ;;name of delegations
           set poblacion ifelse-value (gis:property-value ?1 "POBTOT" > 0)[gis:property-value ?1 "POBTOT"][1]        ;;population size per ageb
@@ -734,13 +710,13 @@ to define_agebs
           set av_inc ifelse-value ((gis:property-value ?1 "I05_INGRES") = nobody )[0][(gis:property-value ?1 "I05_INGRES")]
           set Income-index  ifelse-value (av_inc > 0) [av_inc][1] ;;average income from normal distribution with mean proportional to altitute
           set flooding ifelse-value ((gis:property-value ?2 "Mean_encha") = nobody )[0][(gis:property-value ?2 "Mean_encha")]
-          set protest_magnitude 1
           set desviacion_agua 1
           set eficacia_servicio 1            ;; Gestión del servicio de Drenaje y agua potable (ej. interferencia política, no llega la pipa, horario del tandeo, etc)
           set desperdicio_agua 1            ;;Por fugas, falta de conciencia del uso del agua
           set presion_hidraulica 1
           set garbage 1
           set pop_growth 1
+
           set color grey
           set shape "house"
           set size 0.5
@@ -752,7 +728,9 @@ to define_agebs
   ask agebs [set paches_set_agebs patch-set patches with [ageb_ID = round ([ID] of myself)]]   ;define the patches that belon to each ageb
 
 
-                                                                                               ;define wells as agents
+;#############################################################################################################################################
+;#############################################################################################################################################
+;define infrastructure as agents
   foreach gis:feature-list-of pozos_sacmex
     [ let centroid gis:location-of gis:centroid-of ?
       if not empty? centroid
@@ -796,6 +774,7 @@ end
 to SACMEX_decisions
  ;;; Define value functions
  ;;here goberment clasifies each ageb based on distan from ideal point to rank them and thus priotirized interventions
+;we call each action in the context of a particular ageb nad we modify the value of the criteria acording to the state of the ageb we set the value functions and define the distant metric based on compromisez programing function with exponent =2
   ask  agebs [
     ;;Tranform from natural scale to standarized scale given action 1 (Reparation of pozos)
     ;#################################################################################################################################################
@@ -813,6 +792,7 @@ to SACMEX_decisions
       ask myself[set dist_reparation ddd]
     ]
 
+    ;#################################################################################################################################################
 
 ;#Alternative: New Infrastructure
     ask Alternatives_SACMEX with [name_action = "Nueva_infraestructura"][
@@ -823,6 +803,7 @@ to SACMEX_decisions
       ask myself[set dist_new ddd]
 
     ]
+    ;#################################################################################################################################################
 ;#Alternativa 3 Distribution of water
     ask Alternatives_SACMEX with [name_action = "Distribucion_Agua"][
       set C1 [presion_hidraulica] of myself
@@ -832,6 +813,7 @@ to SACMEX_decisions
       ask myself[set dist_waterdistribution ddd]
     ]
 
+    ;#################################################################################################################################################
 ;#Alternativa 4 Importacion agua
     ask Alternatives_SACMEX with [name_action = "Importacion_Agua"][
       set C1 [presion_hidraulica] of myself
@@ -841,6 +823,7 @@ to SACMEX_decisions
       ask myself [set dist_waterdistribution ddd]
     ]
 
+    ;#################################################################################################################################################
 ;#Alternativa 5 Extraccion agua
     ask Alternatives_SACMEX with [name_action = "Extraccion_Agua"][
       set C1 [flooding] of myself
@@ -945,40 +928,90 @@ end
 
 ;#############################################################################################################################################
 ;#############################################################################################################################################
-
+;This procedure define each alternative as a object define by the:
+;ID: identification of the mental model network where weights are elicit
+;name_action: the name of the alternative
+;w a set of weight that connect each criteria
 to resident_alternativesCriteria
+let MMIz csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/I080316_OTR.weighted.csv"
+
+print (list (item 6 item 7 MMIz)
+(item 2 item 9 MMIz )
+(item 2 item 10 MMIz )
+(item 2 item 11 MMIz )
+(item 2 item 12 MMIz )
+(item 2 item 13 MMIz )
+(item 2 item 14 MMIz)
+(item 2 item 15 MMIz))
 
   create-Alternatives_IZ 1[
+    set ID "IO80316"
     set name_action "Movilizaciones"
     set label name_action
-    set w_C1 0.11
-    set w_C2 0.89
+    set w_C1 item 6 item 7 MMIz
+    set w_C2 item 6 item 8 MMIz
+    set w_C3 item 6 item 9 MMIz
+    set w_C4 item 6 item 10 MMIz
+    set w_C5 item 6 item 11 MMIz
+    set w_C6 item 6 item 12 MMIz
+
   ]
   create-Alternatives_IZ 1[
+    set ID "IO80316"
     set name_action "Accion_colectiva"
     set label name_action
-    set w_C1 1
+    set w_C1 item 2 item 7 MMIz
+    set w_C2 item 2 item 8 MMIz
+    set w_C3 item 2 item 9 MMIz
+    set w_C4 item 2 item 10 MMIz
+    set w_C5 item 2 item 11 MMIz
+    set w_C6 item 2 item 12 MMIz
   ]
   create-Alternatives_IZ 1[
+    set ID "IO80316"
     set name_action "Captacion_agua"
     set label name_action
-    set w_C1 1
+    set w_C1 item 3 item 7 MMIz
+    set w_C2 item 3 item 8 MMIz
+    set w_C3 item 3 item 9 MMIz
+    set w_C4 item 3 item 10 MMIz
+    set w_C5 item 3 item 11 MMIz
+    set w_C6 item 3 item 12 MMIz
   ]
   create-Alternatives_IZ 1[
+    set ID "IO80316"
     set name_action "Modificacion_vivienda"
     set label name_action
-    set w_C1 0.07
-    set w_C2 0.58
-    set w_C3 0.34
+    set w_C1 item 5 item 7 MMIz
+    set w_C2 item 5 item 8 MMIz
+    set w_C3 item 5 item 9 MMIz
+    set w_C4 item 5 item 10 MMIz
+    set w_C5 item 5 item 11 MMIz
+    set w_C6 item 5 item 12 MMIz
+
   ]
   create-Alternatives_IZ 1[
+    set ID "IO80316"
     set name_action "Compra_agua"
     set label name_action
-    set w_C1 0.25
-    set w_C2 0.75
+    set w_C1 item 4 item 7 MMIz
+    set w_C2 item 4 item 8 MMIz
+    set w_C3 item 4 item 9 MMIz
+    set w_C4 item 4 item 10 MMIz
+    set w_C5 item 4 item 11 MMIz
+    set w_C6 item 4 item 12 MMIz
   ]
-
-create-Alternatives_Xo 1[
+  ask Alternatives_IZ [
+    set C1_name item 1 item 7 MMIz
+    set C2_name item 1 item 8 MMIz
+    set C3_name item 1 item 9 MMIz
+    set C4_name item 1 item 10 MMIz
+    set C5_name item 1 item 11 MMIz
+    set C6_name item 1 item 12 MMIz
+  ]
+  inspect one-of Alternatives_IZ with [name_action ="Movilizaciones"]
+  create-Alternatives_Xo 1[
+    set ID "XO62916"
     set name_action "Movilizaciones"
     set label name_action
     set w_C1 0.04
@@ -987,35 +1020,53 @@ create-Alternatives_Xo 1[
     set W_C4 0.15
   ]
   create-Alternatives_Xo 1[
+    set ID "XO62916"
     set name_action "Accion_colectiva"
     set label name_action
-    set w_C2 0.75
-    set w_C1 0.25
+    set w_C1 0.11
+    set w_C2 0.89
+    set w_C3 0.89
+    set w_C4 0.89
+    set w_C5 0.89
+    set w_C6 0.89
   ]
   create-Alternatives_Xo 1[
+    set ID "XO62916"
     set name_action "Captacion_agua"
     set label name_action
-    set w_C1 0.25
-    set w_C2 0.75
+    set w_C1 0.11
+    set w_C2 0.89
+    set w_C3 0.89
+    set w_C4 0.89
+    set w_C5 0.89
+    set w_C6 0.89
   ]
   create-Alternatives_Xo 1[
+    set ID "XO62916"
     set name_action "Modificacion_vivienda"
     set label name_action
-    set w_C1 0.05
-    set w_C2 0.18
-    set w_C3 0.33
-    set w_C4 0.44
+    set w_C1 0.11
+    set w_C2 0.89
+    set w_C3 0.89
+    set w_C4 0.89
+    set w_C5 0.89
+    set w_C6 0.89
   ]
   create-Alternatives_Xo 1[
+    set ID "XO62916"
     set name_action "Compra_agua"
     set label name_action
-    set w_C1 0.27
-    set w_C2 0.63
-    set w_C3 0.1
+    set w_C1 0.11
+    set w_C2 0.89
+    set w_C3 0.89
+    set w_C4 0.89
+    set w_C5 0.89
+    set w_C6 0.89
 
   ]
   ;#################################################
     create-Alternatives_MC 1[
+    set ID "MC080416"
     set name_action "Movilizaciones"
     set label name_action
     set w_C1 0.04
@@ -1024,18 +1075,21 @@ create-Alternatives_Xo 1[
     set W_C4 0.15
   ]
   create-Alternatives_MC 1[
+    set ID "MC080416"
     set name_action "Accion_colectiva"
     set label name_action
     set w_C2 0.75
     set w_C1 0.25
   ]
   create-Alternatives_MC 1[
+    set ID "MC080416"
     set name_action "Captacion_agua"
     set label name_action
     set w_C1 0.25
     set w_C2 0.75
   ]
   create-Alternatives_MC 1[
+    set ID "MC080416"
     set name_action "Modificacion_vivienda"
     set label name_action
 
@@ -1045,6 +1099,7 @@ create-Alternatives_Xo 1[
     set w_C4 0.44
   ]
   create-Alternatives_MC 1[
+    set ID "MC080416"
     set name_action "Compra_agua"
     set label name_action
     set w_C1 0.27
@@ -1191,7 +1246,7 @@ CHOOSER
 Visualization
 Visualization
 "Accion_Colectiva" "Movilizaciones" "Compra_Agua" "Modificacion_vivienda" "Extraction Priorities" "GoogleEarth" "K_groups"
-0
+4
 
 BUTTON
 278
