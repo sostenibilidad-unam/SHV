@@ -206,11 +206,34 @@ Pozos-own[
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 ;define alternatives for residents using MC Iz Xo
+;each alternative is consider an object with properties
+;ID of the mental model
+;name of the action
+;varibles that influence the alternative
+;maximal level of the variable to define
+;value function
+
 Alternatives_IZ-own[ID name_action C1_name C2_name C3_name C4_name C5_name C6_name C7_name C8_name C1 C2 C3 C4 C5 C6 C7 C8 C1_MAX C2_MAX C3_MAX C4_MAX C5_MAX C6_MAX C7_MAX C8_MAX w_C1 w_C2 w_C3 w_C4 w_C5 w_C6 w_C7 w_C8 V1 V2 V3 V4  V5 V6 V7 V8]
 Alternatives_Xo-own[ID name_action C1_name C2_name C3_name C4_name C5_name C6_name C7_name C8_name C1 C2 C3 C4 C5 C6 C7 C8 C1_MAX C2_MAX C3_MAX C4_MAX C5_MAX C6_MAX C7_MAX C8_MAX w_C1 w_C2 w_C3 w_C4 w_C5 w_C6 w_C7 w_C8 V1 V2 V3 V4 V5 V6 V7 V8]
 Alternatives_MC-own[ID name_action C1_name C2_name C3_name C4_name C5_name C6_name C7_name C8_name C1 C2 C3 C4 C5 C6 C7 C8 C1_MAX C2_MAX C3_MAX C4_MAX C5_MAX C6_MAX C7_MAX C8_MAX w_C1 w_C2 w_C3 w_C4 w_C5 w_C6 w_C7 w_C8 V1 V2 V3 V4 V5 V6 V7 V8]
 Alternatives_SACMEX-own[
   name_action
+  C1_name
+  C2_name
+  C3_name
+  C4_name
+  C5_name
+  C6_name
+  C7_name
+  C8_name
+  C9_name
+  C10_name
+  C11_name
+  C12_name
+  C13_name
+  C14_name
+
+
   C1
   C2
   C3
@@ -219,6 +242,12 @@ Alternatives_SACMEX-own[
   C6
   C7
   C8
+  C9
+  C10
+  C11
+  C12
+  C13
+  C14
 
   C1_MAX
   C2_MAX
@@ -228,6 +257,12 @@ Alternatives_SACMEX-own[
   C6_MAX
   C7_MAX
   C8_MAX
+  C9_MAX
+  C10_MAX
+  C11_MAX
+  C12_MAX
+  C13_MAX
+  C14_MAX
 
   w_C1
   w_C2
@@ -237,6 +272,13 @@ Alternatives_SACMEX-own[
   w_C6
   w_C7
   w_C8
+  w_C9
+  w_C10
+  w_C11
+  w_C12
+  w_C13
+  w_C14
+
 
   V1
   V2
@@ -246,6 +288,13 @@ Alternatives_SACMEX-own[
   V6
   V7
   V8
+  V9
+  V10
+  V11
+  V12
+  V13
+  V14
+
 
   w_limit   ;value obtained for the action when calcualting the limiting matrix in super decition
 ]
@@ -935,14 +984,6 @@ end
 to resident_alternativesCriteria
 let MMIz csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/I080316_OTR.weighted.csv"
 
-print (list (item 6 item 7 MMIz)
-(item 2 item 9 MMIz )
-(item 2 item 10 MMIz )
-(item 2 item 11 MMIz )
-(item 2 item 12 MMIz )
-(item 2 item 13 MMIz )
-(item 2 item 14 MMIz)
-(item 2 item 15 MMIz))
 
   create-Alternatives_IZ 1[
     set ID "IO80316"
@@ -955,6 +996,13 @@ print (list (item 6 item 7 MMIz)
     set w_C5 item 6 item 11 MMIz
     set w_C6 item 6 item 12 MMIz
 
+    set C1_name item 1 item 7 MMIz
+    set C2_name item 1 item 8 MMIz
+    set C3_name item 1 item 9 MMIz
+    set C4_name item 1 item 10 MMIz
+    set C5_name item 1 item 11 MMIz
+    set C6_name item 1 item 12 MMIz
+
   ]
   create-Alternatives_IZ 1[
     set ID "IO80316"
@@ -966,6 +1014,14 @@ print (list (item 6 item 7 MMIz)
     set w_C4 item 2 item 10 MMIz
     set w_C5 item 2 item 11 MMIz
     set w_C6 item 2 item 12 MMIz
+
+       set C1_name item 1 item 7 MMIz
+    set C2_name item 1 item 8 MMIz
+    set C3_name item 1 item 9 MMIz
+    set C4_name item 1 item 10 MMIz
+    set C5_name item 1 item 11 MMIz
+    set C6_name item 1 item 12 MMIz
+
   ]
   create-Alternatives_IZ 1[
     set ID "IO80316"
@@ -977,6 +1033,14 @@ print (list (item 6 item 7 MMIz)
     set w_C4 item 3 item 10 MMIz
     set w_C5 item 3 item 11 MMIz
     set w_C6 item 3 item 12 MMIz
+
+    set C1_name item 1 item 7 MMIz
+    set C2_name item 1 item 8 MMIz
+    set C3_name item 1 item 9 MMIz
+    set C4_name item 1 item 10 MMIz
+    set C5_name item 1 item 11 MMIz
+    set C6_name item 1 item 12 MMIz
+
   ]
   create-Alternatives_IZ 1[
     set ID "IO80316"
@@ -989,6 +1053,13 @@ print (list (item 6 item 7 MMIz)
     set w_C5 item 5 item 11 MMIz
     set w_C6 item 5 item 12 MMIz
 
+    set C1_name item 1 item 7 MMIz
+    set C2_name item 1 item 8 MMIz
+    set C3_name item 1 item 9 MMIz
+    set C4_name item 1 item 10 MMIz
+    set C5_name item 1 item 11 MMIz
+    set C6_name item 1 item 12 MMIz
+
   ]
   create-Alternatives_IZ 1[
     set ID "IO80316"
@@ -1000,119 +1071,333 @@ print (list (item 6 item 7 MMIz)
     set w_C4 item 4 item 10 MMIz
     set w_C5 item 4 item 11 MMIz
     set w_C6 item 4 item 12 MMIz
-  ]
-  ask Alternatives_IZ [
+
     set C1_name item 1 item 7 MMIz
     set C2_name item 1 item 8 MMIz
     set C3_name item 1 item 9 MMIz
     set C4_name item 1 item 10 MMIz
     set C5_name item 1 item 11 MMIz
     set C6_name item 1 item 12 MMIz
+
   ]
+
   inspect one-of Alternatives_IZ with [name_action ="Movilizaciones"]
+  let MMXo csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/X062916_OTR_a.weighted.csv"
   create-Alternatives_Xo 1[
     set ID "XO62916"
     set name_action "Movilizaciones"
     set label name_action
-    set w_C1 0.04
-    set w_C2 0.3
-    set W_C3 0.51
-    set W_C4 0.15
+      set w_C1 item 6 item 7 MMXo
+    set w_C2 item 6 item 8 MMXo
+    set w_C3 item 6 item 9 MMXo
+    set w_C4 item 6 item 10 MMXo
+    set w_C5 item 6 item 11 MMXo
+    set w_C6 item 6 item 12 MMXo
+
+    set C1_name item 1 item 7 MMXo
+    set C2_name item 1 item 8 MMXo
+    set C3_name item 1 item 9 MMXo
+    set C4_name item 1 item 10 MMXo
+    set C5_name item 1 item 11 MMXo
+    set C6_name item 1 item 12 MMXo
+
   ]
   create-Alternatives_Xo 1[
     set ID "XO62916"
     set name_action "Accion_colectiva"
     set label name_action
-    set w_C1 0.11
-    set w_C2 0.89
-    set w_C3 0.89
-    set w_C4 0.89
-    set w_C5 0.89
-    set w_C6 0.89
+      set w_C1 item 2 item 7 MMXo
+    set w_C2 item 2 item 8 MMXo
+    set w_C3 item 2 item 9 MMXo
+    set w_C4 item 2 item 10 MMXo
+    set w_C5 item 2 item 11 MMXo
+    set w_C6 item 2 item 12 MMXo
+
+    set C1_name item 1 item 7 MMXo
+    set C2_name item 1 item 8 MMXo
+    set C3_name item 1 item 9 MMXo
+    set C4_name item 1 item 10 MMXo
+    set C5_name item 1 item 11 MMXo
+    set C6_name item 1 item 12 MMXo
+
   ]
   create-Alternatives_Xo 1[
     set ID "XO62916"
     set name_action "Captacion_agua"
     set label name_action
-    set w_C1 0.11
-    set w_C2 0.89
-    set w_C3 0.89
-    set w_C4 0.89
-    set w_C5 0.89
-    set w_C6 0.89
+     set w_C1 item 3 item 7 MMXo
+    set w_C2 item 3 item 8 MMXo
+    set w_C3 item 3 item 9 MMXo
+    set w_C4 item 3 item 10 MMXo
+    set w_C5 item 3 item 11 MMXo
+    set w_C6 item 3 item 12 MMXo
+
+    set C1_name item 1 item 7 MMXo
+    set C2_name item 1 item 8 MMXo
+    set C3_name item 1 item 9 MMXo
+    set C4_name item 1 item 10 MMXo
+    set C5_name item 1 item 11 MMXo
+    set C6_name item 1 item 12 MMXo
+
   ]
   create-Alternatives_Xo 1[
     set ID "XO62916"
     set name_action "Modificacion_vivienda"
     set label name_action
-    set w_C1 0.11
-    set w_C2 0.89
-    set w_C3 0.89
-    set w_C4 0.89
-    set w_C5 0.89
-    set w_C6 0.89
+         set w_C1 item 3 item 7 MMXo
+    set w_C2 item 3 item 8 MMXo
+    set w_C3 item 3 item 9 MMXo
+    set w_C4 item 3 item 10 MMXo
+    set w_C5 item 3 item 11 MMXo
+    set w_C6 item 3 item 12 MMXo
+
+    set C1_name item 1 item 7 MMXo
+    set C2_name item 1 item 8 MMXo
+    set C3_name item 1 item 9 MMXo
+    set C4_name item 1 item 10 MMXo
+    set C5_name item 1 item 11 MMXo
+    set C6_name item 1 item 12 MMXo
+
   ]
   create-Alternatives_Xo 1[
     set ID "XO62916"
     set name_action "Compra_agua"
     set label name_action
-    set w_C1 0.11
-    set w_C2 0.89
-    set w_C3 0.89
-    set w_C4 0.89
-    set w_C5 0.89
-    set w_C6 0.89
+        set w_C1 item 3 item 7 MMXo
+    set w_C2 item 3 item 8 MMXo
+    set w_C3 item 3 item 9 MMXo
+    set w_C4 item 3 item 10 MMXo
+    set w_C5 item 3 item 11 MMXo
+    set w_C6 item 3 item 12 MMXo
+
+    set C1_name item 1 item 7 MMXo
+    set C2_name item 1 item 8 MMXo
+    set C3_name item 1 item 9 MMXo
+    set C4_name item 1 item 10 MMXo
+    set C5_name item 1 item 11 MMXo
+    set C6_name item 1 item 12 MMXo
 
   ]
   ;#################################################
-    create-Alternatives_MC 1[
-    set ID "MC080416"
+  let MMMC csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/MC080416_OTR_a.weighted.csv"
+  let MMMCb csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/MC080416_OTR_b.weighted.csv"
+
+
+  create-Alternatives_MC 1 [
+    set ID "MC080416b"
     set name_action "Movilizaciones"
     set label name_action
-    set w_C1 0.04
-    set w_C2 0.3
-    set W_C3 0.51
-    set W_C4 0.15
+    set w_C1 item 6 item 7 MMMCb
+    set w_C2 item 6 item 8 MMMCb
+    set w_C3 item 6 item 9 MMMCb
+    set w_C4 item 6 item 10 MMMCb
+    set w_C5 item 6 item 11 MMMCb
+    set w_C6 item 6 item 12 MMMCb
+    set w_C6 item 6 item 12 MMMCb
+    set w_C7 item 6 item 13 MMMCb
+
+    set C1_name item 1 item 7 MMMCb
+    set C2_name item 1 item 8 MMMCb
+    set C3_name item 1 item 9 MMMCb
+    set C4_name item 1 item 10 MMMCb
+    set C5_name item 1 item 11 MMMCb
+    set C6_name item 1 item 12 MMMCb
+    set C7_name item 1 item 12 MMMCb
   ]
+
   create-Alternatives_MC 1[
     set ID "MC080416"
     set name_action "Accion_colectiva"
     set label name_action
-    set w_C2 0.75
-    set w_C1 0.25
+    set w_C1 item 2 item 7 MMMC
+    set w_C2 item 2 item 8 MMMC
+    set w_C3 item 2 item 9 MMMC
+    set w_C4 item 2 item 10 MMMC
+    set w_C5 item 2 item 11 MMMC
+    set w_C6 item 2 item 12 MMMC
+
+    set C1_name item 1 item 7 MMMC
+    set C2_name item 1 item 8 MMMC
+    set C3_name item 1 item 9 MMMC
+    set C4_name item 1 item 10 MMMC
+    set C5_name item 1 item 11 MMMC
+    set C6_name item 1 item 12 MMMC
+
+  ]
+
+  create-Alternatives_MC 1[
+    set ID "MC080416b"
+    set name_action "Accion_colectiva"
+    set label name_action
+    set w_C1 item 2 item 7 MMMCb
+    set w_C2 item 2 item 8 MMMCb
+    set w_C3 item 2 item 9 MMMCb
+    set w_C4 item 2 item 10 MMMCb
+    set w_C5 item 2 item 11 MMMCb
+    set w_C6 item 2 item 12 MMMCb
+    set w_C7 item 2 item 13 MMMCb
+
+    set C1_name item 1 item 7 MMMCb
+    set C2_name item 1 item 8 MMMCb
+    set C3_name item 1 item 9 MMMCb
+    set C4_name item 1 item 10 MMMCb
+    set C5_name item 1 item 11 MMMCb
+    set C6_name item 1 item 12 MMMCb
+    set C7_name item 1 item 13 MMMCb
+  ]
+
+
+    create-Alternatives_MC 1[
+    set ID "MC080416"
+    set name_action "Compra de infrestractura de agua"
+    set label name_action
+    set w_C1 item 5 item 7 MMMC
+    set w_C2 item 5 item 8 MMMC
+    set w_C3 item 5 item 9 MMMC
+    set w_C4 item 5 item 10 MMMC
+    set w_C5 item 5 item 11 MMMC
+    set w_C6 item 5 item 12 MMMC
+    set C1_name item 1 item 7 MMMC
+    set C2_name item 1 item 8 MMMC
+    set C3_name item 1 item 9 MMMC
+    set C4_name item 1 item 10 MMMC
+    set C5_name item 1 item 11 MMMC
+    set C6_name item 1 item 12 MMMC
+
   ]
   create-Alternatives_MC 1[
     set ID "MC080416"
     set name_action "Captacion_agua"
     set label name_action
-    set w_C1 0.25
-    set w_C2 0.75
+    set w_C1 item 3 item 7 MMMC
+    set w_C2 item 3 item 8 MMMC
+    set w_C3 item 3 item 9 MMMC
+    set w_C4 item 3 item 10 MMMC
+    set w_C5 item 3 item 11 MMMC
+    set w_C6 item 3 item 12 MMMC
+
+    set C1_name item 6 item 7 MMMC
+    set C2_name item 6 item 8 MMMC
+    set C3_name item 6 item 9 MMMC
+    set C4_name item 6 item 10 MMMC
+    set C5_name item 6 item 11 MMMC
+    set C6_name item 6 item 12 MMMC
+
   ]
+
+   create-Alternatives_MC 1[
+    set ID "MC080416b"
+    set name_action "Captacion_agua"
+    set label name_action
+    set w_C1 item 3 item 7 MMMCb
+    set w_C2 item 3 item 8 MMMCb
+    set w_C3 item 3 item 9 MMMCb
+    set w_C4 item 3 item 10 MMMCb
+    set w_C5 item 3 item 11 MMMCb
+    set w_C6 item 3 item 12 MMMCb
+    set w_C7 item 3 item 13 MMMCb
+
+    set C1_name item 6 item 7 MMMCb
+    set C2_name item 6 item 8 MMMCb
+    set C3_name item 6 item 9 MMMCb
+    set C4_name item 6 item 10 MMMCb
+    set C5_name item 6 item 11 MMMCb
+    set C6_name item 6 item 12 MMMCb
+    set C6_name item 6 item 13 MMMCb
+
+  ]
+
   create-Alternatives_MC 1[
     set ID "MC080416"
-    set name_action "Modificacion_vivienda"
+    set name_action "ReUso de Agua"
     set label name_action
+    set w_C1 item 6 item 7 MMMC
+    set w_C2 item 6 item 8 MMMC
+    set w_C3 item 6 item 9 MMMC
+    set w_C4 item 6 item 10 MMMC
+    set w_C5 item 6 item 11 MMMC
+    set w_C6 item 6 item 12 MMMC
 
-    set w_C1 0.05
-    set w_C2 0.18
-    set w_C3 0.33
-    set w_C4 0.44
+    set C1_name item 1 item 7 MMMC
+    set C2_name item 1 item 8 MMMC
+    set C3_name item 1 item 9 MMMC
+    set C4_name item 1 item 10 MMMC
+    set C5_name item 1 item 11 MMMC
+    set C6_name item 1 item 12 MMMC
+    set C6_name item 6 item 12 MMMC
   ]
   create-Alternatives_MC 1[
     set ID "MC080416"
     set name_action "Compra_agua"
     set label name_action
-    set w_C1 0.27
-    set w_C2 0.63
-    set w_C3 0.1
+    set w_C1 item 4 item 7 MMMC
+    set w_C2 item 4 item 8 MMMC
+    set w_C3 item 4 item 9 MMMC
+    set w_C4 item 4 item 10 MMMC
+    set w_C5 item 4 item 11 MMMC
+    set w_C6 item 4 item 12 MMMC
+
+    set C1_name item 1 item 7 MMMC
+    set C2_name item 1 item 8 MMMC
+    set C3_name item 1 item 9 MMMC
+    set C4_name item 1 item 10 MMMC
+    set C5_name item 1 item 11 MMMC
+    set C6_name item 1 item 12 MMMC
   ]
+
+    create-Alternatives_MC 1[
+    set ID "MC080416b"
+    set name_action "Compra_agua"
+    set label name_action
+    set w_C1 item 4 item 7 MMMCb
+    set w_C2 item 4 item 8 MMMCb
+    set w_C3 item 4 item 9 MMMCb
+    set w_C4 item 4 item 10 MMMCb
+    set w_C5 item 4 item 11 MMMCb
+    set w_C6 item 4 item 12 MMMCb
+    set w_C7 item 4 item 13 MMMCb
+
+    set C1_name item 1 item 7 MMMCb
+    set C2_name item 1 item 8 MMMCb
+    set C3_name item 1 item 9 MMMCb
+    set C4_name item 1 item 10 MMMCb
+    set C5_name item 1 item 11 MMMCb
+    set C6_name item 1 item 12 MMMCb
+    set C7_name item 1 item 13 MMMCb
+  ]
+
 
 ;#########################################
 ;#SACMEX NETWORK
+let MMSACMEX csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/DF101215_GOV_AP modificado PNAS.weighted.csv"
   create-Alternatives_SACMEX 1[
     set name_action "Distribucion_Agua"
     set label name_action
-    set w_C1 1
+    set w_C1 item 2 item 7 MMSACMEX
+    set w_C2 item 2 item 8 MMSACMEX
+    set w_C3 item 2 item 9 MMSACMEX
+    set w_C4 item 2 item 10 MMSACMEX
+    set w_C5 item 2 item 11 MMSACMEX
+    set w_C6 item 2 item 12 MMSACMEX
+    set w_C7 item 2 item 13 MMSACMEX
+    set w_C8 item 2 item 14 MMSACMEX
+    set w_C9 item 2 item 15 MMSACMEX
+    set w_C10 item 2 item 16 MMSACMEX
+    set w_C11 item 2 item 17 MMSACMEX
+
+
+    set C1_name item 1 item 7 MMSACMEX
+    set C2_name item 1 item 8 MMSACMEX
+    set C3_name item 1 item 9 MMSACMEX
+    set C4_name item 1 item 10 MMSACMEX
+    set C5_name item 1 item 11 MMSACMEX
+    set C6_name item 1 item 12 MMSACMEX
+    set C7_name item 1 item 13 MMSACMEX
+    set C8_name item 1 item 14 MMSACMEX
+    set C9_name item 1 item 15 MMSACMEX
+    set C10_name item 1 item 16 MMSACMEX
+    set C11_name item 1 item 17 MMSACMEX
+
     set w_limit 0.05471 /(0.05471 + 0.05212 + 0.01843 + 0.05545 + 0.02017)
   ]
   create-Alternatives_SACMEX 1[
