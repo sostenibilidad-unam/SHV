@@ -111,7 +111,7 @@ breed [Alternatives_IZ action_IZ]
 breed [Alternatives_Xo action_Xo]
 breed [Alternatives_MC action_MC]
 breed [Alternatives_SACMEX action_SACMEX]
-
+breed [Alternatives_OCVAM action_OCVAM]
 directed-link-breed [active-links active-link]
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -217,7 +217,94 @@ Alternatives_IZ-own[ID name_action C1_name C2_name C3_name C4_name C5_name C6_na
 Alternatives_Xo-own[ID name_action C1_name C2_name C3_name C4_name C5_name C6_name C7_name C8_name C1 C2 C3 C4 C5 C6 C7 C8 C1_MAX C2_MAX C3_MAX C4_MAX C5_MAX C6_MAX C7_MAX C8_MAX w_C1 w_C2 w_C3 w_C4 w_C5 w_C6 w_C7 w_C8 V1 V2 V3 V4 V5 V6 V7 V8]
 Alternatives_MC-own[ID name_action C1_name C2_name C3_name C4_name C5_name C6_name C7_name C8_name C1 C2 C3 C4 C5 C6 C7 C8 C1_MAX C2_MAX C3_MAX C4_MAX C5_MAX C6_MAX C7_MAX C8_MAX w_C1 w_C2 w_C3 w_C4 w_C5 w_C6 w_C7 w_C8 V1 V2 V3 V4 V5 V6 V7 V8]
 Alternatives_SACMEX-own[
+  ID
   name_action
+
+  C1_name
+  C2_name
+  C3_name
+  C4_name
+  C5_name
+  C6_name
+  C7_name
+  C8_name
+  C9_name
+  C10_name
+  C11_name
+  C12_name
+  C13_name
+  C14_name
+
+
+  C1
+  C2
+  C3
+  C4
+  C5
+  C6
+  C7
+  C8
+  C9
+  C10
+  C11
+  C12
+  C13
+  C14
+
+  C1_MAX
+  C2_MAX
+  C3_MAX
+  C4_MAX
+  C5_MAX
+  C6_MAX
+  C7_MAX
+  C8_MAX
+  C9_MAX
+  C10_MAX
+  C11_MAX
+  C12_MAX
+  C13_MAX
+  C14_MAX
+
+  w_C1
+  w_C2
+  w_C3
+  w_C4
+  w_C5
+  w_C6
+  w_C7
+  w_C8
+  w_C9
+  w_C10
+  w_C11
+  w_C12
+  w_C13
+  w_C14
+
+
+  V1
+  V2
+  V3
+  V4
+  V5
+  V6
+  V7
+  V8
+  V9
+  V10
+  V11
+  V12
+  V13
+  V14
+
+
+  w_limit   ;value obtained for the action when calcualting the limiting matrix in super decition
+]
+
+Alternatives_OCVAM-own[
+  ID
+  name_action
+  cluster     ;ID of the large scale cluster in
   C1_name
   C2_name
   C3_name
@@ -1370,20 +1457,23 @@ let MMIz csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/M
 ;#########################################
 ;#SACMEX NETWORK
 let MMSACMEX csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/DF101215_GOV_AP modificado PNAS.weighted.csv"
+let MMSACMEX_limit csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/DF101215_GOV_AP modificado PNAS.limit.csv"
+
   create-Alternatives_SACMEX 1[
+    set ID "DF101215_GOV"
     set name_action "Distribucion_Agua"
     set label name_action
-    set w_C1 item 2 item 7 MMSACMEX
-    set w_C2 item 2 item 8 MMSACMEX
-    set w_C3 item 2 item 9 MMSACMEX
-    set w_C4 item 2 item 10 MMSACMEX
-    set w_C5 item 2 item 11 MMSACMEX
-    set w_C6 item 2 item 12 MMSACMEX
-    set w_C7 item 2 item 13 MMSACMEX
-    set w_C8 item 2 item 14 MMSACMEX
-    set w_C9 item 2 item 15 MMSACMEX
-    set w_C10 item 2 item 16 MMSACMEX
-    set w_C11 item 2 item 17 MMSACMEX
+    set w_C1 item 2 item 7 MMSACMEX_limit
+    set w_C2 item 2 item 8 MMSACMEX_limit
+    set w_C3 item 2 item 9 MMSACMEX_limit
+    set w_C4 item 2 item 10 MMSACMEX_limit
+    set w_C5 item 2 item 11 MMSACMEX_limit
+    set w_C6 item 2 item 12 MMSACMEX_limit
+    set w_C7 item 2 item 13 MMSACMEX_limit
+    set w_C8 item 2 item 14 MMSACMEX_limit
+    set w_C9 item 2 item 15 MMSACMEX_limit
+    set w_C10 item 2 item 16 MMSACMEX_limit
+    set w_C11 item 2 item 17 MMSACMEX_limit
 
 
     set C1_name item 1 item 7 MMSACMEX
@@ -1401,34 +1491,125 @@ let MMSACMEX csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-
     set w_limit 0.05471 /(0.05471 + 0.05212 + 0.01843 + 0.05545 + 0.02017)
   ]
   create-Alternatives_SACMEX 1[
+    set ID "DF101215_GOV"
     set name_action "Extraccion_Agua"
     set label name_action
-    set w_C1 0.25
-    set w_C2 0.75
+    set w_C1 item 3 item 7 MMSACMEX_limit
+    set w_C2 item 3 item 8 MMSACMEX_limit
+    set w_C3 item 3 item 9 MMSACMEX_limit
+    set w_C4 item 3 item 10 MMSACMEX_limit
+    set w_C5 item 3 item 11 MMSACMEX_limit
+    set w_C6 item 3 item 12 MMSACMEX_limit
+    set w_C7 item 3 item 13 MMSACMEX_limit
+    set w_C8 item 3 item 14 MMSACMEX_limit
+    set w_C9 item 3 item 15 MMSACMEX_limit
+    set w_C10 item 3 item 16 MMSACMEX_limit
+    set w_C11 item 3 item 17 MMSACMEX_limit
+
+    set C1_name item 1 item 7 MMSACMEX
+    set C2_name item 1 item 8 MMSACMEX
+    set C3_name item 1 item 9 MMSACMEX
+    set C4_name item 1 item 10 MMSACMEX
+    set C5_name item 1 item 11 MMSACMEX
+    set C6_name item 1 item 12 MMSACMEX
+    set C7_name item 1 item 13 MMSACMEX
+    set C8_name item 1 item 14 MMSACMEX
+    set C9_name item 1 item 15 MMSACMEX
+    set C10_name item 1 item 16 MMSACMEX
+    set C11_name item 1 item 17 MMSACMEX
+
     set w_limit  0.05212 /(0.05471 + 0.05212 + 0.01843 + 0.05545 + 0.02017)
   ]
   create-Alternatives_SACMEX 1[
     set name_action "Importacion_Agua"
     set label name_action
-    set w_C1 1
+    set w_C1 item 4 item 7 MMSACMEX_limit
+    set w_C2 item 4 item 8 MMSACMEX_limit
+    set w_C3 item 4 item 9 MMSACMEX_limit
+    set w_C4 item 4 item 10 MMSACMEX_limit
+    set w_C5 item 4 item 11 MMSACMEX_limit
+    set w_C6 item 4 item 12 MMSACMEX_limit
+    set w_C7 item 4 item 13 MMSACMEX_limit
+    set w_C8 item 4 item 14 MMSACMEX_limit
+    set w_C9 item 4 item 15 MMSACMEX_limit
+    set w_C10 item 4 item 16 MMSACMEX_limit
+    set w_C11 item 4 item 17 MMSACMEX_limit
+
+    set C1_name item 1 item 7 MMSACMEX
+    set C2_name item 1 item 8 MMSACMEX
+    set C3_name item 1 item 9 MMSACMEX
+    set C4_name item 1 item 10 MMSACMEX
+    set C5_name item 1 item 11 MMSACMEX
+    set C6_name item 1 item 12 MMSACMEX
+    set C7_name item 1 item 13 MMSACMEX
+    set C8_name item 1 item 14 MMSACMEX
+    set C9_name item 1 item 15 MMSACMEX
+    set C10_name item 1 item 16 MMSACMEX
+    set C11_name item 1 item 17 MMSACMEX
     set w_limit  0.01843 /(0.05471 + 0.05212 + 0.01843 + 0.05545 + 0.02017)
   ]
   create-Alternatives_SACMEX 1[
     set name_action "Mantenimiento"
     set label name_action
-    set w_C1 0.75
-    set w_C1 0.25
+    set w_C1 item 5 item 7 MMSACMEX_limit
+    set w_C2 item 5 item 8 MMSACMEX_limit
+    set w_C3 item 5 item 9 MMSACMEX_limit
+    set w_C4 item 5 item 10 MMSACMEX_limit
+    set w_C5 item 5 item 11 MMSACMEX_limit
+    set w_C6 item 5 item 12 MMSACMEX_limit
+    set w_C7 item 5 item 13 MMSACMEX_limit
+    set w_C8 item 5 item 14 MMSACMEX_limit
+    set w_C9 item 5 item 15 MMSACMEX_limit
+    set w_C10 item 5 item 16 MMSACMEX_limit
+    set w_C11 item 5 item 17 MMSACMEX_limit
+
+    set C1_name item 1 item 7 MMSACMEX
+    set C2_name item 1 item 8 MMSACMEX
+    set C3_name item 1 item 9 MMSACMEX
+    set C4_name item 1 item 10 MMSACMEX
+    set C5_name item 1 item 11 MMSACMEX
+    set C6_name item 1 item 12 MMSACMEX
+    set C7_name item 1 item 13 MMSACMEX
+    set C8_name item 1 item 14 MMSACMEX
+    set C9_name item 1 item 15 MMSACMEX
+    set C10_name item 1 item 16 MMSACMEX
+    set C11_name item 1 item 17 MMSACMEX
     set w_limit 0.05545 /(0.05471 + 0.05212 + 0.01843 + 0.05545 + 0.02017)
   ]
   create-Alternatives_SACMEX 1[
     set name_action "Nueva_infraestructura"
     set label name_action
-    set w_C1 1
+    set w_C1 item 6 item 7 MMSACMEX_limit
+    set w_C2 item 6 item 8 MMSACMEX_limit
+    set w_C3 item 6 item 9 MMSACMEX_limit
+    set w_C4 item 6 item 10 MMSACMEX_limit
+    set w_C5 item 6 item 11 MMSACMEX_limit
+    set w_C6 item 6 item 12 MMSACMEX_limit
+    set w_C7 item 6 item 13 MMSACMEX_limit
+    set w_C8 item 6 item 14 MMSACMEX_limit
+    set w_C9 item 6 item 15 MMSACMEX_limit
+    set w_C10 item 6 item 16 MMSACMEX_limit
+    set w_C11 item 6 item 17 MMSACMEX_limit
+
+    set C1_name item 1 item 7 MMSACMEX
+    set C2_name item 1 item 8 MMSACMEX
+    set C3_name item 1 item 9 MMSACMEX
+    set C4_name item 1 item 10 MMSACMEX
+    set C5_name item 1 item 11 MMSACMEX
+    set C6_name item 1 item 12 MMSACMEX
+    set C7_name item 1 item 13 MMSACMEX
+    set C8_name item 1 item 14 MMSACMEX
+    set C9_name item 1 item 15 MMSACMEX
+    set C10_name item 1 item 16 MMSACMEX
+    set C11_name item 1 item 17 MMSACMEX
     set w_limit  0.02017 /(0.05471 + 0.05212 + 0.01843 + 0.05545 + 0.02017)
   ]
 
+let MMOCVAM csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/OCVAM_Version_sin_GEO.limit.csv"
 
 end
+
+
 
 ;#############################################################################################################################################
 ;#############################################################################################################################################
