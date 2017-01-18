@@ -57,12 +57,21 @@ globals [
   desperdicio_agua_max          ;;max perception of water being waste
   eficacia_servicio_max         ;;ideal state of efficancy desired by actors
   garbage_max                   ;;max level of garbage percived as intolerable
-  calidad_agua_max              ;;optimal value of water quality
   infra_abast_max               ;;max % of houses per ageb covered by the water supply network
   infra_dranage_max             ;;max % of houses per ageb covered by the water dranage network
   flooding_max                  ;;max level of flooding (encharcamientos) recored over the last 10 years
-  Num_fallas_max                ;;max number of fugas
+  fallas_max                ;;max number of fugas
   max_water_in                  ;;
+  Abastecimiento_max
+  Capacidad_max
+  houses_with_dranage_max
+  Petición_Delegaciones_max
+  Presion_social_max
+  Presión_de_medios_max
+  water_quality_max
+  disease_burden_max
+  monto_max
+  scarcity_max
 ;#####################################################################################
 ;#####################################################################################
 ;#####################################################################################
@@ -95,7 +104,7 @@ globals [
   Urban_growth                                                       ;change in population, urban coverage, or other perception of more pressure to the service of water
   failure_of_dranage                                                 ;(translated from residents mental model concept "obstruccion de alcantarillado")
   presion_hidraulica_map                                             ;water in the pipes. related to tandeo and fugas. places with more fugas may have less pressure. places with less pressure would have more tandeo.
-
+  Presión_de_medios
 ]
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -125,7 +134,7 @@ patches-own[
 ]
 
 
-
+Delegaciones-own[Petición_Delegaciones]
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 ;define AGEBS
@@ -135,13 +144,13 @@ Agebs-own[
   pozos_agebs                         ;;set the pozos in ageb
   name_delegation                     ;;the name of the delegation the ageb belongs to
   paches_set_agebs                    ;;the set of patches that bellow to the ageb
-
+  Monto
   Num_protestas_pAgeb                 ;;social pressure index per ageb
   production_water_perageb            ;; produccion de agua {definir escala e.g resolucion temporal !!!!}
-  waterNeeds_perageb                  ;;lts 3 de agua needed given population there definir escala e.g resolucion temporal !!!!}
+  Abastecimiento                      ;;Necesidad de la población en cuanto a servicios hidráulicos (agua potable, drenaje)
   Antiguedad-infra                    ;;mean age of wells in ageb
   Cost_perHab                         ;;cost per habitante that would be invested if infra is repare
-  Num_fallas                          ;;
+  Falla                               ;;Fallas de infraestructura hidráulica ocasionadas por conexiones clandestinas, obstrucción por basura y procesos biofísicos
   hundimientos
   presion_hidraulica                  ;;or an index of low volume of water in the pipes (tandeo)
   dist_water_extraction
@@ -155,7 +164,7 @@ Agebs-own[
   av_inc                       ;; Average montly income
   Income-index                 ;; Actual income
   alpha                        ;; % water_in that is storaged acording to AGEB capasity (e.g. adaptation rate)
-  protest_magnitude            ;; Number of people involved in the protest
+  Presion_social            ;; Number of people involved in the protest
   SC                           ;; Social capital 1 high 0 lowest
 
   damage                       ;; Cost of harm
@@ -166,19 +175,19 @@ Agebs-own[
   houses_with_dranage          ;; % of houses connected to the dranage from ENEGI survey instrument
   houses_with_abastecimiento   ;; % houses connected to distribution network
   disease_burden               ;; Number of gastrointestinal cases per ageb (from disease model)
-  calidad_agua                 ;; Perception fo water quality
+  water_quality                 ;; Perception fo water quality
   garbage                      ;; Garbage as the perception of the cause behind obstruction of dranages
   water_needed                 ;; Total water needed based on population size of colonia and water requirements per peson
   water_in                     ;; Water that enters to the colonias
   water_distributed_pipes      ;; Water imported (not produced in) to the colonia
   water_distributed_trucks     ;; Water imported (not produced in) to the colonia
   tandeo                       ;; Hours a week without water?
-  deficit                      ;; When water_needed >  water_produced, deficit > 0
+  scarcity                      ;; When water_needed >  water_produced, deficit > 0
   surplus                      ;; When water_needed <  water_produced, surplus > 0
   eficacia_servicio            ;; Gestión del servicio de Drenaje y agua potable (ej. interferencia política, no llega la pipa, horario del tandeo, etc)
   desperdicio_agua             ;;Por fugas, falta de conciencia del uso del agua
   desviacion_agua              ;;Se llevan el agua a otros lugares
-
+  Capacidad                    ;;the Capacidad de la infraestructura hidráulica
 
 ;#residents decisions metrics
 
@@ -213,178 +222,12 @@ Pozos-own[
 ;maximal level of the variable to define
 ;value function
 
-Alternatives_IZ-own[ID name_action C1_name C2_name C3_name C4_name C5_name C6_name C7_name C8_name C1 C2 C3 C4 C5 C6 C7 C8 C1_MAX C2_MAX C3_MAX C4_MAX C5_MAX C6_MAX C7_MAX C8_MAX w_C1 w_C2 w_C3 w_C4 w_C5 w_C6 w_C7 w_C8 V1 V2 V3 V4  V5 V6 V7 V8]
-Alternatives_Xo-own[ID name_action C1_name C2_name C3_name C4_name C5_name C6_name C7_name C8_name C1 C2 C3 C4 C5 C6 C7 C8 C1_MAX C2_MAX C3_MAX C4_MAX C5_MAX C6_MAX C7_MAX C8_MAX w_C1 w_C2 w_C3 w_C4 w_C5 w_C6 w_C7 w_C8 V1 V2 V3 V4 V5 V6 V7 V8]
-Alternatives_MC-own[ID name_action C1_name C2_name C3_name C4_name C5_name C6_name C7_name C8_name C1 C2 C3 C4 C5 C6 C7 C8 C1_MAX C2_MAX C3_MAX C4_MAX C5_MAX C6_MAX C7_MAX C8_MAX w_C1 w_C2 w_C3 w_C4 w_C5 w_C6 w_C7 w_C8 V1 V2 V3 V4 V5 V6 V7 V8]
-Alternatives_SACMEX-own[
-  ID
-  name_action
+Alternatives_IZ-own[ID name_action C1_name C1 C1_MAX w_C1 V w_limit]
+Alternatives_Xo-own[ID name_action C1_name C1 C1_MAX w_C1 V w_limit]
+Alternatives_MC-own[ID name_action C1_name C1 C1_MAX w_C1 V w_limit]
+Alternatives_SACMEX-own[ID name_action C1_name C1 C1_MAX w_C1 V w_limit]  ;value obtained for the action when calcualting the limiting matrix in super decition
+Alternatives_OCVAM-own[ID CLUSTER name_action C1_name C1 C1_MAX w_C1 V w_limit]   ;value obtained for the action when calcualting the limiting matrix in super decition
 
-  C1_name
-  C2_name
-  C3_name
-  C4_name
-  C5_name
-  C6_name
-  C7_name
-  C8_name
-  C9_name
-  C10_name
-  C11_name
-  C12_name
-  C13_name
-  C14_name
-
-
-  C1
-  C2
-  C3
-  C4
-  C5
-  C6
-  C7
-  C8
-  C9
-  C10
-  C11
-  C12
-  C13
-  C14
-
-  C1_MAX
-  C2_MAX
-  C3_MAX
-  C4_MAX
-  C5_MAX
-  C6_MAX
-  C7_MAX
-  C8_MAX
-  C9_MAX
-  C10_MAX
-  C11_MAX
-  C12_MAX
-  C13_MAX
-  C14_MAX
-
-  w_C1
-  w_C2
-  w_C3
-  w_C4
-  w_C5
-  w_C6
-  w_C7
-  w_C8
-  w_C9
-  w_C10
-  w_C11
-  w_C12
-  w_C13
-  w_C14
-
-
-  V1
-  V2
-  V3
-  V4
-  V5
-  V6
-  V7
-  V8
-  V9
-  V10
-  V11
-  V12
-  V13
-  V14
-
-
-  w_limit   ;value obtained for the action when calcualting the limiting matrix in super decition
-]
-
-Alternatives_OCVAM-own[
-  ID
-  name_action
-  cluster     ;ID of the large scale cluster in
-  C1_name
-  C2_name
-  C3_name
-  C4_name
-  C5_name
-  C6_name
-  C7_name
-  C8_name
-  C9_name
-  C10_name
-  C11_name
-  C12_name
-  C13_name
-  C14_name
-
-
-  C1
-  C2
-  C3
-  C4
-  C5
-  C6
-  C7
-  C8
-  C9
-  C10
-  C11
-  C12
-  C13
-  C14
-
-  C1_MAX
-  C2_MAX
-  C3_MAX
-  C4_MAX
-  C5_MAX
-  C6_MAX
-  C7_MAX
-  C8_MAX
-  C9_MAX
-  C10_MAX
-  C11_MAX
-  C12_MAX
-  C13_MAX
-  C14_MAX
-
-  w_C1
-  w_C2
-  w_C3
-  w_C4
-  w_C5
-  w_C6
-  w_C7
-  w_C8
-  w_C9
-  w_C10
-  w_C11
-  w_C12
-  w_C13
-  w_C14
-
-
-  V1
-  V2
-  V3
-  V4
-  V5
-  V6
-  V7
-  V8
-  V9
-  V10
-  V11
-  V12
-  V13
-  V14
-
-
-  w_limit   ;value obtained for the action when calcualting the limiting matrix in super decition
-]
 
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -433,7 +276,7 @@ end
 to GO
   ;if ticks = 1 [movie-start "out.mov"]
   tick
-  ;profiler:start
+  profiler:start
   update_globals
   produce_water
   ask agebs [
@@ -456,10 +299,10 @@ to GO
   if visualization = "GoogleEarth" [
     bitmap:copy-to-pcolors City_image false
   ]
- ;profiler:stop          ;; stop profiling
- ;print profiler:report  ;; view the results
- ;profiler:reset         ;; clear the data
- ;reset-ticks
+ profiler:stop          ;; stop profiling
+ print profiler:report  ;; view the results
+ profiler:reset         ;; clear the data
+ reset-ticks
 end
 
 ;#############################################################################################################################################
@@ -501,9 +344,9 @@ to residents_needs                                                              
   set water_produced water_produced - water_distributed_pipes
   ifelse water_distributed_pipes < water_needed[
 
-    set deficit water_needed - water_distributed_pipes]
+    set scarcity water_needed - water_distributed_pipes]
   [
-    set deficit 0
+    set scarcity 0
   ]
 
 end
@@ -533,224 +376,85 @@ to residents_define_distance_metric
 
 if group_kmean = 1 or group_kmean = 3[ ;#residents Xochimilco
 
- ask Alternatives_Xo with [name_action = "Movilizaciones"][
-    set C1 [desperdicio_agua] of myself
-    set C2 [desviacion_agua] of myself
-    set C3 [water_in] of myself ; eficacia_servicio
-    set C4 [houses_with_abastecimiento] of myself
+ ask Alternatives_Xo [
+   update_criteria_action
+   calculate_value_functions
+   let ddd (distance_ideal V w_C1 1)
+   if name_action = "Movilizaciones"[
+     ask myself [set d_Movilizaciones ddd]
+   ]
 
-    set C1_MAX desperdicio_agua_max
-    set C2_MAX desviacion_agua_max ;;max level of perception of deviation
-    set C3_MAX eficacia_servicio_max
-    set C4_MAX Infra_abast_max
+   if name_action = "Modificacion_vivienda" [
+     ask myself [set d_Modificacion_vivienda ddd]
+   ]
 
-    set V1 VF C1 [0.1 0.3 0.7 0.9] ["" "" "" ""] C1_max [0.0625 0.125 0.25  0.5 1]
-    set V2 VF C2 [0.1 0.3 0.7 0.9] ["" "" "" ""] C2_max [0.0625 0.125 0.25  0.5 1]
-    set V3 VF C3 [0.1 0.3 0.9 0.9] ["" "" "" ""] C3_max [1 0.5 0.25 0.125 0.0625]
-    set V4 VF C4 [0.3 0.5 0.9 0.99] ["" "" "" ""] C4_max [1 0.5 0.25 0.125 0.0625] ; ifelse-value (water_in < tau_11)[1][0]                                                ;value function water needs
-    let ddd (distance_ideal (list V1 V2 V3 V4) (list w_C1 w_C2 w_C3 w_C4) 1)
-    ask myself [set d_Movilizaciones ddd]
- ]
+   if name_action = "Captacion_agua" [
+     ask myself [set d_Captacion_agua ddd]
+   ]
 
- ask  Alternatives_Xo with [name_action = "Modificacion_vivienda" ] [
-   set C1 [pop_growth] of myself
-   set C2 [garbage] of myself
-   set C3 [water_in] of myself ; eficacia_servicio
-   set C4 [houses_with_dranage] of myself
+   if name_action = "Accion_colectiva" [
+     ask myself [set d_Accion_colectiva ddd]
+   ]
 
-   set C1_MAX pop_growth_max
-   set C2_MAX garbage_max ;;max level of perception of deviation
-   set C3_MAX eficacia_servicio_max
-   set C4_MAX Infra_abast_max
-
-
-   set V1 VF C1 [0.1 0.3 0.7 0.9] ["" "" "" ""] C1_max [0.0625 0.125 0.25  0.5 1]
-   set V2 VF C2 [0.1 0.3 0.7 0.9] ["" "" "" ""] C2_max [0.0625 0.125 0.25  0.5 1]
-   set V3 VF C3 [0.1 0.3 0.7 0.9] ["" "" "" ""] C1_max [1 0.5 0.25 0.125 0.0625]
-   set V4 VF C4 [0.3 0.5 0.9 0.99] ["" "" "" ""] C1_max [1 0.5 0.25 0.125 0.0625] ; ifelse-value (water_in < tau_11)[1][0]                                                ;value function water needs
-   let ddd (distance_ideal (list V1 V2 V3 V4) (list w_C1 w_C2 w_C3 w_C4) 1)
-   ask myself [set d_Modificacion_vivienda ddd]
- ]
-
- ask Alternatives_Xo with [name_action = "Captacion_agua" ][
-   set C1 [eficacia_servicio] of myself
-   set C1_MAX eficacia_servicio_max
-   set V1 VF C1 [0.1 0.3 0.7 0.9] ["" "" "" ""] C1_max [1 0.5 0.25 0.125 0.0625]
-   let ddd (distance_ideal (list V1) w_C1 1)
-   ask myself [set d_Captacion_agua ddd]
- ]
-
-  ask Alternatives_Xo with [name_action = "Accion_colectiva" ][
-    set C1 [garbage] of myself
-    set C1_max garbage_max
-    set V1 VF C1 [0.1 0.3 0.7 0.9] ["" "" "" ""] C1_max [0.0625 0.125 0.25  0.5 1]
-    let ddd (distance_ideal (list V1)  w_C1 1)
-    ask myself [set d_Accion_colectiva ddd]
-  ]
-
-  ask Alternatives_Xo with [name_action = "Compra_agua" ][
-    set C1 [eficacia_servicio] of myself
-    set C2 [calidad_agua] of myself
-    set C1_max eficacia_servicio_max
-    set C2_max calidad_agua_max
-    set V1 VF C1 [0.1 0.3 0.7 0.9] ["" "" "" ""] C1_max [1 0.5 0.25 0.125 0.0625]
-    set V2 VF C2 [0.1 0.3 0.7 0.9] ["" "" "" ""] C2_max [1 0.5 0.25 0.125 0.0625]
-     let ddd (distance_ideal (list V1 V2)  list w_C1 w_C2 1)
+   if name_action = "Compra_agua" [
      ask myself [set d_Compra_agua ddd]
-  ]
+   ]
+ ]
+
 ]
-
-
 ;###############################################################################################################################
 if group_kmean = 2 or group_kmean = 0[ ;#Residents Iztapalapa
-  ask Alternatives_Iz with [name_action = "Movilizaciones"][
-    set C1 [desperdicio_agua] of myself
-    set C2 [desviacion_agua] of myself
-    set C3 [water_in] of myself; eficacia_servicio
-    set C4 [houses_with_abastecimiento] of myself
+  ask Alternatives_Iz [
+    update_criteria_action
+    calculate_value_functions
+    let  ddd (distance_ideal V w_C1 1)
+    if name_action = "Movilizaciones"[
+      ask myself [set d_Movilizaciones ddd]
+    ]
+    if name_action = "Modificacion_vivienda"[
+      ask myself [set d_Modificacion_vivienda ddd]
+    ]
 
-    set C1_max desperdicio_agua_max
-    set C2_max desviacion_agua_max
-    set C3_max eficacia_servicio_max
-    set C4_max infra_abast_max
+    if name_action = "Captacion_agua"[
+      ask myself [set d_Captacion_agua ddd]
+    ]
 
-    set V1 VF C1 [0.1 0.3 0.7 0.9] ["" "" "" ""] C1_max [0.0625 0.125 0.25  0.5 1]
-    set V2 VF C2 [0.1 0.3 0.7 0.9] ["" "" "" ""] C2_max [0.0625 0.125 0.25  0.5 1]
-    set V3 VF C3 [0.1 0.3 0.7 0.9] ["" "" "" ""] C3_max [1 0.5 0.25 0.125 0.0625]
-    set V4 VF C4 [0.5 0.6 0.7 0.99] ["" "" "" ""] C4_max [1 0.5 0.25 0.125 0.0625]; ifelse-value (water_in < tau_11)[1][0]                                                ;value function water needs
-    let  ddd (distance_ideal (list V1 V2) list w_C1 w_C2 1)
-    ask myself [set d_Movilizaciones ddd]
-  ]
-  ask Alternatives_Iz with [name_action = "Modificacion_vivienda"][
-    set C1 [pop_growth] of myself
-    set C2 [garbage] of myself
-    set C3 [eficacia_servicio] of myself
-    set C4 [houses_with_dranage] of myself
-    set C1_max pop_growth_max
-    set C2_max garbage_max
-    set C3_max eficacia_servicio_max
-    set C4_max infra_dranage_max
-    set V1 VF C1 [0.1 0.3 0.7 0.9] ["" "" "" ""] C1_max [0.0625 0.125 0.25  0.5 1]
-    set V2 VF C2 [0.1 0.3 0.7 0.9] ["" "" "" ""] C2_max [0.0625 0.125 0.25  0.5 1]
-    set V3 VF C3 [0.1 0.3 0.7 0.9] ["" "" "" ""] C3_max [1 0.5 0.25 0.125 0.0625]
-    set V4 VF C4 [0.3 0.5 0.9 0.99] ["" "" "" ""] C4_max [1 0.5 0.25 0.125 0.0625] ; ifelse-value (water_in < tau_11)[1][0]
-    let ddd (distance_ideal (list V1 V2 V3) (list w_C1 w_C2 w_C3) 1)                                             ;value function water needs
-    ask myself [set d_Modificacion_vivienda ddd]
-  ]
+    if name_action = "Accion_colectiva"[
+      ask myself [set d_Accion_colectiva ddd]
+    ]
 
-  ask Alternatives_Iz with [name_action = "Captacion_agua"][
-    set C1 [eficacia_servicio] of myself
-
-    set C1_max eficacia_servicio_max
-
-    set V1 VF C1 [0.1 0.3 0.7 0.9] ["" "" "" ""] C1_max [1 0.5 0.25 0.125 0.0625]
-    let ddd (distance_ideal (list V1) w_C1 1)
-    ask myself [set d_Captacion_agua ddd]
-  ]
-
-  ask Alternatives_Iz with [name_action = "Accion_colectiva"][
-    set C1 [garbage] of myself
-
-    set C1_max garbage_max
-
-    set V1 VF C1 [0.1 0.3 0.7 0.9] ["" "" "" ""] C1_max [0.0625 0.125 0.25  0.5 1]
-    let ddd (distance_ideal (list V1)  w_C1 1)
-    ask myself [set d_Accion_colectiva ddd]
-  ]
-
-  ask Alternatives_Iz with [name_action = "Compra_agua"][
-    set C1 [eficacia_servicio] of myself
-    set C2 [calidad_agua] of myself
-
-    set C1_max eficacia_servicio_max
-    set C2_max calidad_agua_max
-
-    set V1 VF C1 [0.1 0.3 0.7 0.9] ["" "" "" ""] C1_max [1 0.5 0.25 0.125 0.0625]
-    set V2 VF C2 [0.1 0.3 0.7 0.9] ["" "" "" ""] C2_max [1 0.5 0.25 0.125 0.0625]
-    let ddd (distance_ideal (list V1 V2)  (list w_C1 w_C2) 1)
-    ask myself [set d_Compra_agua ddd]
+    if name_action = "Compra_agua"[
+      ask myself [set d_Compra_agua ddd]
+    ]
   ]
 ]
-
 ;###############################################################################################################################
 if group_kmean = 4 [ ;#Residents Magdalena Contreras
-  ask Alternatives_MC with [name_action = "Movilizaciones"] [
-    set C1 [desperdicio_agua] of myself
-    set C2 [desviacion_agua] of myself
-    set C3 [water_in] of myself ; eficacia_servicio
-    set C4 [houses_with_abastecimiento] of myself
-
-    set C1_max desperdicio_agua_max
-    set C2_max desviacion_agua_max
-    set C3_max eficacia_servicio_max
-    set C4_max infra_abast_max
-
-    set V1 VF C1 [0.1 0.3 0.7 0.9] ["" "" "" ""] C1_max [0.0625 0.125 0.25  0.5 1]
-    set V2 VF C2 [0.1 0.3 0.7 0.9] ["" "" "" ""] C2_max [0.0625 0.125 0.25  0.5 1]
-    set V3 VF C3 [0.1 0.3 0.7 0.9] ["" "" "" ""] C3_max [1 0.5 0.25 0.125 0.0625]
-    set V4 VF C4 [0.3 0.5 0.9 0.99] ["" "" "" ""] C4_max [1 0.5 0.25 0.125 0.0625]
-    let ddd (distance_ideal (list V1 V2 V3 V4) (list w_C1 w_C2 w_C3 w_C4) 1)
-    ask myself [set d_Movilizaciones ddd]
-  ]
+  ask Alternatives_MC [
+    update_criteria_action
+    calculate_value_functions
+    let ddd (distance_ideal V w_C1 1)
+    if name_action = "Movilizaciones"[
+      ask myself [set d_Movilizaciones ddd]
+    ]
 
 
-  ask Alternatives_MC with [name_action = "Modificacion_vivienda"] [
+    if name_action = "Modificacion_vivienda"[
+      ask myself [set d_Modificacion_vivienda ddd]
+    ]
 
-    set C1 [pop_growth] of myself
-    set C2 [flooding]  of myself
-    set C3 [houses_with_dranage] of myself
-    set C4 [garbage] of myself
+    if name_action = "Captacion_agua"[
+      ask myself [set d_Captacion_agua ddd]
+    ]
+    if name_action = "Accion_colectiva" [
+      ask myself [set d_Accion_colectiva ddd]
+    ]
 
-    set C1_max pop_growth_max
-    set C2_max flooding_max
-    set C3_max infra_dranage_max
-    set C4_max garbage_max
-
-    set V1 VF C1 [0.1 0.3 0.7 0.9] ["" "" "" ""] C1_max [0.0625 0.125 0.25  0.5 1]
-    set V2 VF C2 [0.1 0.3 0.7 0.9] ["" "" "" ""] C2_max [0.0625 0.125 0.25  0.5 1]
-    set V3 VF C3 [0.3 0.5 0.9 0.99] ["" "" "" ""] C3_max [1 0.5 0.25 0.125 0.0625]
-    set V4 VF C4 [0.1 0.3 0.7 0.9] ["" "" "" ""] C4_max [1 0.5 0.25 0.125 0.0625]
-    let ddd (distance_ideal (list V1 V2 V3 V4) (list w_C1 w_C2 w_C3 w_C4) 1)
-    ask myself [set d_Modificacion_vivienda ddd]
-  ]
-  ask Alternatives_MC with [name_action = "Captacion_agua"] [
-
-    set C1 [water_in] of myself
-    set C2 [houses_with_abastecimiento] of myself
-    set C1_max eficacia_servicio_max
-    set C2_max infra_abast_max
-    set V1 VF C1 [0.1 0.3 0.7 0.9] ["" "" "" ""] C1_max [1 0.5 0.25 0.125 0.0625]
-    set V2 VF C2 [0.1 0.3 0.7 0.9] ["" "" "" ""] C2_max [1 0.5 0.25 0.125 0.0625]
-    let ddd (distance_ideal (list V1 V2) (list w_C1 w_C2) 1)
-    ask myself [set d_Captacion_agua ddd]
-  ]
-  ask Alternatives_MC with [name_action = "Accion_colectiva"] [
-
-    set C1 [houses_with_abastecimiento] of myself
-    set C2 [garbage] of myself
-    set C1_max infra_abast_max
-    set C2_max garbage_max
-
-    set V1 VF C1 [0.1 0.3 0.7 0.9] ["" "" "" ""] C1_max [1 0.5 0.25 0.125 0.0625]
-    set V2 VF C2 [0.1 0.3 0.7 0.9] ["" "" "" ""] C2_max [0.0625 0.125 0.25  0.5 1]
-    let ddd (distance_ideal (list V1 V2)  (list w_C1 w_C2) 1)
-    ask myself [set d_Accion_colectiva ddd]
-
-  ]
-
-  ask Alternatives_MC with [name_action = "Compra_agua"] [
-    set C1 [calidad_agua] of myself
-    set C2 [water_in] of myself
-    set C1_max calidad_agua_max
-    set C2_max eficacia_servicio_max
-
-    set V1 VF C1 [0.1 0.3 0.7 0.9] ["" "" "" ""] C1_max [1 0.5 0.25 0.125 0.0625]
-    set V2 VF C2 [0.1 0.3 0.7 0.9] ["" "" "" ""] C2_max [1 0.5 0.25 0.125 0.0625]
-    let ddd (distance_ideal (list V1 V2)  (list w_C1 w_C2) 1)
-    ask myself [set d_Compra_agua ddd]
+    if name_action = "Compra_agua" [
+      ask myself [set d_Compra_agua ddd]
+    ]
   ]
 ]
-
 end
 
 
@@ -765,8 +469,8 @@ to consume_water                          ;population consume water
   if alpha = 0 [                          ;if storage capasity =0 then the water save in the ageb is 0
     set water_in 0
   ]
-  set protest_magnitude protest_magnitude - 0.1 * protest_magnitude  ;to reduce social presure
-  if protest_magnitude < 0 [set protest_magnitude 0]
+  set Presion_social Presion_social - 0.1 * Presion_social  ;to reduce social presure
+  if Presion_social < 0 [set Presion_social 0]
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -775,11 +479,15 @@ to update_globals  ;; update the maximum or minimum of values use by the model t
       set desperdicio_agua_max max [desperdicio_agua] of agebs;;max level of perception of deviation
       set desviacion_agua_max max [desviacion_agua] of agebs
       set garbage_max 1
-      set calidad_agua_max 1
+      set water_quality_max 1
       set infra_abast_max max [houses_with_abastecimiento] of agebs
-      set infra_dranage_max max [houses_with_dranage] of agebs
+      set houses_with_dranage_max max [houses_with_dranage] of agebs
       set flooding_max max [flooding] of agebs ;;max level of flooding (encharcamientos) recored over the last 10 years
-      set Num_fallas_max max [Num_fallas] of agebs
+      set fallas_max max [Falla] of agebs
+      set Abastecimiento_max max [Abastecimiento] of agebs
+      set disease_burden_max max [disease_burden] of agebs
+      set monto_max max [monto] of agebs
+      set scarcity_max max [scarcity] of agebs
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -844,7 +552,7 @@ to define_agebs
           set hundimientos gis:property-value ?2 "HUND"
           set group_kmean gis:property-value ?2 "KMEANS5"
           set av_inc ifelse-value ((gis:property-value ?1 "I05_INGRES") = nobody )[0][(gis:property-value ?1 "I05_INGRES")]
-          set Income-index  ifelse-value (av_inc > 0) [av_inc][1] ;;average income from normal distribution with mean proportional to altitute
+          set Income-index  ifelse-value (av_inc > 0) [av_inc][1]
           set flooding ifelse-value ((gis:property-value ?2 "Mean_encha") = nobody )[0][(gis:property-value ?2 "Mean_encha")]
           set desviacion_agua 1
           set eficacia_servicio 1            ;; Gestión del servicio de Drenaje y agua potable (ej. interferencia política, no llega la pipa, horario del tandeo, etc)
@@ -907,75 +615,164 @@ to show_pozos
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
+
+to update_criteria_action
+  let i 0
+  (foreach C1_name
+    [
+    if ? = "Antiguedad"[
+      set C1 replace-item i C1 ([Antiguedad-infra] of myself)
+      set C1_max replace-item i C1_max Antiguedad-infra_max  ;change with update quantity for speed
+    ]
+     if ? = "Capacidad"[
+       set C1 replace-item i C1 [Capacidad] of myself
+       set C1_max replace-item i C1_max  Capacidad_max ;change with update quantity for speed
+    ]
+    if ? = "Falla"[
+      set C1 replace-item i C1 [Falla] of myself
+      set C1_max replace-item i C1_max fallas_max ;change with update quantity for speed
+      ]
+      if ? = "Falta"[
+      set C1  replace-item i C1 [houses_with_dranage] of myself
+      set C1_max replace-item i C1_max infra_abast_max   ;change with update quantity for speed
+
+      ]
+      if ? = "Presion_hidraulica"[
+       set C1 replace-item i C1 [Presion_hidraulica] of myself
+       set C1_max replace-item i C1_max presion_hidraulica_max ;change with update quantity for speed
+
+      ]
+      if ? = "Monto"[
+        set C1 replace-item i C1 [Monto] of myself
+        set C1_max replace-item i C1_max Monto_max ;change with update quantity for speed
+
+      ]
+      if ? = "Calidad_agua"[
+        set C1 replace-item i C1 [water_quality] of myself
+        set C1_max replace-item i C1_max water_quality_max  ;change with update quantity for speed
+
+      ]
+      if ? = "Escasez de agua"[
+        set C1 replace-item i C1 [scarcity] of myself
+        set C1_max replace-item i C1_max scarcity_max  ;change with update quantity for speed
+
+      ]
+      if ? = "Inundaciones"[
+        set C1 replace-item i C1 [Flooding] of myself
+        set C1_max replace-item i C1_max Flooding_max  ;change with update quantity for speed
+
+      ]
+      if ? = "Abastecimiento"[
+        set C1 replace-item i C1 [Abastecimiento] of myself
+        set C1_max replace-item i C1_max Abastecimiento_max  ;change with update quantity for speed
+
+      ]
+      if ? = "Peticion de Delegaciones"[
+        set C1 replace-item i C1 [Petición_Delegaciones] of Delegaciones-here
+        set C1_max replace-item i C1_max Petición_Delegaciones_max ;change with update quantity for speed
+      ]
+      if ? = "Presion de medios"[
+        set C1 replace-item i C1 Presión_de_medios
+        set C1_max replace-item i C1_max Presión_de_medios_max ;change with update quantity for speed
+      ]
+      if ? = "Presion social"[
+        set C1 replace-item i C1 [Presion_social] of myself
+        set C1_max replace-item i C1_max Presion_social_max;change with update quantity for speed
+      ]
+
+      if ? = "Crecimiento urbano"[
+        set C1 replace-item i C1 [pop_growth] of myself
+        set C1_max replace-item i C1_max pop_growth_max  ;change with update quantity for speed
+
+      ]
+
+      if ? = "Contaminacion de agua"[
+        set C1 replace-item i C1 [water_quality] of myself
+        set C1_max replace-item i C1_max water_quality_max  ;change with update quantity for speed
+      ]
+
+      if ? = "Salud"[
+        set C1 replace-item i C1 [disease_burden] of myself
+        set C1_max replace-item i C1_max disease_burden_max;change with update quantity for speed
+      ]
+
+
+      if ? = "Infraestructura insuficiente" [
+        set C1 replace-item i C1 [houses_with_dranage] of myself
+        set C1_max replace-item i C1_max houses_with_dranage_max  ;change with update quantity for speed
+
+      ]
+       if ? = "Desperdicio de agua" [
+        set C1 replace-item i C1 [desperdicio_agua] of myself
+        set C1_max replace-item i C1_max desperdicio_agua_max  ;change with update quantity for speed
+       ]
+
+       if ? = "Eficacia del servicio" [
+         set C1 replace-item i C1 [houses_with_dranage] of myself
+         set C1_max replace-item i C1_max  houses_with_dranage_max ;change with update quantity for speed
+       ]
+
+      set i i + 1
+  ]
+  )
+end
+
+
+to calculate_value_functions
+
+   set V (map [VF ?1 [0.1 0.3 0.7 0.9] ["" "" "" ""] ?2 [0.0625 0.125 0.25  0.5 1]] C1 C1_max)
+
+end
+
 to SACMEX_decisions
  ;;; Define value functions
  ;;here goberment clasifies each ageb based on distan from ideal point to rank them and thus priotirized interventions
-;we call each action in the context of a particular ageb nad we modify the value of the criteria acording to the state of the ageb we set the value functions and define the distant metric based on compromisez programing function with exponent =2
+ ;we call each action in the context of a particular ageb nad we modify the value of the criteria acording to the state of the ageb we set the value functions and define the distant metric based on compromisez programing function with exponent =2
   ask  agebs [
     ;;Tranform from natural scale to standarized scale given action 1 (Reparation of pozos)
     ;#################################################################################################################################################
 
 
 ;#Alternative Mantenimiento Infrastructura
-    ask Alternatives_SACMEX with [name_action = "Mantenimiento"][
-      set C1 [Antiguedad-infra] of myself
-      set C2 [Num_fallas] of myself
-      set C1_max Antiguedad-infra_max
-      set C2_max Num_fallas_max
-      set V1 VF C1 [0.1 0.3 0.7 0.9] ["" "" "" ""] C1_max [0.0625 0.125 0.25  0.5 1]
-      set V2 VF C2 [0.1 0.3 0.7 0.9] ["" "" "" ""] C2_max [0.0625 0.125 0.25  0.5 1]
-      let ddd distance_ideal (list V1 V2) (list w_C1 w_C2)  2
-      ask myself[set dist_reparation ddd]
-    ]
+    ask Alternatives_SACMEX [
+      update_criteria_action
+      calculate_value_functions
+      let ddd (distance_ideal V w_C1 2)
+      if name_action = "Mantenimiento"[
+        ask myself[set dist_reparation ddd]
+      ]
 
     ;#################################################################################################################################################
 
 ;#Alternative: New Infrastructure
-    ask Alternatives_SACMEX with [name_action = "Nueva_infraestructura"][
-      set C1 [houses_with_abastecimiento] of myself
-      set C1_max infra_abast_max
-      set V1 VF C1 [0.1 0.3 0.7 0.9] ["" "" "" ""] C1_max [1 0.5 0.25 0.125 0.0625]
-      let ddd (distance_ideal (list V1) w_C1 2)
-      ask myself[set dist_new ddd]
+      if name_action = "Nueva_infraestructura"[
+        ask myself[set dist_new ddd]
+      ]
+      ;#################################################################################################################################################
+      ;#Alternativa 3 Distribution of water
+      if name_action = "Distribucion_Agua"[
+        ask myself[set dist_waterdistribution ddd]
+      ]
 
-    ]
-    ;#################################################################################################################################################
-;#Alternativa 3 Distribution of water
-    ask Alternatives_SACMEX with [name_action = "Distribucion_Agua"][
-      set C1 [presion_hidraulica] of myself
-      set C1_max presion_hidraulica_max
-      set V1 VF C1 [0.1 0.3 0.7 0.9] ["" "" "" ""] C1_max [1 0.5 0.25 0.125 0.0625]
-      let ddd distance_ideal (list V1) w_C1 2
-      ask myself[set dist_waterdistribution ddd]
-    ]
-
-    ;#################################################################################################################################################
-;#Alternativa 4 Importacion agua
-    ask Alternatives_SACMEX with [name_action = "Importacion_Agua"][
-      set C1 [presion_hidraulica] of myself
-      set C1_max presion_hidraulica_max
-      set V1 VF C1 [0.1 0.3 0.7 0.9] ["" "" "" ""] C1_max [1 0.5 0.25 0.125 0.0625]
-      let ddd distance_ideal (list V1) w_C1 2
-      ask myself [set dist_waterdistribution ddd]
-    ]
+      ;#################################################################################################################################################
+      ;#Alternativa 4 Importacion agua
+       if name_action = "Importacion_Agua"[
+         ask myself [set dist_waterdistribution ddd]
+       ]
 
     ;#################################################################################################################################################
 ;#Alternativa 5 Extraccion agua
-    ask Alternatives_SACMEX with [name_action = "Extraccion_Agua"][
-      set C1 [flooding] of myself
-      set C1_max flooding_max
-      set V1 VF C1 [0.01 0.1 0.2 0.4] ["" "" "" ""] C1_max [1 0.5 0.25 0.125 0.0625]
-      let ddd  (distance_ideal (list V1) w_C1 2)
-      ask myself[set dist_water_extraction ddd]
+        if name_action = "Extraccion_Agua"[
+          ask myself[set dist_water_extraction ddd]
+        ]
     ]
   ]
-
 
   ;;water distribution decition per ageb
   foreach sort-on [1 - dist_waterdistribution] agebs[
     ask ? [
       if water_produced > 0 and poblacion > 1 [
-        set water_distributed_trucks deficit
+        set water_distributed_trucks scarcity
         set water_produced water_produced - water_distributed_trucks
       ]
     ]
@@ -1003,10 +800,10 @@ end
 ;#############################################################################################################################################
 to collect-info-system  ;;govertment information to take decisions
   set production_water_perageb ifelse-value  (count pozos_agebs > 0) [sum [Production] of pozos_agebs][0]            ;;;C2_A1;;;
-  set Num_protestas_pAgeb protest_magnitude                                                                          ;;;C3_A1;;;
+  set Num_protestas_pAgeb Presion_social                                                                          ;;;C3_A1;;;
   set Antiguedad-infra ifelse-value (count pozos_agebs > 0) [mean [age_pozo] of pozos_agebs][0]
 
-  set waterNeeds_perageb poblacion * water_requirement_perPerson - sum [H * production] of pozos_agebs               ;;;C4_A1;;;
+  set Abastecimiento poblacion * water_requirement_perPerson - sum [H * production] of pozos_agebs               ;;;C4_A1;;;
 end
 
 ;#############################################################################################################################################
@@ -1055,10 +852,8 @@ to-report distance_ideal[VF_list weight_list h_Cp]
      ;VF_list: a list of value functions
      ;weight_list a list of weights from the alternatives criteria links (CA_links)
      ;h_Cp to control the type of distance h_Cp=2 euclidian; h_Cp=1 manhattan
-     if length VF_list = 1 [set dist item 0 VF_list]
-     if length VF_list = 2 [set dist ((((item 0 weight_list) ^ h_Cp) * ((item 0 VF_list) ^ h_Cp)) + (((item 1 weight_list) ^ h_Cp)  * ((item 1 VF_list) ^ h_Cp))) ^ (1 / h_Cp)]
-     if length VF_list = 3 [set dist ((((item 0 weight_list) ^ h_Cp) * ((item 0 VF_list) ^ h_Cp)) + (((item 1 weight_list) ^ h_Cp)  * ((item 1 VF_list) ^ h_Cp)) + (((item 2 weight_list) ^ h_Cp)  * ((item 2 VF_list) ^ h_Cp))) ^ (1 / h_Cp)]
-     if length VF_list = 4 [set dist ((((item 0 weight_list) ^ h_Cp) * ((item 0 VF_list) ^ h_Cp)) + (((item 1 weight_list) ^ h_Cp)  * ((item 1 VF_list) ^ h_Cp)) + (((item 2 weight_list) ^ h_Cp)  * ((item 2 VF_list) ^ h_Cp)) + (((item 3 weight_list) ^ h_Cp)  * ((item 3 VF_list) ^ h_Cp))) ^ (1 / h_Cp)]
+     set dist ((sum (map [(?1 ^ h_Cp) * (?2 ^ h_Cp)] weight_list VF_list)) ^ (1 / h_Cp))
+
      report dist
 end
 
@@ -1069,543 +864,297 @@ end
 ;name_action: the name of the alternative
 ;w a set of weight that connect each criteria
 to resident_alternativesCriteria
-let MMIz csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/I080316_OTR.weighted.csv"
+  let MMIz csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/I080316_OTR.weighted.csv"
+  let MMIz_limit csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/I080316_OTR.limit.csv"
+  let actions (list item 1 item 2 MMIz_limit
+    item 1 item 3 MMIz_limit
+    item 1 item 4 MMIz_limit
+    item 1 item 5 MMIz_limit
+    item 1 item 6 MMIz_limit)
+  let jj 0
+  foreach actions [
+
+    create-Alternatives_IZ 1[
+      set ID "IO80316"
+      set name_action ?
+      set label name_action
+      set C1 (list 0 0 0 0 0 0 0 0 0)
+      set C1_max (list 0 0 0 0 0 0 0 0 0)
+      set V (list 0 0 0 0 0 0 0 0 0)
+      set w_C1 (
+        list item 6 item 7 MMIz_limit
+        item 6 item 8 MMIz_limit
+        item 6 item 9 MMIz_limit
+        item 6 item 10 MMIz_limit
+        item 6 item 11 MMIz_limit
+        item 6 item 12 MMIz_limit
+        item 6 item 13 MMIz_limit
+        item 6 item 14 MMIz_limit
+        item 6 item 15 MMIz_limit)
+
+      set C1_name (
+        list item 1 item 7 MMIz_limit
+        item 1 item 8 MMIz_limit
+        item 1 item 9 MMIz_limit
+        item 1 item 10 MMIz_limit
+        item 1 item 11 MMIz_limit
+        item 1 item 12 MMIz_limit
+        item 1 item 13 MMIz_limit
+        item 1 item 14 MMIz_limit
+        item 1 item 15 MMIz_limit)
+;      set w_limit item (jj + 2) item (jj + 2) MMIz / 1
+    ]
+
+  set jj jj + 1
+]
 
 
-  create-Alternatives_IZ 1[
-    set ID "IO80316"
-    set name_action "Movilizaciones"
-    set label name_action
-    set w_C1 item 6 item 7 MMIz
-    set w_C2 item 6 item 8 MMIz
-    set w_C3 item 6 item 9 MMIz
-    set w_C4 item 6 item 10 MMIz
-    set w_C5 item 6 item 11 MMIz
-    set w_C6 item 6 item 12 MMIz
+  inspect one-of Alternatives_IZ
 
-    set C1_name item 1 item 7 MMIz
-    set C2_name item 1 item 8 MMIz
-    set C3_name item 1 item 9 MMIz
-    set C4_name item 1 item 10 MMIz
-    set C5_name item 1 item 11 MMIz
-    set C6_name item 1 item 12 MMIz
+  let MMXo_L csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/X062916_OTR_a.limit.csv"
+  let MMXo_W csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/X062916_OTR_a.weighted.csv"
+  set jj 0
 
+  set actions (list item 1 item 2 MMXo_L
+    item 1 item 3 MMXo_L
+    item 1 item 4 MMXo_L
+    item 1 item 5 MMXo_L
+    item 1 item 6 MMXo_L)
+
+  foreach actions [
+    create-Alternatives_Xo 1[
+      set ID "XO62916_a"
+      set name_action ?
+      set label name_action
+      set C1 (list 0 0 0 0 0 0 0 0 0)
+      set C1_max (list 0 0 0 0 0 0 0 0 0)
+      set V (list 0 0 0 0 0 0 0 0 0)
+      set w_C1 (list item 6 item 7 MMXo_L
+        item 6 item 8 MMXo_L
+        item 6 item 9 MMXo_L
+        item 6 item 10 MMXo_L
+        item 6 item 11 MMXo_L
+        item 6 item 12 MMXo_L
+        item 6 item 13 MMXo_L
+        item 6 item 14 MMXo_L
+        item 6 item 15 MMXo_L)
+
+      set C1_name (list item 1 item 7 MMXo_L
+        item 1 item 8 MMXo_L
+        item 1 item 9 MMXo_L
+        item 1 item 10 MMXo_L
+        item 1 item 11 MMXo_L
+        item 1 item 12 MMXo_L
+        item 1 item 13 MMXo_L
+        item 1 item 14 MMXo_L
+        item 1 item 15 MMXo_L)
+
+      set w_limit (item (jj + 2) item (jj + 2) MMXo_L) /(item 5 item 5 MMXo_L + item 4 item 4 MMXo_L + item 3 item 3 MMXo_L + item 6 item 6 MMXo_L + item 2 item 2 MMXo_L)
+    ]
+  set jj jj + 1
   ]
-  create-Alternatives_IZ 1[
-    set ID "IO80316"
-    set name_action "Accion_colectiva"
-    set label name_action
-    set w_C1 item 2 item 7 MMIz
-    set w_C2 item 2 item 8 MMIz
-    set w_C3 item 2 item 9 MMIz
-    set w_C4 item 2 item 10 MMIz
-    set w_C5 item 2 item 11 MMIz
-    set w_C6 item 2 item 12 MMIz
+       ;#################################################
+       let MMMC csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/MC080416_OTR_a.weighted.csv"
+       let MMMC_limit csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/MC080416_OTR_a.limit.csv"
+       let MMMCb csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/MC080416_OTR_b.weighted.csv"
+       let MMMCb_limit csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/MC080416_OTR_b.limit.csv"
 
-       set C1_name item 1 item 7 MMIz
-    set C2_name item 1 item 8 MMIz
-    set C3_name item 1 item 9 MMIz
-    set C4_name item 1 item 10 MMIz
-    set C5_name item 1 item 11 MMIz
-    set C6_name item 1 item 12 MMIz
+       set actions (list item 1 item 2 MMMCb_limit
+         item 1 item 3 MMMCb_limit
+         item 1 item 4 MMMCb_limit
+         item 1 item 5 MMMCb_limit
+         item 1 item 6 MMMCb_limit)
+       set jj 0
+       foreach actions [
+         create-Alternatives_MC 1 [
+           set ID "MC080416b"
+           set name_action ?
+           set label name_action
+;           print item 6 (item 7 MMMCb_limit)
+           set C1 (list 0 0 0 0 0 0 0 0 0 0)
+           set C1_max (list 0 0 0 0 0 0 0 0 0 0)
+           set V (list 0 0 0 0 0 0 0 0 0 0)
+           set w_C1 (list item 6 item 7 MMMCb_limit
+             item 6 item 8 MMMCb_limit
+             item 6 item 9 MMMCb_limit
+             item 6 item 10 MMMCb_limit
+             item 6 item 11 MMMCb_limit
+             item 6 item 12 MMMCb_limit
+             item 6 item 13 MMMCb_limit
+             item 6 item 14 MMMCb_limit
+             item 6 item 15 MMMCb_limit
+             item 6 item 16 MMMCb_limit)
 
-  ]
-  create-Alternatives_IZ 1[
-    set ID "IO80316"
-    set name_action "Captacion_agua"
-    set label name_action
-    set w_C1 item 3 item 7 MMIz
-    set w_C2 item 3 item 8 MMIz
-    set w_C3 item 3 item 9 MMIz
-    set w_C4 item 3 item 10 MMIz
-    set w_C5 item 3 item 11 MMIz
-    set w_C6 item 3 item 12 MMIz
-
-    set C1_name item 1 item 7 MMIz
-    set C2_name item 1 item 8 MMIz
-    set C3_name item 1 item 9 MMIz
-    set C4_name item 1 item 10 MMIz
-    set C5_name item 1 item 11 MMIz
-    set C6_name item 1 item 12 MMIz
-
-  ]
-  create-Alternatives_IZ 1[
-    set ID "IO80316"
-    set name_action "Modificacion_vivienda"
-    set label name_action
-    set w_C1 item 5 item 7 MMIz
-    set w_C2 item 5 item 8 MMIz
-    set w_C3 item 5 item 9 MMIz
-    set w_C4 item 5 item 10 MMIz
-    set w_C5 item 5 item 11 MMIz
-    set w_C6 item 5 item 12 MMIz
-
-    set C1_name item 1 item 7 MMIz
-    set C2_name item 1 item 8 MMIz
-    set C3_name item 1 item 9 MMIz
-    set C4_name item 1 item 10 MMIz
-    set C5_name item 1 item 11 MMIz
-    set C6_name item 1 item 12 MMIz
-
-  ]
-  create-Alternatives_IZ 1[
-    set ID "IO80316"
-    set name_action "Compra_agua"
-    set label name_action
-    set w_C1 item 4 item 7 MMIz
-    set w_C2 item 4 item 8 MMIz
-    set w_C3 item 4 item 9 MMIz
-    set w_C4 item 4 item 10 MMIz
-    set w_C5 item 4 item 11 MMIz
-    set w_C6 item 4 item 12 MMIz
-
-    set C1_name item 1 item 7 MMIz
-    set C2_name item 1 item 8 MMIz
-    set C3_name item 1 item 9 MMIz
-    set C4_name item 1 item 10 MMIz
-    set C5_name item 1 item 11 MMIz
-    set C6_name item 1 item 12 MMIz
-
-  ]
-
-  inspect one-of Alternatives_IZ with [name_action ="Movilizaciones"]
-  let MMXo csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/X062916_OTR_a.weighted.csv"
-  create-Alternatives_Xo 1[
-    set ID "XO62916"
-    set name_action "Movilizaciones"
-    set label name_action
-      set w_C1 item 6 item 7 MMXo
-    set w_C2 item 6 item 8 MMXo
-    set w_C3 item 6 item 9 MMXo
-    set w_C4 item 6 item 10 MMXo
-    set w_C5 item 6 item 11 MMXo
-    set w_C6 item 6 item 12 MMXo
-
-    set C1_name item 1 item 7 MMXo
-    set C2_name item 1 item 8 MMXo
-    set C3_name item 1 item 9 MMXo
-    set C4_name item 1 item 10 MMXo
-    set C5_name item 1 item 11 MMXo
-    set C6_name item 1 item 12 MMXo
-
-  ]
-  create-Alternatives_Xo 1[
-    set ID "XO62916"
-    set name_action "Accion_colectiva"
-    set label name_action
-      set w_C1 item 2 item 7 MMXo
-    set w_C2 item 2 item 8 MMXo
-    set w_C3 item 2 item 9 MMXo
-    set w_C4 item 2 item 10 MMXo
-    set w_C5 item 2 item 11 MMXo
-    set w_C6 item 2 item 12 MMXo
-
-    set C1_name item 1 item 7 MMXo
-    set C2_name item 1 item 8 MMXo
-    set C3_name item 1 item 9 MMXo
-    set C4_name item 1 item 10 MMXo
-    set C5_name item 1 item 11 MMXo
-    set C6_name item 1 item 12 MMXo
-
-  ]
-  create-Alternatives_Xo 1[
-    set ID "XO62916"
-    set name_action "Captacion_agua"
-    set label name_action
-     set w_C1 item 3 item 7 MMXo
-    set w_C2 item 3 item 8 MMXo
-    set w_C3 item 3 item 9 MMXo
-    set w_C4 item 3 item 10 MMXo
-    set w_C5 item 3 item 11 MMXo
-    set w_C6 item 3 item 12 MMXo
-
-    set C1_name item 1 item 7 MMXo
-    set C2_name item 1 item 8 MMXo
-    set C3_name item 1 item 9 MMXo
-    set C4_name item 1 item 10 MMXo
-    set C5_name item 1 item 11 MMXo
-    set C6_name item 1 item 12 MMXo
-
-  ]
-  create-Alternatives_Xo 1[
-    set ID "XO62916"
-    set name_action "Modificacion_vivienda"
-    set label name_action
-         set w_C1 item 3 item 7 MMXo
-    set w_C2 item 3 item 8 MMXo
-    set w_C3 item 3 item 9 MMXo
-    set w_C4 item 3 item 10 MMXo
-    set w_C5 item 3 item 11 MMXo
-    set w_C6 item 3 item 12 MMXo
-
-    set C1_name item 1 item 7 MMXo
-    set C2_name item 1 item 8 MMXo
-    set C3_name item 1 item 9 MMXo
-    set C4_name item 1 item 10 MMXo
-    set C5_name item 1 item 11 MMXo
-    set C6_name item 1 item 12 MMXo
-
-  ]
-  create-Alternatives_Xo 1[
-    set ID "XO62916"
-    set name_action "Compra_agua"
-    set label name_action
-        set w_C1 item 3 item 7 MMXo
-    set w_C2 item 3 item 8 MMXo
-    set w_C3 item 3 item 9 MMXo
-    set w_C4 item 3 item 10 MMXo
-    set w_C5 item 3 item 11 MMXo
-    set w_C6 item 3 item 12 MMXo
-
-    set C1_name item 1 item 7 MMXo
-    set C2_name item 1 item 8 MMXo
-    set C3_name item 1 item 9 MMXo
-    set C4_name item 1 item 10 MMXo
-    set C5_name item 1 item 11 MMXo
-    set C6_name item 1 item 12 MMXo
-
-  ]
-  ;#################################################
-  let MMMC csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/MC080416_OTR_a.weighted.csv"
-  let MMMCb csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/MC080416_OTR_b.weighted.csv"
+           set C1_name (list item 1 item 7 MMMCb_limit
+             item 1 item 8 MMMCb_limit
+             item 1 item 9 MMMCb_limit
+             item 1 item 10 MMMCb_limit
+             item 1 item 11 MMMCb_limit
+             item 1 item 12 MMMCb_limit
+             item 1 item 13 MMMCb_limit
+             item 1 item 14 MMMCb_limit
+             item 1 item 15 MMMCb_limit
+             item 1 item 16 MMMCb_limit)
 
 
-  create-Alternatives_MC 1 [
-    set ID "MC080416b"
-    set name_action "Movilizaciones"
-    set label name_action
-    set w_C1 item 6 item 7 MMMCb
-    set w_C2 item 6 item 8 MMMCb
-    set w_C3 item 6 item 9 MMMCb
-    set w_C4 item 6 item 10 MMMCb
-    set w_C5 item 6 item 11 MMMCb
-    set w_C6 item 6 item 12 MMMCb
-    set w_C6 item 6 item 12 MMMCb
-    set w_C7 item 6 item 13 MMMCb
+          ; set w_limit item (? + 2) item (? + 2) MMMCb_limit /(item 5 item 5 MMMCb_limit + item 4 item 4 MMMCb_limit + item 3 item 3 MMMCb_limit + item 6 item 6 MMMCb_limit + item 2 item 2 MMMCb_limit)
+         ]
+       ]
 
-    set C1_name item 1 item 7 MMMCb
-    set C2_name item 1 item 8 MMMCb
-    set C3_name item 1 item 9 MMMCb
-    set C4_name item 1 item 10 MMMCb
-    set C5_name item 1 item 11 MMMCb
-    set C6_name item 1 item 12 MMMCb
-    set C7_name item 1 item 12 MMMCb
-  ]
+       set actions (list item 1 item 2 MMMC_limit
+         item 1 item 3 MMMC_limit
+         item 1 item 4 MMMC_limit
+         item 1 item 5 MMMC_limit
+         item 1 item 6 MMMC_limit)
 
-  create-Alternatives_MC 1[
-    set ID "MC080416"
-    set name_action "Accion_colectiva"
-    set label name_action
-    set w_C1 item 2 item 7 MMMC
-    set w_C2 item 2 item 8 MMMC
-    set w_C3 item 2 item 9 MMMC
-    set w_C4 item 2 item 10 MMMC
-    set w_C5 item 2 item 11 MMMC
-    set w_C6 item 2 item 12 MMMC
+       set jj 0
+       foreach actions [
+         create-Alternatives_MC 1[
+           set ID "MC080416"
+           set name_action "Accion_colectiva"
+           set label name_action
+           set C1 (list 0 0 0 0 0 0)
+           set C1_max (list 0 0 0 0 0 0)
+           set V (list 0 0 0 0 0 0)
+           set w_C1 (list item 2 item 7 MMMC_limit
+             item 2 item 8 MMMC_limit
+             item 2 item 9 MMMC_limit
+             item 2 item 10 MMMC_limit
+             item 2 item 11 MMMC_limit
+             item 2 item 12 MMMC_limit)
 
-    set C1_name item 1 item 7 MMMC
-    set C2_name item 1 item 8 MMMC
-    set C3_name item 1 item 9 MMMC
-    set C4_name item 1 item 10 MMMC
-    set C5_name item 1 item 11 MMMC
-    set C6_name item 1 item 12 MMMC
-
-  ]
-
-  create-Alternatives_MC 1[
-    set ID "MC080416b"
-    set name_action "Accion_colectiva"
-    set label name_action
-    set w_C1 item 2 item 7 MMMCb
-    set w_C2 item 2 item 8 MMMCb
-    set w_C3 item 2 item 9 MMMCb
-    set w_C4 item 2 item 10 MMMCb
-    set w_C5 item 2 item 11 MMMCb
-    set w_C6 item 2 item 12 MMMCb
-    set w_C7 item 2 item 13 MMMCb
-
-    set C1_name item 1 item 7 MMMCb
-    set C2_name item 1 item 8 MMMCb
-    set C3_name item 1 item 9 MMMCb
-    set C4_name item 1 item 10 MMMCb
-    set C5_name item 1 item 11 MMMCb
-    set C6_name item 1 item 12 MMMCb
-    set C7_name item 1 item 13 MMMCb
-  ]
+           set C1_name (list item 1 item 7 MMMC_limit
+             item 1 item 8 MMMC_limit
+             item 1 item 9 MMMC_limit
+             item 1 item 10 MMMC_limit
+             item 1 item 11 MMMC_limit
+             item 1 item 12 MMMC_limit)
 
 
-    create-Alternatives_MC 1[
-    set ID "MC080416"
-    set name_action "Compra de infrestractura de agua"
-    set label name_action
-    set w_C1 item 5 item 7 MMMC
-    set w_C2 item 5 item 8 MMMC
-    set w_C3 item 5 item 9 MMMC
-    set w_C4 item 5 item 10 MMMC
-    set w_C5 item 5 item 11 MMMC
-    set w_C6 item 5 item 12 MMMC
-    set C1_name item 1 item 7 MMMC
-    set C2_name item 1 item 8 MMMC
-    set C3_name item 1 item 9 MMMC
-    set C4_name item 1 item 10 MMMC
-    set C5_name item 1 item 11 MMMC
-    set C6_name item 1 item 12 MMMC
+           set w_limit item (jj + 2) item (jj + 2) MMMC_limit /(item 5 item 5 MMMC_limit + item 4 item 4 MMMC_limit + item 3 item 3 MMMC_limit + item 6 item 6 MMMC_limit + item 2 item 2 MMMC_limit)
 
-  ]
-  create-Alternatives_MC 1[
-    set ID "MC080416"
-    set name_action "Captacion_agua"
-    set label name_action
-    set w_C1 item 3 item 7 MMMC
-    set w_C2 item 3 item 8 MMMC
-    set w_C3 item 3 item 9 MMMC
-    set w_C4 item 3 item 10 MMMC
-    set w_C5 item 3 item 11 MMMC
-    set w_C6 item 3 item 12 MMMC
-
-    set C1_name item 6 item 7 MMMC
-    set C2_name item 6 item 8 MMMC
-    set C3_name item 6 item 9 MMMC
-    set C4_name item 6 item 10 MMMC
-    set C5_name item 6 item 11 MMMC
-    set C6_name item 6 item 12 MMMC
-
-  ]
-
-   create-Alternatives_MC 1[
-    set ID "MC080416b"
-    set name_action "Captacion_agua"
-    set label name_action
-    set w_C1 item 3 item 7 MMMCb
-    set w_C2 item 3 item 8 MMMCb
-    set w_C3 item 3 item 9 MMMCb
-    set w_C4 item 3 item 10 MMMCb
-    set w_C5 item 3 item 11 MMMCb
-    set w_C6 item 3 item 12 MMMCb
-    set w_C7 item 3 item 13 MMMCb
-
-    set C1_name item 6 item 7 MMMCb
-    set C2_name item 6 item 8 MMMCb
-    set C3_name item 6 item 9 MMMCb
-    set C4_name item 6 item 10 MMMCb
-    set C5_name item 6 item 11 MMMCb
-    set C6_name item 6 item 12 MMMCb
-    set C6_name item 6 item 13 MMMCb
-
-  ]
-
-  create-Alternatives_MC 1[
-    set ID "MC080416"
-    set name_action "ReUso de Agua"
-    set label name_action
-    set w_C1 item 6 item 7 MMMC
-    set w_C2 item 6 item 8 MMMC
-    set w_C3 item 6 item 9 MMMC
-    set w_C4 item 6 item 10 MMMC
-    set w_C5 item 6 item 11 MMMC
-    set w_C6 item 6 item 12 MMMC
-
-    set C1_name item 1 item 7 MMMC
-    set C2_name item 1 item 8 MMMC
-    set C3_name item 1 item 9 MMMC
-    set C4_name item 1 item 10 MMMC
-    set C5_name item 1 item 11 MMMC
-    set C6_name item 1 item 12 MMMC
-    set C6_name item 6 item 12 MMMC
-  ]
-  create-Alternatives_MC 1[
-    set ID "MC080416"
-    set name_action "Compra_agua"
-    set label name_action
-    set w_C1 item 4 item 7 MMMC
-    set w_C2 item 4 item 8 MMMC
-    set w_C3 item 4 item 9 MMMC
-    set w_C4 item 4 item 10 MMMC
-    set w_C5 item 4 item 11 MMMC
-    set w_C6 item 4 item 12 MMMC
-
-    set C1_name item 1 item 7 MMMC
-    set C2_name item 1 item 8 MMMC
-    set C3_name item 1 item 9 MMMC
-    set C4_name item 1 item 10 MMMC
-    set C5_name item 1 item 11 MMMC
-    set C6_name item 1 item 12 MMMC
-  ]
-
-    create-Alternatives_MC 1[
-    set ID "MC080416b"
-    set name_action "Compra_agua"
-    set label name_action
-    set w_C1 item 4 item 7 MMMCb
-    set w_C2 item 4 item 8 MMMCb
-    set w_C3 item 4 item 9 MMMCb
-    set w_C4 item 4 item 10 MMMCb
-    set w_C5 item 4 item 11 MMMCb
-    set w_C6 item 4 item 12 MMMCb
-    set w_C7 item 4 item 13 MMMCb
-
-    set C1_name item 1 item 7 MMMCb
-    set C2_name item 1 item 8 MMMCb
-    set C3_name item 1 item 9 MMMCb
-    set C4_name item 1 item 10 MMMCb
-    set C5_name item 1 item 11 MMMCb
-    set C6_name item 1 item 12 MMMCb
-    set C7_name item 1 item 13 MMMCb
-  ]
+         ]
+         set jj jj + 1
+       ]
 
 
-;#########################################
+       ;#########################################
 ;#SACMEX NETWORK
-let MMSACMEX csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/DF101215_GOV_AP modificado PNAS.weighted.csv"
-let MMSACMEX_limit csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/DF101215_GOV_AP modificado PNAS.limit.csv"
+       let MMSACMEX csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/DF101215_GOV_AP modificado PNAS.weighted.csv"
+       let MMSACMEX_limit csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/DF101215_GOV_AP modificado PNAS.limit.csv"
 
-  create-Alternatives_SACMEX 1[
-    set ID "DF101215_GOV"
-    set name_action "Distribucion_Agua"
-    set label name_action
-    set w_C1 item 2 item 7 MMSACMEX_limit
-    set w_C2 item 2 item 8 MMSACMEX_limit
-    set w_C3 item 2 item 9 MMSACMEX_limit
-    set w_C4 item 2 item 10 MMSACMEX_limit
-    set w_C5 item 2 item 11 MMSACMEX_limit
-    set w_C6 item 2 item 12 MMSACMEX_limit
-    set w_C7 item 2 item 13 MMSACMEX_limit
-    set w_C8 item 2 item 14 MMSACMEX_limit
-    set w_C9 item 2 item 15 MMSACMEX_limit
-    set w_C10 item 2 item 16 MMSACMEX_limit
-    set w_C11 item 2 item 17 MMSACMEX_limit
+       set actions (list item 1 item 2 MMSACMEX_limit
+         item 1 item 3 MMSACMEX_limit
+         item 1 item 4 MMSACMEX_limit
+         item 1 item 5 MMSACMEX_limit
+         item 1 item 6 MMSACMEX_limit)
+       set jj 0
+       print actions
+       foreach actions [
+         create-Alternatives_SACMEX 1[
+           set ID "DF101215_GOV"
+           set name_action ?
+           set label name_action
+           set C1 (list 0 0 0 0 0 0 0 0 0 0 0)
+           set C1_max (list 0 0 0 0 0 0 0 0 0 0 0)
+           set V (list 0 0 0 0 0 0 0 0 0 0 0)
+           set w_C1 (
+             list item 2 item 7 MMSACMEX_limit
+             item 2 item 8 MMSACMEX_limit
+             item 2 item 9 MMSACMEX_limit
+             item 2 item 10 MMSACMEX_limit
+             item 2 item 11 MMSACMEX_limit
+             item 2 item 12 MMSACMEX_limit
+             item 2 item 13 MMSACMEX_limit
+             item 2 item 14 MMSACMEX_limit
+             item 2 item 15 MMSACMEX_limit
+             item 2 item 16 MMSACMEX_limit
+             item 2 item 17 MMSACMEX_limit)
+
+           set C1_name (list item 1 item 7 MMSACMEX
+             item 1 item 8 MMSACMEX
+             item 1 item 9 MMSACMEX
+             item 1 item 10 MMSACMEX
+             item 1 item 11 MMSACMEX
+             item 1 item 12 MMSACMEX
+             item 1 item 13 MMSACMEX
+             item 1 item 14 MMSACMEX
+             item 1 item 15 MMSACMEX
+             item 1 item 16 MMSACMEX
+             item 1 item 17 MMSACMEX)
+print name_action
+print w_C1
+           set w_limit item (jj + 2) item (jj + 2) MMSACMEX_limit /(item 5 item 5 MMSACMEX_limit + item 4 item 4 MMSACMEX_limit + item 3 item 3 MMSACMEX_limit + item 6 item 6 MMSACMEX_limit + item 2 item 2 MMSACMEX_limit)
+
+         ]
+         set jj jj + 1
+       ]
 
 
-    set C1_name item 1 item 7 MMSACMEX
-    set C2_name item 1 item 8 MMSACMEX
-    set C3_name item 1 item 9 MMSACMEX
-    set C4_name item 1 item 10 MMSACMEX
-    set C5_name item 1 item 11 MMSACMEX
-    set C6_name item 1 item 12 MMSACMEX
-    set C7_name item 1 item 13 MMSACMEX
-    set C8_name item 1 item 14 MMSACMEX
-    set C9_name item 1 item 15 MMSACMEX
-    set C10_name item 1 item 16 MMSACMEX
-    set C11_name item 1 item 17 MMSACMEX
+       let MMOCVAM csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/OCVAM_Version_sin_GEO.limit.csv"
 
-    set w_limit 0.05471 /(0.05471 + 0.05212 + 0.01843 + 0.05545 + 0.02017)
-  ]
-  create-Alternatives_SACMEX 1[
-    set ID "DF101215_GOV"
-    set name_action "Extraccion_Agua"
-    set label name_action
-    set w_C1 item 3 item 7 MMSACMEX_limit
-    set w_C2 item 3 item 8 MMSACMEX_limit
-    set w_C3 item 3 item 9 MMSACMEX_limit
-    set w_C4 item 3 item 10 MMSACMEX_limit
-    set w_C5 item 3 item 11 MMSACMEX_limit
-    set w_C6 item 3 item 12 MMSACMEX_limit
-    set w_C7 item 3 item 13 MMSACMEX_limit
-    set w_C8 item 3 item 14 MMSACMEX_limit
-    set w_C9 item 3 item 15 MMSACMEX_limit
-    set w_C10 item 3 item 16 MMSACMEX_limit
-    set w_C11 item 3 item 17 MMSACMEX_limit
-
-    set C1_name item 1 item 7 MMSACMEX
-    set C2_name item 1 item 8 MMSACMEX
-    set C3_name item 1 item 9 MMSACMEX
-    set C4_name item 1 item 10 MMSACMEX
-    set C5_name item 1 item 11 MMSACMEX
-    set C6_name item 1 item 12 MMSACMEX
-    set C7_name item 1 item 13 MMSACMEX
-    set C8_name item 1 item 14 MMSACMEX
-    set C9_name item 1 item 15 MMSACMEX
-    set C10_name item 1 item 16 MMSACMEX
-    set C11_name item 1 item 17 MMSACMEX
-
-    set w_limit  0.05212 /(0.05471 + 0.05212 + 0.01843 + 0.05545 + 0.02017)
-  ]
-  create-Alternatives_SACMEX 1[
-    set name_action "Importacion_Agua"
-    set label name_action
-    set w_C1 item 4 item 7 MMSACMEX_limit
-    set w_C2 item 4 item 8 MMSACMEX_limit
-    set w_C3 item 4 item 9 MMSACMEX_limit
-    set w_C4 item 4 item 10 MMSACMEX_limit
-    set w_C5 item 4 item 11 MMSACMEX_limit
-    set w_C6 item 4 item 12 MMSACMEX_limit
-    set w_C7 item 4 item 13 MMSACMEX_limit
-    set w_C8 item 4 item 14 MMSACMEX_limit
-    set w_C9 item 4 item 15 MMSACMEX_limit
-    set w_C10 item 4 item 16 MMSACMEX_limit
-    set w_C11 item 4 item 17 MMSACMEX_limit
-
-    set C1_name item 1 item 7 MMSACMEX
-    set C2_name item 1 item 8 MMSACMEX
-    set C3_name item 1 item 9 MMSACMEX
-    set C4_name item 1 item 10 MMSACMEX
-    set C5_name item 1 item 11 MMSACMEX
-    set C6_name item 1 item 12 MMSACMEX
-    set C7_name item 1 item 13 MMSACMEX
-    set C8_name item 1 item 14 MMSACMEX
-    set C9_name item 1 item 15 MMSACMEX
-    set C10_name item 1 item 16 MMSACMEX
-    set C11_name item 1 item 17 MMSACMEX
-    set w_limit  0.01843 /(0.05471 + 0.05212 + 0.01843 + 0.05545 + 0.02017)
-  ]
-  create-Alternatives_SACMEX 1[
-    set name_action "Mantenimiento"
-    set label name_action
-    set w_C1 item 5 item 7 MMSACMEX_limit
-    set w_C2 item 5 item 8 MMSACMEX_limit
-    set w_C3 item 5 item 9 MMSACMEX_limit
-    set w_C4 item 5 item 10 MMSACMEX_limit
-    set w_C5 item 5 item 11 MMSACMEX_limit
-    set w_C6 item 5 item 12 MMSACMEX_limit
-    set w_C7 item 5 item 13 MMSACMEX_limit
-    set w_C8 item 5 item 14 MMSACMEX_limit
-    set w_C9 item 5 item 15 MMSACMEX_limit
-    set w_C10 item 5 item 16 MMSACMEX_limit
-    set w_C11 item 5 item 17 MMSACMEX_limit
-
-    set C1_name item 1 item 7 MMSACMEX
-    set C2_name item 1 item 8 MMSACMEX
-    set C3_name item 1 item 9 MMSACMEX
-    set C4_name item 1 item 10 MMSACMEX
-    set C5_name item 1 item 11 MMSACMEX
-    set C6_name item 1 item 12 MMSACMEX
-    set C7_name item 1 item 13 MMSACMEX
-    set C8_name item 1 item 14 MMSACMEX
-    set C9_name item 1 item 15 MMSACMEX
-    set C10_name item 1 item 16 MMSACMEX
-    set C11_name item 1 item 17 MMSACMEX
-    set w_limit 0.05545 /(0.05471 + 0.05212 + 0.01843 + 0.05545 + 0.02017)
-  ]
-  create-Alternatives_SACMEX 1[
-    set name_action "Nueva_infraestructura"
-    set label name_action
-    set w_C1 item 6 item 7 MMSACMEX_limit
-    set w_C2 item 6 item 8 MMSACMEX_limit
-    set w_C3 item 6 item 9 MMSACMEX_limit
-    set w_C4 item 6 item 10 MMSACMEX_limit
-    set w_C5 item 6 item 11 MMSACMEX_limit
-    set w_C6 item 6 item 12 MMSACMEX_limit
-    set w_C7 item 6 item 13 MMSACMEX_limit
-    set w_C8 item 6 item 14 MMSACMEX_limit
-    set w_C9 item 6 item 15 MMSACMEX_limit
-    set w_C10 item 6 item 16 MMSACMEX_limit
-    set w_C11 item 6 item 17 MMSACMEX_limit
-
-    set C1_name item 1 item 7 MMSACMEX
-    set C2_name item 1 item 8 MMSACMEX
-    set C3_name item 1 item 9 MMSACMEX
-    set C4_name item 1 item 10 MMSACMEX
-    set C5_name item 1 item 11 MMSACMEX
-    set C6_name item 1 item 12 MMSACMEX
-    set C7_name item 1 item 13 MMSACMEX
-    set C8_name item 1 item 14 MMSACMEX
-    set C9_name item 1 item 15 MMSACMEX
-    set C10_name item 1 item 16 MMSACMEX
-    set C11_name item 1 item 17 MMSACMEX
-    set w_limit  0.02017 /(0.05471 + 0.05212 + 0.01843 + 0.05545 + 0.02017)
-  ]
-
-let MMOCVAM csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/OCVAM_Version_sin_GEO.limit.csv"
+       ;create-Alternatives_OCVAM 1[
+       ;    set ID "OCVAM"
+       ;    set label name_action
+       ;    set w_C1 (list item 6 item 2 MMOCVAM
+       ;    item 6 item 3 MMOCVAM
+       ;    item 6 item 4 MMOCVAM
+       ;    item 6 item 5 MMOCVAM
+       ;    item 6 item 6 MMOCVAM
+       ;    item 6 item 7 MMOCVAM
+       ;    item 6 item 8 MMOCVAM
+       ;    item 6 item 9 MMOCVAM
+       ;    item 6 item 10 MMOCVAM
+       ;    item 6 item 11 MMOCVAM
+       ;
+       ;    item 6 item 12 MMOCVAM
+       ;    item 6 item 13 MMOCVAM
+       ;    item 6 item 14 MMOCVAM
+       ;    item 6 item 15 MMOCVAM
+       ;    item 6 item 16 MMOCVAM
+       ;    item 6 item 17 MMOCVAM
+       ;    item 6 item 18 MMOCVAM
+       ;    item 6 item 19 MMOCVAM
+       ;    item 6 item 20 MMOCVAM
+       ;    item 6 item 21 MMOCVAM
+       ;
+       ;    item 6 item 22 MMOCVAM
+       ;    item 6 item 23 MMOCVAM
+       ;    item 6 item 24 MMOCVAM
+       ;    item 6 item 25 MMOCVAM
+       ;    item 6 item 26 MMOCVAM)
+       ;
+       ;
+       ;
+       ;    set C1_name (list item 1 item 2 MMOCVAM
+       ;    item 1 item 3 MMOCVAM
+       ;    item 1 item 4 MMOCVAM
+       ;    item 1 item 5 MMOCVAM
+       ;    item 1 item 6 MMOCVAM
+       ;    item 1 item 7 MMOCVAM
+       ;    item 1 item 8 MMOCVAM
+       ;    item 1 item 9 MMOCVAM
+       ;    item 1 item 10 MMOCVAM
+       ;    item 1 item 11 MMOCVAM
+       ;
+       ;    item 1 item 12 MMOCVAM
+       ;    item 1 item 13 MMOCVAM
+       ;    item 1 item 14 MMOCVAM
+       ;    item 1 item 15 MMOCVAM
+       ;    item 1 item 16 MMOCVAM
+       ;    item 1 item 17 MMOCVAM
+       ;    item 1 item 18 MMOCVAM
+       ;    item 1 item 19 MMOCVAM
+       ;    item 1 item 20 MMOCVAM
+       ;    item 1 item 21 MMOCVAM
+       ;    item 1 item 23 MMOCVAM
+       ;    item 1 item 24 MMOCVAM
+       ;    item 1 item 25 MMOCVAM
+       ;    item 1 item 26 MMOCVAM)
+       ;
+       ;    set w_limit  0.02017 /(0.05471 + 0.05212 + 0.01843 + 0.05545 + 0.02017)
+       ;  ]
+       ;
 
 end
 
@@ -1712,7 +1261,7 @@ CHOOSER
 Visualization
 Visualization
 "Accion_Colectiva" "Movilizaciones" "Compra_Agua" "Modificacion_vivienda" "Extraction Priorities" "GoogleEarth" "K_groups"
-4
+1
 
 BUTTON
 278
