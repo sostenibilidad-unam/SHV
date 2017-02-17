@@ -1,4 +1,4 @@
-extensions [GIS bitmap profiler csv];
+extensions [GIS bitmap profiler csv sql];
 globals [
 
 
@@ -534,17 +534,16 @@ end
 ;#############################################################################################################################################
 ;; read GIS layers
 to load-gis
-  set elevation gis:load-dataset "c:/Users/abaezaca/Documents/MEGADAPT/rastert_dem1.asc"                                                             ;elevation
-  set pozos_sacmex gis:load-dataset  "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/Join_pozosColoniasAgebs.shp"                                 ;wells
-  set Limites_delegacionales gis:load-dataset  "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/limites_deleg_DF_2013.shp"
-  set agebs_map gis:load-dataset "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/ageb7.shp";                                                      ;AGEB shape file
-  ;set Agebs_map_full gis:load-dataset "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/AGEB_Zona_Project.shp";
-  set ageb_encharc gis:load-dataset "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/DF_ageb_N_escalante_Project_withEncharcamientos.shp"
-  set Limites_cuenca gis:load-dataset "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/Lim_Cuenca_Valle_Mexico_Proj.shp";mask.shp"                                                          ;Mask of study area
-  set mascara gis:load-dataset "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/mask.shp"                                                                                                                                          ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
+  set elevation gis:load-dataset "data/rastert_dem1.asc"                                                             ;elevation
+  set pozos_sacmex gis:load-dataset  "data/Join_pozosColoniasAgebs.shp"                                 ;wells
+  set Limites_delegacionales gis:load-dataset  "data/limites_deleg_DF_2013.shp"
+  set agebs_map gis:load-dataset "data/ageb7.shp";                                                      ;AGEB shape file
+  set ageb_encharc gis:load-dataset "data/DF_ageb_N_escalante_Project_withEncharcamientos.shp"
+  set Limites_cuenca gis:load-dataset "data/Lim_Cuenca_Valle_Mexico_Proj.shp";mask.shp"                                                          ;Mask of study area
+  set mascara gis:load-dataset "data/mask.shp"                                                                                                                                          ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
   gis:set-world-envelope-ds gis:envelope-of mascara ;ageb_encharc;mascara;Limites_delegacionales
 
-  set city_image  bitmap:import "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/DF_googleB.jpg"                                                   ; google earth image
+  set city_image  bitmap:import "data/DF_googleB.jpg"                                                   ; google earth image
   bitmap:copy-to-pcolors City_image false
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;load GIS variables into patches;;;;;;;;;;;;;
@@ -931,6 +930,24 @@ to export-table
 
 end
 
+to export-postrges
+;this procedure exports an attribute from the agebs to a layer in postgis
+
+ sql:configure "defaultconnection" [["brand" "PostgreSQL"]["host" "localhost"]["port" 5432] ["user" "fidel"]["database" "netlogo"]]
+
+ foreach sort-on [ID] agebs[    ;sort agebs by ID from low to high
+   ask ?
+   [
+     ;Antiguedad-infra
+     sql:exec-update "UPDATE agebs_df SET infra=? WHERE ageb_id=?"  list Antiguedad-infra ID
+
+   ]
+ ]
+
+
+end
+
+
 
 
 ;#############################################################################################################################################
@@ -1012,8 +1029,8 @@ end
 ;name_action: the name of the alternative
 ;w a set of weight that connect each criteria
 to define_alternativesCriteria
-  let MMIz csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/I080316_OTR.weighted.csv"
-  let MMIz_limit csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/I080316_OTR.limit.csv"
+  let MMIz csv:from-file  "I080316_OTR.weighted.csv"
+  let MMIz_limit csv:from-file  "I080316_OTR.limit.csv"
   let actions (list item 1 item 2 MMIz_limit
     item 1 item 3 MMIz_limit
     item 1 item 4 MMIz_limit
@@ -1070,8 +1087,8 @@ to define_alternativesCriteria
 
 
 
-  let MMXo_L csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/X062916_OTR_a.limit.csv"
-  let MMXo_W csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/X062916_OTR_a.weighted.csv"
+  let MMXo_L csv:from-file  "X062916_OTR_a.limit.csv"
+  let MMXo_W csv:from-file  "X062916_OTR_a.weighted.csv"
   set jj 0
 
   set actions (list item 1 item 2 MMXo_L   ;obtain the name of the alternatives performed
@@ -1124,8 +1141,8 @@ to define_alternativesCriteria
   set jj jj + 1
   ]
        ;#################################################
-       let MMMCb csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/MC080416_OTR_b.weighted.csv"
-       let MMMCb_limit csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/MC080416_OTR_b.limit.csv"
+       let MMMCb csv:from-file  "MC080416_OTR_b.weighted.csv"
+       let MMMCb_limit csv:from-file  "MC080416_OTR_b.limit.csv"
 
        set actions (list item 1 item 2 MMMCb_limit
          item 1 item 3 MMMCb_limit
@@ -1186,8 +1203,8 @@ to define_alternativesCriteria
 
        ]
 ;################################################
-       let MMMC csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/MC080416_OTR_a.weighted.csv"
-       let MMMC_limit csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/MC080416_OTR_a.limit.csv"
+       let MMMC csv:from-file  "MC080416_OTR_a.weighted.csv"
+       let MMMC_limit csv:from-file  "MC080416_OTR_a.limit.csv"
 
        set actions (list item 1 item 2 MMMC_limit
          item 1 item 3 MMMC_limit
@@ -1237,8 +1254,8 @@ to define_alternativesCriteria
 
        ;#########################################
 ;#SACMEX NETWORK
-       let MMSACMEX csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/DF101215_GOV_AP modificado PNAS.weighted.csv"
-       let MMSACMEX_limit csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/DF101215_GOV_AP modificado PNAS.limit.csv"
+       let MMSACMEX csv:from-file  "DF101215_GOV_AP modificado PNAS.weighted.csv"
+       let MMSACMEX_limit csv:from-file  "DF101215_GOV_AP modificado PNAS.limit.csv"
 
        set actions (list item 1 item 2 MMSACMEX_limit
          item 1 item 3 MMSACMEX_limit
@@ -1305,7 +1322,7 @@ to define_alternativesCriteria
 
        ]
 
-       let MMOCVAM csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/OCVAM_Version_sin_GEO.limit.csv"
+       let MMOCVAM csv:from-file  "OCVAM_Version_sin_GEO.limit.csv"
 
        ;create-Alternatives_OCVAM 1[
        ;    set ID "OCVAM"
@@ -2083,7 +2100,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.2.1
+NetLogo 5.3.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
