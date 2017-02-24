@@ -306,9 +306,11 @@ to GO
     update_Infrastructure_state
   ]
 
-  if visualization = "GoogleEarth" [
-    bitmap:copy-to-pcolors City_image false
-  ]
+  ;export-postgres
+
+  ;if visualization = "GoogleEarth" [
+  ;  bitmap:copy-to-pcolors City_image false
+  ;]
  ;profiler:stop          ;; stop profiling
  ;print profiler:report  ;; view the results
  ;profiler:reset         ;; clear the data
@@ -537,14 +539,14 @@ to load-gis
   set elevation gis:load-dataset "data/rastert_dem1.asc"                                                             ;elevation
   set pozos_sacmex gis:load-dataset  "data/Join_pozosColoniasAgebs.shp"                                 ;wells
   set Limites_delegacionales gis:load-dataset  "data/limites_deleg_DF_2013.shp"
-  set agebs_map gis:load-dataset "data/ageb7.shp";                                                      ;AGEB shape file
+  set agebs_map gis:load-dataset "data/ageb8.shp";                                                      ;AGEB shape file
   set ageb_encharc gis:load-dataset "data/DF_ageb_N_escalante_Project_withEncharcamientos.shp"
   set Limites_cuenca gis:load-dataset "data/Lim_Cuenca_Valle_Mexico_Proj.shp";mask.shp"                                                          ;Mask of study area
-  set mascara gis:load-dataset "data/mask.shp"                                                                                                                                          ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
+  set mascara gis:load-dataset "data/Mask.shp"                                                                                                                                          ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
   gis:set-world-envelope-ds gis:envelope-of mascara ;ageb_encharc;mascara;Limites_delegacionales
 
-  set city_image  bitmap:import "data/DF_googleB.jpg"                                                   ; google earth image
-  bitmap:copy-to-pcolors City_image false
+  ;set city_image  bitmap:import "data/DF_googleB.jpg"                                                   ; google earth image
+  ;bitmap:copy-to-pcolors City_image false
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;load GIS variables into patches;;;;;;;;;;;;;
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -598,7 +600,7 @@ to define_agebs
           set ycor item 1 centroid
           set name_delegation gis:property-value ?1 "NOM_MUN"                                                                                                ;;name of delegations
           set poblacion ifelse-value (gis:property-value ?1 "POBTOT" > 0)[gis:property-value ?1 "POBTOT"][1]                                                  ;;population size per ageb
-          set ID gis:property-value ?1 "POLY_ID"                                                                                                              ;;ageb ID Check witht the team in MX to have the same identifier
+          set ID gis:property-value ?1 "ageb_id"                                                                                                              ;;ageb ID Check witht the team in MX to have the same identifier
           set label ""
           set houses_with_abastecimiento gis:property-value ?1 "VPH_AGUADV" / (1 + gis:property-value ?1 "VPH_AGUADV" + gis:property-value ?1 "VPH_AGUAFV")  ;;% cases con toma de abastecimiento
           set houses_with_dranage gis:property-value ?1 "VPH_DRENAJ" / (1 + gis:property-value ?1 "VPH_DRENAJ" + gis:property-value ?1 "VPH_NODREN")         ;;% de casas con toma de drenage from encuesta ENGHI
@@ -930,17 +932,17 @@ to export-table
 
 end
 
-to export-postrges
+to export-postgres
 ;this procedure exports an attribute from the agebs to a layer in postgis
 
- sql:configure "defaultconnection" [["brand" "PostgreSQL"]["host" "localhost"]["port" 5432] ["user" "fidel"]["database" "netlogo"]]
+ sql:configure "defaultconnection" [["brand" "PostgreSQL"]["host" "localhost"]["port" 5432] ["user" "postgres"]["password" "x"]["database" "new"]]
 
  foreach sort-on [ID] agebs[    ;sort agebs by ID from low to high
    ask ?
    [
      ;Antiguedad-infra
-     sql:exec-update "UPDATE agebs_df SET infra=? WHERE ageb_id=?"  list Antiguedad-infra ID
-
+     sql:exec-update "UPDATE agebs_calles_geo SET infra=? WHERE ageb_id=?"  list Antiguedad-infra ID
+     ;show ID
    ]
  ]
 
@@ -2100,7 +2102,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.3.1
+NetLogo 5.3
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
