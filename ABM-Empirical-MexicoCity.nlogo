@@ -3,6 +3,7 @@ extensions [GIS bitmap profiler csv matrix];
 ;=======
 ;extensions [GIS bitmap profiler csv sql];
 ;>>>>>>> 247fb45929804fe520d04fb62e879cf1409142e5
+;
 globals [
 
 
@@ -10,7 +11,8 @@ globals [
   Tot_water_Imported_Cutzamala ;;total water that enter to MC every day by importation from Cutzamala. for now a constant in the future connected as a network
   Tot_water_Imported_Lerma     ;;total water that enter to MC every day by importation from Lerma system. for now a constant int he future connected as a network
   water_produced               ;;Water produced by the city wells
-
+  zonas_aquiferas_MX           ;;ID de las zonas aquiferas en MXC
+  from_d_to_bombeo
 ;; agua en tuberias
   background_fugas             ;; % water lost every day by fugas
   max-elevation                ;;max altitude
@@ -236,12 +238,12 @@ Pozos-own[
 ;maximal level of the variable to define
 ;value function
 
-Alternatives_IZ-own[ID name_action C1_name C1 C1_MAX w_C1 V w_limit]
-Alternatives_Xo-own[ID name_action C1_name C1 C1_MAX w_C1 V w_limit]
-Alternatives_MC-own[ID name_action C1_name C1 C1_MAX w_C1 V w_limit]
-Alternatives_SACMEX-own[ID name_action C1_name C1 C1_MAX w_C1 V w_limit]  ;value obtained for the action when calcualting the limiting matrix in super decition
-Alternatives_SACMEX_D-own[ID name_action C1_name C1 C1_MAX w_C1 V w_limit]  ;value obtained for the action when calcualting the limiting matrix in super decition
-Alternatives_OCVAM-own[ID CLUSTER name_action C1_name C1 C1_MAX w_C1 V w_limit]   ;value obtained for the action when calcualting the limiting matrix in super decition
+Alternatives_IZ-own[ID name_action C1_name C1 C1_MAX w_C1 V alpha]
+Alternatives_Xo-own[ID name_action C1_name C1 C1_MAX w_C1 V alpha]
+Alternatives_MC-own[ID name_action C1_name C1 C1_MAX w_C1 V alpha]
+Alternatives_SACMEX-own[ID name_action C1_name C1 C1_MAX w_C1 V alpha]  ;value obtained for the action when calcualting the limiting matrix in super decition
+Alternatives_SACMEX_D-own[ID name_action C1_name C1 C1_MAX w_C1 V alpha]  ;value obtained for the action when calcualting the limiting matrix in super decition
+Alternatives_OCVAM-own[ID CLUSTER name_action C1_name C1 C1_MAX w_C1 V alpha]   ;value obtained for the action when calcualting the limiting matrix in super decition
 
 
 ;#############################################################################################################################################
@@ -293,7 +295,6 @@ to SETUP
   set d_new_max 1
   set d_water_distribution_max 1
   set d_water_importacion_max 1
-
   set d_water_extraction_max 1
 
 if escala = "cuenca"[
@@ -301,7 +302,8 @@ if escala = "cuenca"[
 ]
 if escala = "ciudad" [
   define_agebs
-
+  set zonas_aquiferas_MX [4 12 14 15 16 17 19 20 24 26 27 28 29 31 32 33 34 36 37 38 41 42 43 44 48]
+  set from_d_to_bombeo [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
 ]
   define_alternativesCriteria
 
@@ -326,16 +328,17 @@ to GO
   ;profiler:start
 
   update_globals
- counter_days                   ;counter to define when actions occur
+  counter_days                   ;counter to define when actions occur
 
  if months = 1 and days = 1 [
-  SACMEX-decisions_Ab              ;;decisions by SACMEX
-
+   SACMEX-decisions              ;;decisions by SACMEX
+   water_extraccion
  ]
-if days = 1[
-  ask agebs [
-    residents-decisions
+ if days = 1[
+   ask agebs [
+     residents-decisions
 
+     ;<<<<<<< HEAD
     if escala = "ciudad" [
           Landscape_visualization          ;;visualization of social and physical processes
     ]
@@ -349,12 +352,20 @@ if days = 1[
 ;    bitmap:copy-to-pcolors City_image false
 ;  ]
 
+;=======
+  ;export-postgres
+
+  ;if visualization = "GoogleEarth" [
+  ;  bitmap:copy-to-pcolors City_image false
+  ;]
+;>>>>>>> 40296037b262d6aac0752d8e484d769571b1ce61
  ;profiler:stop          ;; stop profiling
  ;print profiler:report  ;; view the results
  ;profiler:reset         ;; clear the data
   if ticks = 2[plot-pen-reset]
 
-  if months = 12 and days = 30[export-postgres]
+;  if months = 12 and days = 30[ ]
+
 end
 
 ;#############################################################################################################################################
@@ -382,21 +393,13 @@ end
 
 ;#############################################################################################################################################
 ;#############################################################################################################################################
-
-
-
-
-
-
-;#############################################################################################################################################
-;#############################################################################################################################################
 to residents-decisions
 
 if group_kmean = 1 or group_kmean = 3[ ;#residents type Xochimilco
 
  ask Alternatives_Xo [
    update_criteria_and_valueFunctions_residentes
-   let ddd (distance-ideal w_limit V w_C1 1)
+   let ddd (distance-ideal alpha V w_C1 1)
    if name_action = "Movilizaciones"[
      ask myself [
        set d_Movilizaciones ddd
@@ -425,7 +428,7 @@ if group_kmean = 2 or group_kmean = 0[ ;#Residents type Iztapalapa
   ask Alternatives_Iz [
     update_criteria_and_valueFunctions_residentes
 
-    let  ddd (distance-ideal w_limit V w_C1 1)
+    let  ddd (distance-ideal alpha V w_C1 1)
     if name_action = "Movilizaciones"[
       ask myself [
         set d_Movilizaciones ddd
@@ -454,7 +457,7 @@ if group_kmean = 2 or group_kmean = 0[ ;#Residents type Iztapalapa
 if group_kmean = 4 [ ;#Residents type Magdalena Contreras
   ask Alternatives_MC [
     update_criteria_and_valueFunctions_residentes
-    let ddd (distance-ideal w_limit V w_C1 1)
+    let ddd (distance-ideal alpha V w_C1 1)
     if name_action = "Movilizaciones"[
       ask myself [
         set d_Movilizaciones ddd
@@ -519,7 +522,7 @@ to update_globals  ;; update the maximum or minimum of values use by the model t
 to p_falla_infra    ;;update age and probability of failure and also is color if well is working
     set Antiguedad-infra_Ab  Antiguedad-infra_Ab  + 1
     set Antiguedad-infra_D  Antiguedad-infra_D  + 1
-     set P_failure  (1 - exp(- hundimientos * Antiguedad-infra_Ab  / 200))
+     set P_failure  1 - exp(- hundimientos * Antiguedad-infra_Ab  / (365 * 200))
 
 end
 ;#############################################################################################################################################
@@ -546,25 +549,35 @@ end
 ;#############################################################################################################################################
 ;; read GIS layers
 to load-gis
+;<<<<<<< HEAD
   ;set elevation gis:load-dataset "c:/Users/abaezaca/Documents/MEGADAPT/rastert_dem1.asc"                                                             ;elevation
 ;<<<<<<< HEAD
 ;  set pozos_sacmex gis:load-dataset  "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/Join_pozosColoniasAgebs.shp"                                 ;wells
   set Limites_delegacionales gis:load-dataset  "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/limites_deleg_DF_2013.shp"
-  set agebs_map gis:load-dataset "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/ageb7.shp";                                                      ;AGEB shape file
+  ;set agebs_map gis:load-dataset "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/ageb7.shp";                                                      ;AGEB shape file
   set Agebs_map_full gis:load-dataset "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/agebs_total_test.shp";original from C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/01febrero2017
   set ageb_encharc gis:load-dataset "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/DF_ageb_N_escalante_Project_withEncharcamientos.shp"
- ; set Limites_cuenca gis:load-dataset "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/Lim_Cuenca_Valle_Mexico_Proj.shp";mask.shp"                                                          ;Mask of study area
+  ;set Limites_cuenca gis:load-dataset "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/Lim_Cuenca_Valle_Mexico_Proj.shp";mask.shp"                                                          ;Mask of study area
   set mascara gis:load-dataset "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/mask.shp"                                                                                                                                          ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
 ;=======
 ;  set pozos_sacmex gis:load-dataset  "data/Join_pozosColoniasAgebs.shp"                                 ;wells
 ;  set Limites_delegacionales gis:load-dataset  "data/limites_deleg_DF_2013.shp"
-;  set agebs_map gis:load-dataset "data/ageb8.shp";                                                      ;AGEB shape file
+  set agebs_map gis:load-dataset "data/ageb8.shp";                                                      ;AGEB shape file
 ;  set Agebs_map_full gis:load-dataset "data/agebs_total_test.shp";orignal from C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/01febrero2017
 ;  set ageb_encharc gis:load-dataset "data/DF_ageb_N_escalante_Project_withEncharcamientos.shp"
 ; ; set Limites_cuenca gis:load-dataset "data/Lim_Cuenca_Valle_Mexico_Proj.shp";mask.shp"                                                          ;Mask of study area
 ;  set mascara gis:load-dataset "data/Mask.shp"                                                                                                                                          ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
 ;>>>>>>> 247fb45929804fe520d04fb62e879cf1409142e5
 if escala = "ciudad"[
+;=======
+ ; set elevation gis:load-dataset "data/rastert_dem1.asc"                                                             ;elevation
+ ; set pozos_sacmex gis:load-dataset  "data/Join_pozosColoniasAgebs.shp"                                 ;wells
+ ; set Limites_delegacionales gis:load-dataset  "data/limites_deleg_DF_2013.shp"
+ ; set agebs_map gis:load-dataset "data/ageb8.shp";                                                      ;AGEB shape file
+ ; set ageb_encharc gis:load-dataset "data/DF_ageb_N_escalante_Project_withEncharcamientos.shp"
+;  set Limites_cuenca gis:load-dataset "data/Lim_Cuenca_Valle_Mexico_Proj.shp";mask.shp"                                                          ;Mask of study area
+;  set mascara gis:load-dataset "data/Mask.shp"                                                                                                                                          ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
+;>>>>>>> 40296037b262d6aac0752d8e484d769571b1ce61
   gis:set-world-envelope-ds gis:envelope-of mascara ;ageb_encharc;mascara;Limites_delegacionales
   gis:apply-coverage agebs_map "POLY_ID" ageb_ID
 ]
@@ -572,8 +585,13 @@ if escala = "cuenca"[
   gis:set-world-envelope-ds gis:envelope-of Agebs_map_full;mascara ;ageb_encharc;mascara;Limites_delegacionales
 ]
 
+;<<<<<<< HEAD
  ; set city_image  bitmap:import "data/DF_googleB.jpg"                                                   ; google earth image
  ; bitmap:copy-to-pcolors City_image false
+;=======
+  ;set city_image  bitmap:import "data/DF_googleB.jpg"                                                   ; google earth image
+  ;bitmap:copy-to-pcolors City_image false
+;>>>>>>> 40296037b262d6aac0752d8e484d769571b1ce61
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;load GIS variables into patches;;;;;;;;;;;;;
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -617,7 +635,7 @@ foreach gis:feature-list-of Agebs_map_full; "ID_ZONA" "0"
        set ID gis:property-value ? "AGEB_ID"
        set color grey
        set shape "circle"
-       set size 0.1
+       set size 0.5
        set hidden? false
        set Abastecimiento poblacion * water_requirement_perPerson               ;;;C4_A1;;;
        set Gasto_hidraulico 1
@@ -654,9 +672,9 @@ to define_agebs
           set ycor item 1 centroid
           set name_delegation gis:property-value ?1 "NOM_MUN"                                                                                                ;;name of delegations
           set poblacion ifelse-value (gis:property-value ?1 "POBTOT" > 0)[gis:property-value ?1 "POBTOT"][1]                                                  ;;population size per ageb
-          set ID gis:property-value ?1 "POLY_ID"                                                                                                              ;;ageb ID Check witht the team in MX to have the same identifier
+          set ID gis:property-value ?1 "ageb_id"                                                                                                              ;;ageb ID Check witht the team in MX to have the same identifier
           set label ""
-          set houses_with_abastecimiento gis:property-value ?1 "VPH_AGUADV" / (1 + gis:property-value ?1 "VPH_AGUADV" + gis:property-value ?1 "VPH_AGUAFV")  ;;% cases con toma de abastecimiento
+          set houses_with_abastecimiento gis:property-value ?1 "VPH_AGUADV" / (1 + gis:property-value ?1 "VPH_AGUADV" + gis:property-value ?1 "VPH_AGUAFV")  ;;% casas con toma de abastecimiento
           set houses_with_dranage gis:property-value ?1 "VPH_DRENAJ" / (1 + gis:property-value ?1 "VPH_DRENAJ" + gis:property-value ?1 "VPH_NODREN")         ;;% de casas con toma de drenage from encuesta ENGHI
           set hundimientos gis:property-value ?2 "HUND"                                                                                                      ;;variable hundimientos (Marco)
           set group_kmean gis:property-value ?2 "KMEANS5"                                                                                                    ;;grupos de vecindarios
@@ -907,7 +925,7 @@ end
 ;#################################################################################################################################################
 ;#################################################################################################################################################
 
-to SACMEX-decisions_Ab
+to SACMEX-decisions
  ;;; Define value functions
  ;;here government clasifies each ageb based on distan from ideal point to rank them and thus priotirized interventions
  ;we call each alternative to update the value of the criteria acording to the state of the ageb
@@ -917,7 +935,7 @@ to SACMEX-decisions_Ab
     ;#################################################################################################################################################
     ask Alternatives_SACMEX [
       update_criteria_and_valueFunctions_SACMEX   ;
-      let ddd (distance-ideal w_limit V w_C1 2)
+      let ddd (distance-ideal alpha V w_C1 2)
 
       ;#Alternative Mantenimiento Infrastructura
       if name_action = "Mantenimiento"[
@@ -944,8 +962,7 @@ to SACMEX-decisions_Ab
   ;#actions of drenage
     ask Alternatives_SACMEX_D [
       update_criteria_and_valueFunctions_SACMEX   ;
-      let ddd (distance-ideal w_limit V w_C1 2)
-
+      let ddd (distance-ideal alpha V w_C1 2)
       if name_action = "Nueva_infraestructura"[
         ask myself[set d_new_D ddd]
       ]
@@ -965,28 +982,23 @@ to SACMEX-decisions_Ab
 ;      ]
  ;   ]
   ;]
-  reparar-Infra_Ab
 
+
+  ;;actions
+  repair-Infra_Ab
+  repair-Infra_D
+  New-Infra_A
+  New-Infra_D
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
-
-to SACMEX-decisions_D
-  ask  agebs [
-
-  ]
-  reparar-Infra_Ab
-end
-
-;#############################################################################################################################################
-;#############################################################################################################################################
-  to reparar-Infra_Ab
+  to repair-Infra_Ab
   let Budget 0
   foreach sort-on [1 - d_mantencion] agebs[
     ask ? [
 
       if Budget < recursos_para_mantencion[
-        set Antiguedad-infra_Ab  0.8 * Antiguedad-infra_Ab
+        set Antiguedad-infra_Ab  tasa_de_cambio_edadInfra * Antiguedad-infra_Ab
         set Budget Budget + 1
       ]
     ]
@@ -994,19 +1006,59 @@ end
   end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
-  to reparar-Infra_D
+  to repair-Infra_D
     let Budget 0
     foreach sort-on [1 - d_mantencion_D] agebs[
       ask ? [
 
-        if Budget < recursos_para_mantencion[
-          set Antiguedad-infra_D  0.8 * Antiguedad-infra_D
+        if Budget < recursos_para_mantencion [
+          set Antiguedad-infra_D tasa_de_cambio_edadInfra * Antiguedad-infra_D
           set Budget Budget + 1
         ]
       ]
     ]
 end
 ;#############################################################################################################################################
+;#############################################################################################################################################
+to New-Infra_D
+    let Budget 0
+    foreach sort-on [1 - d_new_D] agebs[
+      ask ? [
+
+        if Budget < recursos_para_new and houses_with_abastecimiento < 1 [
+          set houses_with_abastecimiento houses_with_abastecimiento + tasa_de_cambio_newInfra * (1 - houses_with_abastecimiento)
+          set Budget Budget + 1
+        ]
+      ]
+    ]
+end
+;#############################################################################################################################################
+;#############################################################################################################################################
+to New-Infra_A
+    let Budget 0
+    foreach sort-on [1 - d_new] agebs[
+      ask ? [
+
+        if Budget < recursos_para_new and houses_with_dranage < 1 [
+          set houses_with_dranage houses_with_dranage + tasa_de_cambio_newInfra * (1 - houses_with_dranage)
+          set Budget Budget + 1
+        ]
+      ]
+    ]
+end
+;#############################################################################################################################################
+to water_extraccion
+  let i 0
+foreach zonas_aquiferas_MX [
+
+set from_d_to_bombeo replace-item i from_d_to_bombeo ifelse-value (any? agebs with [zona_aquifera = ?]) [mean [d_water_extraction] of agebs with [zona_aquifera = ?]]["NA"]
+set i i + 1
+]
+
+print from_d_to_bombeo
+end
+
+
 ;#############################################################################################################################################
 to protest
 set Presion_social 0.9 * Presion_social  + ifelse-value (d_Movilizaciones > random-float 1)[1][0]
@@ -1041,6 +1093,30 @@ if file-exists? file_n
  file-close                                        ;close the File
  report word "saved  " atribute
 end
+;<<<<<<< HEAD
+;=======
+
+;to export-postgres
+;;this procedure exports an attribute from the agebs to a layer in postgis
+
+; sql:configure "defaultconnection" [["brand" "PostgreSQL"]["host" "localhost"]["port" 5432] ["user" "postgres"]["password" "x"]["database" "new"]]
+;
+; foreach sort-on [ID] agebs[    ;sort agebs by ID from low to high
+;   ask ?
+;   [
+ ;    ;Antiguedad-infra
+;     sql:exec-update "UPDATE agebs_calles_geo SET infra=? WHERE ageb_id=?"  list Antiguedad-infra ID
+     ;show ID
+;   ]
+; ]
+
+
+;end
+
+
+
+
+;>>>>>>> 40296037b262d6aac0752d8e484d769571b1ce61
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 to import-agebslayers
@@ -1095,10 +1171,12 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
       if visualization = "Salud" and ticks > 1 [set color (5 * sqrt disease_burden)] ;;visualized incidence of gastrointestinal diseases in MX 2004-2014
       if visualization = "Encharcamientos" and ticks > 1 [set color  scale-color sky flooding 0 flooding_max] ;;visualized SACMEX flooding dataset MX 2004-2014
       if visualization = "Infraestructura Abastecimiento" and ticks > 1 [set color  scale-color sky houses_with_abastecimiento 1 0.7] ;;visualized SACMEX flooding dataset MX 2004-2014
-      if visualization = "Infraestructura Edad" and ticks > 1 [set color  scale-color green Antiguedad-infra_Ab  0 200]
+      if visualization = "Infraestructura Edad" and ticks > 1 [
+        set size Antiguedad-infra_Ab / 100
+        set color  scale-color green Antiguedad-infra_Ab  0 200]
       if visualization = "P. Falla" and ticks > 1 [set color  scale-color green P_failure 0 1]
       if visualization = "Zonas Aquifero" and ticks > 1 [set color  zona_aquifera]
-    ]
+   ]
   ]
 end
 ;#############################################################################################################################################
@@ -1114,13 +1192,12 @@ to-report Value-Function [A B C D EE]    ;This function reports a standarized va
     if A > (item 1 B) * D and  A <= (item 2 B) * D [set SM (item 2 EE)]
     if A > (item 0 B) * D and  A <= (item 1 B) * D [set SM (item 1 EE)]
     if A <= (item 0 B) * D [set SM (item 0 EE)]
-
 Report SM
   ;return a list of
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
-to-report distance-ideal[alpha VF_list weight_list h_Cp]
+to-report distance-ideal[alpha_w VF_list weight_list h_Cp]
   ;this function calcualte a distance to ideal point using compromized programing metric
   ;arguments:
      ;VF_list: a list of value functions
@@ -1138,8 +1215,13 @@ end
 ;name_action: the name of the alternative
 ;w a set of weight that connect each criteria
 to define_alternativesCriteria
-  let MMIz csv:from-file  "data/I080316_OTR.weighted.csv"
-  let MMIz_limit csv:from-file  "data/I080316_OTR.limit.csv"
+;<<<<<<< HEAD
+;  let MMIz csv:from-file  "data/I080316_OTR.weighted.csv"
+;  let MMIz_limit csv:from-file  "data/I080316_OTR.limit.csv"
+;=======
+  let MMIz csv:from-file  "I080316_OTR.weighted.csv"
+  let MMIz_limit csv:from-file  "I080316_OTR.limit.csv"
+;>>>>>>> 40296037b262d6aac0752d8e484d769571b1ce61
   let actions (list item 1 item 2 MMIz_limit
     item 1 item 3 MMIz_limit
     item 1 item 4 MMIz_limit
@@ -1187,7 +1269,7 @@ to define_alternativesCriteria
         item 1 item 14 MMIz_limit
         item 1 item 15 MMIz_limit)
 
-      set w_limit item (jj + 2) item (jj + 2) MMIz_limit / (item 5 item 5 MMIz_limit + item 4 item 4 MMIz_limit + item 3 item 3 MMIz_limit + item 6 item 6 MMIz_limit + item 2 item 2 MMIz_limit)
+      set alpha item (jj + 2) item (jj + 2) MMIz_limit / (item 5 item 5 MMIz_limit + item 4 item 4 MMIz_limit + item 3 item 3 MMIz_limit + item 6 item 6 MMIz_limit + item 2 item 2 MMIz_limit)
     ]
 
   set jj jj + 1
@@ -1196,8 +1278,13 @@ to define_alternativesCriteria
 
 
 
-  let MMXo_L csv:from-file  "data/X062916_OTR_a.limit.csv"
-  let MMXo_W csv:from-file  "data/X062916_OTR_a.weighted.csv"
+;<<<<<<< HEAD
+; let MMXo_L csv:from-file  "data/X062916_OTR_a.limit.csv"
+;  let MMXo_W csv:from-file  "data/X062916_OTR_a.weighted.csv"
+;;=======
+  let MMXo_L csv:from-file  "X062916_OTR_a.limit.csv"
+  let MMXo_W csv:from-file  "X062916_OTR_a.weighted.csv"
+;>>>>>>> 40296037b262d6aac0752d8e484d769571b1ce61
   set jj 0
 
   set actions (list item 1 item 2 MMXo_L   ;obtain the name of the alternatives performed
@@ -1244,14 +1331,19 @@ to define_alternativesCriteria
         item 1 item 14 MMXo_L
         item 1 item 15 MMXo_L)
 
-      set w_limit (item (jj + 2) item (jj + 2) MMXo_L) / (item 5 item 5 MMXo_L + item 4 item 4 MMXo_L + item 3 item 3 MMXo_L + item 6 item 6 MMXo_L + item 2 item 2 MMXo_L)
+      set alpha (item (jj + 2) item (jj + 2) MMXo_L) / (item 5 item 5 MMXo_L + item 4 item 4 MMXo_L + item 3 item 3 MMXo_L + item 6 item 6 MMXo_L + item 2 item 2 MMXo_L)
     ]
 
   set jj jj + 1
   ]
        ;#################################################
-       let MMMCb csv:from-file  "data/MC080416_OTR_b.weighted.csv"
-       let MMMCb_limit csv:from-file  "data/MC080416_OTR_b.limit.csv"
+;<<<<<<< HEAD
+;       let MMMCb csv:from-file  "data/MC080416_OTR_b.weighted.csv"
+;       let MMMCb_limit csv:from-file  "data/MC080416_OTR_b.limit.csv"
+;=======
+       let MMMCb csv:from-file  "MC080416_OTR_b.weighted.csv"
+       let MMMCb_limit csv:from-file  "MC080416_OTR_b.limit.csv"
+;>>>>>>> 40296037b262d6aac0752d8e484d769571b1ce61
 
        set actions (list item 1 item 2 MMMCb_limit
          item 1 item 3 MMMCb_limit
@@ -1305,15 +1397,20 @@ to define_alternativesCriteria
              item 1 item 16 MMMCb_limit)
 
 
-           set w_limit item (jj + 2) item (jj + 2) MMMCb_limit /(item 5 item 5 MMMCb_limit + item 4 item 4 MMMCb_limit + item 3 item 3 MMMCb_limit + item 6 item 6 MMMCb_limit + item 2 item 2 MMMCb_limit)
+           set alpha item (jj + 2) item (jj + 2) MMMCb_limit /(item 5 item 5 MMMCb_limit + item 4 item 4 MMMCb_limit + item 3 item 3 MMMCb_limit + item 6 item 6 MMMCb_limit + item 2 item 2 MMMCb_limit)
 
          ]
   set jj jj + 1
 
        ]
 ;################################################
-       let MMMC csv:from-file  "data/MC080416_OTR_a.weighted.csv"
-       let MMMC_limit csv:from-file  "data/MC080416_OTR_a.limit.csv"
+;<<<<<<< HEAD
+ ;      let MMMC csv:from-file  "data/MC080416_OTR_a.weighted.csv"
+;       let MMMC_limit csv:from-file  "data/MC080416_OTR_a.limit.csv"
+;=======
+       let MMMC csv:from-file  "MC080416_OTR_a.weighted.csv"
+       let MMMC_limit csv:from-file  "MC080416_OTR_a.limit.csv"
+;>>>>>>> 40296037b262d6aac0752d8e484d769571b1ce61
 
        set actions (list item 1 item 2 MMMC_limit
          item 1 item 3 MMMC_limit
@@ -1352,7 +1449,7 @@ to define_alternativesCriteria
              item 1 item 12 MMMC_limit)
 
 
-           set w_limit item (jj + 2) item (jj + 2) MMMC_limit /(item 5 item 5 MMMC_limit + item 4 item 4 MMMC_limit + item 3 item 3 MMMC_limit + item 6 item 6 MMMC_limit + item 2 item 2 MMMC_limit)
+           set alpha item (jj + 2) item (jj + 2) MMMC_limit /(item 5 item 5 MMMC_limit + item 4 item 4 MMMC_limit + item 3 item 3 MMMC_limit + item 6 item 6 MMMC_limit + item 2 item 2 MMMC_limit)
 
 
          ]
@@ -1363,8 +1460,13 @@ to define_alternativesCriteria
 
        ;#########################################
 ;#SACMEX NETWORK
-       let MMSACMEX csv:from-file  "data/DF101215_GOV_AP modificado PNAS.weighted.csv"
-       let MMSACMEX_limit csv:from-file  "data/DF101215_GOV_AP modificado PNAS.limit.csv"
+;<<<<<<< HEAD
+;       let MMSACMEX csv:from-file  "data/DF101215_GOV_AP modificado PNAS.weighted.csv"
+ ;      let MMSACMEX_limit csv:from-file  "data/DF101215_GOV_AP modificado PNAS.limit.csv"
+;=======
+       let MMSACMEX csv:from-file  "DF101215_GOV_AP modificado PNAS.weighted.csv"
+       let MMSACMEX_limit csv:from-file  "DF101215_GOV_AP modificado PNAS.limit.csv"
+;>>>>>>> 40296037b262d6aac0752d8e484d769571b1ce61
 
        set actions (list item 1 item 2 MMSACMEX_limit   ;define the alternatives
          item 1 item 3 MMSACMEX_limit
@@ -1424,13 +1526,14 @@ to define_alternativesCriteria
              item 1 item 18 MMSACMEX_limit
              item 1 item 19 MMSACMEX_limit)
 
-           set w_limit item (jj + 2) item (jj + 2) MMSACMEX_limit /(item 5 item 5 MMSACMEX_limit + item 4 item 4 MMSACMEX_limit + item 3 item 3 MMSACMEX_limit + item 6 item 6 MMSACMEX_limit + item 2 item 2 MMSACMEX_limit)
+           set alpha item (jj + 2) item (jj + 2) MMSACMEX_limit /(item 5 item 5 MMSACMEX_limit + item 4 item 4 MMSACMEX_limit + item 3 item 3 MMSACMEX_limit + item 6 item 6 MMSACMEX_limit + item 2 item 2 MMSACMEX_limit)
          ]
          set jj jj + 1
 
 
        ]
 
+;<<<<<<< HEAD
 ;<<<<<<< HEAD
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -1458,16 +1561,16 @@ to define_alternativesCriteria
        set MMSACMEX_limit_D matrix:from-row-list MMSACMEX_limit_D
 
        set MMSACMEX_limit_D (matrix:times MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D)
-       print matrix:pretty-print-text MMSACMEX_limit_D
+       ;print matrix:pretty-print-text MMSACMEX_limit_D
        foreach actions [
-         create-Alternatives_SACMEX_D 1[    ;create an alternative, the criteria and the weights. Also in the case of HNP network the weight of each alternative in the limit matrix
+         create-Alternatives_SACMEX_D 1[    ;create an alternative, the criteria and the weights. Also in the case of HNP network the weight of each alternative in the limit matrix (alpha)
            set ID "no-defined Drenage"
            set name_action ?
            set label name_action
-           set C1 (list 0 0 0 0 0 0 0 0 0 0 0 0 0)
-           set C1_max (list 0 0 0 0 0 0 0 0 0 0 0 0 0)
-           set V (list 0 0 0 0 0 0 0 0 0 0 0 0 0)
-           print matrix:get MMSACMEX_limit_D 2 2
+           set C1 (list 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
+           set C1_max (list 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
+           set V (list 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
+
            let w_sum sum (list matrix:get MMSACMEX_limit_D 2 2
              matrix:get MMSACMEX_limit_D 3 2
              matrix:get MMSACMEX_limit_D 4 2
@@ -1513,8 +1616,10 @@ to define_alternativesCriteria
              item 1 item 15 MMSACMEX_D
              item 1 item 16 MMSACMEX_D
              item 1 item 17 MMSACMEX_D)
-           print C1_name
+          set alpha matrix:get MMSACMEX_limit_D jj jj /(matrix:get MMSACMEX_limit_D 0 0 + matrix:get MMSACMEX_limit_D 1 1)
+
          ]
+         set jj jj + 1
        ]
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -1525,6 +1630,9 @@ to define_alternativesCriteria
 ;=======
 ;       let MMOCVAM csv:from-file  "data/OCVAM_Version_sin_GEO.limit.csv"
 ;>>>>>>> 247fb45929804fe520d04fb62e879cf1409142e5
+;=======
+     ;  let MMOCVAM csv:from-file  "OCVAM_Version_sin_GEO.limit.csv"
+;>>>>>>> 40296037b262d6aac0752d8e484d769571b1ce61
 
        ;create-Alternatives_OCVAM 1[
        ;    set ID "OCVAM"
@@ -1718,7 +1826,7 @@ CHOOSER
 Visualization
 Visualization
 "Accion Colectiva" "Movilizaciones" "Captacion de Agua" "Compra de Agua" "Modificacion de la vivienda" "Extraction Agua SACMEX" "Reparaciones SACMEX" "Nueva Infraestructura SACMEX" "Distribucion de Agua SACMEX" "GoogleEarth" "K_groups" "Salud" "Escasez" "Encharcamientos" "Infraestructura Abastecimiento" "Infraestructura Edad" "P. Falla" "Zonas Aquifero"
-1
+15
 
 BUTTON
 243
@@ -1765,10 +1873,10 @@ Visualización
 1
 
 SLIDER
-35
-115
-235
-148
+30
+195
+230
+228
 water_requirement_perPerson
 water_requirement_perPerson
 0.007
@@ -1788,23 +1896,23 @@ recursos_para_mantencion
 recursos_para_mantencion
 1
 60
-40
+60
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-36
-155
-238
-188
-water_production
-water_production
+31
+235
+247
+268
+tasa_de_cambio_newInfra
+tasa_de_cambio_newInfra
+0
 1
-40
-7
-1
+0.776
+0.001
 1
 NIL
 HORIZONTAL
@@ -1920,7 +2028,7 @@ true
 "" ""
 PENS
 "Extraccion de Agua" 1.0 1 -16777216 true "" "plotxy 1 sum [d_water_extraction] of agebs"
-"Reparaciones" 1.0 1 -7500403 true "" "plotxy 2 sum [d_reparation] of agebs"
+"Reparaciones" 1.0 1 -7500403 true "" "plotxy 2 sum [d_mantencion] of agebs"
 "Nueva Infrastructura" 1.0 1 -2674135 true "" "plotxy 3 sum [d_new] of agebs"
 "Distribucion de Agua" 1.0 1 -955883 true "" "plotxy 4 sum [d_water_distribution] of agebs"
 
@@ -1942,14 +2050,14 @@ NIL
 1
 
 CHOOSER
-58
-254
-196
-299
+53
+334
+191
+379
 escala
 escala
 "cuenca" "ciudad"
-0
+1
 
 SWITCH
 114
@@ -1961,6 +2069,36 @@ export-to-postgres
 1
 1
 -1000
+
+SLIDER
+29
+273
+231
+306
+tasa_de_cambio_edadInfra
+tasa_de_cambio_edadInfra
+0
+1
+0.48
+0.01
+1
+NIL
+HORIZONTAL
+
+SLIDER
+57
+132
+229
+165
+recursos_para_new
+recursos_para_new
+0
+50
+50
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
