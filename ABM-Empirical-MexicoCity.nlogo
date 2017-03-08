@@ -1,9 +1,4 @@
-;<<<<<<< HEAD
-extensions [GIS bitmap profiler csv matrix];
-;=======
-;extensions [GIS bitmap profiler csv sql];
-;>>>>>>> 247fb45929804fe520d04fb62e879cf1409142e5
-;
+extensions [GIS bitmap profiler csv sql matrix]
 globals [
 
 
@@ -255,7 +250,7 @@ Cutzamala-own [val new-val from_lumb to_lumb diameter_entrada valbula] ; a node'
 to SETUP
   clear-all
   ;profiler:start
-  ;sql:configure "defaultconnection" [["brand" "PostgreSQL"]["host" "localhost"]["port" 5432] ["user" "postgres"]["password" "x"]["database" "new"]]
+  sql:configure "defaultconnection" [["brand" "PostgreSQL"]["host" "localhost"]["port" 5432] ["user" "postgres"]["password" "x"]["database" "new"]]
   load-gis
   ;;set global variables
   set max-elevation 1;gis:maximum-of elevation           ;;to visualize elevation
@@ -333,17 +328,21 @@ to GO
  if months = 1 and days = 1 [
    SACMEX-decisions              ;;decisions by SACMEX
    water_extraccion
+
+   export-postgres
  ]
  if days = 1[
    ask agebs [
      residents-decisions
 
-     ;<<<<<<< HEAD
+
     if escala = "ciudad" [
           Landscape_visualization          ;;visualization of social and physical processes
     ]
     p_falla_infra
     failure_duetoMaitaince
+
+
 
   ]
 ]
@@ -353,7 +352,7 @@ to GO
 ;  ]
 
 ;=======
-  ;export-postgres
+
 
   ;if visualization = "GoogleEarth" [
   ;  bitmap:copy-to-pcolors City_image false
@@ -549,35 +548,26 @@ end
 ;#############################################################################################################################################
 ;; read GIS layers
 to load-gis
-;<<<<<<< HEAD
-  ;set elevation gis:load-dataset "c:/Users/abaezaca/Documents/MEGADAPT/rastert_dem1.asc"                                                             ;elevation
-;<<<<<<< HEAD
-;  set pozos_sacmex gis:load-dataset  "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/Join_pozosColoniasAgebs.shp"                                 ;wells
-  set Limites_delegacionales gis:load-dataset  "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/limites_deleg_DF_2013.shp"
-  ;set agebs_map gis:load-dataset "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/ageb7.shp";                                                      ;AGEB shape file
-  set Agebs_map_full gis:load-dataset "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/agebs_total_test.shp";original from C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/01febrero2017
-  set ageb_encharc gis:load-dataset "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/DF_ageb_N_escalante_Project_withEncharcamientos.shp"
-  ;set Limites_cuenca gis:load-dataset "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/Lim_Cuenca_Valle_Mexico_Proj.shp";mask.shp"                                                          ;Mask of study area
-  set mascara gis:load-dataset "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/mask.shp"                                                                                                                                          ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
-;=======
-;  set pozos_sacmex gis:load-dataset  "data/Join_pozosColoniasAgebs.shp"                                 ;wells
-;  set Limites_delegacionales gis:load-dataset  "data/limites_deleg_DF_2013.shp"
+                                                                                                                                 ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
+
+  set pozos_sacmex gis:load-dataset  "data/Join_pozosColoniasAgebs.shp"                                 ;wells
+  set Limites_delegacionales gis:load-dataset  "data/limites_deleg_DF_2013.shp"
   set agebs_map gis:load-dataset "data/ageb8.shp";                                                      ;AGEB shape file
-;  set Agebs_map_full gis:load-dataset "data/agebs_total_test.shp";orignal from C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/01febrero2017
-;  set ageb_encharc gis:load-dataset "data/DF_ageb_N_escalante_Project_withEncharcamientos.shp"
-; ; set Limites_cuenca gis:load-dataset "data/Lim_Cuenca_Valle_Mexico_Proj.shp";mask.shp"                                                          ;Mask of study area
-;  set mascara gis:load-dataset "data/Mask.shp"                                                                                                                                          ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
-;>>>>>>> 247fb45929804fe520d04fb62e879cf1409142e5
+  set Agebs_map_full gis:load-dataset "data/agebs_total_test.shp";orignal from C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/01febrero2017
+  set ageb_encharc gis:load-dataset "data/DF_ageb_N_escalante_Project_withEncharcamientos.shp"
+  set Limites_cuenca gis:load-dataset "data/Lim_Cuenca_Valle_Mexico_Proj.shp";mask.shp"                                                          ;Mask of study area
+  set mascara gis:load-dataset "data/Mask.shp"                                                                                                                                          ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
+
 if escala = "ciudad"[
-;=======
- ; set elevation gis:load-dataset "data/rastert_dem1.asc"                                                             ;elevation
- ; set pozos_sacmex gis:load-dataset  "data/Join_pozosColoniasAgebs.shp"                                 ;wells
- ; set Limites_delegacionales gis:load-dataset  "data/limites_deleg_DF_2013.shp"
- ; set agebs_map gis:load-dataset "data/ageb8.shp";                                                      ;AGEB shape file
- ; set ageb_encharc gis:load-dataset "data/DF_ageb_N_escalante_Project_withEncharcamientos.shp"
-;  set Limites_cuenca gis:load-dataset "data/Lim_Cuenca_Valle_Mexico_Proj.shp";mask.shp"                                                          ;Mask of study area
-;  set mascara gis:load-dataset "data/Mask.shp"                                                                                                                                          ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
-;>>>>>>> 40296037b262d6aac0752d8e484d769571b1ce61
+
+  set elevation gis:load-dataset "data/rastert_dem1.asc"                                                             ;elevation
+  set pozos_sacmex gis:load-dataset  "data/Join_pozosColoniasAgebs.shp"                                 ;wells
+  set Limites_delegacionales gis:load-dataset  "data/limites_deleg_DF_2013.shp"
+  set agebs_map gis:load-dataset "data/ageb8.shp";                                                      ;AGEB shape file
+  set ageb_encharc gis:load-dataset "data/DF_ageb_N_escalante_Project_withEncharcamientos.shp"
+  set Limites_cuenca gis:load-dataset "data/Lim_Cuenca_Valle_Mexico_Proj.shp";mask.shp"                                                          ;Mask of study area
+  set mascara gis:load-dataset "data/Mask.shp"                                                                                                                                          ;
+  ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
   gis:set-world-envelope-ds gis:envelope-of mascara ;ageb_encharc;mascara;Limites_delegacionales
   gis:apply-coverage agebs_map "POLY_ID" ageb_ID
 ]
@@ -585,13 +575,10 @@ if escala = "cuenca"[
   gis:set-world-envelope-ds gis:envelope-of Agebs_map_full;mascara ;ageb_encharc;mascara;Limites_delegacionales
 ]
 
-;<<<<<<< HEAD
+
  ; set city_image  bitmap:import "data/DF_googleB.jpg"                                                   ; google earth image
  ; bitmap:copy-to-pcolors City_image false
-;=======
-  ;set city_image  bitmap:import "data/DF_googleB.jpg"                                                   ; google earth image
-  ;bitmap:copy-to-pcolors City_image false
-;>>>>>>> 40296037b262d6aac0752d8e484d769571b1ce61
+
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;load GIS variables into patches;;;;;;;;;;;;;
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1093,40 +1080,32 @@ if file-exists? file_n
  file-close                                        ;close the File
  report word "saved  " atribute
 end
-;<<<<<<< HEAD
-;=======
 
-;to export-postgres
-;;this procedure exports an attribute from the agebs to a layer in postgis
+to export-postgres
+;this procedure exports an attribute from the agebs to a layer in postgis
 
-; sql:configure "defaultconnection" [["brand" "PostgreSQL"]["host" "localhost"]["port" 5432] ["user" "postgres"]["password" "x"]["database" "new"]]
-;
-; foreach sort-on [ID] agebs[    ;sort agebs by ID from low to high
-;   ask ?
-;   [
- ;    ;Antiguedad-infra
-;     sql:exec-update "UPDATE agebs_calles_geo SET infra=? WHERE ageb_id=?"  list Antiguedad-infra ID
+ sql:configure "defaultconnection" [["brand" "PostgreSQL"]["host" "localhost"]["port" 5432] ["user" "postgres"]["password" "x"]["database" "new"]]
+
+ foreach sort-on [ID] agebs[    ;sort agebs by ID from low to high
+   ask ?
+   [
+     ;Antiguedad-infra
+     sql:exec-update "UPDATE agebs_calles_geo SET infra=? WHERE ageb_id=?"  list Antiguedad-infra_Ab ID
      ;show ID
-;   ]
-; ]
+   ]
+ ]
 
 
-;end
+end
 
 
 
-
-;>>>>>>> 40296037b262d6aac0752d8e484d769571b1ce61
-;#############################################################################################################################################
-;#############################################################################################################################################
 to import-agebslayers
 ;this procedure creates a txt file with avector containing a particular atribute from the agebs
 
-;<<<<<<< HEAD
- file-open "c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/CarpetasTrabajo/AndresBaeza/text_alllayers.txt"
-;=======
-;file-open "data/text_alllayers.txt"
-;>>>>>>> 247fb45929804fe520d04fb62e879cf1409142e5
+
+file-open "data/text_alllayers.txt"
+
  foreach sort-on [ID] agebs[    ;sort agebs by ID from low to high
    ask ?
    [
@@ -1215,13 +1194,10 @@ end
 ;name_action: the name of the alternative
 ;w a set of weight that connect each criteria
 to define_alternativesCriteria
-;<<<<<<< HEAD
-;  let MMIz csv:from-file  "data/I080316_OTR.weighted.csv"
-;  let MMIz_limit csv:from-file  "data/I080316_OTR.limit.csv"
-;=======
-  let MMIz csv:from-file  "I080316_OTR.weighted.csv"
-  let MMIz_limit csv:from-file  "I080316_OTR.limit.csv"
-;>>>>>>> 40296037b262d6aac0752d8e484d769571b1ce61
+
+  let MMIz csv:from-file  "data/I080316_OTR.weighted.csv"
+  let MMIz_limit csv:from-file  "data/I080316_OTR.limit.csv"
+
   let actions (list item 1 item 2 MMIz_limit
     item 1 item 3 MMIz_limit
     item 1 item 4 MMIz_limit
@@ -1278,13 +1254,10 @@ to define_alternativesCriteria
 
 
 
-;<<<<<<< HEAD
-; let MMXo_L csv:from-file  "data/X062916_OTR_a.limit.csv"
-;  let MMXo_W csv:from-file  "data/X062916_OTR_a.weighted.csv"
-;;=======
-  let MMXo_L csv:from-file  "X062916_OTR_a.limit.csv"
-  let MMXo_W csv:from-file  "X062916_OTR_a.weighted.csv"
-;>>>>>>> 40296037b262d6aac0752d8e484d769571b1ce61
+
+ let MMXo_L csv:from-file  "data/X062916_OTR_a.limit.csv"
+ let MMXo_W csv:from-file  "data/X062916_OTR_a.weighted.csv"
+
   set jj 0
 
   set actions (list item 1 item 2 MMXo_L   ;obtain the name of the alternatives performed
@@ -1336,14 +1309,11 @@ to define_alternativesCriteria
 
   set jj jj + 1
   ]
-       ;#################################################
-;<<<<<<< HEAD
-;       let MMMCb csv:from-file  "data/MC080416_OTR_b.weighted.csv"
-;       let MMMCb_limit csv:from-file  "data/MC080416_OTR_b.limit.csv"
-;=======
-       let MMMCb csv:from-file  "MC080416_OTR_b.weighted.csv"
-       let MMMCb_limit csv:from-file  "MC080416_OTR_b.limit.csv"
-;>>>>>>> 40296037b262d6aac0752d8e484d769571b1ce61
+
+       let MMMCb csv:from-file  "data/MC080416_OTR_b.weighted.csv"
+       let MMMCb_limit csv:from-file  "data/MC080416_OTR_b.limit.csv"
+
+
 
        set actions (list item 1 item 2 MMMCb_limit
          item 1 item 3 MMMCb_limit
@@ -1404,13 +1374,11 @@ to define_alternativesCriteria
 
        ]
 ;################################################
-;<<<<<<< HEAD
- ;      let MMMC csv:from-file  "data/MC080416_OTR_a.weighted.csv"
-;       let MMMC_limit csv:from-file  "data/MC080416_OTR_a.limit.csv"
-;=======
-       let MMMC csv:from-file  "MC080416_OTR_a.weighted.csv"
-       let MMMC_limit csv:from-file  "MC080416_OTR_a.limit.csv"
-;>>>>>>> 40296037b262d6aac0752d8e484d769571b1ce61
+
+       let MMMC csv:from-file  "data/MC080416_OTR_a.weighted.csv"
+       let MMMC_limit csv:from-file  "data/MC080416_OTR_a.limit.csv"
+
+
 
        set actions (list item 1 item 2 MMMC_limit
          item 1 item 3 MMMC_limit
@@ -1459,14 +1427,9 @@ to define_alternativesCriteria
 
 
        ;#########################################
-;#SACMEX NETWORK
-;<<<<<<< HEAD
-;       let MMSACMEX csv:from-file  "data/DF101215_GOV_AP modificado PNAS.weighted.csv"
- ;      let MMSACMEX_limit csv:from-file  "data/DF101215_GOV_AP modificado PNAS.limit.csv"
-;=======
-       let MMSACMEX csv:from-file  "DF101215_GOV_AP modificado PNAS.weighted.csv"
-       let MMSACMEX_limit csv:from-file  "DF101215_GOV_AP modificado PNAS.limit.csv"
-;>>>>>>> 40296037b262d6aac0752d8e484d769571b1ce61
+
+       let MMSACMEX csv:from-file  "data/DF101215_GOV_AP modificado PNAS.weighted.csv"
+       let MMSACMEX_limit csv:from-file  "data/DF101215_GOV_AP modificado PNAS.limit.csv"
 
        set actions (list item 1 item 2 MMSACMEX_limit   ;define the alternatives
          item 1 item 3 MMSACMEX_limit
@@ -1533,12 +1496,9 @@ to define_alternativesCriteria
 
        ]
 
-;<<<<<<< HEAD
-;<<<<<<< HEAD
-;#############################################################################################################################################
-;#############################################################################################################################################
-       let MMSACMEX_D csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/SACMEX_Drenaje modificada febrero 2017.weighted.csv"
-       let MMSACMEX_D_limit csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/SACMEX_Drenaje modificada febrero 2017.limit.csv"
+
+       let MMSACMEX_D csv:from-file  "data/SACMEX_Drenaje modificada febrero 2017.weighted.csv"
+       let MMSACMEX_D_limit csv:from-file  "data/SACMEX_Drenaje modificada febrero 2017.limit.csv"
        set actions (list item 1 item 2 MMSACMEX_D   ;define the alternatives
          item 1 item 3 MMSACMEX_D)
        set jj 0
@@ -1626,13 +1586,9 @@ to define_alternativesCriteria
 
 
 
-       let MMOCVAM csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/OCVAM_Version_sin_GEO.limit.csv"
-;=======
-;       let MMOCVAM csv:from-file  "data/OCVAM_Version_sin_GEO.limit.csv"
-;>>>>>>> 247fb45929804fe520d04fb62e879cf1409142e5
-;=======
-     ;  let MMOCVAM csv:from-file  "OCVAM_Version_sin_GEO.limit.csv"
-;>>>>>>> 40296037b262d6aac0752d8e484d769571b1ce61
+
+       let MMOCVAM csv:from-file  "data/OCVAM_Version_sin_GEO.limit.csv"
+
 
        ;create-Alternatives_OCVAM 1[
        ;    set ID "OCVAM"
@@ -1705,22 +1661,6 @@ to flood_risk  ;replace by fault
       set H_f H_f + 1
     ]
   ]
-end
-to export-postgres
-;this procedure exports an attribute in the agebs to a layer in postgis
-
-; sql:configure "defaultconnection" [["brand" "PostgreSQL"]["host" "localhost"]["port" 5432] ["user" "postgres"]["password" "x"]["database" "new"]]
-
- foreach sort-on [ID] agebs[    ;sort agebs by ID from low to high
-   ask ?
-   [
-     ;Antiguedad-infra
- ;    sql:exec-update "UPDATE agebs_calles_geo SET infra=? WHERE ageb_id=?"  list Antiguedad-infra ID
- ;    show Antiguedad-infra
-   ]
- ]
-
-
 end
 
 
@@ -2443,7 +2383,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.2.1
+NetLogo 5.3
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
