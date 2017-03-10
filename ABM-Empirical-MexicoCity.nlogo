@@ -1,7 +1,7 @@
 extensions [GIS bitmap profiler csv sql matrix]
 globals [
 
-
+  timestep                     ;;time step for postgres history
 ;;Importacion de agua
   Tot_water_Imported_Cutzamala ;;total water that enter to MC every day by importation from Cutzamala. for now a constant in the future connected as a network
   Tot_water_Imported_Lerma     ;;total water that enter to MC every day by importation from Lerma system. for now a constant int he future connected as a network
@@ -251,6 +251,7 @@ to SETUP
   clear-all
   ;profiler:start
   sql:configure "defaultconnection" [["brand" "PostgreSQL"]["host" "localhost"]["port" 5432] ["user" "postgres"]["password" "x"]["database" "new"]]
+  set timestep 0
   load-gis
   ;;set global variables
   set max-elevation 1;gis:maximum-of elevation           ;;to visualize elevation
@@ -329,7 +330,7 @@ to GO
    SACMEX-decisions              ;;decisions by SACMEX
    water_extraccion
 
-   export-postgres
+
  ]
  if days = 1[
    ask agebs [
@@ -339,13 +340,17 @@ to GO
     if escala = "ciudad" [
           Landscape_visualization          ;;visualization of social and physical processes
     ]
-    p_falla_infra
-    failure_duetoMaitaince
+      p_falla_infra
+      failure_duetoMaitaince
 
 
 
+    ]
   ]
-]
+  if months = 1 and days = 1 [
+    export-postgres-history
+
+ ]
 
 ;  if visualization = "GoogleEarth" [
 ;    bitmap:copy-to-pcolors City_image false
@@ -1097,7 +1102,22 @@ to export-postgres
 
 
 end
+to export-postgres-history
+;this procedure exports an attribute from the agebs to a history table in postgres
+  set timestep timestep + 1
+ ;sql:configure "defaultconnection" [["brand" "PostgreSQL"]["host" "localhost"]["port" 5432] ["user" "postgres"]["password" "x"]["database" "new"]]
 
+ foreach sort-on [ID] agebs[    ;sort agebs by ID from low to high
+   ask ?
+   [
+     ;Antiguedad-infra
+     sql:exec-update "INSERT into infra_h values(?,?,?) "  (list ID Antiguedad-infra_Ab timestep)
+     ;show ID
+   ]
+ ]
+
+
+end
 
 
 to import-agebslayers
