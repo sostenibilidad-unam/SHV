@@ -6,7 +6,6 @@ extensions [GIS bitmap profiler csv matrix];
 ;
 globals [
 
-
 ;;Importacion de agua
   Tot_water_Imported_Cutzamala ;;total water that enter to MC every day by importation from Cutzamala. for now a constant in the future connected as a network
   Tot_water_Imported_Lerma     ;;total water that enter to MC every day by importation from Lerma system. for now a constant int he future connected as a network
@@ -687,8 +686,8 @@ to define_agebs
           set peticion_usuarios 1
                   ;capas que falta incluir
           set desviacion_agua 1
-          set eficacia_servicio 1                                                                               ;; Gestión del servicio de Drenaje y agua potable (ej. interferencia política, no llega la pipa, horario del tandeo, etc)
-          set desperdicio_agua 1                                                                        ;;Por fugas, falta de conciencia del uso del agua
+          set eficacia_servicio 1   ;; Gestión del servicio de Drenaje y agua potable (ej. interferencia política, no llega la pipa, horario del tandeo, etc)
+          set desperdicio_agua 1                      ;;Por fugas, falta de conciencia del uso del agua
           set presion_hidraulica 1
           set Gasto_hidraulico 1
           set garbage poblacion;1 ;# de habitantes
@@ -890,7 +889,6 @@ to update_criteria_and_valueFunctions_residentes
           set C1_max replace-item i C1_max  infra_abast_max ;change with update quantity for speed
           set V replace-item i V (Value-Function (item i C1) [0.9 0.94 0.97 0.99] ["" "" "" ""] (item i C1_max)  [1 0.5 0.25 0.125 0.0625])
          ]
-
       ]
       if ? = "Desperdicio de agua" [
         set C1 replace-item i C1 [desperdicio_agua] of myself
@@ -973,15 +971,7 @@ to SACMEX-decisions
   ]
 
 
-  ;;water distribution decition per ageb
-;  foreach sort-on [1 - d_water_distribution] agebs[
-;    ask ? [
-;      if water_produced > 0 and poblacion > 1 [
-;        set water_distributed_trucks scarcity
-;        set water_produced water_produced - water_distributed_trucks
-;      ]
- ;   ]
-  ;]
+;create new connections to the dranage and supply system by assuming it occur 1 time a year
   New-Infra_A
   New-Infra_D
 end
@@ -989,11 +979,10 @@ end
 ;#############################################################################################################################################
   to repair-Infra_Ab
   let Budget 0
-  foreach sort-on [1 - d_mantencion] agebs[
+  foreach sort-on [1 - d_mantencion] agebs[    ;sort census blocks
     ask ? [
-
-      ifelse Budget < recursos_para_mantencion[
-        set Antiguedad-infra_Ab tasa_de_cambio_edadInfra * Antiguedad-infra_Ab
+      ifelse Budget < recursos_para_mantencion[                                       ;agebs that were selected for maitenance do not reduce its age
+        set Antiguedad-infra_Ab Antiguedad-infra_Ab + Effectiveness_mantencion
         set Budget Budget + 1
       ]
       [
@@ -1009,9 +998,9 @@ end
     foreach sort-on [1 - d_mantencion_D] agebs[
 
       ask ? [
-        print d_mantencion_D
+
         ifelse Budget < recursos_para_mantencion [
-          set Antiguedad-infra_D tasa_de_cambio_edadInfra * Antiguedad-infra_D
+          set Antiguedad-infra_D Antiguedad-infra_D + Effectiveness_mantencion
           set Budget Budget + 1
         ]
         [
@@ -1171,10 +1160,14 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
       if visualization = "K_groups" and ticks > 1 [set color  15 +  10 * group_kmean]
       if visualization = "Salud" and ticks > 1 [set color (5 * sqrt disease_burden)] ;;visualized incidence of gastrointestinal diseases in MX 2004-2014
       if visualization = "Encharcamientos" and ticks > 1 [set color  scale-color sky flooding 0 flooding_max] ;;visualized SACMEX flooding dataset MX 2004-2014
-      if visualization = "Infraestructura Abastecimiento" and ticks > 1 [set color  scale-color sky houses_with_abastecimiento 1 0.7] ;;visualized SACMEX flooding dataset MX 2004-2014
+      if visualization = "Infraestructura Abastecimiento" and ticks > 1 [
+        set size 2
+        set shape "square 2"
+        set color  scale-color sky houses_with_abastecimiento 1 0.7] ;;visualized SACMEX flooding dataset MX 2004-2014
       if visualization = "Infraestructura Edad" and ticks > 1 [
-        set size Antiguedad-infra_Ab / 100
-        set color  scale-color green Antiguedad-infra_Ab  0 200]
+        set size 2
+        set shape "square 2"
+        set color  scale-color blue Antiguedad-infra_Ab  0 Antiguedad-infra_Ab_max]
       if visualization = "P. Falla" and ticks > 1 [set color  scale-color green P_failure 0 1]
       if visualization = "Zonas Aquifero" and ticks > 1 [set color  zona_aquifera]
    ]
@@ -1476,6 +1469,27 @@ to define_alternativesCriteria
          item 1 item 6 MMSACMEX_limit)
        set jj 0
 
+;       let MMSACMEX_limit_S []
+;       let VSACMEX_limit_S []
+;       let cc 2
+;       let cri 2
+;
+;       while [cri < 18][   ;tranfor the data from.csv to a matrix to manipulte using matrix extention
+;         set cc 2
+;         while [cc < 18][
+;           set VSACMEX_limit_S lput (item cc item cri MMSACMEX_S) VSACMEX_limit_S
+;           set cc cc + 1
+;         ]
+;         set cri cri + 1
+;         set MMSACMEX_limit_S lput VSACMEX_limit_D MMSACMEX_limit_D
+;         set VSACMEX_limit_S []
+;       ]
+;       set MMSACMEX_limit_S matrix:from-row-list MMSACMEX_limit_S
+;       set MMSACMEX_limit_S matrix:eigenvectors MMSACMEX_limit_S
+;
+
+
+
        foreach actions [
          create-Alternatives_SACMEX 1[    ;create an alternative, the criteria and the weights. Also in the case of HNP network the weight of each alternative in the limit matrix
            set ID "DF101215_GOV"
@@ -1561,8 +1575,22 @@ to define_alternativesCriteria
        ]
        set MMSACMEX_limit_D matrix:from-row-list MMSACMEX_limit_D
 
+       let MMSACMEX_limit_D1 matrix:eigenvectors MMSACMEX_limit_D
+
+       let MMSACMEX_limit_D2 matrix:real-eigenvalues MMSACMEX_limit_D
        set MMSACMEX_limit_D (matrix:times MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D MMSACMEX_limit_D)
-       ;print matrix:pretty-print-text MMSACMEX_limit_D
+
+
+
+       print matrix:pretty-print-text MMSACMEX_limit_D1
+
+
+
+       print matrix:pretty-print-text MMSACMEX_limit_D
+
+       print MMSACMEX_limit_D2
+
+
        foreach actions [
          create-Alternatives_SACMEX_D 1[    ;create an alternative, the criteria and the weights. Also in the case of HNP network the weight of each alternative in the limit matrix (alpha)
            set ID "no-defined Drenage"
@@ -1617,7 +1645,7 @@ to define_alternativesCriteria
              item 1 item 15 MMSACMEX_D
              item 1 item 16 MMSACMEX_D
              item 1 item 17 MMSACMEX_D)
-          set alpha matrix:get MMSACMEX_limit_D jj jj /(matrix:get MMSACMEX_limit_D 0 0 + matrix:get MMSACMEX_limit_D 1 1)
+          set alpha matrix:get MMSACMEX_limit_D jj jj / (matrix:get MMSACMEX_limit_D 0 0 + matrix:get MMSACMEX_limit_D 1 1)
 
          ]
          set jj jj + 1
@@ -1897,7 +1925,7 @@ recursos_para_mantencion
 recursos_para_mantencion
 1
 2000
-60
+368
 1
 1
 NIL
@@ -1912,7 +1940,7 @@ tasa_de_cambio_newInfra
 tasa_de_cambio_newInfra
 0
 1
-1
+0.085
 0.001
 1
 NIL
@@ -2076,11 +2104,11 @@ SLIDER
 273
 231
 306
-tasa_de_cambio_edadInfra
-tasa_de_cambio_edadInfra
+Effectiveness_mantencion
+Effectiveness_mantencion
 0
 1
-0.48
+0.98
 0.01
 1
 NIL
@@ -2100,6 +2128,24 @@ recursos_para_new
 1
 NIL
 HORIZONTAL
+
+PLOT
+1459
+588
+1659
+738
+plot 1
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot mean [Antiguedad-infra_Ab] of agebs"
 
 @#$#@#$#@
 ## WHAT IS IT?
