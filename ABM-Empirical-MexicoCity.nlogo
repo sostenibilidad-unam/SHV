@@ -1,11 +1,10 @@
-;<<<<<<< HEAD
-extensions [GIS bitmap profiler csv matrix];
-;=======
-;extensions [GIS bitmap profiler csv sql];
-;>>>>>>> 247fb45929804fe520d04fb62e879cf1409142e5
-;
+extensions [GIS bitmap profiler csv sql matrix]
 globals [
 
+;<<<<<<< HEAD
+=======
+  timestep                     ;;time step for postgres history
+;>>>>>>> 444d49d996310c8bccd80a414c78f519adf60687
 ;;Importacion de agua
   Tot_water_Imported_Cutzamala ;;total water that enter to MC every day by importation from Cutzamala. for now a constant in the future connected as a network
   Tot_water_Imported_Lerma     ;;total water that enter to MC every day by importation from Lerma system. for now a constant int he future connected as a network
@@ -47,7 +46,7 @@ globals [
   max_water_in                  ;;
   Abastecimiento_max            ;;
   Capacidad_max                 ;;
-  Petición_Delegaciones_max
+  Petición_Delegacional_max
   Presion_social_max
   Presión_de_medios_max
   water_quality_max
@@ -80,6 +79,7 @@ globals [
 ;define geo coded GIS (maps) variables
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   Agebs_map                                                          ;includes economic index water-related infrastructure
+  Agebs_map13
   Agebs_map_full
   ageb_encharc                                                       ;data set of ageb taht includes the floodings events
   Limites_delegacionales                                             ;limits of borrows
@@ -160,16 +160,20 @@ Agebs-own[
   Falla                        ;;Fallas de infraestructura hidráulica ocasionadas por conexiones clandestinas, obstrucción por basura y procesos biofísicos
   FALTA
   Mantenimiento?               ;; what is the probability this patch is under maitnance
-  P_failure                    ;;probabilidad de falla
+  P_failure                    ;;probabilidad de falla por edad
+  p_failure_hund               ;;probabilidad de falla debido a hundimientos
+  ;p_failure_?               ;;probabilidad de falla debido a ?
   hundimientos
   presion_hidraulica           ;;or an index of low volume of water in the pipes (tandeo)
   Gasto_hidraulico             ;;water the enter the sewage system in each ageb
   poblacion                    ;; Population size ageb
+  densidad_pop                 ;;people per hectare
   uso_suelo
   urban_growth                   ;; Population growth
   Income-index                 ;; Actual income
   Presion_social               ;;social pressure index per ageb (e.g. %pop. involved in the protests?)
   peticion_usuarios
+  Peticion_Delegacional
   Flooding                     ;; mean number of encharcamientos during between 2004 and 2014
   days_wno_water               ;; Days with no water
 ;;Charactersitics of the agebs that define criteria
@@ -213,6 +217,12 @@ Agebs-own[
 ;SACMEX drenaje
   d_mantencion_D
   d_new_D
+;Vulnerability indicators
+  Sensitivity                   ;indicators of how sensitive, relative to level of adaptations (house modifications)
+  Exposure                      ;indicators of level of flooding or scarcity
+  AC                            ;adaptive capasity
+
+
 ]
 
 ;#############################################################################################################################################
@@ -255,7 +265,8 @@ Cutzamala-own [val new-val from_lumb to_lumb diameter_entrada valbula] ; a node'
 to SETUP
   clear-all
   ;profiler:start
-  ;sql:configure "defaultconnection" [["brand" "PostgreSQL"]["host" "localhost"]["port" 5432] ["user" "postgres"]["password" "x"]["database" "new"]]
+ ; sql:configure "defaultconnection" [["brand" "PostgreSQL"]["host" "localhost"]["port" 5432] ["user" "postgres"]["password" "x"]["database" "new"]]
+  set timestep 0
   load-gis
   ;;set global variables
   set max-elevation 1;gis:maximum-of elevation           ;;to visualize elevation
@@ -265,7 +276,7 @@ to SETUP
   set years 1
   set Presión_de_medios 1 ;;need to define as a layer?
 
-;set variables hidricas
+;set global variables and the
 
   set Tot_water_Imported_Cutzamala 14 * 60 * 60 * 24 ;[m3/s][s/min][min/hour][hours/day]   ;;total water imported from Cutzamala System
   set Tot_water_Imported_Lerma 5 * 60 * 60 * 24                                            ;;total water imported from Lerma System
@@ -334,6 +345,8 @@ to GO
  if months = 1 and days = 1 [   ;annual changes
    SACMEX-decisions              ;;decisions by SACMEX
    water_extraccion
+
+
  ]
  if days = 1[
    ask agebs [
@@ -348,13 +361,36 @@ to GO
   repair-Infra_Ab
   repair-Infra_D
 
+;<<<<<<< HEAD
+;=======
+
+    if escala = "ciudad" [
+          Landscape_visualization          ;;visualization of social and physical processes
+    ]
+     ; p_falla_infra
+;      failure_duetoMaitaince
+
+
+
+    ;]
+  ;]
+;  if months = 1 and days = 1 [
+;    export-postgres-history
+
+; ]
+;>>>>>>> 444d49d996310c8bccd80a414c78f519adf60687
 
  ;  if visualization = "GoogleEarth" [
  ;    bitmap:copy-to-pcolors City_image false
  ;  ]
 
+;<<<<<<< HEAD
  ;=======
  ;export-postgres
+;=======
+;=======
+
+;>>>>>>> 444d49d996310c8bccd80a414c78f519adf60687
 
  ;if visualization = "GoogleEarth" [
  ;  bitmap:copy-to-pcolors City_image false
@@ -489,7 +525,23 @@ if group_kmean = 4 [ ;#Residents type Magdalena Contreras
 ]
 
 end
+;#############################################################################################################################################
+;#############################################################################################################################################
+to house-modification
+  set Sensitivity Sensitivity + 1
+end
+;#############################################################################################################################################
+;#############################################################################################################################################
+to rain-waterCapture
+  set Sensitivity Sensitivity + 1
+end
+;#############################################################################################################################################
+to water-Purchase
 
+end
+;#############################################################################################################################################
+to collective-action
+end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 to update_globals  ;; update the maximum or minimum of values use by the model to calculate range of the value functions
@@ -526,7 +578,8 @@ to update_globals  ;; update the maximum or minimum of values use by the model t
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 to p_falla_infra    ;;update age and probability of failure and also is color if well is working
-     set P_failure  1 - exp(- hundimientos * Antiguedad-infra_Ab  / (365 * 200))
+     set P_failure  1 - exp(Antiguedad-infra_Ab  * (1 / (365 * 200)))
+     set p_failure_hund  hundimientos
 end
 ;#############################################################################################################################################
 to counter_days
@@ -546,21 +599,11 @@ end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 ;; read GIS layers
-to load-gis
-;<<<<<<< HEAD
-  ;set elevation gis:load-dataset "c:/Users/abaezaca/Documents/MEGADAPT/rastert_dem1.asc"                                                             ;elevation
-;<<<<<<< HEAD
-;  set pozos_sacmex gis:load-dataset  "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/Join_pozosColoniasAgebs.shp"                                 ;wells
-  set Limites_delegacionales gis:load-dataset  "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/limites_deleg_DF_2013.shp"
-  ;set agebs_map gis:load-dataset "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/ageb7.shp";                                                      ;AGEB shape file
-  set Agebs_map_full gis:load-dataset "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/agebs_total_test.shp";original from C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/01febrero2017
-  set ageb_encharc gis:load-dataset "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/DF_ageb_N_escalante_Project_withEncharcamientos.shp"
-  ;set Limites_cuenca gis:load-dataset "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/Lim_Cuenca_Valle_Mexico_Proj.shp";mask.shp"                                                          ;Mask of study area
-  set mascara gis:load-dataset "c:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/mask.shp"                                                                                                                                          ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
-;=======
-;  set pozos_sacmex gis:load-dataset  "data/Join_pozosColoniasAgebs.shp"                                 ;wells
-;  set Limites_delegacionales gis:load-dataset  "data/limites_deleg_DF_2013.shp"
+to load-gis                                                                                                                                 ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
+  set pozos_sacmex gis:load-dataset  "data/Join_pozosColoniasAgebs.shp"                                 ;wells
+  set Limites_delegacionales gis:load-dataset  "data/limites_deleg_DF_2013.shp"
   set agebs_map gis:load-dataset "data/ageb8.shp";                                                      ;AGEB shape file
+;<<<<<<< HEAD
 ;  set Agebs_map_full gis:load-dataset "data/agebs_total_test.shp";orignal from C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/01febrero2017
 ; ; set Limites_cuenca gis:load-dataset "data/Lim_Cuenca_Valle_Mexico_Proj.shp";mask.shp"                                                          ;Mask of study area
 ;  set mascara gis:load-dataset "data/Mask.shp"                                                                                                                                          ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
@@ -570,31 +613,47 @@ if escala = "ciudad"[
  ; set elevation gis:load-dataset "data/rastert_dem1.asc"                                                ;Elevation
  ; set pozos_sacmex gis:load-dataset  "data/Join_pozosColoniasAgebs.shp"                                 ;Wells
  ; set Limites_delegacionales gis:load-dataset  "data/limites_deleg_DF_2013.shp"
- ; set agebs_map gis:load-dataset "data/ageb8.shp";                                                      ;AGEB shape file
+  set agebs_map13 gis:load-dataset "data/ageb14.shp";                                                      ;AGEB shape file
  ; set ageb_encharc gis:load-dataset "data/DF_ageb_N_escalante_Project_withEncharcamientos.shp"
 ;  set Limites_cuenca gis:load-dataset "data/Lim_Cuenca_Valle_Mexico_Proj.shp";mask.shp"                                                          ;Mask of study area
 ;  set mascara gis:load-dataset "data/Mask.shp"                                                                                                                                          ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
 ;>>>>>>> 40296037b262d6aac0752d8e484d769571b1ce61
+;=======
+  set Agebs_map_full gis:load-dataset "data/agebs_total_test.shp";orignal from C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/01febrero2017
+  set ageb_encharc gis:load-dataset "data/DF_ageb_N_escalante_Project_withEncharcamientos.shp"
+  set Limites_cuenca gis:load-dataset "data/Lim_Cuenca_Valle_Mexico_Proj.shp";mask.shp"                                                          ;Mask of study area
+  set mascara gis:load-dataset "data/Mask.shp"                                                                                                                                          ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
+]
+if escala = "ciudad"[
+
+  set elevation gis:load-dataset "data/rastert_dem1.asc"                                                             ;elevation
+  set pozos_sacmex gis:load-dataset  "data/Join_pozosColoniasAgebs.shp"                                 ;wells
+  set Limites_delegacionales gis:load-dataset  "data/limites_deleg_DF_2013.shp"
+  ;set agebs_map gis:load-dataset "data/ageb13.shp";                                                      ;AGEB shape file
+  set ageb_encharc gis:load-dataset "data/DF_ageb_N_escalante_Project_withEncharcamientos.shp"
+  set Limites_cuenca gis:load-dataset "data/Lim_Cuenca_Valle_Mexico_Proj.shp";mask.shp"                                                          ;Mask of study area
+  set mascara gis:load-dataset "data/Mask.shp"                                                                                                                                          ;
+  ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
+;>>>>>>> 444d49d996310c8bccd80a414c78f519adf60687
   gis:set-world-envelope-ds gis:envelope-of mascara ;ageb_encharc;mascara;Limites_delegacionales
-  gis:apply-coverage agebs_map "POLY_ID" ageb_ID
+;  gis:apply-coverage agebs_map "POLY_ID" ageb_ID
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;load GIS variables into patches;;;;;;;;;;;;;
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  gis:apply-raster  elevation altitude
+
 ]
 if escala = "cuenca"[
   gis:set-world-envelope-ds gis:envelope-of Agebs_map_full;mascara ;ageb_encharc;mascara;Limites_delegacionales
 ]
 
-;<<<<<<< HEAD
+
  ; set city_image  bitmap:import "data/DF_googleB.jpg"                                                   ; google earth image
  ; bitmap:copy-to-pcolors City_image false
-;=======
-  ;set city_image  bitmap:import "data/DF_googleB.jpg"                                                   ; google earth image
-  ;bitmap:copy-to-pcolors City_image false
-;>>>>>>> 40296037b262d6aac0752d8e484d769571b1ce61
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;;load GIS variables into patches;;;;;;;;;;;;;
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;gis:apply-raster  elevation altitude
+
   ;
   ;gis:apply-coverage agebs_map "NOM_MUN" delegation_ID
+print "OK"
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -660,16 +719,24 @@ end
 ;######################################################################################################################################################
 ;this procedure read every ageb polygon to create an AGEB agent. It assigns to each agent the property of the
 to define_agebs
-  (foreach gis:find-features agebs_map "NOM_LOC" "Total AGEB urbana"   gis:find-features ageb_encharc "NOM_LOC" "Total AGEB urbana"
+
+  (foreach gis:find-features agebs_map13 "NOM_LOC" "Total AGEB urbana"   gis:find-features ageb_encharc "NOM_LOC" "Total AGEB urbana"
+
     [ let centroid gis:location-of gis:centroid-of ?
-      if not empty? centroid
-      [
+
+;      if not empty? centroid
+
+ ;     [
         create-agebs 1
-        [ set xcor item 0 centroid                                                                                                                           ;define xy using the central coordinate of the ageb and matches with the patch in which the ageb  is centred
+        [
+          if not empty? centroid[
+            set xcor item 0 centroid                                                                                                                           ;define xy using the central coordinate of the ageb and matches with the patch in which the ageb  is centred
           set ycor item 1 centroid
+          ]
           set name_delegation gis:property-value ?1 "NOM_MUN"                                                                                                ;;name of delegations
           set poblacion ifelse-value (gis:property-value ?1 "POBTOT" > 0)[gis:property-value ?1 "POBTOT"][1]                                                  ;;population size per ageb
-          set ID gis:property-value ?1 "ageb_id"                                                                                                              ;;ageb ID Check witht the team in MX to have the same identifier
+          set densidad_pop gis:property-value ?1 "DENSPOB"
+          set ID gis:property-value ?1 "AGEB_ID"                                                                                                               ;;ageb ID Check witht the team in MX to have the same identifier
           set label ""
           set houses_with_abastecimiento gis:property-value ?1 "VPH_AGUADV" / (1 + gis:property-value ?1 "VPH_AGUADV" + gis:property-value ?1 "VPH_AGUAFV")  ;;% casas con toma de abastecimiento
           set houses_with_dranage gis:property-value ?1 "VPH_DRENAJ" / (1 + gis:property-value ?1 "VPH_DRENAJ" + gis:property-value ?1 "VPH_NODREN")         ;;% de casas con toma de drenage from encuesta ENGHI
@@ -678,22 +745,24 @@ to define_agebs
           set disease_burden  ((gis:property-value ?1 "N04_TODAS") + (gis:property-value ?1 "X05_TOTAL") + (gis:property-value ?1 "X06_TODAS") + gis:property-value ?1 "X07_TODAS" + gis:property-value ?1 "X08_TODAS" + gis:property-value ?1 "X09_TODAS" + gis:property-value ?1 "N10_TODAS" + gis:property-value ?1 "N11_TODAS" + gis:property-value ?1 "N12_TODAS"  + gis:property-value ?1 "N13_TODAS"  + gis:property-value ?1 "N14_TODAS") / 11
           set Income-index ifelse-value ((gis:property-value ?1 "I05_INGRES") = nobody )[0][(gis:property-value ?1 "I05_INGRES")]
           set flooding ifelse-value ((gis:property-value ?2 "Mean_encha") = nobody )[0][(gis:property-value ?2 "Mean_encha")]
-          set Antiguedad-infra_Ab  gis:property-value ?2 "edad_infra"
-          set Antiguedad-infra_D  gis:property-value ?2 "edad_infra"
+          set Antiguedad-infra_Ab 365 * gis:property-value ?2 "edad_infra"
+          set Antiguedad-infra_D 365 * gis:property-value ?2 "edad_infra"
           set zona_aquifera gis:property-value ?2 "zonas"
           set precipitation  gis:property-value ?2 "PRECIP"
           set Abastecimiento poblacion * water_requirement_perPerson               ;;;C4_A1;;;
+          set Peticion_Delegacional gis:property-value ?1 "PETDELS"
           set peticion_usuarios 1
                   ;capas que falta incluir
+          set garbage poblacion;1 ;# de habitantes we assume that the proportion of garbage accumulated in the dranage is proportional to the population living in each census block
+          set scarcity gis:property-value ?1 "ESCASEZ"
           set desviacion_agua 1
           set eficacia_servicio 1   ;; Gestión del servicio de Drenaje y agua potable (ej. interferencia política, no llega la pipa, horario del tandeo, etc)
           set desperdicio_agua 1                      ;;Por fugas, falta de conciencia del uso del agua
           set presion_hidraulica 1
-          set Gasto_hidraulico 1
-          set garbage poblacion;1 ;# de habitantes
+          set Gasto_hidraulico 1     ;;to be completed with the calcualtion made by
           set urban_growth 1
           set capacidad 1
-          set Falla 1
+          set Falla gis:property-value ? "FALLAIN"
           set Monto 1
           set water_quality 1
           set color grey
@@ -701,7 +770,7 @@ to define_agebs
           set size 0.5
           set hidden? false
         ]
-      ]
+      ;]
     ])
 
  ; ask agebs [set paches_set_agebs patch-set patches with [ageb_ID = round ([ID] of myself)]]   ;define the patches that belon to each ageb
@@ -854,6 +923,7 @@ to update_criteria_and_valueFunctions_residentes
         set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
       ]
 
+
       if ? = "Contaminacion de agua"[
         set C1 replace-item i C1 [water_quality] of myself
         set C1_max replace-item i C1_max water_quality_max  ;change with update quantity for speed
@@ -863,9 +933,15 @@ to update_criteria_and_valueFunctions_residentes
       if ? = "Salud"[
         set C1 replace-item i C1 [disease_burden] of myself
         set C1_max replace-item i C1_max disease_burden_max;change with update quantity for speed
-        set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
-
+        set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.4 0.9] ["" "" "" ""] (item i C1_max)  [0.05 0.1 0.159 0.4 1])
       ]
+
+      if ? = "Escasez de agua"[
+        set C1 replace-item i C1 [scarcity] of myself
+        set C1_max replace-item i C1_max scarcity_max
+        set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.05 0.1 0.159 0.4 1])
+      ]
+
       if ? = "agua insuficiente" [
         set C1 replace-item i C1 [houses_with_abastecimiento] of myself ;#escasez
         set C1_max replace-item i C1_max  infra_abast_max ;change with update quantity for speed
@@ -877,7 +953,6 @@ to update_criteria_and_valueFunctions_residentes
           set C1 replace-item i C1 [(1 - houses_with_dranage) + falta] of myself
           set C1_max replace-item i C1_max  (infra_dranage_max + infra_abast_max) ;change with update quantity for speed
           set V replace-item i V (Value-Function (item i C1) [0.8 0.9 0.95 0.99] ["" "" "" ""] (item i C1_max)  [1 0.5 0.25 0.125 0.0625])
-
         ]
         if name_action = "Modificacion vivienda"[
           set C1 replace-item i C1 [houses_with_dranage] of myself
@@ -971,7 +1046,7 @@ to SACMEX-decisions
   ]
 
 
-;create new connections to the dranage and supply system by assuming it occur 1 time a year
+;create new connections to the dranage and supply system by assuming it occur 1 time a year ;need to add changes in the capasity of the infrastructure due to new investments
   New-Infra_A
   New-Infra_D
 end
@@ -1015,7 +1090,7 @@ to New-Infra_D
     let Budget 0
     foreach sort-on [1 - d_new_D] agebs[
       ask ? [
-        if Budget < recursos_para_new and houses_with_abastecimiento < 1 [
+        if Budget < recursos_para_new and houses_with_abastecimiento < 0.99 [
           set houses_with_abastecimiento houses_with_abastecimiento + tasa_de_cambio_newInfra * (1 - houses_with_abastecimiento)
           set Budget Budget + 1
         ]
@@ -1026,10 +1101,10 @@ end
 ;#############################################################################################################################################
 to New-Infra_A
     let Budget 0
-    foreach sort-on [1 - d_new] agebs[
+    foreach sort-on [(1 - d_new)]  agebs[
       ask ? [
-
-        if Budget < recursos_para_new and houses_with_dranage < 1 [
+        if houses_with_dranage < 0.99[print houses_with_dranage]
+        if Budget < recursos_para_new and houses_with_dranage < 0.99 [
           set houses_with_dranage houses_with_dranage + tasa_de_cambio_newInfra * (1 - houses_with_dranage)
           set Budget Budget + 1
         ]
@@ -1039,19 +1114,17 @@ end
 ;#############################################################################################################################################
 to water_extraccion
   let i 0
-foreach zonas_aquiferas_MX [
+  foreach zonas_aquiferas_MX [
 
-set from_d_to_bombeo replace-item i from_d_to_bombeo ifelse-value (any? agebs with [zona_aquifera = ?]) [mean [d_water_extraction] of agebs with [zona_aquifera = ?]]["NA"]
-set i i + 1
-]
-
-print from_d_to_bombeo
+    set from_d_to_bombeo replace-item i from_d_to_bombeo ifelse-value (any? agebs with [zona_aquifera = ?]) [mean [d_water_extraction] of agebs with [zona_aquifera = ?]]["NA"]
+    set i i + 1
+  ]
+;  print from_d_to_bombeo
 end
-
 
 ;#############################################################################################################################################
 to protest
-set Presion_social 0.9 * Presion_social  + ifelse-value (d_Movilizaciones > random-float 1)[1][0]
+set Presion_social 0.9 * Presion_social  + ifelse-value (d_Movilizaciones > random-float max (list d_Modificacion_vivienda d_Accion_colectiva d_Captacion_agua d_Compra_agua))[1][0]
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -1083,40 +1156,47 @@ if file-exists? file_n
  file-close                                        ;close the File
  report word "saved  " atribute
 end
-;<<<<<<< HEAD
-;=======
 
-;to export-postgres
-;;this procedure exports an attribute from the agebs to a layer in postgis
+to export-postgres
+;this procedure exports an attribute from the agebs to a layer in postgis
 
-; sql:configure "defaultconnection" [["brand" "PostgreSQL"]["host" "localhost"]["port" 5432] ["user" "postgres"]["password" "x"]["database" "new"]]
-;
-; foreach sort-on [ID] agebs[    ;sort agebs by ID from low to high
-;   ask ?
-;   [
- ;    ;Antiguedad-infra
-;     sql:exec-update "UPDATE agebs_calles_geo SET infra=? WHERE ageb_id=?"  list Antiguedad-infra ID
+ sql:configure "defaultconnection" [["brand" "PostgreSQL"]["host" "localhost"]["port" 5432] ["user" "postgres"]["password" "x"]["database" "new"]]
+
+ foreach sort-on [ID] agebs[    ;sort agebs by ID from low to high
+   ask ?
+   [
+     ;Antiguedad-infra
+     sql:exec-update "UPDATE agebs_calles_geo SET infra=? WHERE ageb_id=?"  list Antiguedad-infra_Ab ID
      ;show ID
-;   ]
-; ]
+   ]
+ ]
 
 
-;end
+end
+to export-postgres-history
+;this procedure exports an attribute from the agebs to a history table in postgres
+  set timestep timestep + 1
+ ;sql:configure "defaultconnection" [["brand" "PostgreSQL"]["host" "localhost"]["port" 5432] ["user" "postgres"]["password" "x"]["database" "new"]]
+
+ foreach sort-on [ID] agebs[    ;sort agebs by ID from low to high
+   ask ?
+   [
+     ;Antiguedad-infra
+     sql:exec-update "INSERT into infra_h values(?,?,?) "  (list ID Antiguedad-infra_Ab timestep)
+     ;show ID
+   ]
+ ]
 
 
+end
 
 
-;>>>>>>> 40296037b262d6aac0752d8e484d769571b1ce61
-;#############################################################################################################################################
-;#############################################################################################################################################
 to import-agebslayers
 ;this procedure creates a txt file with avector containing a particular atribute from the agebs
 
-;<<<<<<< HEAD
- file-open "c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/CarpetasTrabajo/AndresBaeza/text_alllayers.txt"
-;=======
-;file-open "data/text_alllayers.txt"
-;>>>>>>> 247fb45929804fe520d04fb62e879cf1409142e5
+
+file-open "data/text_alllayers.txt"
+
  foreach sort-on [ID] agebs[    ;sort agebs by ID from low to high
    ask ?
    [
@@ -1210,13 +1290,10 @@ end
 ;3)w: a set of weight that connect each criteria
 ;4) alphas: a set of weights for each action when HNP is used (supermatrix)
 to define_alternativesCriteria
-;<<<<<<< HEAD
-;  let MMIz csv:from-file  "data/I080316_OTR.weighted.csv"
-;  let MMIz_limit csv:from-file  "data/I080316_OTR.limit.csv"
-;=======
-  let MMIz csv:from-file  "I080316_OTR.weighted.csv"
-  let MMIz_limit csv:from-file  "I080316_OTR.limit.csv"
-;>>>>>>> 40296037b262d6aac0752d8e484d769571b1ce61
+
+  let MMIz csv:from-file  "data/I080316_OTR.weighted.csv"
+  let MMIz_limit csv:from-file  "data/I080316_OTR.limit.csv"
+
   let actions (list item 1 item 2 MMIz_limit
     item 1 item 3 MMIz_limit
     item 1 item 4 MMIz_limit
@@ -1273,13 +1350,10 @@ to define_alternativesCriteria
 
 
 
-;<<<<<<< HEAD
-; let MMXo_L csv:from-file  "data/X062916_OTR_a.limit.csv"
-;  let MMXo_W csv:from-file  "data/X062916_OTR_a.weighted.csv"
-;;=======
-  let MMXo_L csv:from-file  "X062916_OTR_a.limit.csv"
-  let MMXo_W csv:from-file  "X062916_OTR_a.weighted.csv"
-;>>>>>>> 40296037b262d6aac0752d8e484d769571b1ce61
+
+ let MMXo_L csv:from-file  "data/X062916_OTR_a.limit.csv"
+ let MMXo_W csv:from-file  "data/X062916_OTR_a.weighted.csv"
+
   set jj 0
 
   set actions (list item 1 item 2 MMXo_L   ;obtain the name of the alternatives performed
@@ -1331,14 +1405,11 @@ to define_alternativesCriteria
 
   set jj jj + 1
   ]
-       ;#################################################
-;<<<<<<< HEAD
-;       let MMMCb csv:from-file  "data/MC080416_OTR_b.weighted.csv"
-;       let MMMCb_limit csv:from-file  "data/MC080416_OTR_b.limit.csv"
-;=======
-       let MMMCb csv:from-file  "MC080416_OTR_b.weighted.csv"
-       let MMMCb_limit csv:from-file  "MC080416_OTR_b.limit.csv"
-;>>>>>>> 40296037b262d6aac0752d8e484d769571b1ce61
+
+       let MMMCb csv:from-file  "data/MC080416_OTR_b.weighted.csv"
+       let MMMCb_limit csv:from-file  "data/MC080416_OTR_b.limit.csv"
+
+
 
        set actions (list item 1 item 2 MMMCb_limit
          item 1 item 3 MMMCb_limit
@@ -1398,13 +1469,11 @@ to define_alternativesCriteria
 
        ]
 ;################################################
-;<<<<<<< HEAD
- ;      let MMMC csv:from-file  "data/MC080416_OTR_a.weighted.csv"
-;       let MMMC_limit csv:from-file  "data/MC080416_OTR_a.limit.csv"
-;=======
-       let MMMC csv:from-file  "MC080416_OTR_a.weighted.csv"
-       let MMMC_limit csv:from-file  "MC080416_OTR_a.limit.csv"
-;>>>>>>> 40296037b262d6aac0752d8e484d769571b1ce61
+
+       let MMMC csv:from-file  "data/MC080416_OTR_a.weighted.csv"
+       let MMMC_limit csv:from-file  "data/MC080416_OTR_a.limit.csv"
+
+
 
        set actions (list item 1 item 2 MMMC_limit
          item 1 item 3 MMMC_limit
@@ -1453,14 +1522,9 @@ to define_alternativesCriteria
 
 
        ;#########################################
-;#SACMEX NETWORK
-;<<<<<<< HEAD
-;       let MMSACMEX csv:from-file  "data/DF101215_GOV_AP modificado PNAS.weighted.csv"
- ;      let MMSACMEX_limit csv:from-file  "data/DF101215_GOV_AP modificado PNAS.limit.csv"
-;=======
-       let MMSACMEX csv:from-file  "DF101215_GOV_AP modificado PNAS.weighted.csv"
-       let MMSACMEX_limit csv:from-file  "DF101215_GOV_AP modificado PNAS.limit.csv"
-;>>>>>>> 40296037b262d6aac0752d8e484d769571b1ce61
+
+       let MMSACMEX csv:from-file  "data/DF101215_GOV_AP modificado PNAS.weighted.csv"
+       let MMSACMEX_limit csv:from-file  "data/DF101215_GOV_AP modificado PNAS.limit.csv"
 
        set actions (list item 1 item 2 MMSACMEX_limit   ;define the alternatives
          item 1 item 3 MMSACMEX_limit
@@ -1548,12 +1612,9 @@ to define_alternativesCriteria
 
        ]
 
-;<<<<<<< HEAD
-;<<<<<<< HEAD
-;#############################################################################################################################################
-;#############################################################################################################################################
-       let MMSACMEX_D csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/SACMEX_Drenaje modificada febrero 2017.weighted.csv"
-       let MMSACMEX_D_limit csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/SACMEX_Drenaje modificada febrero 2017.limit.csv"
+
+       let MMSACMEX_D csv:from-file  "data/SACMEX_Drenaje modificada febrero 2017.weighted.csv"
+       let MMSACMEX_D_limit csv:from-file  "data/SACMEX_Drenaje modificada febrero 2017.limit.csv"
        set actions (list item 1 item 2 MMSACMEX_D   ;define the alternatives
          item 1 item 3 MMSACMEX_D)
        set jj 0
@@ -1655,13 +1716,9 @@ to define_alternativesCriteria
 
 
 
-       let MMOCVAM csv:from-file  "c:/Users/abaezaca/Documents/MEGADAPT/ABM-empirical-V1/Mental-Models/OCVAM_Version_sin_GEO.limit.csv"
-;=======
-;       let MMOCVAM csv:from-file  "data/OCVAM_Version_sin_GEO.limit.csv"
-;>>>>>>> 247fb45929804fe520d04fb62e879cf1409142e5
-;=======
-     ;  let MMOCVAM csv:from-file  "OCVAM_Version_sin_GEO.limit.csv"
-;>>>>>>> 40296037b262d6aac0752d8e484d769571b1ce61
+
+       let MMOCVAM csv:from-file  "data/OCVAM_Version_sin_GEO.limit.csv"
+
 
        ;create-Alternatives_OCVAM 1[
        ;    set ID "OCVAM"
@@ -1734,22 +1791,6 @@ to flood_risk  ;replace by fault
       set H_f H_f + 1
     ]
   ]
-end
-to export-postgres
-;this procedure exports an attribute in the agebs to a layer in postgis
-
-; sql:configure "defaultconnection" [["brand" "PostgreSQL"]["host" "localhost"]["port" 5432] ["user" "postgres"]["password" "x"]["database" "new"]]
-
- foreach sort-on [ID] agebs[    ;sort agebs by ID from low to high
-   ask ?
-   [
-     ;Antiguedad-infra
- ;    sql:exec-update "UPDATE agebs_calles_geo SET infra=? WHERE ageb_id=?"  list Antiguedad-infra ID
- ;    show Antiguedad-infra
-   ]
- ]
-
-
 end
 
 
@@ -1946,24 +1987,6 @@ tasa_de_cambio_newInfra
 NIL
 HORIZONTAL
 
-PLOT
-1051
-10
-1407
-226
-Salud
-1000*casos/habitante
-# AGEBS
-0.0
-50.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-"default" 0.5 1 -16777216 true "" "histogram [disease_burden] of agebs"
-
 BUTTON
 243
 248
@@ -1980,86 +2003,6 @@ NIL
 NIL
 NIL
 1
-
-PLOT
-1049
-230
-1408
-420
-Encharcamientos
-# Encharcamientos
-# AGEBS
-0.0
-30.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-"default" 1.0 1 -16777216 true "" "histogram [Flooding] of agebs"
-
-PLOT
-1051
-430
-1408
-652
-Infrastructure
-% casa connectadas
-# AGEBS
-0.8
-1.0
-0.0
-10.0
-true
-true
-"" ""
-PENS
-"Drenage" 0.01 1 -6459832 true "" "histogram [houses_with_dranage] of agebs"
-"Abastecimiento" 0.01 1 -14454117 true "" "histogram [houses_with_abastecimiento] of agebs"
-
-PLOT
-1416
-317
-1845
-537
-Residentes
-NIL
-NIL
-0.0
-6.0
-0.0
-0.01
-true
-true
-"" ""
-PENS
-"Compra Agua" 1.0 1 -16777216 true "" "plotxy 1 sum [d_Compra_agua] of agebs"
-"Captacion Agua" 1.0 1 -4528153 true "" "plotxy 2 sum [d_Captacion_agua] of agebs"
-"Movilizaciones" 1.0 1 -2674135 true "" "plotxy 3 sum [d_Movilizaciones] of agebs"
-"Modificacion Vivienda" 1.0 1 -13791810 true "" "plotxy 4 sum [d_Modificacion_vivienda] of agebs"
-"Accion Colectiva" 1.0 1 -11085214 true "" "plotxy 5 sum [d_Accion_colectiva] of agebs"
-
-PLOT
-1413
-47
-1847
-273
-SACMEX
-NIL
-NIL
-0.0
-6.0
-0.0
-10.0
-true
-true
-"" ""
-PENS
-"Extraccion de Agua" 1.0 1 -16777216 true "" "plotxy 1 sum [d_water_extraction] of agebs"
-"Reparaciones" 1.0 1 -7500403 true "" "plotxy 2 sum [d_mantencion] of agebs"
-"Nueva Infrastructura" 1.0 1 -2674135 true "" "plotxy 3 sum [d_new] of agebs"
-"Distribucion de Agua" 1.0 1 -955883 true "" "plotxy 4 sum [d_water_distribution] of agebs"
 
 BUTTON
 243
