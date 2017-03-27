@@ -73,9 +73,9 @@ globals [
 ;#####################################################################################
 ;;Vulnerability
 ;#####################################################################################
-Sensitivity_F_Max      ;max level of changes made to houses
+Sensitivity_F_Max      ;max level of changes made to houses to reduce damage by flooding
 Vulnerability_F_max
-Sensitivity_S_Max      ;max level of changes made to houses
+Sensitivity_S_Max      ;max level of changes made to houses to reduce scarcity
 Vulnerability_S_max
 ;;############################################################################################################################################
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -163,9 +163,11 @@ Agebs-own[
   Falla                        ;;Fallas de infraestructura hidráulica ocasionadas por conexiones clandestinas, obstrucción por basura y procesos biofísicos
   FALTA
   Mantenimiento?               ;; what is the probability this patch is under maitnance
-  P_failure                    ;;probabilidad de falla por edad
+  P_failure_AB                 ;;probabilidad de falla infra abastecimiento por edad
+  P_failure_D                 ;;probabilidad de falla infra drenaje por edad
   p_failure_hund               ;;probabilidad de falla debido a hundimientos
-  p_falla                      ;;probability of failure due to age and subsidence
+  p_falla_AB                      ;;probability of failure due to age and subsidence
+  p_falla_D
   hundimientos
   presion_hidraulica           ;;or an index of low volume of water in the pipes (tandeo)
   Gasto_hidraulico             ;;water the enter the sewage system in each ageb
@@ -175,6 +177,7 @@ Agebs-own[
   urban_growth                   ;; Population growth
   Income-index                 ;; Actual income
   Presion_social               ;;social pressure index per ageb (e.g. %pop. involved in the protests?)
+  Presion_social_dy               ;;social pressure index per ageb (e.g. %pop. involved in the protests?)
   peticion_usuarios
   Peticion_Delegacional
   Flooding                     ;; mean number of encharcamientos during between 2004 and 2014
@@ -440,7 +443,7 @@ end
 
 ;#############################################################################################################################################
 ;#############################################################################################################################################
-to residents-decisions
+to residents-decisions  ;calculation of distance metrix using compromize programing. Need to update value of the atributes in the landscape and its standarize value
   if group_kmean = 1 or group_kmean = 3[ ;#residents type Xochimilco
     ask Alternatives_Xo [
       update_criteria_and_valueFunctions_residentes
@@ -611,10 +614,14 @@ to update_globals  ;; update the maximum or minimum of values use by the model t
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 to p_falla_infra    ;;update age and probability of failure and also is color if well is working
-     set P_failure  1 - exp(Antiguedad-infra_Ab  * (1 / (365 * 200)))
-     set p_failure_hund  hundimientos
-     set p_falla p_failure_hund + P_failure
+     set P_failure_AB 1 - exp(Antiguedad-infra_Ab  * (- 1 / (365 * 200)))
+print exp(Antiguedad-infra_Ab  * (- 1 / (365 * 200)))
+     set P_failure_D  1 - exp(Antiguedad-infra_D  * (- 1 / (365 * 200)))
+     set p_failure_hund  hundimientos * p_falla_subsidencia
+     set p_falla_AB p_failure_hund + P_failure_AB
+     set p_falla_D p_failure_hund + P_failure_D
 end
+;#############################################################################################################################################
 ;#############################################################################################################################################
 to counter_days
   if ticks mod 360 = 0[
@@ -786,10 +793,11 @@ to define_agebs
           set Abastecimiento poblacion * water_requirement_perPerson               ;;;C4_A1;;;
           set Peticion_Delegacional gis:property-value ?1 "PETDELS"
           set Presion_social gis:property-value ?1 "protests"
-          set peticion_usuarios 1
-                  ;capas que falta incluir
+          set Falla gis:property-value ? "FALLAIN"
           set garbage poblacion;1 ;# de habitantes we assume that the proportion of garbage accumulated in the dranage is proportional to the population living in each census block
           set scarcity gis:property-value ?1 "ESCASEZ"
+          set peticion_usuarios 1
+                  ;capas que falta incluir
           set desviacion_agua 1
           set eficacia_servicio 1   ;; Gestión del servicio de Drenaje y agua potable (ej. interferencia política, no llega la pipa, horario del tandeo, etc)
           set desperdicio_agua 1                      ;;Por fugas, falta de conciencia del uso del agua
@@ -797,7 +805,6 @@ to define_agebs
           set Gasto_hidraulico 1     ;;to be completed with the calcualtion made by
           set urban_growth 1
           set capacidad 1
-          set Falla gis:property-value ? "FALLAIN"
           set Monto 1
           set tandeo 1 / 7
           set water_quality 1
@@ -915,7 +922,7 @@ to update_criteria_and_valueFunctions_SACMEX    ;;update the biphisical value of
       set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
     ]
     ;###########################################################
-    if ? = "Inundaciones"[
+    if ? = "Inundaciones"[  ;grandes inundaciones !!need to change variable for criteria
       set C1 replace-item i C1 [Flooding] of myself
       set C1_max replace-item i C1_max Flooding_max  ;change with update quantity for speed
 
@@ -963,6 +970,17 @@ to update_criteria_and_valueFunctions_SACMEX    ;;update the biphisical value of
       set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
     ]
     ;###########################################################
+    if ? = "Encharcamientos"[
+      set C1 replace-item i C1 [Flooding] of myself
+      set C1_max replace-item i C1_max Flooding_max  ;change with update quantity for speed
+      if-else name_action = "Extraccion_agua"[
+        set V replace-item i V (Value-Function (item i C1) [0.3 0.4 0.5 0.6] ["" "" "" ""] (item i C1_max)  [1 0.5 0.25 0.125 0.0625])
+      ]
+      [
+        set V replace-item i V (Value-Function (item i C1) [0.1 0.4 0.6 0.8] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
+      ]
+    ]
+    ;###########################################################
       set i i + 1
   ]
   )
@@ -999,13 +1017,13 @@ to update_criteria_and_valueFunctions_residentes
       ;###########################################################
       if ? = "Escasez de agua"[
         if name_action = "Compra de agua" [
-          set C1 replace-item i C1 [scarcity] of myself
-          set C1_max replace-item i C1_max scarcity_max
-          set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.05 0.8 0.9 0.95 1])
+          set C1 replace-item i C1 [days_wno_water] of myself
+          set C1_max replace-item i C1_max 20
+          set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.05 1 1 0.05 0.05])
         ]
         if name_action = "Movilizaciones" [
-          set C1 replace-item i C1 [scarcity] of myself
-          set C1_max replace-item i C1_max scarcity_max
+          set C1 replace-item i C1 [days_wno_water] of myself
+          set C1_max replace-item i C1_max 20
           set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max) [0.05 0.1 0.5 0.8 1])
         ]
       ]
@@ -1222,7 +1240,7 @@ to water_extraccion
 ;  print from_d_to_bombeo
 end
 ;#############################################################################################################################################
-to water_distribution
+to water_distribution  ;distribution of water from government by truck
 let available_water N_trucks_used * truck_capasity
     foreach sort-on [(1 - d_water_distribution)]  agebs[
       ask ? [
@@ -1239,8 +1257,8 @@ let available_water N_trucks_used * truck_capasity
 end
 ;##############################################################################################################
 to water_by_pipe
-;having water depends on tandeo, infrastructure and ifra failure distribution of water by trucks
-  let pw tandeo * (1 - p_falla)
+;having water by pipe depends on tandeo (p having water based on info collected by ALE,about days with water), infrastructure and ifra failure distribution of water by trucks
+  let pw tandeo * (1 - p_falla_AB)
   if-else pw > random-float 1[
     set water_distributed_pipes 1
   ][
@@ -1248,7 +1266,7 @@ to water_by_pipe
   ]
 end
 ;##############################################################################################################
-to water_in_aday
+to water_in_aday  ;this procedure check if water was distributed to an ageb. This is true if water came from pipes, trucks or buying water
   if-else water_distributed_pipes = 1 or water_distributed_trucks = 1 or water_in_buying = 1[
     set water_in 1
     set days_wno_water 0
@@ -1262,8 +1280,15 @@ end
 ;##############################################################################################################
 
 ;#############################################################################################################################################
-to protest
-set Presion_social 0.9 * Presion_social  + ifelse-value (d_Movilizaciones > max (list d_Modificacion_vivienda d_Accion_colectiva d_Captacion_agua d_Compra_agua))[1][0]
+to protest  ;if the distant to ideal for protest is greater than
+  ifelse d_Movilizaciones > max (list d_Modificacion_vivienda d_Accion_colectiva d_Captacion_agua d_Compra_agua)[
+    set Presion_social_dy Presion_social_dy  + 1
+  ]
+  [
+  ]
+  if months = 1 and days = 2 and ticks > 10 [
+    set Presion_social 0
+  ]
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -1371,7 +1396,7 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
       ] ;accion colectiva
 
       if Visualization = "Movilizaciones" and ticks > 1 [
-        set size Presion_social
+        set size Presion_social / 5
         set color  scale-color red Presion_social 0 Presion_social_max
       ] ;;social pressure
 
@@ -1401,7 +1426,7 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
         set shape "square 2"
         set color  scale-color blue Antiguedad-infra_Ab  0 Antiguedad-infra_Ab_max]
       if visualization = "P. Falla" and ticks > 1 [
-        set color  scale-color green p_falla 0 1
+        set color  scale-color green p_falla_AB 0 1
         ]
       if visualization = "Zonas Aquifero" and ticks > 1 [set color  zona_aquifera]
    ]
@@ -1494,8 +1519,13 @@ to define_alternativesCriteria
         item 1 item 13 MMIz_limit
         item 1 item 14 MMIz_limit
         item 1 item 15 MMIz_limit)
+      if-else ANP = TRUE[
+        set alpha item (jj + 2) item (jj + 2) MMIz_limit / (item 5 item 5 MMIz_limit + item 4 item 4 MMIz_limit + item 3 item 3 MMIz_limit + item 6 item 6 MMIz_limit + item 2 item 2 MMIz_limit)
+      ]
+      [
+        set alpha 1
+      ]
 
-      set alpha item (jj + 2) item (jj + 2) MMIz_limit / (item 5 item 5 MMIz_limit + item 4 item 4 MMIz_limit + item 3 item 3 MMIz_limit + item 6 item 6 MMIz_limit + item 2 item 2 MMIz_limit)
     ]
 
   set jj jj + 1
@@ -1553,8 +1583,11 @@ to define_alternativesCriteria
         item 1 item 13 MMXo_L
         item 1 item 14 MMXo_L
         item 1 item 15 MMXo_L)
-
-      set alpha (item (jj + 2) item (jj + 2) MMXo_L) / (item 5 item 5 MMXo_L + item 4 item 4 MMXo_L + item 3 item 3 MMXo_L + item 6 item 6 MMXo_L + item 2 item 2 MMXo_L)
+      if-else ANP = TRUE[
+        set alpha (item (jj + 2) item (jj + 2) MMXo_L) / (item 5 item 5 MMXo_L + item 4 item 4 MMXo_L + item 3 item 3 MMXo_L + item 6 item 6 MMXo_L + item 2 item 2 MMXo_L)
+      ][
+      set alpha 1
+      ]
     ]
 
   set jj jj + 1
@@ -1615,9 +1648,11 @@ to define_alternativesCriteria
              item 1 item 15 MMMCb_limit
              item 1 item 16 MMMCb_limit)
 
-
-           set alpha item (jj + 2) item (jj + 2) MMMCb_limit /(item 5 item 5 MMMCb_limit + item 4 item 4 MMMCb_limit + item 3 item 3 MMMCb_limit + item 6 item 6 MMMCb_limit + item 2 item 2 MMMCb_limit)
-
+           if-else ANP = TRUE[
+             set alpha item (jj + 2) item (jj + 2) MMMCb_limit /(item 5 item 5 MMMCb_limit + item 4 item 4 MMMCb_limit + item 3 item 3 MMMCb_limit + item 6 item 6 MMMCb_limit + item 2 item 2 MMMCb_limit)
+           ][
+           set alpha 1
+           ]
          ]
   set jj jj + 1
 
@@ -1665,9 +1700,11 @@ to define_alternativesCriteria
              item 1 item 11 MMMC_limit
              item 1 item 12 MMMC_limit)
 
-
+           if-else ANP = TRUE[
            set alpha item (jj + 2) item (jj + 2) MMMC_limit /(item 5 item 5 MMMC_limit + item 4 item 4 MMMC_limit + item 3 item 3 MMMC_limit + item 6 item 6 MMMC_limit + item 2 item 2 MMMC_limit)
-
+           ][
+           set alpha 1
+           ]
 
          ]
          set jj jj + 1
@@ -1677,8 +1714,8 @@ to define_alternativesCriteria
 
        ;#########################################
 
-       let MMSACMEX csv:from-file  "data/DF101215_GOV_AP modificado PNAS.weighted.csv"
-       let MMSACMEX_limit csv:from-file  "data/DF101215_GOV_AP modificado PNAS.limit.csv"
+       let MMSACMEX csv:from-file  "data/DF101215_GOV_AP modificado.weighted.csv"
+       let MMSACMEX_limit csv:from-file  "data/DF101215_GOV_AP modificado.limit.csv"
 
        set actions (list item 1 item 2 MMSACMEX_limit   ;define the alternatives
          item 1 item 3 MMSACMEX_limit
@@ -1713,9 +1750,9 @@ to define_alternativesCriteria
            set ID "DF101215_GOV"
            set name_action ?
            set label name_action
-           set C1 (list 0 0 0 0 0 0 0 0 0 0 0 0 0)
-           set C1_max (list 0 0 0 0 0 0 0 0 0 0 0 0 0)
-           set V (list 0 0 0 0 0 0 0 0 0 0 0 0 0)
+           set C1 (list 0 0 0 0 0 0 0 0 0 0 0 0)
+           set C1_max (list 0 0 0 0 0 0 0 0 0 0 0 0)
+           set V (list 0 0 0 0 0 0 0 0 0 0 0 0)
            let w_sum sum (list item 2 item 7 MMSACMEX_limit
              item 2 item 8 MMSACMEX_limit
              item 2 item 9 MMSACMEX_limit
@@ -1728,7 +1765,7 @@ to define_alternativesCriteria
              item 2 item 16 MMSACMEX_limit
              item 2 item 17 MMSACMEX_limit
              item 2 item 18 MMSACMEX_limit
-             item 2 item 19 MMSACMEX_limit)
+             )
 
            set w_C1 (
              list (item 2 item 7 MMSACMEX_limit / w_sum)
@@ -1743,7 +1780,7 @@ to define_alternativesCriteria
              (item 2 item 16 MMSACMEX_limit / w_sum)
              (item 2 item 17 MMSACMEX_limit / w_sum)
              (item 2 item 18 MMSACMEX_limit / w_sum)
-             (item 2 item 19 MMSACMEX_limit / w_sum))
+             )
 
            set C1_name (list item 1 item 7 MMSACMEX_limit
              item 1 item 8 MMSACMEX_limit
@@ -1757,7 +1794,7 @@ to define_alternativesCriteria
              item 1 item 16 MMSACMEX_limit
              item 1 item 17 MMSACMEX_limit
              item 1 item 18 MMSACMEX_limit
-             item 1 item 19 MMSACMEX_limit)
+             )
 
            set alpha item (jj + 2) item (jj + 2) MMSACMEX_limit /(item 5 item 5 MMSACMEX_limit + item 4 item 4 MMSACMEX_limit + item 3 item 3 MMSACMEX_limit + item 6 item 6 MMSACMEX_limit + item 2 item 2 MMSACMEX_limit)
          ]
@@ -1941,7 +1978,7 @@ end
 ;##############################################################################################################
 to flood_risk  ;replace by fault
   ask Agebs [
-    if P_failure > random 1 or Mantenimiento? = TRUE or precipitation > R_tau [
+    if P_failure_D > random 1 or Mantenimiento? = TRUE or precipitation > R_tau [
       set H_f H_f + 1
     ]
   ]
@@ -2048,12 +2085,12 @@ NIL
 CHOOSER
 47
 433
-346
+227
 478
 Visualization
 Visualization
 "Accion Colectiva" "Movilizaciones" "Captacion de Agua" "Compra de Agua" "Modificacion de la vivienda" "Extraction Agua SACMEX" "Reparaciones SACMEX" "Nueva Infraestructura SACMEX" "Distribucion de Agua SACMEX" "GoogleEarth" "K_groups" "Salud" "Escasez" "Encharcamientos" "Infraestructura Abastecimiento" "Infraestructura Edad" "P. Falla" "Zonas Aquifero"
-8
+15
 
 BUTTON
 243
@@ -2100,10 +2137,10 @@ Visualización
 1
 
 SLIDER
-38
-196
-238
-229
+36
+193
+237
+226
 water_requirement_perPerson
 water_requirement_perPerson
 0.007
@@ -2123,17 +2160,17 @@ recursos_para_mantencion
 recursos_para_mantencion
 1
 2000
-368
+496
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-31
-235
-247
-268
+32
+233
+238
+266
 tasa_de_cambio_newInfra
 tasa_de_cambio_newInfra
 0
@@ -2145,10 +2182,10 @@ NIL
 HORIZONTAL
 
 BUTTON
-243
-248
-413
-311
+244
+172
+414
+235
 NIL
 show-actors-actions
 NIL
@@ -2162,10 +2199,10 @@ NIL
 1
 
 BUTTON
-243
-312
-414
-376
+244
+237
+415
+301
 NIL
 clear-plots
 NIL
@@ -2179,10 +2216,10 @@ NIL
 1
 
 CHOOSER
-53
-334
-191
-379
+31
+351
+230
+396
 escala
 escala
 "cuenca" "ciudad"
@@ -2200,15 +2237,15 @@ export-to-postgres
 -1000
 
 SLIDER
-29
+33
 273
-231
+236
 306
 Effectiveness_mantencion
 Effectiveness_mantencion
 0
 1
-0.98
+0.72
 0.01
 1
 NIL
@@ -2217,7 +2254,7 @@ HORIZONTAL
 SLIDER
 36
 116
-208
+236
 149
 recursos_para_new
 recursos_para_new
@@ -2230,10 +2267,10 @@ NIL
 HORIZONTAL
 
 PLOT
-1459
-588
-1659
-738
+1039
+366
+1239
+516
 plot 1
 NIL
 NIL
@@ -2248,9 +2285,9 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot mean [Antiguedad-infra_Ab] of agebs"
 
 SLIDER
-48
+36
 155
-220
+236
 188
 N_trucks_used
 N_trucks_used
@@ -2271,7 +2308,7 @@ plot 2
 NIL
 NIL
 0.0
-10.0
+20.0
 0.0
 10.0
 true
@@ -2279,6 +2316,32 @@ false
 "" ""
 PENS
 "default" 1.0 1 -16777216 true "" "histogram [days_wno_water] of agebs"
+
+SLIDER
+31
+309
+228
+342
+p_falla_subsidencia
+p_falla_subsidencia
+0
+0.01
+0.0021
+0.0001
+1
+NIL
+HORIZONTAL
+
+SWITCH
+135
+576
+240
+611
+ANP
+ANP
+0
+1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?
