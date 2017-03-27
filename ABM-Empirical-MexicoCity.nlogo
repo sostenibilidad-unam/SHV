@@ -9,6 +9,7 @@ globals [
   Tot_water_Imported_Cutzamala ;;total water that enter to MC every day by importation from Cutzamala. for now a constant in the future connected as a network
   Tot_water_Imported_Lerma     ;;total water that enter to MC every day by importation from Lerma system. for now a constant int he future connected as a network
   water_produced               ;;Water produced by the city wells
+  truck_capasity               ;;capasity for each truck (pipas) to deliver water
   zonas_aquiferas_MX           ;;ID de las zonas aquiferas en MXC
   from_d_to_bombeo
 ;; agua en tuberias
@@ -164,7 +165,7 @@ Agebs-own[
   Mantenimiento?               ;; what is the probability this patch is under maitnance
   P_failure                    ;;probabilidad de falla por edad
   p_failure_hund               ;;probabilidad de falla debido a hundimientos
-  ;p_failure_?               ;;probabilidad de falla debido a ?
+  p_falla                      ;;probability of failure due to age and subsidence
   hundimientos
   presion_hidraulica           ;;or an index of low volume of water in the pipes (tandeo)
   Gasto_hidraulico             ;;water the enter the sewage system in each ageb
@@ -177,7 +178,6 @@ Agebs-own[
   peticion_usuarios
   Peticion_Delegacional
   Flooding                     ;; mean number of encharcamientos during between 2004 and 2014
-  days_wno_water               ;; Days with no water
 ;;Charactersitics of the agebs that define criteria
   houses_with_dranage          ;; % of houses connected to the dranage from ENEGI survey instrument
   houses_with_abastecimiento   ;; % houses connected to distribution network
@@ -188,9 +188,12 @@ Agebs-own[
   water_needed                 ;; Total water needed based on population size of colonia and water requirements per peson
   water_in                     ;; Water that enters to the colonias
   water_distributed_pipes      ;; Water imported (not produced in) to the colonia
-  water_distributed_trucks     ;; Water imported (not produced in) to the colonia
-  tandeo                       ;; Hours a week without water?
+  water_distributed_trucks     ;; Water distributed by trucks
+  water_in_buying              ;; Water bought from private sources
+  tandeo                       ;; days a week with water distributed by pipes
   scarcity                     ;; When water_needed >  water_produced, deficit > 0
+  days_wno_water               ;; Days with no water
+  resources_water              ;; index 0 1 defining the purchase power to buy water
   surplus                      ;; When water_needed <  water_produced, surplus > 0
   eficacia_servicio            ;;Gestión del servicio de Drenaje y agua potable (ej. interferencia política, no llega la pipa, horario del tandeo, etc)
   desperdicio_agua             ;;Por fugas, falta de conciencia del uso del agua
@@ -284,6 +287,7 @@ to SETUP
 
   set Tot_water_Imported_Cutzamala 14 * 60 * 60 * 24 ;[m3/s][s/min][min/hour][hours/day]   ;;total water imported from Cutzamala System
   set Tot_water_Imported_Lerma 5 * 60 * 60 * 24                                            ;;total water imported from Lerma System
+  set truck_capasity 300 ;[m3/truck]
   set Antiguedad-infra_Ab_max 1
   set desperdicio_agua_max 1
   set desviacion_agua_max 1
@@ -351,28 +355,30 @@ to GO
  if months = 1 and days = 1 [   ;annual changes
    SACMEX-decisions              ;;decisions by SACMEX
    water_extraccion
-
-
  ]
+ ;;actions sacmex
+  repair-Infra_Ab
+  repair-Infra_D
+  water_distribution
+
+  if escala = "ciudad" [
+    Landscape_visualization          ;;visualization of social and physical processes
+  ]
+
  ask agebs [
+   water_by_pipe
+   water_in_aday
    if days = 1[
+     set resources_water 1
      residents-decisions
      if escala = "ciudad" [
        Landscape_visualization          ;;visualization of social and physical processes
      ]
-
    ]
    p_falla_infra
    take_action_residents
    Vulnerability_indicator
  ]
-   ;;actions
-  repair-Infra_Ab
-  repair-Infra_D
-  if escala = "ciudad" [
-    Landscape_visualization          ;;visualization of social and physical processes
-  ]
-
 
 
     ;]
@@ -435,26 +441,22 @@ end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 to residents-decisions
-
   if group_kmean = 1 or group_kmean = 3[ ;#residents type Xochimilco
-
     ask Alternatives_Xo [
       update_criteria_and_valueFunctions_residentes
       let ddd (distance-ideal alpha V w_C1 1)
       if name_action = "Movilizaciones"[
-        ask myself [
-          set d_Movilizaciones ddd
-          protest]
+        ask myself [set d_Movilizaciones ddd]
       ]
 
-      if name_action = "Modificacion vivienda" [
+      if name_action = "Modificacion vivienda" and months = 1[
         ask myself [set d_Modificacion_vivienda ddd]
       ]
-      if name_action = "Captacion de agua" [
+      if name_action = "Captacion de agua" and months = 6 [
         ask myself [set d_Captacion_agua ddd]
       ]
 
-      if name_action = "Accion colectiva" [
+      if name_action = "Accion colectiva" and months = 1[
         ask myself [set d_Accion_colectiva ddd]
       ]
 
@@ -463,7 +465,6 @@ to residents-decisions
       ]
     ]
   ]
-
   ;###############################################################################################################################
   if group_kmean = 2 or group_kmean = 0[ ;#Residents type Iztapalapa
     ask Alternatives_Iz [
@@ -471,21 +472,18 @@ to residents-decisions
 
       let  ddd (distance-ideal alpha V w_C1 1)
       if name_action = "Movilizaciones"[
-      ask myself [
-        set d_Movilizaciones ddd
-        protest
-;        set Presion_social Presion_social  + d_Movilizaciones
+        ask myself [
+          set d_Movilizaciones ddd]
       ]
-    ]
-    if name_action = "Modificacion vivienda"[
+      if name_action = "Modificacion vivienda"  and months = 1[
       ask myself [set d_Modificacion_vivienda ddd]
-    ]
+      ]
 
-    if name_action = "Captacion de agua"[
-      ask myself [set d_Captacion_agua ddd]
-    ]
+      if name_action = "Captacion de agua" and months = 6 [
+        ask myself [set d_Captacion_agua ddd]
+      ]
 
-    if name_action = "Accion colectiva"[
+    if name_action = "Accion colectiva"  and months = 1[
       ask myself [set d_Accion_colectiva ddd]
     ]
 
@@ -493,65 +491,60 @@ to residents-decisions
       ask myself [set d_Compra_agua ddd]
 
     ]
-  ]
-]
-;###############################################################################################################################
-if group_kmean = 4 [ ;#Residents type Magdalena Contreras
-  ask Alternatives_MC [
-    update_criteria_and_valueFunctions_residentes
-    let ddd (distance-ideal alpha V w_C1 1)
-    if name_action = "Movilizaciones"[
-      ask myself [
-        set d_Movilizaciones ddd
-
-        ;set Presion_social Presion_social  + d_Movilizaciones
-        ]
-    ]
-
-    if name_action = "Modificacion vivienda"[
-      ask myself [set d_Modificacion_vivienda ddd]
-    ]
-
-    if name_action = "Captacion de agua"[
-      ask myself [set d_Captacion_agua ddd]
-
-    ]
-
-    if name_action = "Accion colectiva" [
-      ask myself [set d_Accion_colectiva ddd]
-    ]
-
-    if name_action = "Compra de agua" [
-      ask myself [set d_Compra_agua ddd]
     ]
   ]
-]
+  ;###############################################################################################################################
+  if group_kmean = 4 [ ;#Residents type Magdalena Contreras
+    ask Alternatives_MC [
+      update_criteria_and_valueFunctions_residentes
+      let ddd (distance-ideal alpha V w_C1 1)
+      if name_action = "Movilizaciones"[
+        ask myself [set d_Movilizaciones ddd]
+      ]
 
+      if name_action = "Modificacion vivienda"  and months = 1[
+        ask myself [set d_Modificacion_vivienda ddd]
+      ]
 
+      if name_action = "Captacion de agua"  and months = 6 [
+        ask myself [set d_Captacion_agua ddd]
+
+      ]
+
+      if name_action = "Accion colectiva"  and months = 1[
+        ask myself [set d_Accion_colectiva ddd]
+      ]
+
+      if name_action = "Compra de agua" [
+        ask myself [set d_Compra_agua ddd]
+      ]
+    ]
+  ]
 end
 
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 
 to take_action_residents
-if d_Modificacion_vivienda > max (list d_Movilizaciones d_Accion_colectiva d_Captacion_agua d_Compra_agua)
-[
-  house-modification
-]
-if d_Movilizaciones > max (list d_Modificacion_vivienda d_Accion_colectiva d_Captacion_agua d_Compra_agua)
-[
-  protest
-]
-if d_Accion_colectiva > max (list d_Modificacion_vivienda d_Movilizaciones d_Captacion_agua d_Compra_agua)
-[
-]
-if d_Captacion_agua > max (list d_Modificacion_vivienda d_Movilizaciones d_Accion_colectiva d_Compra_agua)
-[
-  rain-waterCapture
+  if d_Modificacion_vivienda > max (list d_Movilizaciones d_Accion_colectiva d_Captacion_agua d_Compra_agua)
+  [
+    house-modification
   ]
-if d_Compra_agua > max (list d_Modificacion_vivienda d_Movilizaciones d_Accion_colectiva d_Captacion_agua)
-[]
-
+  if d_Movilizaciones > max (list d_Modificacion_vivienda d_Accion_colectiva d_Captacion_agua d_Compra_agua)
+  [
+    protest
+  ]
+  if d_Accion_colectiva > max (list d_Modificacion_vivienda d_Movilizaciones d_Captacion_agua d_Compra_agua)
+  [
+  ]
+  if d_Captacion_agua > max (list d_Modificacion_vivienda d_Movilizaciones d_Accion_colectiva d_Compra_agua)
+  [
+    rain-waterCapture
+  ]
+  if d_Compra_agua > max (list d_Modificacion_vivienda d_Movilizaciones d_Accion_colectiva d_Captacion_agua)
+  [
+    water-Purchase
+  ]
 end
 
 ;#############################################################################################################################################
@@ -566,7 +559,13 @@ to rain-waterCapture
 end
 ;#############################################################################################################################################
 to water-Purchase
-
+  if-else resources_water > income-index[  ;in you have resources purchese water
+    set resources_water resources_water - 1 / 30
+    set water_in_buying 1
+  ]
+  [
+    set water_in_buying 0
+    ]
 end
 ;#############################################################################################################################################
 to collective-action
@@ -614,6 +613,7 @@ to update_globals  ;; update the maximum or minimum of values use by the model t
 to p_falla_infra    ;;update age and probability of failure and also is color if well is working
      set P_failure  1 - exp(Antiguedad-infra_Ab  * (1 / (365 * 200)))
      set p_failure_hund  hundimientos
+     set p_falla p_failure_hund + P_failure
 end
 ;#############################################################################################################################################
 to counter_days
@@ -799,6 +799,7 @@ to define_agebs
           set capacidad 1
           set Falla gis:property-value ? "FALLAIN"
           set Monto 1
+          set tandeo 1 / 7
           set water_quality 1
           set sensitivity_F 1
           set sensitivity_S 1
@@ -853,56 +854,67 @@ to update_criteria_and_valueFunctions_SACMEX    ;;update the biphisical value of
 
   (foreach C1_name
     [
+    ;###########################################################
     if ? = "Antiguedad"[
       set C1 replace-item i C1 ([Antiguedad-infra_Ab ] of myself)
       set C1_max replace-item i C1_max Antiguedad-infra_Ab_max
       set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
     ]
+    ;###########################################################
      if ? = "Capacidad"[
        set C1 replace-item i C1 [Capacidad] of myself
        set C1_max replace-item i C1_max  Capacidad_max ;change with update quantity for speed
        set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [1 0.5 0.25 0.125 0.0625])
     ]
+    ;###########################################################
     if ? = "Falla"[
       set C1 replace-item i C1 [Falla] of myself
       set C1_max replace-item i C1_max fallas_max
       set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
     ]
+    ;###########################################################
     if ? = "Falta"[
       set C1  replace-item i C1 [falta] of myself
       set C1_max replace-item i C1_max falta_max
       set V replace-item i V (Value-Function (item i C1) [0.9 0.95 0.97 0.99] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
     ]
+    ;###########################################################
     if ? = "Presion_hidraulica"[
       set C1 replace-item i C1 [Presion_hidraulica] of myself
       set C1_max replace-item i C1_max presion_hidraulica_max
       set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [1 0.5 0.25 0.125 0.0625])
     ]
+    ;###########################################################
     if ? = "Gasto_hidraulico"[
       set C1 replace-item i C1 [Gasto_hidraulico] of myself
       set C1_max replace-item i C1_max Gasto_hidraulico_max
       set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [1 0.5 0.25 0.125 0.0625])
     ]
+    ;###########################################################
     if ? = "Basura"[
       set C1 replace-item i C1 [garbage] of myself
       set C1_max replace-item i C1_max garbage_max
       set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
     ]
+    ;###########################################################
     if ? = "Monto"[
       set C1 replace-item i C1 [Monto] of myself
       set C1_max replace-item i C1_max Monto_max
       set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
     ]
+    ;###########################################################
     if ? = "Calidad_agua"[
       set C1 replace-item i C1 [water_quality] of myself
       set C1_max replace-item i C1_max water_quality_max
       set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [1 0.5 0.25 0.125 0.0625])
     ]
+    ;###########################################################
     if ? = "Escasez de agua"[
       set C1 replace-item i C1 [scarcity] of myself
       set C1_max replace-item i C1_max scarcity_max
       set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
     ]
+    ;###########################################################
     if ? = "Inundaciones"[
       set C1 replace-item i C1 [Flooding] of myself
       set C1_max replace-item i C1_max Flooding_max  ;change with update quantity for speed
@@ -914,40 +926,43 @@ to update_criteria_and_valueFunctions_SACMEX    ;;update the biphisical value of
         set V replace-item i V (Value-Function (item i C1) [0.1 0.4 0.6 0.8] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
       ]
     ]
-      if ? = "Abastecimiento"[
-        set C1 replace-item i C1 [Abastecimiento] of myself
-        set C1_max replace-item i C1_max Abastecimiento_max
-        set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
-      ]
-
-      if ? = "Peticion de Delegaciones"[
-        set C1 replace-item i C1 1;[Petición_Delegaciones] of Delegaciones-here
-        set C1_max replace-item i C1_max 1;Petición_Delegaciones_max ;change with update quantity for speed
-        set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
-      ]
-
-      if ? = "Peticiones de usuarios"[
-        set C1 replace-item i C1 [peticion_usuarios] of myself
-        set C1_max replace-item i C1_max peticion_usuarios_max
-        set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
-      ]
-      if ? = "Presion de medios"[
-        set C1 replace-item i C1 1;[Presión_de_medios] of myself
-        set C1_max replace-item i C1_max Presión_de_medios_max ;change with update quantity for speed
-        set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
-      ]
-      if ? = "Presion social"[
-        set C1 replace-item i C1 [Presion_social] of myself
-        set C1_max replace-item i C1_max Presion_social_max;change with update quantity for speed
-        set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
-      ]
-
-      if ? = "Precipitacion"[
-        set C1 replace-item i C1 [precipitation] of myself
-        set C1_max replace-item i C1_max precipitation_max;change with update quantity for speed
-        set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
-      ]
-
+    ;###########################################################
+    if ? = "Abastecimiento"[
+      set C1 replace-item i C1 [Abastecimiento] of myself
+      set C1_max replace-item i C1_max Abastecimiento_max
+      set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
+    ]
+    ;###########################################################
+    if ? = "Peticion de Delegaciones"[
+      set C1 replace-item i C1 1;[Petición_Delegaciones] of Delegaciones-here
+      set C1_max replace-item i C1_max 1;Petición_Delegaciones_max ;change with update quantity for speed
+      set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
+    ]
+    ;###########################################################
+    if ? = "Peticiones de usuarios"[
+      set C1 replace-item i C1 [peticion_usuarios] of myself
+      set C1_max replace-item i C1_max peticion_usuarios_max
+      set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
+    ]
+    ;###########################################################
+    if ? = "Presion de medios"[
+      set C1 replace-item i C1 1;[Presión_de_medios] of myself
+      set C1_max replace-item i C1_max Presión_de_medios_max ;change with update quantity for speed
+      set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
+    ]
+    ;###########################################################
+    if ? = "Presion social"[
+      set C1 replace-item i C1 [Presion_social] of myself
+      set C1_max replace-item i C1_max Presion_social_max;change with update quantity for speed
+      set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
+    ]
+    ;###########################################################
+    if ? = "Precipitacion"[
+      set C1 replace-item i C1 [precipitation] of myself
+      set C1_max replace-item i C1_max precipitation_max;change with update quantity for speed
+      set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
+    ]
+    ;###########################################################
       set i i + 1
   ]
   )
@@ -957,53 +972,59 @@ to update_criteria_and_valueFunctions_residentes
     let i 0
   (foreach C1_name
     [
+      ;###########################################################
       if ? = "Crecimiento urbano"[
         set C1 replace-item i C1 [urban_growth] of myself
         set C1_max replace-item i C1_max urban_growth_max  ;change with update quantity for speed
         set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
       ]
-
-
+      ;###########################################################
       if ? = "Contaminacion de agua"[
         set C1 replace-item i C1 [water_quality] of myself
         set C1_max replace-item i C1_max water_quality_max  ;change with update quantity for speed
         set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
       ]
-
-
+      ;###########################################################
       if ? = "Obstruccion de alcantarillado"[
         set C1 replace-item i C1 [garbage] of myself
         set C1_max replace-item i C1_max garbage_max  ;change with update quantity for speed
         set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
       ]
-
+      ;###########################################################
       if ? = "Salud"[
         set C1 replace-item i C1 [disease_burden] of myself
         set C1_max replace-item i C1_max disease_burden_max;change with update quantity for speed
         set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.4 0.9] ["" "" "" ""] (item i C1_max)  [0.05 0.1 0.159 0.4 1])
       ]
-
+      ;###########################################################
       if ? = "Escasez de agua"[
-        set C1 replace-item i C1 [scarcity] of myself
-        set C1_max replace-item i C1_max scarcity_max
-        set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.05 0.1 0.159 0.4 1])
+        if name_action = "Compra de agua" [
+          set C1 replace-item i C1 [scarcity] of myself
+          set C1_max replace-item i C1_max scarcity_max
+          set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.05 0.8 0.9 0.95 1])
+        ]
+        if name_action = "Movilizaciones" [
+          set C1 replace-item i C1 [scarcity] of myself
+          set C1_max replace-item i C1_max scarcity_max
+          set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max) [0.05 0.1 0.5 0.8 1])
+        ]
       ]
-
+      ;###########################################################
       if ? = "Inundaciones"[
         set C1 replace-item i C1 [flooding] of myself
         set C1_max replace-item i C1_max flooding_max
         set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.05 0.1 0.159 0.4 1])
       ]
-
+      ;###########################################################
       if ? = "agua insuficiente" [
         set C1 replace-item i C1 [houses_with_abastecimiento] of myself ;#escasez
         set C1_max replace-item i C1_max  infra_abast_max ;change with update quantity for speed
         set V replace-item i V (Value-Function (item i C1) [0.9 0.94 0.97 0.99] ["" "" "" ""] (item i C1_max)  [1 0.5 0.25 0.125 0.0625])
       ]
-
+      ;###########################################################
       if ? = "Falta de infraestructura" [
         if name_action = "Accion colectiva" [
-          set C1 replace-item i C1 [(1 - houses_with_dranage) + falta] of myself
+          set C1 replace-item i C1 [houses_with_dranage + falta] of myself
           set C1_max replace-item i C1_max  (infra_dranage_max + infra_abast_max) ;change with update quantity for speed
           set V replace-item i V (Value-Function (item i C1) [0.8 0.9 0.95 0.99] ["" "" "" ""] (item i C1_max)  [1 0.5 0.25 0.125 0.0625])
         ]
@@ -1019,7 +1040,7 @@ to update_criteria_and_valueFunctions_residentes
           set V replace-item i V (Value-Function (item i C1) [0.9 0.94 0.97 0.99] ["" "" "" ""] (item i C1_max)  [1 0.5 0.25 0.125 0.0625])
         ]
       ]
-
+      ;###########################################################
       if ? = "Infraestructura insuficiente" [
         if name_action = "Accion colectiva" [
           set C1 replace-item i C1 [(1 - houses_with_dranage) + falta] of myself
@@ -1032,37 +1053,43 @@ to update_criteria_and_valueFunctions_residentes
           set C1_max replace-item i C1_max  infra_dranage_max ;change with update quantity for speed
           set V replace-item i V (Value-Function (item i C1) [0.9 0.94 0.97 0.99] ["" "" "" ""] (item i C1_max)  [1 0.5 0.25 0.125 0.0625])
         ]
-        if name_action = "Captacion de agua" or name_action = "Compra de agua" or name_action = "Movilizaciones"[
+        if name_action = "Compra de agua" [
+          set C1 replace-item i C1 [houses_with_abastecimiento] of myself
+          set C1_max replace-item i C1_max  infra_abast_max ;change with update quantity for speed
+          set V replace-item i V (Value-Function (item i C1) [0.9 0.94 0.97 0.99] ["" "" "" ""] (item i C1_max)  [1 0.99 0.95 0.5 0.0625])
+        ]
+
+        if name_action = "Captacion de agua" or name_action = "Movilizaciones"[
           set C1 replace-item i C1 [houses_with_abastecimiento] of myself
           set C1_max replace-item i C1_max  infra_abast_max ;change with update quantity for speed
           set V replace-item i V (Value-Function (item i C1) [0.9 0.94 0.97 0.99] ["" "" "" ""] (item i C1_max)  [1 0.5 0.25 0.125 0.0625])
         ]
       ]
+      ;###########################################################
       if ? = "Desperdicio de agua" [
         set C1 replace-item i C1 [desperdicio_agua] of myself
         set C1_max replace-item i C1_max desperdicio_agua_max  ;change with update quantity for speed
         set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
       ]
-
+      ;###########################################################
       if ? = "Eficacia del servicio" [
         if name_action = "Accion colectiva" [
           set C1 replace-item i C1 [houses_with_dranage + falta] of myself
           set C1_max replace-item i C1_max  (infra_dranage_max +  falta_max) ;change with update quantity for speed
           set V replace-item i V (Value-Function (item i C1) [0.9 0.94 0.97 0.99] ["" "" "" ""] (item i C1_max)  [1 0.5 0.25 0.125 0.0625])
-
         ]
         if name_action = "Modificacion vivienda"[
-           set C1 replace-item i C1 [houses_with_dranage] of myself
-           set C1_max replace-item i C1_max  infra_dranage_max ;change with update quantity for speed
-           set V replace-item i V (Value-Function (item i C1) [0.9 0.94 0.97 0.99] ["" "" "" ""] (item i C1_max)  [1 0.5 0.25 0.125 0.0625])
-         ]
-         if name_action = "Captacion de agua" or (name_action = "Compra de agua" or name_action = "Movilizaciones")[
-           set C1 replace-item i C1 [falta] of myself
-           set C1_max replace-item i C1_max  falta_max ;change with update quantity for speed
-           set V replace-item i V (Value-Function (item i C1) [0.9 0.94 0.97 0.99]["" "" "" ""] (item i C1_max)  [1 0.5 0.25 0.125 0.0625])
-         ]
+          set C1 replace-item i C1 [houses_with_dranage] of myself
+          set C1_max replace-item i C1_max  infra_dranage_max ;change with update quantity for speed
+          set V replace-item i V (Value-Function (item i C1) [0.9 0.94 0.97 0.99] ["" "" "" ""] (item i C1_max)  [1 0.5 0.25 0.125 0.0625])
+        ]
+        if name_action = "Captacion de agua" or (name_action = "Compra de agua" or name_action = "Movilizaciones")[
+          set C1 replace-item i C1 [falta] of myself
+          set C1_max replace-item i C1_max  falta_max ;change with update quantity for speed
+          set V replace-item i V (Value-Function (item i C1) [0.9 0.94 0.97 0.99]["" "" "" ""] (item i C1_max)  [1 0.5 0.25 0.125 0.0625])
+        ]
       ]
-
+      ;###########################################################
       set i i + 1
     ]
   )
@@ -1164,8 +1191,8 @@ to New-Infra_D
     let Budget 0
     foreach sort-on [1 - d_new_D] agebs[
       ask ? [
-        if Budget < recursos_para_new and houses_with_abastecimiento < 0.99 [
-          set houses_with_abastecimiento houses_with_abastecimiento + tasa_de_cambio_newInfra * (1 - houses_with_abastecimiento)
+        if Budget < recursos_para_new and houses_with_dranage  < 0.99 [
+          set houses_with_abastecimiento houses_with_dranage  + tasa_de_cambio_newInfra * (1 - houses_with_dranage)
           set Budget Budget + 1
         ]
       ]
@@ -1177,8 +1204,8 @@ to New-Infra_A
     let Budget 0
     foreach sort-on [(1 - d_new)]  agebs[
       ask ? [
-        if Budget < recursos_para_new and houses_with_dranage < 0.99 [
-          set houses_with_dranage houses_with_dranage + tasa_de_cambio_newInfra * (1 - houses_with_dranage)
+        if Budget < recursos_para_new and houses_with_abastecimiento < 0.99 [
+          set houses_with_abastecimiento houses_with_abastecimiento + tasa_de_cambio_newInfra * (1 - houses_with_abastecimiento)
           set Budget Budget + 1
         ]
       ]
@@ -1194,10 +1221,49 @@ to water_extraccion
   ]
 ;  print from_d_to_bombeo
 end
+;#############################################################################################################################################
+to water_distribution
+let available_water N_trucks_used * truck_capasity
+    foreach sort-on [(1 - d_water_distribution)]  agebs[
+      ask ? [
+        if-else available_water > 0 [
+          set water_distributed_trucks 1
+          set available_water available_water - water_requirement_perPerson * poblacion * (1 - houses_with_abastecimiento)
+          if available_water < 0 [set available_water 0]
+        ]
+        [
+          set water_distributed_trucks 0
+        ]
+      ]
+    ]
+end
+;##############################################################################################################
+to water_by_pipe
+;having water depends on tandeo, infrastructure and ifra failure distribution of water by trucks
+  let pw tandeo * (1 - p_falla)
+  if-else pw > random-float 1[
+    set water_distributed_pipes 1
+  ][
+  set water_distributed_pipes 0
+  ]
+end
+;##############################################################################################################
+to water_in_aday
+  if-else water_distributed_pipes = 1 or water_distributed_trucks = 1 or water_in_buying = 1[
+    set water_in 1
+    set days_wno_water 0
+  ]
+  [
+    set water_in 0
+    set days_wno_water days_wno_water + 1
+  ]
+
+end
+;##############################################################################################################
 
 ;#############################################################################################################################################
 to protest
-set Presion_social 0.9 * Presion_social  + ifelse-value (d_Movilizaciones > random-float max (list d_Modificacion_vivienda d_Accion_colectiva d_Captacion_agua d_Compra_agua))[1][0]
+set Presion_social 0.9 * Presion_social  + ifelse-value (d_Movilizaciones > max (list d_Modificacion_vivienda d_Accion_colectiva d_Captacion_agua d_Compra_agua))[1][0]
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -1299,29 +1365,44 @@ end
 to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
   if visualization != "GoogleEarth"[
     ask agebs [
-      if Visualization = "Accion Colectiva" and ticks > 1[set size 100 * d_Accion_colectiva] ;accion colectiva
+      set size 3
+      if Visualization = "Accion Colectiva" and ticks > 1[
+        set color scale-color sky d_Accion_colectiva 0 d_Accion_colectiva_max
+      ] ;accion colectiva
+
       if Visualization = "Movilizaciones" and ticks > 1 [
         set size Presion_social
-        set color  scale-color red Presion_social 0 Presion_social_max] ;;social pressure
-      if visualization = "Compra de Agua" and ticks > 1 [set size 100 * d_Compra_agua]
+        set color  scale-color red Presion_social 0 Presion_social_max
+      ] ;;social pressure
+
+      if visualization = "Compra de Agua" and ticks > 1 [
+        set color scale-color sky d_Compra_agua 0 d_Compra_agua_max
+      ]
       if visualization = "Captacion de Agua" and ticks > 1 [set size 500 * d_Captacion_agua]
       if visualization = "Modificacion de la vivienda"and ticks > 1 [set size 100 * [d_Modificacion_vivienda] of myself]
       if visualization = "Extraction Agua SACMEX" and ticks > 1 [set size 50 * d_water_extraction]
       if visualization = "Reparaciones SACMEX" and ticks > 1 [set size d_mantencion]
       if visualization = "Nueva Infraestructura SACMEX" and ticks > 1 [set size 100 * d_new]
-      if visualization = "Distribucion de Agua SACMEX" and ticks > 1 [set size 100 * d_water_distribution]
+
+      if visualization = "Distribucion de Agua SACMEX" and ticks > 1 [
+        set size 3
+        set color scale-color sky d_water_distribution 0 d_water_distribution_max
+      ]
+
       if visualization = "K_groups" and ticks > 1 [set color  15 +  10 * group_kmean]
       if visualization = "Salud" and ticks > 1 [set color (5 * sqrt disease_burden)] ;;visualized incidence of gastrointestinal diseases in MX 2004-2014
       if visualization = "Encharcamientos" and ticks > 1 [set color  scale-color sky flooding 0 flooding_max] ;;visualized SACMEX flooding dataset MX 2004-2014
       if visualization = "Infraestructura Abastecimiento" and ticks > 1 [
-        set size 2
+
         set shape "square 2"
         set color  scale-color sky houses_with_abastecimiento 1 0.7] ;;visualized SACMEX flooding dataset MX 2004-2014
       if visualization = "Infraestructura Edad" and ticks > 1 [
-        set size 2
+
         set shape "square 2"
         set color  scale-color blue Antiguedad-infra_Ab  0 Antiguedad-infra_Ab_max]
-      if visualization = "P. Falla" and ticks > 1 [set color  scale-color green P_failure 0 1]
+      if visualization = "P. Falla" and ticks > 1 [
+        set color  scale-color green p_falla 0 1
+        ]
       if visualization = "Zonas Aquifero" and ticks > 1 [set color  zona_aquifera]
    ]
   ]
@@ -1857,7 +1938,7 @@ to define_alternativesCriteria
        ;
 
 end
-
+;##############################################################################################################
 to flood_risk  ;replace by fault
   ask Agebs [
     if P_failure > random 1 or Mantenimiento? = TRUE or precipitation > R_tau [
@@ -1865,7 +1946,7 @@ to flood_risk  ;replace by fault
     ]
   ]
 end
-
+;##############################################################################################################
 
 to Vulnerability_indicator
   set vulnerability_F (flooding * (1 - Sensitivity_F / Sensitivity_F_max))  / ( 1 + 100 * Income-index)
@@ -1972,7 +2053,7 @@ CHOOSER
 Visualization
 Visualization
 "Accion Colectiva" "Movilizaciones" "Captacion de Agua" "Compra de Agua" "Modificacion de la vivienda" "Extraction Agua SACMEX" "Reparaciones SACMEX" "Nueva Infraestructura SACMEX" "Distribucion de Agua SACMEX" "GoogleEarth" "K_groups" "Salud" "Escasez" "Encharcamientos" "Infraestructura Abastecimiento" "Infraestructura Edad" "P. Falla" "Zonas Aquifero"
-10
+8
 
 BUTTON
 243
@@ -1992,10 +2073,10 @@ NIL
 1
 
 BUTTON
-242
-172
-412
-236
+244
+106
+414
+170
 NIL
 show_AGEBS
 NIL
@@ -2019,10 +2100,10 @@ Visualización
 1
 
 SLIDER
-30
-195
-230
-228
+38
+196
+238
+229
 water_requirement_perPerson
 water_requirement_perPerson
 0.007
@@ -2134,14 +2215,14 @@ NIL
 HORIZONTAL
 
 SLIDER
-57
-132
-229
-165
+36
+116
+208
+149
 recursos_para_new
 recursos_para_new
 0
-50
+360
 50
 1
 1
@@ -2165,6 +2246,39 @@ false
 "" ""
 PENS
 "default" 1.0 0 -16777216 true "" "plot mean [Antiguedad-infra_Ab] of agebs"
+
+SLIDER
+48
+155
+220
+188
+N_trucks_used
+N_trucks_used
+0
+500
+35
+1
+1
+NIL
+HORIZONTAL
+
+PLOT
+1045
+198
+1245
+348
+plot 2
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 1 -16777216 true "" "histogram [days_wno_water] of agebs"
 
 @#$#@#$#@
 ## WHAT IS IT?
