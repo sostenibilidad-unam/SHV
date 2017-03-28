@@ -331,14 +331,14 @@ if escala = "ciudad" [
   define_alternativesCriteria
 
 
-if escenarios = "bajos recursos"[
+if escenarios = "Escenario A"[
   set recursos_para_mantenimiento 100
   set recursos_nuevaInfrastructura 100
   set Eficiencia_Mantenimiento 0.1
   set Eficiencia_NuevaInfra 0.1
   set Recursos_para_distribucion 600
 ]
-if escenarios = "altos recursos"[
+if escenarios = "Escenario A"[
   set recursos_para_mantenimiento 500
   set recursos_nuevaInfrastructura 500
   set Eficiencia_Mantenimiento 0.7
@@ -362,23 +362,23 @@ end
 to GO
   ;if ticks = 1 [movie-start "out.mov"]
   tick
-  ;profiler:start
+  profiler:start
 
   ;############################################3
   ;# Escenarios de presupuesto (recursos)
-  if escenarios = "bajos recursos"[
+  if escenarios = "Escenario A"[
     set recursos_para_mantenimiento 100
     set recursos_nuevaInfrastructura 100
     set Eficiencia_Mantenimiento 0.1
     set Eficiencia_NuevaInfra 0.1
-    set Recursos_para_distribucion 400
+
   ]
-  if escenarios = "altos recursos"[
+  if escenarios = "Escenario B"[
     set recursos_para_mantenimiento 500
     set recursos_nuevaInfrastructura 500
     set Eficiencia_Mantenimiento 0.7
     set Eficiencia_NuevaInfra 0.6
-    set Recursos_para_distribucion 800
+
   ]
   ;############################################3
 
@@ -394,25 +394,23 @@ to GO
   repair-Infra_D
   water_distribution
 
-  if escala = "ciudad" [
-    Landscape_visualization          ;;visualization of social and physical processes
-  ]
 
- ask agebs [
-   water_by_pipe
-   water_in_aday
-   if days = 1[
-     set resources_water 1
-     residents-decisions
-     if escala = "ciudad" [
-       Landscape_visualization          ;;visualization of social and physical processes
-     ]
-   ]
+
+  ask agebs [
+    water_by_pipe
+    water_in_aday
+
+
    p_falla_infra
    take_action_residents
    Vulnerability_indicator
- ]
+  ]
 
+   if days = 1 and months = 1 [ask agebs [residents-decisions]]
+
+    if escala = "ciudad" [
+     Landscape_visualization          ;;visualization of social and physical processes
+   ]
     ;]
   ;]
 ;  if months = 1 and days = 1 [
@@ -437,9 +435,9 @@ to GO
  ;  bitmap:copy-to-pcolors City_image false
  ;]
  ;>>>>>>> 40296037b262d6aac0752d8e484d769571b1ce61
- ;profiler:stop          ;; stop profiling
- ;print profiler:report  ;; view the results
- ;profiler:reset         ;; clear the data
+ profiler:stop          ;; stop profiling
+ print profiler:report  ;; view the results
+ profiler:reset         ;; clear the data
  ;if ticks = 2[plot-pen-reset]
 
 ;  if months = 12 and days = 30[ ]
@@ -554,7 +552,7 @@ end
 
 ;#############################################################################################################################################
 ;#############################################################################################################################################
-
+;resident decides what action to take. The action with the large metric is defined
 to take_action_residents
   if d_Modificacion_vivienda > max (list d_Movilizaciones d_Accion_colectiva d_Captacion_agua d_Compra_agua)
   [
@@ -1018,6 +1016,7 @@ to update_criteria_and_valueFunctions_SACMEX    ;;update the biphisical value of
 end
 
 to update_criteria_and_valueFunctions_residentes
+
     let i 0
   (foreach C1_name
     [
@@ -1096,7 +1095,6 @@ to update_criteria_and_valueFunctions_residentes
           set C1_max replace-item i C1_max  (infra_dranage_max + infra_abast_max) ;change with update quantity for speed
           set V replace-item i V (Value-Function (item i C1) [0.8 0.9 0.95 0.99] ["" "" "" ""] (item i C1_max)  [1 0.5 0.25 0.125 0.0625])
         ]
-
         if name_action = "Modificacion vivienda"[
           set C1 replace-item i C1 [houses_with_dranage] of myself
           set C1_max replace-item i C1_max  infra_dranage_max ;change with update quantity for speed
@@ -1107,7 +1105,6 @@ to update_criteria_and_valueFunctions_residentes
           set C1_max replace-item i C1_max  infra_abast_max ;change with update quantity for speed
           set V replace-item i V (Value-Function (item i C1) [0.9 0.94 0.97 0.99] ["" "" "" ""] (item i C1_max)  [1 0.99 0.95 0.5 0.0625])
         ]
-
         if name_action = "Captacion de agua" or name_action = "Movilizaciones"[
           set C1 replace-item i C1 [houses_with_abastecimiento] of myself
           set C1_max replace-item i C1_max  infra_abast_max ;change with update quantity for speed
@@ -1302,22 +1299,21 @@ to water_in_aday  ;this procedure check if water was distributed to an ageb. Thi
   ]
   [
     set water_in 0
-    set days_wno_water ifelse-value (days_wno_water < 20)[days_wno_water + 1] [days_wno_water]
+    set days_wno_water days_wno_water + 1
   ]
-
+ if days_wno_water > 30 [set days_wno_water 0]
 end
 ;##############################################################################################################
 
 ;#############################################################################################################################################
 to protest  ;if the distant to ideal for protest is greater than
-  ifelse d_Movilizaciones > max (list d_Modificacion_vivienda d_Accion_colectiva d_Captacion_agua d_Compra_agua)[
-    set Presion_social_dy Presion_social_dy  + 1
-  ]
-  [
-  ]
+
+    set Presion_social_dy Presion_social_dy
+
   if months = 1 and days = 2 and ticks > 10 [
-    set Presion_social 0
+    set Presion_social_dy 0
   ]
+  if Presion_social_dy > 10 [set Presion_social_dy 0]
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -1425,8 +1421,8 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
       ] ;accion colectiva
 
       if Visualization = "Movilizaciones" and ticks > 1 [
-        set size Presion_social / 5
-        set color  scale-color red Presion_social 0 Presion_social_max
+        set size Presion_social_dy / 5
+        set color  scale-color red Presion_social_dy 0 Presion_social_max
       ] ;;social pressure
 
       if visualization = "Compra de Agua" and ticks > 1 [
@@ -1443,7 +1439,7 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
         set color scale-color sky d_water_distribution 0 d_water_distribution_max
       ]
 
-      if visualization = "K_groups" and ticks > 1 [set color  15 +  10 * group_kmean]
+      if visualization = "K_groups" and ticks > 1 [set color  15 +  10 * group_kmean] ; visualize K-mean clusterization
 
       if visualization = "Salud" and ticks > 1 [
         set color scale-color green disease_burden 0 disease_burden_max] ;;visualized incidence of gastrointestinal diseases in MX 2004-2014
@@ -1461,8 +1457,8 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
         set color  scale-color green p_falla_AB 0 1
         ]
       if visualization = "Escasez" and ticks > 1 [
-        set size days_wno_water
-        set color  scale-color red days_wno_water 0 20
+        set size factor_scale * days_wno_water
+        set color  scale-color red days_wno_water 0 15
         ]
       if visualization = "Zonas Aquifero" and ticks > 1 [set color  zona_aquifera]
    ]
@@ -2043,11 +2039,11 @@ end
 GRAPHICS-WINDOW
 412
 7
-1188
-813
+1139
+755
 -1
 -1
-1.33
+1.79
 1
 40
 1
@@ -2181,7 +2177,7 @@ Requerimiento_deAgua
 Requerimiento_deAgua
 0.007
 0.4
-0.2784
+0.0982
 0.0001
 1
 [m3/persona]
@@ -2191,7 +2187,7 @@ SLIDER
 35
 79
 235
-114
+112
 recursos_para_mantenimiento
 recursos_para_mantenimiento
 1
@@ -2252,10 +2248,10 @@ NIL
 1
 
 CHOOSER
-31
-351
-230
-396
+1198
+506
+1381
+551
 escala
 escala
 "cuenca" "ciudad"
@@ -2311,7 +2307,7 @@ Recursos_para_distribucion
 Recursos_para_distribucion
 0
 2000
-400
+152
 1
 1
 NIL
@@ -2336,7 +2332,7 @@ SWITCH
 135
 576
 240
-611
+609
 ANP
 ANP
 0
@@ -2350,8 +2346,23 @@ CHOOSER
 121
 Escenarios
 Escenarios
-"bajos recursos" "altos recursos"
+"Escenario A" "Escenario B"
 0
+
+SLIDER
+1199
+558
+1372
+591
+factor_scale
+factor_scale
+0
+3
+2.2
+0.1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
