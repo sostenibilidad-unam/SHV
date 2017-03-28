@@ -20,7 +20,6 @@ globals [
 ;;############################################################################################################################################
   SM   ;standarized measure from the value function
   dist ;the reported value of distance from the ideal point function
-
 ;#####################################################################################
 ;;Government decision-making process
 ;#####################################################################################
@@ -290,7 +289,7 @@ to SETUP
 
   set Tot_water_Imported_Cutzamala 14 * 60 * 60 * 24 ;[m3/s][s/min][min/hour][hours/day]   ;;total water imported from Cutzamala System
   set Tot_water_Imported_Lerma 5 * 60 * 60 * 24                                            ;;total water imported from Lerma System
-  set truck_capasity 300 ;[m3/truck]
+  set truck_capasity 10 ;[m3/truck]
   set Antiguedad-infra_Ab_max 1
   set desperdicio_agua_max 1
   set desviacion_agua_max 1
@@ -332,6 +331,22 @@ if escala = "ciudad" [
   define_alternativesCriteria
 
 
+if escenarios = "bajos recursos"[
+  set recursos_para_mantenimiento 100
+  set recursos_nuevaInfrastructura 100
+  set Eficiencia_Mantenimiento 0.1
+  set Eficiencia_NuevaInfra 0.1
+  set Recursos_para_distribucion 600
+]
+if escenarios = "altos recursos"[
+  set recursos_para_mantenimiento 500
+  set recursos_nuevaInfrastructura 500
+  set Eficiencia_Mantenimiento 0.7
+  set Eficiencia_NuevaInfra 0.6
+  set Recursos_para_distribucion 1000
+]
+
+
 
 
  ;profiler:stop          ;; stop profiling
@@ -343,14 +358,29 @@ end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 ;#############################################################################################################################################
-;#############################################################################################################################################
-;#############################################################################################################################################
-;#############################################################################################################################################
 
 to GO
   ;if ticks = 1 [movie-start "out.mov"]
   tick
   ;profiler:start
+
+  ;############################################3
+  ;# Escenarios de presupuesto (recursos)
+  if escenarios = "bajos recursos"[
+    set recursos_para_mantenimiento 100
+    set recursos_nuevaInfrastructura 100
+    set Eficiencia_Mantenimiento 0.1
+    set Eficiencia_NuevaInfra 0.1
+    set Recursos_para_distribucion 400
+  ]
+  if escenarios = "altos recursos"[
+    set recursos_para_mantenimiento 500
+    set recursos_nuevaInfrastructura 500
+    set Eficiencia_Mantenimiento 0.7
+    set Eficiencia_NuevaInfra 0.6
+    set Recursos_para_distribucion 800
+  ]
+  ;############################################3
 
   update_globals
   counter_days                   ;counter to define when actions occur
@@ -383,7 +413,6 @@ to GO
    Vulnerability_indicator
  ]
 
-
     ;]
   ;]
 ;  if months = 1 and days = 1 [
@@ -411,7 +440,7 @@ to GO
  ;profiler:stop          ;; stop profiling
  ;print profiler:report  ;; view the results
  ;profiler:reset         ;; clear the data
- if ticks = 2[plot-pen-reset]
+ ;if ticks = 2[plot-pen-reset]
 
 ;  if months = 12 and days = 30[ ]
 
@@ -428,11 +457,9 @@ end
 
 ;#############################################################################################################################################
 ;#############################################################################################################################################
-
 to show-actors-actions
        inspect one-of alternatives_SACMEX
 end
-
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 to show_AGEBS
@@ -562,8 +589,8 @@ to rain-waterCapture
 end
 ;#############################################################################################################################################
 to water-Purchase
-  if-else resources_water > income-index[  ;in you have resources purchese water
-    set resources_water resources_water - 1 / 30
+  if-else (0.1 + income-index) / 2 > random-float 1[  ;in you have resources purchese water
+    ;set resources_water resources_water - 1 / 30
     set water_in_buying 1
   ]
   [
@@ -615,7 +642,6 @@ to update_globals  ;; update the maximum or minimum of values use by the model t
 ;#############################################################################################################################################
 to p_falla_infra    ;;update age and probability of failure and also is color if well is working
      set P_failure_AB 1 - exp(Antiguedad-infra_Ab  * (- 1 / (365 * 200)))
-print exp(Antiguedad-infra_Ab  * (- 1 / (365 * 200)))
      set P_failure_D  1 - exp(Antiguedad-infra_D  * (- 1 / (365 * 200)))
      set p_failure_hund  hundimientos * p_falla_subsidencia
      set p_falla_AB p_failure_hund + P_failure_AB
@@ -689,8 +715,8 @@ if escala = "cuenca"[
 ]
 
 
- ; set city_image  bitmap:import "data/DF_googleB.jpg"                                                   ; google earth image
- ; bitmap:copy-to-pcolors City_image false
+  set city_image  bitmap:import "data/DF_googleB.jpg"                                                   ; google earth image
+  bitmap:copy-to-pcolors City_image false
 
   ;
   ;gis:apply-coverage agebs_map "NOM_MUN" delegation_ID
@@ -734,7 +760,7 @@ foreach gis:feature-list-of Agebs_map_full; "ID_ZONA" "0"
        set shape "circle"
        set size 0.5
        set hidden? false
-       set Abastecimiento poblacion * water_requirement_perPerson               ;;;C4_A1;;;
+       set Abastecimiento poblacion * Requerimiento_deAgua               ;;;C4_A1;;;
        set Gasto_hidraulico 1
        set desviacion_agua 1
        set eficacia_servicio 1                                                                               ;; Gestión del servicio de Drenaje y agua potable (ej. interferencia política, no llega la pipa, horario del tandeo, etc)
@@ -765,17 +791,17 @@ to define_agebs
 
     [ let centroid gis:location-of gis:centroid-of ?
 
-;      if not empty? centroid
+      ;      if not empty? centroid
 
- ;     [
-        create-agebs 1
-        [
-          if not empty? centroid[
-            set xcor item 0 centroid                                                                                                                           ;define xy using the central coordinate of the ageb and matches with the patch in which the ageb  is centred
+      ;     [
+      create-agebs 1
+      [
+        if not empty? centroid[
+          set xcor item 0 centroid                                                                                                                           ;define xy using the central coordinate of the ageb and matches with the patch in which the ageb  is centred
           set ycor item 1 centroid
-          ]
-          set name_delegation gis:property-value ?1 "NOM_MUN"                                                                                                ;;name of delegations
-          set poblacion ifelse-value (gis:property-value ?1 "POBTOT" > 0)[gis:property-value ?1 "POBTOT"][1]                                                  ;;population size per ageb
+        ]
+        set name_delegation gis:property-value ?1 "NOM_MUN"                                                                                                ;;name of delegations
+        set poblacion ifelse-value (gis:property-value ?1 "POBTOT" > 0)[gis:property-value ?1 "POBTOT"][1]                                                  ;;population size per ageb
           set densidad_pop gis:property-value ?1 "DENSPOB"
           set ID gis:property-value ?1 "AGEB_ID"                                                                                                               ;;ageb ID Check witht the team in MX to have the same identifier
           set label ""
@@ -790,14 +816,14 @@ to define_agebs
           set Antiguedad-infra_D 365 * gis:property-value ?2 "edad_infra"
           set zona_aquifera gis:property-value ?2 "zonas"
           set precipitation  gis:property-value ?2 "PRECIP"
-          set Abastecimiento poblacion * water_requirement_perPerson               ;;;C4_A1;;;
+          set Abastecimiento poblacion * Requerimiento_deAgua               ;;;C4_A1;;;
           set Peticion_Delegacional gis:property-value ?1 "PETDELS"
           set Presion_social gis:property-value ?1 "protests"
-          set Falla gis:property-value ? "FALLAIN"
+          set Falla gis:property-value ?1 "FALLAIN"
           set garbage poblacion;1 ;# de habitantes we assume that the proportion of garbage accumulated in the dranage is proportional to the population living in each census block
           set scarcity gis:property-value ?1 "ESCASEZ"
           set peticion_usuarios 1
-                  ;capas que falta incluir
+          ;capas que falta incluir
           set desviacion_agua 1
           set eficacia_servicio 1   ;; Gestión del servicio de Drenaje y agua potable (ej. interferencia política, no llega la pipa, horario del tandeo, etc)
           set desperdicio_agua 1                      ;;Por fugas, falta de conciencia del uso del agua
@@ -806,7 +832,7 @@ to define_agebs
           set urban_growth 1
           set capacidad 1
           set Monto 1
-          set tandeo 1 / 7
+          set tandeo 6 / 7
           set water_quality 1
           set sensitivity_F 1
           set sensitivity_S 1
@@ -816,12 +842,15 @@ to define_agebs
           set shape "circle"
           set size 0.5
           set hidden? false
-        ]
-      ;]
+      ]
     ])
-
- ; ask agebs [set paches_set_agebs patch-set patches with [ageb_ID = round ([ID] of myself)]]   ;define the patches that belon to each ageb
-
+; ask agebs [set paches_set_agebs patch-set patches with [ageb_ID = round ([ID] of myself)]]   ;define the patches that belon to each ageb
+ask agebs with [name_delegation = "Iztapalapa"][set tandeo 3 / 7]
+ask agebs with [name_delegation = "La Magdalena Contreras"][set tandeo 3 / 7]
+ask agebs with [name_delegation = "Coyoacn"][set tandeo 5 / 7]
+ask agebs with [name_delegation = "Gustavo A. Madero"][set tandeo 6 / 7]
+ask agebs with [name_delegation = "Tlalpan"][set tandeo 3 / 7]
+ask agebs with [name_delegation = "Xochimilco"][set tandeo 3 / 7]
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -917,8 +946,10 @@ to update_criteria_and_valueFunctions_SACMEX    ;;update the biphisical value of
     ]
     ;###########################################################
     if ? = "Escasez de agua"[
-      set C1 replace-item i C1 [scarcity] of myself
-      set C1_max replace-item i C1_max scarcity_max
+;      set C1 replace-item i C1 [scarcity] of myself
+      set C1 replace-item i C1 [days_wno_water] of myself
+
+      set C1_max replace-item i C1_max 20
       set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
     ]
     ;###########################################################
@@ -1172,11 +1203,11 @@ end
 ;#############################################################################################################################################
   to repair-Infra_Ab
   let Budget 0
-  foreach sort-on [(1 - d_mantencion) + (1 - densidad_pop / densidad_pop_max)] agebs[    ;sort census blocks
+  foreach sort-on [(1 - d_mantencion) ] agebs[    ;sort census blocks (+ (1 - densidad_pop / densidad_pop_max))
     ask ? [
      ; PRINT d_mantencion + densidad_pop / densidad_pop_max
-      ifelse Budget < recursos_para_mantencion[                                       ;agebs that were selected for maitenance do not reduce its age
-        set Antiguedad-infra_Ab Antiguedad-infra_Ab + Effectiveness_mantencion
+      ifelse Budget < recursos_para_mantenimiento[                                       ;agebs that were selected for maitenance do not reduce its age
+        set Antiguedad-infra_Ab Antiguedad-infra_Ab + (1 - Eficiencia_Mantenimiento)
         set Budget Budget + 1
       ]
       [
@@ -1189,12 +1220,10 @@ end
 ;#############################################################################################################################################
   to repair-Infra_D
     let Budget 0
-    foreach sort-on [(1 - d_mantencion_D) + (1 - densidad_pop / densidad_pop_max)] agebs[
-
+    foreach sort-on [(1 - d_mantencion_D) ] agebs[ ;+ (1 - densidad_pop / densidad_pop_max)
       ask ? [
-
-        ifelse Budget < recursos_para_mantencion [
-          set Antiguedad-infra_D Antiguedad-infra_D + Effectiveness_mantencion
+        ifelse Budget < recursos_para_mantenimiento [
+          set Antiguedad-infra_D Antiguedad-infra_D + (1 - Eficiencia_Mantenimiento)
           set Budget Budget + 1
         ]
         [
@@ -1209,8 +1238,8 @@ to New-Infra_D
     let Budget 0
     foreach sort-on [1 - d_new_D] agebs[
       ask ? [
-        if Budget < recursos_para_new and houses_with_dranage  < 0.99 [
-          set houses_with_abastecimiento houses_with_dranage  + tasa_de_cambio_newInfra * (1 - houses_with_dranage)
+        if Budget < recursos_nuevaInfrastructura and houses_with_dranage  < 0.99 [
+          set houses_with_abastecimiento houses_with_dranage  + Eficiencia_NuevaInfra * (1 - houses_with_dranage)
           set Budget Budget + 1
         ]
       ]
@@ -1222,8 +1251,8 @@ to New-Infra_A
     let Budget 0
     foreach sort-on [(1 - d_new)]  agebs[
       ask ? [
-        if Budget < recursos_para_new and houses_with_abastecimiento < 0.99 [
-          set houses_with_abastecimiento houses_with_abastecimiento + tasa_de_cambio_newInfra * (1 - houses_with_abastecimiento)
+        if Budget < recursos_nuevaInfrastructura and houses_with_abastecimiento < 0.99 [
+          set houses_with_abastecimiento houses_with_abastecimiento + Eficiencia_NuevaInfra * (1 - houses_with_abastecimiento)
           set Budget Budget + 1
         ]
       ]
@@ -1241,12 +1270,12 @@ to water_extraccion
 end
 ;#############################################################################################################################################
 to water_distribution  ;distribution of water from government by truck
-let available_water N_trucks_used * truck_capasity
+let available_water Recursos_para_distribucion * truck_capasity
     foreach sort-on [(1 - d_water_distribution)]  agebs[
       ask ? [
         if-else available_water > 0 [
           set water_distributed_trucks 1
-          set available_water available_water - water_requirement_perPerson * poblacion * (1 - houses_with_abastecimiento)
+          set available_water available_water - Requerimiento_deAgua * poblacion * (1 - houses_with_abastecimiento)
           if available_water < 0 [set available_water 0]
         ]
         [
@@ -1258,7 +1287,7 @@ end
 ;##############################################################################################################
 to water_by_pipe
 ;having water by pipe depends on tandeo (p having water based on info collected by ALE,about days with water), infrastructure and ifra failure distribution of water by trucks
-  let pw tandeo * (1 - p_falla_AB)
+  let pw ifelse-value (houses_with_abastecimiento > 0)[tandeo * (1 - p_falla_AB)][0]
   if-else pw > random-float 1[
     set water_distributed_pipes 1
   ][
@@ -1273,7 +1302,7 @@ to water_in_aday  ;this procedure check if water was distributed to an ageb. Thi
   ]
   [
     set water_in 0
-    set days_wno_water days_wno_water + 1
+    set days_wno_water ifelse-value (days_wno_water < 20)[days_wno_water + 1] [days_wno_water]
   ]
 
 end
@@ -1293,10 +1322,10 @@ end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 to export_view  ;;export snapshots of the landscape
-  if ticks > 20 and ticks < 40[
-    let directory "c:/Users/abaezaca/Documents/MEGADAPT/model_results/Movie-ABM/"
-    export-interface  word directory word ticks "water_supply_wells_MexicoCity.png"
-  ]
+
+    let directory "c:/Users/abaezaca/Documents/MEGADAPT/SHV/images_model_ng/"
+    export-view  word directory word ticks "water_supply.png"
+
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -1415,18 +1444,25 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
       ]
 
       if visualization = "K_groups" and ticks > 1 [set color  15 +  10 * group_kmean]
-      if visualization = "Salud" and ticks > 1 [set color (5 * sqrt disease_burden)] ;;visualized incidence of gastrointestinal diseases in MX 2004-2014
+
+      if visualization = "Salud" and ticks > 1 [
+        set color scale-color green disease_burden 0 disease_burden_max] ;;visualized incidence of gastrointestinal diseases in MX 2004-2014
+
       if visualization = "Encharcamientos" and ticks > 1 [set color  scale-color sky flooding 0 flooding_max] ;;visualized SACMEX flooding dataset MX 2004-2014
       if visualization = "Infraestructura Abastecimiento" and ticks > 1 [
-
         set shape "square 2"
         set color  scale-color sky houses_with_abastecimiento 1 0.7] ;;visualized SACMEX flooding dataset MX 2004-2014
       if visualization = "Infraestructura Edad" and ticks > 1 [
-
         set shape "square 2"
-        set color  scale-color blue Antiguedad-infra_Ab  0 Antiguedad-infra_Ab_max]
+        set color  scale-color blue Antiguedad-infra_Ab  0 Antiguedad-infra_Ab_max
+      ]
       if visualization = "P. Falla" and ticks > 1 [
+        set size 5 * p_falla_AB
         set color  scale-color green p_falla_AB 0 1
+        ]
+      if visualization = "Escasez" and ticks > 1 [
+        set size days_wno_water
+        set color  scale-color red days_wno_water 0 20
         ]
       if visualization = "Zonas Aquifero" and ticks > 1 [set color  zona_aquifera]
    ]
@@ -2007,11 +2043,11 @@ end
 GRAPHICS-WINDOW
 412
 7
-1023
-639
+1188
+813
 -1
 -1
-1.5
+1.33
 1
 40
 1
@@ -2083,20 +2119,20 @@ NIL
 1
 
 CHOOSER
-47
-433
-227
-478
+1198
+449
+1378
+494
 Visualization
 Visualization
 "Accion Colectiva" "Movilizaciones" "Captacion de Agua" "Compra de Agua" "Modificacion de la vivienda" "Extraction Agua SACMEX" "Reparaciones SACMEX" "Nueva Infraestructura SACMEX" "Distribucion de Agua SACMEX" "GoogleEarth" "K_groups" "Salud" "Escasez" "Encharcamientos" "Infraestructura Abastecimiento" "Infraestructura Edad" "P. Falla" "Zonas Aquifero"
-15
+12
 
 BUTTON
-243
-22
-415
-91
+1209
+46
+1381
+115
 NIL
 show_limitesDelegaciones
 NIL
@@ -2110,10 +2146,10 @@ NIL
 1
 
 BUTTON
-244
-106
-414
-170
+1209
+129
+1379
+193
 NIL
 show_AGEBS
 NIL
@@ -2127,65 +2163,65 @@ NIL
 1
 
 TEXTBOX
-66
-401
-179
-436
+1225
+416
+1338
+451
 Visualización
 18
 0.0
 1
 
 SLIDER
-36
-193
-237
-226
-water_requirement_perPerson
-water_requirement_perPerson
+33
+266
+233
+299
+Requerimiento_deAgua
+Requerimiento_deAgua
 0.007
 0.4
-0.3452
+0.2784
 0.0001
 1
-NIL
+[m3/persona]
 HORIZONTAL
 
 SLIDER
 35
 79
 235
-112
-recursos_para_mantencion
-recursos_para_mantencion
+114
+recursos_para_mantenimiento
+recursos_para_mantenimiento
 1
 2000
-496
+100
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-32
-233
-238
-266
-tasa_de_cambio_newInfra
-tasa_de_cambio_newInfra
+33
+155
+239
+188
+Eficiencia_NuevaInfra
+Eficiencia_NuevaInfra
 0
 1
-0.085
+0.1
 0.001
 1
 NIL
 HORIZONTAL
 
 BUTTON
-244
-172
-414
-235
+1209
+196
+1379
+259
 NIL
 show-actors-actions
 NIL
@@ -2199,10 +2235,10 @@ NIL
 1
 
 BUTTON
-244
-237
-415
-301
+1209
+260
+1380
+324
 NIL
 clear-plots
 NIL
@@ -2238,95 +2274,59 @@ export-to-postgres
 
 SLIDER
 33
-273
+191
 236
-306
-Effectiveness_mantencion
-Effectiveness_mantencion
+224
+Eficiencia_Mantenimiento
+Eficiencia_Mantenimiento
 0
 1
-0.72
+0.1
 0.01
 1
 NIL
 HORIZONTAL
 
 SLIDER
-36
-116
+35
+119
 236
-149
-recursos_para_new
-recursos_para_new
+152
+recursos_nuevaInfrastructura
+recursos_nuevaInfrastructura
 0
-360
-50
+2000
+100
 1
 1
 NIL
 HORIZONTAL
-
-PLOT
-1039
-366
-1239
-516
-plot 1
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -16777216 true "" "plot mean [Antiguedad-infra_Ab] of agebs"
 
 SLIDER
-36
-155
-236
-188
-N_trucks_used
-N_trucks_used
+32
+229
+241
+262
+Recursos_para_distribucion
+Recursos_para_distribucion
 0
-500
-35
+2000
+400
 1
 1
 NIL
 HORIZONTAL
-
-PLOT
-1045
-198
-1245
-348
-plot 2
-NIL
-NIL
-0.0
-20.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-"default" 1.0 1 -16777216 true "" "histogram [days_wno_water] of agebs"
 
 SLIDER
 31
 309
-228
+236
 342
 p_falla_subsidencia
 p_falla_subsidencia
 0
-0.01
-0.0021
+0.1
+0.1
 0.0001
 1
 NIL
@@ -2342,6 +2342,16 @@ ANP
 0
 1
 -1000
+
+CHOOSER
+249
+76
+403
+121
+Escenarios
+Escenarios
+"bajos recursos" "altos recursos"
+0
 
 @#$#@#$#@
 ## WHAT IS IT?
