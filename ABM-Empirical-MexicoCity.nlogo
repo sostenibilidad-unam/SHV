@@ -165,7 +165,7 @@ Agebs-own[
   P_failure_AB                 ;;probabilidad de falla infra abastecimiento por edad
   P_failure_D                 ;;probabilidad de falla infra drenaje por edad
   p_failure_hund               ;;probabilidad de falla debido a hundimientos
-  p_falla_AB                      ;;probability of failure due to age and subsidence
+  p_falla_AB                   ;;probability of failure due to age and subsidence
   p_falla_D
   hundimientos
   presion_hidraulica           ;;or an index of low volume of water in the pipes (tandeo)
@@ -180,6 +180,7 @@ Agebs-own[
   peticion_usuarios
   Peticion_Delegacional
   Flooding                     ;; mean number of encharcamientos during between 2004 and 2014
+  sd_flooding                  ;;standard deviation flooding per ageb
 ;;Charactersitics of the agebs that define criteria
   houses_with_dranage          ;; % of houses connected to the dranage from ENEGI survey instrument
   houses_with_abastecimiento   ;; % houses connected to distribution network
@@ -336,14 +337,14 @@ if escenarios = "Escenario A"[
   set recursos_nuevaInfrastructura 100
   set Eficiencia_Mantenimiento 0.1
   set Eficiencia_NuevaInfra 0.1
-  set Recursos_para_distribucion 600
+  set Recursos_para_distribucion 300
 ]
 if escenarios = "Escenario A"[
   set recursos_para_mantenimiento 500
   set recursos_nuevaInfrastructura 500
   set Eficiencia_Mantenimiento 0.7
   set Eficiencia_NuevaInfra 0.6
-  set Recursos_para_distribucion 1000
+  set Recursos_para_distribucion 600
 ]
 
 
@@ -362,7 +363,7 @@ end
 to GO
   ;if ticks = 1 [movie-start "out.mov"]
   tick
-  profiler:start
+  ;profiler:start
 
   ;############################################3
   ;# Escenarios de presupuesto (recursos)
@@ -390,8 +391,10 @@ to GO
    water_extraccion
  ]
  ;;actions sacmex
-  repair-Infra_Ab
-  repair-Infra_D
+  if days = 1 [
+    repair-Infra_Ab
+    repair-Infra_D
+  ]
   water_distribution
 
 
@@ -399,11 +402,10 @@ to GO
   ask agebs [
     water_by_pipe
     water_in_aday
-
-
-   p_falla_infra
-   take_action_residents
-   Vulnerability_indicator
+    p_falla_infra
+    take_action_residents
+    Vulnerability_indicator
+    edad_infra_change
   ]
 
    if days = 1 and months = 1 [ask agebs [residents-decisions]]
@@ -435,9 +437,9 @@ to GO
  ;  bitmap:copy-to-pcolors City_image false
  ;]
  ;>>>>>>> 40296037b262d6aac0752d8e484d769571b1ce61
- profiler:stop          ;; stop profiling
- print profiler:report  ;; view the results
- profiler:reset         ;; clear the data
+ ;profiler:stop          ;; stop profiling
+ ;print profiler:report  ;; view the results
+ ;profiler:reset         ;; clear the data
  ;if ticks = 2[plot-pen-reset]
 
 ;  if months = 12 and days = 30[ ]
@@ -810,6 +812,7 @@ to define_agebs
           set disease_burden  ((gis:property-value ?1 "N04_TODAS") + (gis:property-value ?1 "X05_TOTAL") + (gis:property-value ?1 "X06_TODAS") + gis:property-value ?1 "X07_TODAS" + gis:property-value ?1 "X08_TODAS" + gis:property-value ?1 "X09_TODAS" + gis:property-value ?1 "N10_TODAS" + gis:property-value ?1 "N11_TODAS" + gis:property-value ?1 "N12_TODAS"  + gis:property-value ?1 "N13_TODAS"  + gis:property-value ?1 "N14_TODAS") / 11
           set Income-index ifelse-value ((gis:property-value ?1 "I05_INGRES") = nobody )[0][(gis:property-value ?1 "I05_INGRES")]
           set flooding ifelse-value ((gis:property-value ?2 "Mean_encha") = nobody )[0][(gis:property-value ?2 "Mean_encha")]
+          set sd_flooding standard-deviation (list gis:property-value ?2 "E07" gis:property-value ?2 "E08" gis:property-value ?2 "E09" gis:property-value ?2 "E10" gis:property-value ?2 "E11" gis:property-value ?2 "E12" gis:property-value ?2 "E13" gis:property-value ?2 "E14")
           set Antiguedad-infra_Ab 365 * gis:property-value ?2 "edad_infra"
           set Antiguedad-infra_D 365 * gis:property-value ?2 "edad_infra"
           set zona_aquifera gis:property-value ?2 "zonas"
@@ -1203,15 +1206,19 @@ end
   foreach sort-on [(1 - d_mantencion) ] agebs[    ;sort census blocks (+ (1 - densidad_pop / densidad_pop_max))
     ask ? [
      ; PRINT d_mantencion + densidad_pop / densidad_pop_max
-      ifelse Budget < recursos_para_mantenimiento[                                       ;agebs that were selected for maitenance do not reduce its age
-        set Antiguedad-infra_Ab Antiguedad-infra_Ab + (1 - Eficiencia_Mantenimiento)
+      if Budget < recursos_para_mantenimiento[                                       ;agebs that were selected for maitenance do not reduce its age
+        set Antiguedad-infra_Ab Antiguedad-infra_Ab - Eficiencia_Mantenimiento * Antiguedad-infra_Ab
         set Budget Budget + 1
       ]
-      [
-        set Antiguedad-infra_Ab Antiguedad-infra_Ab + 1
-        ]
+
     ]
   ]
+  end
+;#############################################################################################################################################
+;#############################################################################################################################################
+  to edad_infra_change
+   set Antiguedad-infra_Ab Antiguedad-infra_Ab + 1
+    set Antiguedad-infra_D Antiguedad-infra_D + 1
   end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -1219,13 +1226,11 @@ end
     let Budget 0
     foreach sort-on [(1 - d_mantencion_D) ] agebs[ ;+ (1 - densidad_pop / densidad_pop_max)
       ask ? [
-        ifelse Budget < recursos_para_mantenimiento [
-          set Antiguedad-infra_D Antiguedad-infra_D + (1 - Eficiencia_Mantenimiento)
+        if Budget < recursos_para_mantenimiento [
+          set Antiguedad-infra_D Antiguedad-infra_D  - Eficiencia_Mantenimiento * Antiguedad-infra_D
           set Budget Budget + 1
         ]
-        [
-          set Antiguedad-infra_D Antiguedad-infra_D + 1
-          ]
+
       ]
     ]
 end
@@ -1301,7 +1306,7 @@ to water_in_aday  ;this procedure check if water was distributed to an ageb. Thi
     set water_in 0
     set days_wno_water days_wno_water + 1
   ]
- if days_wno_water > 30 [set days_wno_water 0]
+ if days_wno_water > 15 [set days_wno_water 0]
 end
 ;##############################################################################################################
 
@@ -1415,51 +1420,69 @@ end
 to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
   if visualization != "GoogleEarth"[
     ask agebs [
-      set size 3
+      set size factor_scale * 1
+      set shape "circle"
       if Visualization = "Accion Colectiva" and ticks > 1[
         set color scale-color sky d_Accion_colectiva 0 d_Accion_colectiva_max
       ] ;accion colectiva
-
-      if Visualization = "Movilizaciones" and ticks > 1 [
-        set size Presion_social_dy / 5
+;############################################################################################
+      if Visualization = "Petición ciudadana" and ticks > 1 [
+        set size Presion_social_dy  * factor_scale
         set color  scale-color red Presion_social_dy 0 Presion_social_max
       ] ;;social pressure
-
+;############################################################################################
       if visualization = "Compra de Agua" and ticks > 1 [
         set color scale-color sky d_Compra_agua 0 d_Compra_agua_max
       ]
+;############################################################################################
       if visualization = "Captacion de Agua" and ticks > 1 [set size 500 * d_Captacion_agua]
+;############################################################################################
       if visualization = "Modificacion de la vivienda"and ticks > 1 [set size 100 * [d_Modificacion_vivienda] of myself]
+;############################################################################################
       if visualization = "Extraction Agua SACMEX" and ticks > 1 [set size 50 * d_water_extraction]
+;############################################################################################
       if visualization = "Reparaciones SACMEX" and ticks > 1 [set size d_mantencion]
-      if visualization = "Nueva Infraestructura SACMEX" and ticks > 1 [set size 100 * d_new]
-
+;############################################################################################
+      if visualization = "Nueva Infraestructura SACMEX" and ticks > 1 [
+        set color scale-color green d_new 0 d_new_max]
+;############################################################################################
       if visualization = "Distribucion de Agua SACMEX" and ticks > 1 [
-        set size 3
+        set size d_water_distribution * factor_scale
         set color scale-color sky d_water_distribution 0 d_water_distribution_max
       ]
-
+;############################################################################################
       if visualization = "K_groups" and ticks > 1 [set color  15 +  10 * group_kmean] ; visualize K-mean clusterization
-
+;############################################################################################
       if visualization = "Salud" and ticks > 1 [
         set color scale-color green disease_burden 0 disease_burden_max] ;;visualized incidence of gastrointestinal diseases in MX 2004-2014
-
-      if visualization = "Encharcamientos" and ticks > 1 [set color  scale-color sky flooding 0 flooding_max] ;;visualized SACMEX flooding dataset MX 2004-2014
+;############################################################################################
+      if visualization = "Encharcamientos" and ticks > 1 [
+        let seasonal ifelse-value (months < 10)[months / 9][1 / 9]
+        let v_E random-normal (seasonal * flooding) (seasonal * sd_flooding)
+        set size v_E * 0.1 * factor_scale
+        set color  scale-color sky v_E 0 flooding_max] ;;visualized SACMEX flooding dataset MX 2004-2014
+  ;############################################################################################
       if visualization = "Infraestructura Abastecimiento" and ticks > 1 [
-        set shape "square 2"
+        set shape "square"
         set color  scale-color sky houses_with_abastecimiento 1 0.7] ;;visualized SACMEX flooding dataset MX 2004-2014
+;############################################################################################
       if visualization = "Infraestructura Edad" and ticks > 1 [
-        set shape "square 2"
-        set color  scale-color blue Antiguedad-infra_Ab  0 Antiguedad-infra_Ab_max
+        set shape "square"
+        set color  scale-color grey Antiguedad-infra_Ab  (30 * 365) (300 * 365)
       ]
+  ;############################################################################################
       if visualization = "P. Falla" and ticks > 1 [
         set size 5 * p_falla_AB
         set color  scale-color green p_falla_AB 0 1
         ]
+  ;############################################################################################
       if visualization = "Escasez" and ticks > 1 [
+        ;set shape "drop"
         set size factor_scale * days_wno_water
-        set color  scale-color red days_wno_water 0 15
+        set color scale-color red days_wno_water 0 15
+
         ]
+  ;############################################################################################
       if visualization = "Zonas Aquifero" and ticks > 1 [set color  zona_aquifera]
    ]
   ]
@@ -2037,10 +2060,10 @@ end
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 @#$#@#$#@
 GRAPHICS-WINDOW
-412
-7
-1139
-755
+449
+84
+1176
+832
 -1
 -1
 1.79
@@ -2121,8 +2144,8 @@ CHOOSER
 494
 Visualization
 Visualization
-"Accion Colectiva" "Movilizaciones" "Captacion de Agua" "Compra de Agua" "Modificacion de la vivienda" "Extraction Agua SACMEX" "Reparaciones SACMEX" "Nueva Infraestructura SACMEX" "Distribucion de Agua SACMEX" "GoogleEarth" "K_groups" "Salud" "Escasez" "Encharcamientos" "Infraestructura Abastecimiento" "Infraestructura Edad" "P. Falla" "Zonas Aquifero"
-12
+"Accion Colectiva" "Petición ciudadana" "Captacion de Agua" "Compra de Agua" "Modificacion de la vivienda" "Extraction Agua SACMEX" "Reparaciones SACMEX" "Nueva Infraestructura SACMEX" "Distribucion de Agua SACMEX" "GoogleEarth" "K_groups" "Salud" "Escasez" "Encharcamientos" "Infraestructura Abastecimiento" "Infraestructura Edad" "P. Falla" "Zonas Aquifero"
+13
 
 BUTTON
 1209
@@ -2177,7 +2200,7 @@ Requerimiento_deAgua
 Requerimiento_deAgua
 0.007
 0.4
-0.0982
+0.2788
 0.0001
 1
 [m3/persona]
@@ -2276,7 +2299,7 @@ SLIDER
 Eficiencia_Mantenimiento
 Eficiencia_Mantenimiento
 0
-1
+0.4
 0.1
 0.01
 1
@@ -2307,7 +2330,7 @@ Recursos_para_distribucion
 Recursos_para_distribucion
 0
 2000
-152
+928
 1
 1
 NIL
@@ -2335,7 +2358,7 @@ SWITCH
 609
 ANP
 ANP
-0
+1
 1
 -1000
 
@@ -2358,11 +2381,22 @@ factor_scale
 factor_scale
 0
 3
-2.2
+0.6
 0.1
 1
 NIL
 HORIZONTAL
+
+MONITOR
+728
+16
+912
+77
+Tiempo [Dia-Mes-Año]
+(list days months years)
+0
+1
+15
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -2484,6 +2518,13 @@ dot
 false
 0
 Circle -7500403 true true 90 90 120
+
+drop
+false
+0
+Circle -7500403 true true 73 133 152
+Polygon -7500403 true true 219 181 205 152 185 120 174 95 163 64 156 37 149 7 147 166
+Polygon -7500403 true true 79 182 95 152 115 120 126 95 137 64 144 37 150 6 154 165
 
 face happy
 false
