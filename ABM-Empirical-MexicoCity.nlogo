@@ -1,4 +1,4 @@
-extensions [GIS bitmap profiler csv sql matrix]
+extensions [GIS bitmap profiler csv matrix]
 globals [
 
 ;<<<<<<< HEAD
@@ -1383,39 +1383,39 @@ if file-exists? file_n
  report word "saved  " atribute
 end
 
-to export-postgres
-;this procedure exports an attribute from the agebs to a layer in postgis
+;to export-postgres
+;;this procedure exports an attribute from the agebs to a layer in postgis
+;
+; ;sql:configure "defaultconnection" [["brand" "PostgreSQL"]["host" "localhost"]["port" 5432] ["user" "postgres"]["password" "x"]["database" "new"]]
+;
+; foreach sort-on [ID] agebs[    ;sort agebs by ID from low to high
+;   ask ?
+;   [
+;     ;Antiguedad-infra
+;    ; sql:exec-update "UPDATE agebs_calles_geo SET infra=? WHERE ageb_id=?"  list Antiguedad-infra_Ab ID
+;     ;show ID
+;   ]
+; ]
+;
+;
+;end
 
- sql:configure "defaultconnection" [["brand" "PostgreSQL"]["host" "localhost"]["port" 5432] ["user" "postgres"]["password" "x"]["database" "new"]]
-
- foreach sort-on [ID] agebs[    ;sort agebs by ID from low to high
-   ask ?
-   [
-     ;Antiguedad-infra
-     sql:exec-update "UPDATE agebs_calles_geo SET infra=? WHERE ageb_id=?"  list Antiguedad-infra_Ab ID
-     ;show ID
-   ]
- ]
-
-
-end
-
-to export-postgres-history
-;this procedure exports an attribute from the agebs to a history table in postgres
-  set timestep timestep + 1
- ;sql:configure "defaultconnection" [["brand" "PostgreSQL"]["host" "localhost"]["port" 5432] ["user" "postgres"]["password" "x"]["database" "new"]]
-
- foreach sort-on [ID] agebs[    ;sort agebs by ID from low to high
-   ask ?
-   [
-     ;Antiguedad-infra
-     sql:exec-update "INSERT into infra_h values(?,?,?) "  (list ID Antiguedad-infra_Ab timestep)
-     ;show ID
-   ]
- ]
-
-
-end
+;to export-postgres-history
+;;this procedure exports an attribute from the agebs to a history table in postgres
+;  set timestep timestep + 1
+; ;sql:configure "defaultconnection" [["brand" "PostgreSQL"]["host" "localhost"]["port" 5432] ["user" "postgres"]["password" "x"]["database" "new"]]
+;
+; foreach sort-on [ID] agebs[    ;sort agebs by ID from low to high
+;   ask ?
+;   [
+;     ;Antiguedad-infra
+;    ; sql:exec-update "INSERT into infra_h values(?,?,?) "  (list ID Antiguedad-infra_Ab timestep)
+;     ;show ID
+;   ]
+; ]
+;
+;
+;end
 
 
 to import-agebslayers
@@ -2809,7 +2809,7 @@ NetLogo 5.2.1
     <setup>setup</setup>
     <go>go</go>
     <timeLimit steps="3650"/>
-    <metric>count agebs</metric>
+    <metric>mean [Antiguedad-infra_Ab] of agebs</metric>
     <enumeratedValueSet variable="Eficiencia_NuevaInfra">
       <value value="0.0050"/>
     </enumeratedValueSet>

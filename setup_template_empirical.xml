@@ -3,7 +3,7 @@
     <setup>setup</setup>
     <go>go</go>
     <timeLimit steps="3650"/>
-    <metric>count agebs</metric>
+    <metric>mean [Antiguedad-infra_Ab] of agebs</metric>
     <enumeratedValueSet variable="Eficiencia_NuevaInfra">
       <value value="0.0050"/>
     </enumeratedValueSet>
