@@ -1,0 +1,50 @@
+<experiments>
+  <experiment name="experiment1" repetitions="10" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="3650"/>
+    <metric>count agebs</metric>
+    <enumeratedValueSet variable="Eficiencia_NuevaInfra">
+      <value value="0.0050"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Eficiencia_Mantenimiento">
+      <value value="0.0050"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="export-to-postgres">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="factor_scale">
+      <value value="1.7"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="lambda">
+      <value value="4.0E-6"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Visualization">
+      <value value="&quot;Escasez&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="escala">
+      <value value="&quot;ciudad&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="factor_subsidencia">
+      <value value="0.045"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Recursos_para_distribucion">
+      <value value="600"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="recursos_para_mantenimiento">
+      <value value="500"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="recursos_nuevaInfrastructura">
+      <value value="500"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="ANP">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Requerimiento_deAgua">
+      <value value="0.2788"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Escenarios">
+      <value value="&quot;Escenario B&quot;"/>
+    </enumeratedValueSet>
+  </experiment>
+</experiments>

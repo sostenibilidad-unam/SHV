@@ -2099,8 +2099,8 @@ end
 GRAPHICS-WINDOW
 418
 89
-960
-666
+829
+521
 -1
 -1
 0.786
@@ -2182,7 +2182,7 @@ CHOOSER
 Visualization
 Visualization
 "Accion Colectiva" "Petición ciudadana" "Captacion de Agua" "Compra de Agua" "Modificacion de la vivienda" "Reparaciones SACMEX" "Nueva Infraestructura SACMEX" "Distribucion de Agua SACMEX" "GoogleEarth" "K_groups" "Salud" "Escasez" "Encharcamientos" "Infraestructura Abastecimiento" "Infraestructura Edad" "P. Falla" "Zonas Aquifero" "Infraestructura Edad Ab." "Infraestructura Edad D"
-18
+11
 
 BUTTON
 1002
@@ -2418,7 +2418,7 @@ factor_scale
 factor_scale
 0
 6
-4.7
+1.7
 0.1
 1
 NIL
@@ -2439,7 +2439,7 @@ SLIDER
 34
 357
 237
-391
+390
 lambda
 lambda
 0
@@ -2805,34 +2805,52 @@ NetLogo 5.2.1
 @#$#@#$#@
 @#$#@#$#@
 <experiments>
-  <experiment name="experiment_evolution" repetitions="5" runMetricsEveryStep="false">
+  <experiment name="experiment1" repetitions="10" runMetricsEveryStep="true">
     <setup>setup</setup>
     <go>go</go>
-    <timeLimit steps="150"/>
-    <metric>mean V_list</metric>
-    <metric>mean gini_V</metric>
-    <metric>mean W_list</metric>
-    <metric>mean gini_W</metric>
-    <metric>mean S_list</metric>
-    <metric>total_cost_plot</metric>
-    <metric>mean [p_failure] of patches with [IS &gt; 0]</metric>
-    <metric>mean [W] of colonias</metric>
-    <metric>mean [Sens_ave] of colonias</metric>
-    <metric>mean [exposure] of colonias</metric>
-    <enumeratedValueSet variable="prop_cost_bud">
-      <value value="4.3E-5"/>
-      <value value="8.5E-5"/>
+    <timeLimit steps="3650"/>
+    <metric>count agebs</metric>
+    <enumeratedValueSet variable="Eficiencia_NuevaInfra">
+      <value value="0.0050"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="Effective_protest">
-      <value value="0.5"/>
+    <enumeratedValueSet variable="Eficiencia_Mantenimiento">
+      <value value="0.0050"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="Scenarios_GovDecisions">
-      <value value="&quot;BAU&quot;"/>
-      <value value="&quot;More New Infra&quot;"/>
-      <value value="&quot;Social responsability/pressure&quot;"/>
+    <enumeratedValueSet variable="export-to-postgres">
+      <value value="false"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="type_of_simulation">
-      <value value="&quot;Evolution&quot;"/>
+    <enumeratedValueSet variable="factor_scale">
+      <value value="1.7"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="lambda">
+      <value value="4.0E-6"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Visualization">
+      <value value="&quot;Escasez&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="escala">
+      <value value="&quot;ciudad&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="factor_subsidencia">
+      <value value="0.045"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Recursos_para_distribucion">
+      <value value="600"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="recursos_para_mantenimiento">
+      <value value="500"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="recursos_nuevaInfrastructura">
+      <value value="500"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="ANP">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Requerimiento_deAgua">
+      <value value="0.2788"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Escenarios">
+      <value value="&quot;Escenario B&quot;"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>
