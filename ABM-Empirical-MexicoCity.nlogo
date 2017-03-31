@@ -802,47 +802,51 @@ to define_agebs
         ]
         set name_delegation gis:property-value ?1 "NOM_MUN"                                                                                                ;;name of delegations
         set poblacion ifelse-value (gis:property-value ?1 "POBTOT" > 0)[gis:property-value ?1 "POBTOT"][1]                                                  ;;population size per ageb
-          set densidad_pop gis:property-value ?1 "DENSPOB"
-          set ID gis:property-value ?1 "AGEB_ID"                                                                                                               ;;ageb ID Check witht the team in MX to have the same identifier
-          set label ""
-          set houses_with_abastecimiento gis:property-value ?1 "VPH_AGUADV" / (1 + gis:property-value ?1 "VPH_AGUADV" + gis:property-value ?1 "VPH_AGUAFV")  ;;% casas con toma de abastecimiento
-          set houses_with_dranage gis:property-value ?1 "VPH_DRENAJ" / (1 + gis:property-value ?1 "VPH_DRENAJ" + gis:property-value ?1 "VPH_NODREN")         ;;% de casas con toma de drenage from encuesta ENGHI
-          set hundimientos gis:property-value ?2 "HUND"                                                                                                      ;;variable hundimientos (Marco)
-          set group_kmean gis:property-value ?2 "KMEANS5"                                                                                                    ;;grupos de vecindarios
-          set disease_burden  ((gis:property-value ?1 "N04_TODAS") + (gis:property-value ?1 "X05_TOTAL") + (gis:property-value ?1 "X06_TODAS") + gis:property-value ?1 "X07_TODAS" + gis:property-value ?1 "X08_TODAS" + gis:property-value ?1 "X09_TODAS" + gis:property-value ?1 "N10_TODAS" + gis:property-value ?1 "N11_TODAS" + gis:property-value ?1 "N12_TODAS"  + gis:property-value ?1 "N13_TODAS"  + gis:property-value ?1 "N14_TODAS") / 11
-          set Income-index ifelse-value ((gis:property-value ?1 "I05_INGRES") = nobody )[0][(gis:property-value ?1 "I05_INGRES")]
-          set flooding ifelse-value ((gis:property-value ?2 "Mean_encha") = nobody )[0][(gis:property-value ?2 "Mean_encha")]
-          set sd_flooding standard-deviation (list gis:property-value ?2 "E07" gis:property-value ?2 "E08" gis:property-value ?2 "E09" gis:property-value ?2 "E10" gis:property-value ?2 "E11" gis:property-value ?2 "E12" gis:property-value ?2 "E13" gis:property-value ?2 "E14")
-          set Antiguedad-infra_Ab 365 * gis:property-value ?2 "edad_infra"
-          set Antiguedad-infra_D 365 * gis:property-value ?2 "edad_infra"
-          set zona_aquifera gis:property-value ?2 "zonas"
-          set precipitation  gis:property-value ?2 "PRECIP"
-          set Abastecimiento poblacion * Requerimiento_deAgua               ;;;C4_A1;;;
-          set Peticion_Delegacional gis:property-value ?1 "PETDELS"
-          set Presion_social gis:property-value ?1 "protests"
-          set Falla gis:property-value ?1 "FALLAIN"
-          set garbage poblacion;1 ;# de habitantes we assume that the proportion of garbage accumulated in the dranage is proportional to the population living in each census block
-          set scarcity gis:property-value ?1 "ESCASEZ"
-          set peticion_usuarios 1
-          ;capas que falta incluir
-          set desviacion_agua 1
-          set eficacia_servicio 1   ;; Gestión del servicio de Drenaje y agua potable (ej. interferencia política, no llega la pipa, horario del tandeo, etc)
-          set desperdicio_agua 1                      ;;Por fugas, falta de conciencia del uso del agua
-          set presion_hidraulica 1
-          set Gasto_hidraulico 1     ;;to be completed with the calcualtion made by
-          set urban_growth 1
-          set capacidad 1
-          set Monto 1
-          set tandeo 6 / 7
-          set water_quality 1
-          set sensitivity_F 1
-          set sensitivity_S 1
-          set vulnerability_S 1
-          set vulnerability_F 1
-          set color grey
-          set shape "circle"
-          set size 0.5
-          set hidden? false
+        set densidad_pop gis:property-value ?1 "DENSPOB"
+        set ID gis:property-value ?1 "AGEB_ID"                                                                                                               ;;ageb ID Check witht the team in MX to have the same identifier
+        set label ""
+        set houses_with_abastecimiento gis:property-value ?1 "VPH_AGUADV" / (1 + gis:property-value ?1 "VPH_AGUADV" + gis:property-value ?1 "VPH_AGUAFV")  ;;% casas con toma de abastecimiento
+        set houses_with_dranage gis:property-value ?1 "VPH_DRENAJ" / (1 + gis:property-value ?1 "VPH_DRENAJ" + gis:property-value ?1 "VPH_NODREN")         ;;% de casas con toma de drenage from encuesta ENGHI
+        set hundimientos gis:property-value ?2 "HUND" ;Cambiar a velocidad de subsidencia                                                                                                    ;;variable hundimientos (Marco)
+        set group_kmean gis:property-value ?2 "KMEANS5"                                                                                                    ;;grupos de vecindarios
+        set disease_burden  ((gis:property-value ?1 "N04_TODAS") + (gis:property-value ?1 "X05_TOTAL") + (gis:property-value ?1 "X06_TODAS") + gis:property-value ?1 "X07_TODAS" + gis:property-value ?1 "X08_TODAS" + gis:property-value ?1 "X09_TODAS" + gis:property-value ?1 "N10_TODAS" + gis:property-value ?1 "N11_TODAS" + gis:property-value ?1 "N12_TODAS"  + gis:property-value ?1 "N13_TODAS"  + gis:property-value ?1 "N14_TODAS") / 11
+        set Income-index ifelse-value ((gis:property-value ?1 "I05_INGRES") = nobody )[0][(gis:property-value ?1 "I05_INGRES")]
+        set flooding ifelse-value ((gis:property-value ?2 "Mean_encha") = nobody )[0][(gis:property-value ?2 "Mean_encha")]
+        set sd_flooding standard-deviation (list gis:property-value ?2 "E07" gis:property-value ?2 "E08" gis:property-value ?2 "E09" gis:property-value ?2 "E10" gis:property-value ?2 "E11" gis:property-value ?2 "E12" gis:property-value ?2 "E13" gis:property-value ?2 "E14")
+        set Antiguedad-infra_Ab 365 * gis:property-value ?2 "edad_infra"
+        set Antiguedad-infra_D 365 * gis:property-value ?2 "edad_infra"
+        set zona_aquifera gis:property-value ?2 "zonas"
+        set precipitation  gis:property-value ?2 "PRECIP"
+        set Abastecimiento poblacion * Requerimiento_deAgua               ;;;C4_A1;;;
+        set Peticion_Delegacional gis:property-value ?1 "PETDELS"  ;; nivel socio-economico * peso politico (differencia entre partido gobernante a nivel local y estatal)
+        set Presion_social gis:property-value ?1 "protests"
+        set Falla gis:property-value ?1 "FALLAIN"
+        set garbage poblacion / Income-index;1 ;# we assume that the proportion of garbage accumulated in the dranage is proportional to the population living in each census block
+        set scarcity gis:property-value ?1 "ESCASEZ"  ;cambiar y usar los datos de Ale de tandeo par el DF. Usar datos de ingreso como proxy de escasez por municipio.
+
+
+        ;capas que falta incluir
+        set peticion_usuarios 1 ;index densidad de infra por cuanca * falta de conexiones por ageb.
+        set desviacion_agua 1   ;; 1 si hay pozo en ageb o en agebs colindantes; 0 si no.
+        set eficacia_servicio 1   ;; Gestión del servicio de Drenaje y agua potable (ej. interferencia política, no llega la pipa, horario del tandeo, etc)
+        set desperdicio_agua 1                      ;;Por fugas, falta de conciencia del uso del agua
+        set presion_hidraulica 1  ;no considerar
+        set Gasto_hidraulico 1     ;;to be completed
+        set urban_growth 1
+        set capacidad 1 ;
+        set Monto 1  ;
+        set tandeo 6 / 7
+        set water_quality 1
+
+
+        set sensitivity_F 1
+        set sensitivity_S 1
+        set vulnerability_S 1
+        set vulnerability_F 1
+        set color grey
+        set shape "circle"
+        set size 0.5
+        set hidden? false
       ]
     ])
 ; ask agebs [set paches_set_agebs patch-set patches with [ageb_ID = round ([ID] of myself)]]   ;define the patches that belon to each ageb
@@ -2215,7 +2219,7 @@ recursos_para_mantenimiento
 recursos_para_mantenimiento
 1
 2000
-100
+500
 1
 1
 NIL
@@ -2230,7 +2234,7 @@ Eficiencia_NuevaInfra
 Eficiencia_NuevaInfra
 0
 1
-0.1
+0.6
 0.001
 1
 NIL
@@ -2300,7 +2304,7 @@ Eficiencia_Mantenimiento
 Eficiencia_Mantenimiento
 0
 0.4
-0.1
+0.7
 0.01
 1
 NIL
@@ -2315,7 +2319,7 @@ recursos_nuevaInfrastructura
 recursos_nuevaInfrastructura
 0
 2000
-100
+500
 1
 1
 NIL
@@ -2330,7 +2334,7 @@ Recursos_para_distribucion
 Recursos_para_distribucion
 0
 2000
-928
+600
 1
 1
 NIL
