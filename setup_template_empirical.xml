@@ -1,50 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE experiments SYSTEM "behaviorspace.dtd">
 <experiments>
-  <experiment name="experiment1" repetitions="10" runMetricsEveryStep="true">
+  <experiment name="experiment1" repetitions="1" runMetricsEveryStep="true">
     <setup>setup</setup>
     <go>go</go>
-    <timeLimit steps="3650"/>
+    <timeLimit steps="{time_limit}"/>
     <metric>mean [Antiguedad-infra_Ab] of agebs</metric>
     <enumeratedValueSet variable="Eficiencia_NuevaInfra">
-      <value value="0.0050"/>
+      <value value="{eficiencia_nuevainfra}"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="Eficiencia_Mantenimiento">
-      <value value="0.0050"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="export-to-postgres">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="factor_scale">
-      <value value="1.7"/>
+      <value value="{eficiencia_mantenimiento}"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="lambda">
-      <value value="4.0E-6"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="Visualization">
-      <value value="&quot;Escasez&quot;"/>
+      <value value="{lambda}"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="escala">
-      <value value="&quot;ciudad&quot;"/>
+      <value value="&quot;{escala}&quot;"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="factor_subsidencia">
-      <value value="0.045"/>
+      <value value="{factor_subsidencia}"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="Recursos_para_distribucion">
-      <value value="600"/>
+      <value value="{recursos_para_distribucion}"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="recursos_para_mantenimiento">
-      <value value="500"/>
+      <value value="{recursos_para_mantenimiento}"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="recursos_nuevaInfrastructura">
-      <value value="500"/>
+      <value value="{recursos_nuevainfrastructura}"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="ANP">
-      <value value="true"/>
+      <value value="{ANP}"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="Requerimiento_deAgua">
-      <value value="0.2788"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="Escenarios">
-      <value value="&quot;Escenario B&quot;"/>
+      <value value="{requerimiento_deagua}"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>

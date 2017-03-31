@@ -39,6 +39,7 @@ os.symlink(os.path.join(this_dir, "ABM-Empirical-MexicoCity.nlogo"),
            os.path.join(args.workdir, "ABM-Empirical-MexicoCity.nlogo"))
 #os.symlink(os.path.join(this_dir, args.argumentspace.name), os.path.join(args.workdir, args.argumentspace.name))
 os.symlink(os.path.join(this_dir, "run.sh"), os.path.join(args.workdir, "run.sh"))
+os.symlink(os.path.join(this_dir, "data"), os.path.join(args.workdir, "data"))
 
 # read setup and submit templates
 setup_template = open('setup_template_empirical.xml').read()
@@ -58,7 +59,24 @@ condor_template= open('submit_template.condor').read()
 #                                                 args.landscape,
 #                                                 simulation_number)
 #                 with open('%s/setup_%s.xml' % (args.workdir, run_id), 'w') as setupfile:
-#                     setupfile.write(setup_template.format(simulation_number=simulation_number,
+
+years = 8
+e = {"time_limit" : years * 365,
+     "eficiencia_nuevainfra": 0.005,
+     "eficiencia_mantenimiento": 0.005,
+     "lambda": 0.000004,
+     "escala": "ciudad",
+     "factor_subsidencia": 0.45,
+     "recursos_para_distribucion": 600,
+     "recursos_para_mantenimiento": 500,
+     "recursos_nuevainfrastructura": 500,
+     "ANP": "true",
+     "requerimiento_deagua": 0.2788}
+
+#setupfile.write(
+print setup_template.format(**e)
+
+#simulation_number=simulation_number,
 #                                                           new_infra_investment=new_infra_investment,
 #                                                           maintenance=maintenance,
 #                                                           landscape=args.landscape,
