@@ -1,20 +1,14 @@
 import argparse
 import random
 import os
+import setup
+import numpy as np
 
 parser = argparse.ArgumentParser(description='Create meta-simulation package at workdir')
 parser.add_argument('--netlogo', required=True, help='absolute path to netlogo directory')
 parser.add_argument('--workdir', required=True, help='absolute path to working directory where meta-simulation will be setup.')
-#parser.add_argument('--argumentspace', type=argparse.FileType('r'), required=True,
-#                    help="argument space CSV file")
-#parser.add_argument('--landscape', default="many-hills",
-#                    help="type of landscape")
-#parser.add_argument('--new_infra_investment', type=int, nargs="+")
-#parser.add_argument('--maintenance', type=int, nargs="+")
-#parser.add_argument('--budget_distribution', default="competitionwithinactions")
 parser.add_argument('--threads', type=int, default=12)
 args = parser.parse_args()
-
 
 
 # create working directory
@@ -45,6 +39,35 @@ os.symlink(os.path.join(this_dir, "data"), os.path.join(args.workdir, "data"))
 setup_template = open('setup_template_empirical.xml').read()
 condor_template= open('submit_template.condor').read()
 
+
+for eficiencia_nuevainfra in setup.eficiencia_nuevainfra:
+    for eficiencia_mantenimiento in setup.eficiencia_mantenimiento:
+        for Lambda in setup.Lambda:
+            for factor_subsidencia in setup.factor_subsidencia:
+                for recursos_para_distribucion in setup.recursos_para_distribucion:
+                    for recursos_para_mantenimiento in setup.recursos_para_mantenimiento:
+                        for recursos_nuevainfrastructura in setup.recursos_nuevainfrastructura:
+                            for requerimiento_deagua in setup.requerimiento_deagua:
+                                print "hola"
+                                
+# years = 8
+# e = {"time_limit" : years * 365,
+#      "eficiencia_nuevainfra": 0.005,
+#      "eficiencia_mantenimiento": 0.005,
+#      "lambda": 0.000004,
+#      "escala": "ciudad",
+#      "factor_subsidencia": 0.45,
+#      "recursos_para_distribucion": 600,
+#      "recursos_para_mantenimiento": 500,
+#      "recursos_nuevainfrastructura": 500,
+#      "ANP": "true",
+#      "requerimiento_deagua": 0.2788}
+
+# #setupfile.write(
+# print setup_template.format(**e)
+
+
+
 # lines = args.argumentspace.readlines()
 
 # create setup XML files and condor files
@@ -60,21 +83,6 @@ condor_template= open('submit_template.condor').read()
 #                                                 simulation_number)
 #                 with open('%s/setup_%s.xml' % (args.workdir, run_id), 'w') as setupfile:
 
-years = 8
-e = {"time_limit" : years * 365,
-     "eficiencia_nuevainfra": 0.005,
-     "eficiencia_mantenimiento": 0.005,
-     "lambda": 0.000004,
-     "escala": "ciudad",
-     "factor_subsidencia": 0.45,
-     "recursos_para_distribucion": 600,
-     "recursos_para_mantenimiento": 500,
-     "recursos_nuevainfrastructura": 500,
-     "ANP": "true",
-     "requerimiento_deagua": 0.2788}
-
-#setupfile.write(
-print setup_template.format(**e)
 
 #simulation_number=simulation_number,
 #                                                           new_infra_investment=new_infra_investment,
