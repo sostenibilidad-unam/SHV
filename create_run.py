@@ -40,56 +40,40 @@ setup_template = open('setup_template_empirical.xml').read()
 condor_template= open('submit_template.condor').read()
 
 
-for eficiencia_nuevainfra in setup.eficiencia_nuevainfra:
-    for eficiencia_mantenimiento in setup.eficiencia_mantenimiento:
-        for Lambda in setup.Lambda:
-            for factor_subsidencia in setup.factor_subsidencia:
-                for recursos_para_distribucion in setup.recursos_para_distribucion:
-                    for recursos_para_mantenimiento in setup.recursos_para_mantenimiento:
-                        for recursos_nuevainfrastructura in setup.recursos_nuevainfrastructura:
-                            for requerimiento_deagua in setup.requerimiento_deagua:
-                                print "hola"
-                                
-# years = 8
-# e = {"time_limit" : years * 365,
-#      "eficiencia_nuevainfra": 0.005,
-#      "eficiencia_mantenimiento": 0.005,
-#      "lambda": 0.000004,
-#      "escala": "ciudad",
-#      "factor_subsidencia": 0.45,
-#      "recursos_para_distribucion": 600,
-#      "recursos_para_mantenimiento": 500,
-#      "recursos_nuevainfrastructura": 500,
-#      "ANP": "true",
-#      "requerimiento_deagua": 0.2788}
-
-# #setupfile.write(
-# print setup_template.format(**e)
-
-
-
-# lines = args.argumentspace.readlines()
-
 # create setup XML files and condor files
-# with open('%s/submit_all.condor' % args.workdir, 'w') as condorfile:
-#     condorfile.write("executable = run.sh\n\n")
-#     for simulation_number in range(len(lines)-1):
-#         for new_infra_investment in args.new_infra_investment:
-#             for maintenance in args.maintenance:
-#                 random_seed = random.randint(0, 100000)
-#                 run_id = "nii%s_mii%s_%s_%s" % (new_infra_investment,
-#                                                 maintenance,
-#                                                 args.landscape,
-#                                                 simulation_number)
-#                 with open('%s/setup_%s.xml' % (args.workdir, run_id), 'w') as setupfile:
+with open('%s/submit_all.condor' % args.workdir, 'w') as condorfile:
+    for eficiencia_nuevainfra in setup.eficiencia_nuevainfra:
+        for eficiencia_mantenimiento in setup.eficiencia_mantenimiento:
+            for Lambda in setup.Lambda:
+                for factor_subsidencia in setup.factor_subsidencia:
+                    for recursos_para_distribucion in setup.recursos_para_distribucion:
+                        for recursos_para_mantenimiento in setup.recursos_para_mantenimiento:
+                            for recursos_nuevainfrastructura in setup.recursos_nuevainfrastructura:
+                                for requerimiento_deagua in setup.requerimiento_deagua:
+                                    run_id = "r_%s_%s_%s_%s_%s_%s_%s_%s" % (eficiencia_nuevainfra,
+                                                                            eficiencia_mantenimiento,
+                                                                            Lambda,
+                                                                            factor_subsidencia,
+                                                                            recursos_para_distribucion,
+                                                                            recursos_para_mantenimiento,
+                                                                            recursos_nuevainfrastructura,
+                                                                            requerimiento_deagua)
 
+                                    condorfile.write(condor_template.format(run_id=run_id,
+                                                                            threads=args.threads))
 
-#simulation_number=simulation_number,
-#                                                           new_infra_investment=new_infra_investment,
-#                                                           maintenance=maintenance,
-#                                                           landscape=args.landscape,
-#                                                           budget_distribution=args.budget_distribution,
-#                                                           random_seed=random_seed,
-#                                                           threads=args.threads))
-#                 condorfile.write(condor_template.format(run_id=run_id,
-#                                                         threads=args.threads))
+                                    with open('%s/setup_%s.xml' % (args.workdir, run_id), 'w') as setupfile:
+                                        e = {"time_limit" : setup.years * 365,
+                                             "eficiencia_nuevainfra": eficiencia_nuevainfra,
+                                             "eficiencia_mantenimiento": eficiencia_mantenimiento,
+                                             "lambda": Lambda,
+                                             "escala": setup.escala,
+                                             "factor_subsidencia": factor_subsidencia,
+                                             "recursos_para_distribucion": recursos_para_distribucion,
+                                             "recursos_para_mantenimiento": recursos_para_mantenimiento,
+                                             "recursos_nuevainfrastructura": recursos_nuevainfrastructura,
+                                             "ANP": setup.ANP,
+                                             "requerimiento_deagua": requerimiento_deagua} 
+                                        setupfile.write(
+                                            setup_template.format(**e)
+                                            )
