@@ -2066,6 +2066,8 @@ to define_alternativesCriteria
        ;  ]
        ;
 
+
+
 end
 ;##############################################################################################################
 to flood_risk  ;replace by fault
@@ -2099,11 +2101,11 @@ end
 GRAPHICS-WINDOW
 418
 89
-829
-521
+1052
+744
 -1
 -1
-0.786
+1.55611
 1
 40
 1
@@ -2175,20 +2177,20 @@ NIL
 1
 
 CHOOSER
-990
-445
-1170
-490
+1167
+449
+1347
+494
 Visualization
 Visualization
-"Accion Colectiva" "Petición ciudadana" "Captacion de Agua" "Compra de Agua" "Modificacion de la vivienda" "Reparaciones SACMEX" "Nueva Infraestructura SACMEX" "Distribucion de Agua SACMEX" "GoogleEarth" "K_groups" "Salud" "Escasez" "Encharcamientos" "Infraestructura Abastecimiento" "Infraestructura Edad" "P. Falla" "Zonas Aquifero" "Infraestructura Edad Ab." "Infraestructura Edad D"
+"Accion Colectiva" "Petición ciudadana" "Captacion de Agua" "Compra de Agua" "Modificacion de la vivienda" "Reparaciones SACMEX" "Nueva Infraestructura SACMEX" "Distribucion de Agua SACMEX" "GoogleEarth" "K_groups" "Salud" "Escasez" "Encharcamientos" "Infraestructura Abastecimiento" "P. Falla Ab" "P. Falla D" "Zonas Aquifero" "Infraestructura Edad Ab." "Infraestructura Edad D"
 11
 
 BUTTON
-1002
-42
-1174
-111
+1179
+46
+1351
+115
 NIL
 show_limitesDelegaciones
 NIL
@@ -2202,10 +2204,10 @@ NIL
 1
 
 BUTTON
-1002
-125
-1172
-189
+1179
+129
+1349
+193
 NIL
 show_AGEBS
 NIL
@@ -2219,10 +2221,10 @@ NIL
 1
 
 TEXTBOX
-1017
-412
-1130
-447
+1194
+416
+1307
+451
 Visualización
 18
 0.0
@@ -2252,7 +2254,7 @@ recursos_para_mantenimiento
 recursos_para_mantenimiento
 1
 2000
-500
+1536
 1
 1
 NIL
@@ -2274,10 +2276,10 @@ NIL
 HORIZONTAL
 
 BUTTON
-1002
-192
-1172
-255
+1179
+196
+1349
+259
 NIL
 show-actors-actions
 NIL
@@ -2291,10 +2293,10 @@ NIL
 1
 
 BUTTON
-1002
-255
-1173
-319
+1179
+259
+1350
+323
 NIL
 clear-plots
 NIL
@@ -2308,10 +2310,10 @@ NIL
 1
 
 CHOOSER
-990
-502
-1173
-547
+1167
+506
+1350
+551
 escala
 escala
 "cuenca" "ciudad"
@@ -2337,7 +2339,7 @@ Eficiencia_Mantenimiento
 Eficiencia_Mantenimiento
 0
 0.1
-0.0050
+0.08
 0.01
 1
 NIL
@@ -2367,7 +2369,7 @@ Recursos_para_distribucion
 Recursos_para_distribucion
 0
 2000
-600
+670
 1
 1
 NIL
@@ -2410,15 +2412,15 @@ Escenarios
 1
 
 SLIDER
-992
-554
-1165
-587
+1169
+558
+1342
+591
 factor_scale
 factor_scale
 0
 6
-1.7
+2.3
 0.1
 1
 NIL
@@ -2805,7 +2807,7 @@ NetLogo 5.2.1
 @#$#@#$#@
 @#$#@#$#@
 <experiments>
-  <experiment name="experiment1" repetitions="10" runMetricsEveryStep="true">
+  <experiment name="experiment1" repetitions="1" runMetricsEveryStep="false">
     <setup>setup</setup>
     <go>go</go>
     <timeLimit steps="3650"/>
