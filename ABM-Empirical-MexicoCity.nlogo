@@ -2,7 +2,7 @@ extensions [GIS bitmap profiler csv matrix]
 globals [
 
 ;<<<<<<< HEAD
-=======
+;=======
   timestep                     ;;time step for postgres history
 ;>>>>>>> 444d49d996310c8bccd80a414c78f519adf60687
 ;;Importacion de agua
@@ -49,9 +49,9 @@ globals [
   Abastecimiento_max            ;;
   Capacidad_max_Ab                 ;;
   Capacidad_max_d
-  Petición_Delegacional_max
+  Peticion_Delegacional_max
   Presion_social_max
-  Presión_de_medios_max
+  Presion_de_medios_max
   water_quality_max
   disease_burden_max
   monto_max
@@ -104,7 +104,7 @@ Vulnerability_S_max
   Urban_g                                                        ;change in population, urban coverage, construction or other perception of more pressure to the service of water
   failure_of_dranage                                                 ;(translated from residents mental model concept "obstruccion de alcantarillado")
   presion_hidraulica_map                                             ;water in the pipes. related to tandeo and fugas. places with more fugas may have less pressure. places with less pressure would have more tandeo.
-  Presión_de_medios
+  Presion_de_medios
 
 
 ;;Other auxiliar variables
@@ -145,7 +145,7 @@ patches-own[
 ]
 
 
-Delegaciones-own[name_delegacion Petición_Delegaciones]
+Delegaciones-own[name_delegacion Peticion_Delegaciones]
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 ;define AGEBS
@@ -158,12 +158,12 @@ Agebs-own[
   paches_set_agebs             ;;the set of patches that bellow to the ageb
   Monto                        ;; resources designated to each ageb (delegations?)
   production_water_perageb     ;; produccion de agua {definir escala e.g resolucion temporal !!!!}
-  Abastecimiento               ;;Necesidad de la población en cuanto a servicios hidráulicos (agua potable, drenaje)
+  Abastecimiento               ;;Necesidad de la poblacion en cuanto a servicios hidraulicos (agua potable, drenaje)
   Abastecimiento_b
   Antiguedad-infra_Ab          ;;average Age of infra for water supply
   Antiguedad-infra_D           ;;average Age of infra for water dranage
   Cost_perHab                  ;;cost per habitante that would be invested if infra is repared
-  falla_ab                        ;;Fallas de infraestructura hidráulica ocasionadas por conexiones clandestinas, obstrucción por basura y procesos biofísicos
+  falla_ab                        ;;Fallas de infraestructura hidraulica ocasionadas por conexiones clandestinas, obstruccion por basura y procesos biofisicos
   falla_d
   falta_Ab                        ;;falta de conexiones de
   falta_d                      ;;falta de drenage
@@ -204,10 +204,10 @@ Agebs-own[
   days_wno_water               ;; Days with no water
   resources_water              ;; index 0 1 defining the purchase power to buy water
   surplus                      ;; When water_needed <  water_produced, surplus > 0
-  eficacia_servicio            ;;Gestión del servicio de Drenaje y agua potable (ej. interferencia política, no llega la pipa, horario del tandeo, etc)
+  eficacia_servicio            ;;Gestion del servicio de Drenaje y agua potable (ej. interferencia politica, no llega la pipa, horario del tandeo, etc)
   desperdicio_agua             ;;Por fugas, falta de conciencia del uso del agua
   desviacion_agua              ;;Se llevan el agua a otros lugares
-  Capacidad_Ab                 ;;La Capacidad de la infraestructura hidráulica
+  Capacidad_Ab                 ;;La Capacidad de la infraestructura hidraulica
   Capacidad_D                  ;;
   infiltracion
   R_tau                        ;;threshold of rainfall according to protocol
@@ -291,7 +291,7 @@ to SETUP
   set days 0                                           ;; count days
   set months 1
   set years 1
-  set Presión_de_medios 1 ;;need to define as a layer?
+  set Presion_de_medios 1 ;;need to define as a layer?
 
 ;set global variables and the
 
@@ -399,38 +399,8 @@ to GO
   if escala = "ciudad" [
     Landscape_visualization          ;;visualization of social and physical processes
   ]
-  ;]
-  ;]
-  ;  if months = 1 and days = 1 [
-  ;    export-postgres-history
-
-  ; ]
-;>>>>>>> 444d49d996310c8bccd80a414c78f519adf60687
-
-;  if visualization = "GoogleEarth" [
-;    bitmap:copy-to-pcolors City_image false
-;  ]
-
-;<<<<<<< HEAD
-;=======
- ;export-postgres
- ;=======
- ;=======
-
- ;>>>>>>> 444d49d996310c8bccd80a414c78f519adf60687
-
- ;if visualization = "GoogleEarth" [
- ;  bitmap:copy-to-pcolors City_image false
- ;]
- ;>>>>>>> 40296037b262d6aac0752d8e484d769571b1ce61
- ;profiler:stop          ;; stop profiling
- ;print profiler:report  ;; view the results
- ;profiler:reset         ;; clear the data
- ;if ticks = 2[plot-pen-reset]
-
- ;  if months = 12 and days = 30[ ]
-
 end
+
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -725,7 +695,7 @@ end
        set xcor item 0 centroid              ;define coodeantes of ageb at the center of the polygone
        set ycor item 1 centroid
        set name_delegacion gis:property-value ?1 "NOM_MUN"
-       set Petición_Delegaciones 1
+       set Peticion_Delegaciones 1
 
      ]
    ]
@@ -755,7 +725,7 @@ foreach gis:feature-list-of Agebs_map_full; "ID_ZONA" "0"
        set Abastecimiento poblacion * Requerimiento_deAgua               ;;;C4_A1;;;
        set Gasto_hidraulico 1
        set desviacion_agua 1
-       set eficacia_servicio 1                                                                               ;; Gestión del servicio de Drenaje y agua potable (ej. interferencia política, no llega la pipa, horario del tandeo, etc)
+       set eficacia_servicio 1                                                                               ;; Gestion del servicio de Drenaje y agua potable (ej. interferencia politica, no llega la pipa, horario del tandeo, etc)
        set desperdicio_agua 1                                                                        ;;Por fugas, falta de conciencia del uso del agua
        set presion_hidraulica 1
        set peticion_usuarios 1
@@ -825,7 +795,7 @@ to define_agebs
  ;capas que falta incluir
         set peticion_usuarios 1 ;index densidad de infra por cuanca * falta de conexiones por ageb.
         set desviacion_agua 1   ;; 1 si hay pozo en ageb o en agebs colindantes; 0 si no.
-        set eficacia_servicio 1   ;; Gestión del servicio de Drenaje y agua potable (ej. interferencia política, no llega la pipa, horario del tandeo, etc)
+        set eficacia_servicio 1   ;; Gestion del servicio de Drenaje y agua potable (ej. interferencia politica, no llega la pipa, horario del tandeo, etc)
         set desperdicio_agua 1                      ;;Por fugas, falta de conciencia del uso del agua
         set presion_hidraulica 1  ;no considerar
         set Gasto_hidraulico 1     ;;to be completed
@@ -1000,8 +970,8 @@ to update_criteria_and_valueFunctions_SACMEX    ;;update the biphisical value of
     ]
     ;###########################################################
     if ? = "Peticion de Delegaciones"[
-      set C1 replace-item i C1 1;[Petición_Delegaciones] of Delegaciones-here
-      set C1_max replace-item i C1_max 1;Petición_Delegaciones_max ;change with update quantity for speed
+      set C1 replace-item i C1 1;[Peticion_Delegaciones] of Delegaciones-here
+      set C1_max replace-item i C1_max 1;Peticion_Delegaciones_max ;change with update quantity for speed
       set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
     ]
     ;###########################################################
@@ -1012,8 +982,8 @@ to update_criteria_and_valueFunctions_SACMEX    ;;update the biphisical value of
     ]
     ;###########################################################
     if ? = "Presion de medios"[
-      set C1 replace-item i C1 1;[Presión_de_medios] of myself
-      set C1_max replace-item i C1_max Presión_de_medios_max ;change with update quantity for speed
+      set C1 replace-item i C1 1;[Presion_de_medios] of myself
+      set C1_max replace-item i C1_max Presion_de_medios_max ;change with update quantity for speed
       set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
     ]
     ;###########################################################
@@ -1459,7 +1429,7 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
         set color scale-color sky d_Accion_colectiva 0 d_Accion_colectiva_max
       ] ;accion colectiva
 ;############################################################################################
-      if Visualization = "Petición ciudadana" and ticks > 1 [
+      if Visualization = "Peticion ciudadana" and ticks > 1 [
         set size Presion_social_dy  * factor_scale
         set color  scale-color red Presion_social_dy 0 Presion_social_max
       ] ;;social pressure
@@ -2183,7 +2153,11 @@ CHOOSER
 494
 Visualization
 Visualization
+;<<<<<<< HEAD
 "Accion Colectiva" "Petición ciudadana" "Captacion de Agua" "Compra de Agua" "Modificacion de la vivienda" "Reparaciones SACMEX" "Nueva Infraestructura SACMEX" "Distribucion de Agua SACMEX" "GoogleEarth" "K_groups" "Salud" "Escasez" "Encharcamientos" "Infraestructura Abastecimiento" "P. Falla Ab" "P. Falla D" "Zonas Aquifero" "Infraestructura Edad Ab." "Infraestructura Edad D"
+;=======
+;"Accion Colectiva" "Peticion ciudadana" "Captacion de Agua" "Compra de Agua" "Modificacion de la vivienda" "Reparaciones SACMEX" "Nueva Infraestructura SACMEX" "Distribucion de Agua SACMEX" "GoogleEarth" "K_groups" "Salud" "Escasez" "Encharcamientos" "Infraestructura Abastecimiento" "Infraestructura Edad" "P. Falla" "Zonas Aquifero" "Infraestructura Edad Ab." "Infraestructura Edad D"
+;>>>>>>> 70a46a1deed517f17d65d88f91facdd950ae8be6
 11
 
 BUTTON
@@ -2218,16 +2192,6 @@ NIL
 NIL
 NIL
 NIL
-1
-
-TEXTBOX
-1194
-416
-1307
-451
-Visualización
-18
-0.0
 1
 
 SLIDER
@@ -2431,7 +2395,7 @@ MONITOR
 16
 912
 77
-Tiempo [Dia-Mes-Año]
+Tiempo [Dia-Mes-Anyo]
 (list days months years)
 0
 1
