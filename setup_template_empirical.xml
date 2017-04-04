@@ -6,6 +6,11 @@
     <go>go</go>
     <timeLimit steps="{time_limit}"/>
     <metric>mean [Antiguedad-infra_Ab] of agebs</metric>
+    <metric>mean [Antiguedad-infra_D] of agebs</metric>
+    <metric>mean [scarcity_annual] of agebs</metric>
+    <metric>[Antiguedad-infra_Ab] of agebs</metric>
+    <metric>[Antiguedad-infra_D] of agebs</metric>
+    <metric>[scarcity_annual] of agebs</metric>
     <enumeratedValueSet variable="Eficiencia_NuevaInfra">
       <value value="{eficiencia_nuevainfra}"/>
     </enumeratedValueSet>
