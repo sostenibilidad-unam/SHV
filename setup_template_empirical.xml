@@ -7,10 +7,49 @@
     <timeLimit steps="{time_limit}"/>
     <metric>mean [Antiguedad-infra_Ab] of agebs</metric>
     <metric>mean [Antiguedad-infra_D] of agebs</metric>
-    <metric>mean [scarcity_annual] of agebs</metric>
-    <metric>[Antiguedad-infra_Ab] of agebs</metric>
-    <metric>[Antiguedad-infra_D] of agebs</metric>
-    <metric>[scarcity_annual] of agebs</metric>
+    <metric>mean [scarcity_index] of agebs</metric>
+    <metric>mean [Antiguedad-infra_Ab] of agebs with [name_delegation ="Gustavo A. Madero"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of agebs with [name_delegation ="Venustiano Carranza"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of agebs with [name_delegation ="Iztacalco"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of agebs with [name_delegation ="Tlhuac"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of agebs with [name_delegation ="Miguel Hidalgo"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of agebs with [name_delegation ="Tlalpan"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of agebs with [name_delegation ="Iztapalapa"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of agebs with [name_delegation ="Coyoacn"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of agebs with [name_delegation ="Benito Jurez"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of agebs with [name_delegation ="Cuajimalpa de Morelos"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of agebs with [name_delegation ="lvaro Obregn"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of agebs with [name_delegation ="Cuauhtmoc"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of agebs with [name_delegation ="Milpa Alta"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of agebs with [name_delegation ="La Magdalena Contreras"]</metric>
+    <metric>mean [Antiguedad-infra_D] of agebs with [name_delegation ="Gustavo A. Madero"]</metric>
+    <metric>mean [Antiguedad-infra_D] of agebs with [name_delegation ="Venustiano Carranza"]</metric>
+    <metric>mean [Antiguedad-infra_D] of agebs with [name_delegation ="Iztacalco"]</metric>
+    <metric>mean [Antiguedad-infra_D] of agebs with [name_delegation ="Tlhuac"]</metric>
+    <metric>mean [Antiguedad-infra_D] of agebs with [name_delegation ="Miguel Hidalgo"]</metric>
+    <metric>mean [Antiguedad-infra_D] of agebs with [name_delegation ="Tlalpan"]</metric>
+    <metric>mean [Antiguedad-infra_D] of agebs with [name_delegation ="Iztapalapa"]</metric>
+    <metric>mean [Antiguedad-infra_D] of agebs with [name_delegation ="Coyoacn"]</metric>
+    <metric>mean [Antiguedad-infra_D] of agebs with [name_delegation ="Benito Jurez"]</metric>
+    <metric>mean [Antiguedad-infra_D] of agebs with [name_delegation ="Cuajimalpa de Morelos"]</metric>
+    <metric>mean [Antiguedad-infra_D] of agebs with [name_delegation ="lvaro Obregn"]</metric>
+    <metric>mean [Antiguedad-infra_D] of agebs with [name_delegation ="La Magdalena Contreras"]</metric>
+    <metric>mean [Antiguedad-infra_D] of agebs with [name_delegation ="Cuauhtmoc"]</metric>
+    <metric>mean [Antiguedad-infra_D] of agebs with [name_delegation ="Milpa Alta"]</metric>
+    <metric>mean [scarcity_index] of agebs with [name_delegation ="Gustavo A. Madero"]</metric>
+    <metric>mean [scarcity_index] of agebs with [name_delegation ="Venustiano Carranza"]</metric>
+    <metric>mean [scarcity_index] of agebs with [name_delegation ="Iztacalco"]</metric>
+    <metric>mean [scarcity_index] of agebs with [name_delegation ="Tlhuac"]</metric>
+    <metric>mean [scarcity_index] of agebs with [name_delegation ="Miguel Hidalgo"]</metric>
+    <metric>mean [scarcity_index] of agebs with [name_delegation ="Tlalpan"]</metric>
+    <metric>mean [scarcity_index] of agebs with [name_delegation ="Iztapalapa"]</metric>
+    <metric>mean [scarcity_index] of agebs with [name_delegation ="Coyoacn"]</metric>
+    <metric>mean [scarcity_index] of agebs with [name_delegation ="Benito Jurez"]</metric>
+    <metric>mean [scarcity_index] of agebs with [name_delegation ="Cuajimalpa de Morelos"]</metric>
+    <metric>mean [scarcity_index] of agebs with [name_delegation ="lvaro Obregn"]</metric>
+    <metric>mean [scarcity_index] of agebs with [name_delegation ="Cuauhtmoc"]</metric>
+    <metric>mean [scarcity_index] of agebs with [name_delegation ="Milpa Alta"]</metric>
+    <metric>mean [scarcity_index] of agebs with [name_delegation ="La Magdalena Contreras"]</metric>
     <enumeratedValueSet variable="Eficiencia_NuevaInfra">
       <value value="{eficiencia_nuevainfra}"/>
     </enumeratedValueSet>
