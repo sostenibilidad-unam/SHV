@@ -1,0 +1,139 @@
+---
+title: "from_dbs_to_txt"
+author: "Andres Baeza"
+date: "February 9, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##This spript will read shapefile and create txt files to be read by netlogo to fill the atributes of the agebs
+
+read packages
+```{r}
+library(maptools)
+require(sp) 
+require("rgdal") # requires sp, will use proj.4 if installed
+require("plyr")
+require(foreign)
+```
+
+#read csv
+```{r, echo=FALSE}
+ABAST<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/01febrero2017/ABASTECLCS17a")
+CALAGUA<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/01febrero2017/CALAGUALCS17a")
+ESCASEZ<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/01febrero2017/ESCASEZLCS17a")
+FALTA<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/01febrero2017/FALTAINLCS17a")
+FALLA<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/01febrero2017/FALLAINLCS17a")
+INFILT<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/01febrero2017/INFILTRLCS17a")
+PETDE<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/01febrero2017/PETDELSLCS17a")
+PRESHDRL<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/01febrero2017/PRESHDRLCS17a")
+SUBSIDE<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/01febrero2017/SUBSIDELCS17a")
+USOSUEL<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/01febrero2017/USOSUELLCS17a")
+PRESME<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/01febrero2017/PRESMEDLCS17a")
+dev_agua<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/13abril2017/desv_agua")
+FALTA_D<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/13abril2017/falta_dren")
+gasto<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/13abril2017/gasto")
+Pet_del_dren<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/13abril2017/Pet_del_dren")
+pet_usr_dren<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/13abril2017/pet_usr_dren")
+abastecimiento<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/13abril2017/abastecimiento")
+antiguedad<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/13abril2017/antiguedad")
+```
+
+
+```{r, echo=FALSE}
+
+for (i in 1: length(dev_agua@data$AGEB_ID)){
+ if (i ==1){
+   aba=c(ABAST@data$AGEB_ID[i],ABAST@data$VALUE[i])
+   cal=c(CALAGUA@data$AGEB_ID[i],CALAGUA@data$VALUE[i])
+   esc=c(ESCASEZ@data$AGEB_ID[i],ESCASEZ@data$VALUE[i])
+   falt=c(FALTA@data$AGEB_ID[i],FALTA@data$VALUE[i])
+   fall=c(FALLA@data$AGEB_ID[i],FALLA@data$VALUE[i])
+   inf=c(INFILT@data$AGEB_ID[i],INFILT@data$VALUE[i])
+   ph=c(PRESHDRL@data$AGEB_ID[i],PRESHDRL@data$VALUE[i])
+   hund=c(SUBSIDE@data$AGEB_ID[i],SUBSIDE@data$VALUE[i])
+   usos=c(USOSUEL@data$AGEB_ID[i],USOSUEL@data$VALUE[i])
+   PREE=c(PRESME@data$AGEB_ID[i],PRESME@data$VALUE[i])
+   dev_ag=c(dev_agua@data$AGEB_ID[i],dev_agua@data$VALUE[i])
+   FAL_D=c(FALTA_D@data$AGEB_ID[i],FALTA_D@data$VALUE[i])
+   gas=c(gasto@data$AGEB_ID[i],gasto@data$VALUE[i])
+   Pet_del_d=c(Pet_del_dren@data$AGEB_ID[i],Pet_del_dren@data$VALUE[i])
+   aba_B=c(abastecimiento@data$AGEB_ID[i],abastecimiento@data$POB_S_AGUA[i])
+   age=c(antiguedad@data$AGEB_ID[i],antiguedad@data$ANTIG[i])
+   
+   tot=c(CALAGUA@data$VALUE[i],ESCASEZ@data$VALUE[i],FALTA@data$VALUE[i],FALLA@data$VALUE[i],INFILT@data$VALUE[i],PRESHDRL@data$VALUE[i],SUBSIDE@data$VALUE[i],USOSUEL@data$VALUE[i],PRESME@data$VALUE[i],dev_agua@data$VALUE[i],FALTA_D@data$VALUE[i],gasto@data$VALUE[i],Pet_del_dren@data$VALUE[i],abastecimiento@data$POB_S_AGUA[i],antiguedad@data$ANTIG[i])
+   
+   print(length(tot))
+   browser()
+ }
+ else{
+   aba=c(aba,ABAST@data$AGEB_ID[i])
+   aba=c(aba,ABAST@data$VALUE[i])
+   
+   cal=c(cal,CALAGUA@data$AGEB_ID[i])
+   cal=c(cal,CALAGUA@data$VALUE[i])
+   
+   esc=c(esc,ESCASEZ@data$AGEB_ID[i])
+   esc=c(esc,ESCASEZ@data$VALUE[i])
+   
+   falt=c(falt,FALTA@data$AGEB_ID[i])
+   falt=c(falt,FALTA@data$VALUE[i])
+   
+   fall=c(fall,FALLA@data$AGEB_ID[i])
+   fall=c(fall,FALLA@data$VALUE[i])
+   
+   inf=c(inf,INFILT@data$AGEB_ID[i])
+   inf=c(inf,INFILT@data$VALUE[i])
+   
+   ph=c(ph,PRESHDRL@data$AGEB_ID[i])
+   ph=c(ph,PRESHDRL@data$VALUE[i])
+   
+   hund=c(hund,SUBSIDE@data$AGEB_ID[i])
+   hund=c(hund,SUBSIDE@data$VALUE[i])
+   
+   usos=c(usos,USOSUEL@data$AGEB_ID[i])
+   usos=c(usos,USOSUEL@data$VALUE[i])
+   
+   
+  PREE=c(PREE,PRESME@data$AGEB_ID[i])
+  PREE=c(PREE,PRESME@data$VALUE[i])
+  
+  dev_ag=c(dev_ag,dev_agua@data$AGEB_ID[i])
+  dev_ag=c(dev_ag,dev_agua@data$VALUE[i])
+  
+  FAL_D=c(FAL_D,FALTA_D@data$AGEB_ID[i])
+  FAL_D=c(FAL_D,FALTA_D@data$VALUE[i])
+  
+  gas=c(gas,gasto@data$AGEB_ID[i])
+  gas=c(gas,gasto@data$VALUE[i])
+  
+  Pet_del_d=c(Pet_del_d,Pet_del_dren@data$AGEB_ID[i])
+  Pet_del_d=c(Pet_del_d,Pet_del_dren@data$VALUE[i])
+
+  aba_B=c(aba_B,abastecimiento@data$AGEB_ID[i])
+  aba_B=c(aba_B,abastecimiento@data$VALUE[i])
+  
+  age=c(age,antiguedad@data$AGEB_ID[i])
+  age=c(age,antiguedad@data$VALUE[i])
+   
+   
+   tot=c(tot,CALAGUA@data$VALUE[i],ESCASEZ@data$VALUE[i],FALTA@data$VALUE[i],FALLA@data$VALUE[i],INFILT@data$VALUE[i],PRESHDRL@data$VALUE[i],SUBSIDE@data$VALUE[i],USOSUEL@data$VALUE[i], PRESME@data$VALUE[i],dev_agua@data$VALUE[i],FALTA_D@data$VALUE[i],gasto@data$VALUE[i],Pet_del_dren@data$VALUE[i],abastecimiento@data$POB_S_AGUA[i],antiguedad@data$ANTIG[i])
+   }
+}
+write(aba,file="C:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/text_abast.txt")
+write(cal,file="C:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/text_cal.txt")
+write(esc,file="C:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/text_esc.txt")
+write(falt,file="C:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/text_falt.txt")
+write(fall,file="C:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/text_fall.txt")
+write(inf,file="C:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/text_inf.txt")
+write(ph,file="C:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/text_ph.txt")
+write(hund,file="C:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/text_hund.txt")
+write(usos,file="C:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/text_usos.txt")
+
+
+write(tot,file="C:/Users/abaezaca/Documents/MEGADAPT/SHV/data/text_alllayers.txt")
+
+```
