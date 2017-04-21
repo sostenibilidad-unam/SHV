@@ -56,7 +56,7 @@ globals [
   Presion_social_max
   Presion_de_medios_max
   water_quality_max
-  disease_burden_max
+  health_max
   monto_max
   scarcity_max
   densidad_pop_max
@@ -131,6 +131,7 @@ globals [
 ;geographic boundaries
 breed [Colonias Colonia]
 breed [Agebs Ageb]
+breed [Agebs_U Ageb_U]
 breed [Delegaciones Delegacion]
 ;infrastructure
 breed [Pozos pozo]
@@ -162,6 +163,11 @@ Delegaciones-own[name_delegacion Peticion_Delegaciones]
 ;#############################################################################################################################################
 ;define AGEBS
 Agebs-own[
+  CVEGEO                       ;;key to define state, delegation/delegation
+  CV_estado                    ;Estate
+  CV_municipio                 ;municipality
+  Localidad                    ; to represent location
+  AGB_k                        ; to represent ageb using CVEGEO
   ID                           ;;ID from shape file
   group_kmean                  ;; define to witch group an ageb belongs to, based on sosio-economic charactersitics
   zona_aquifera
@@ -199,17 +205,18 @@ Agebs-own[
   Peticion_Delegacional
   Peticion_Delegacional_D
   Flooding                     ;; mean number of encharcamientos during between 2004 and 2014
-  sd_flooding                  ;;standard deviation flooding per ageb
+  flooding_sd                  ;;standard deviation flooding per ageb
 ;;Charactersitics of the agebs that define criteria
   houses_with_dranage          ;; % of houses connected to the dranage from ENEGI survey instrument
   houses_with_abastecimiento   ;; % houses connected to distribution network
-  disease_burden               ;; Number of gastrointestinal cases per ageb (from disease model)
+  health               ;; Number of gastrointestinal cases per ageb (from disease model)
+  health_sd
   water_quality                ;; Perception fo water quality
   garbage                      ;; Garbage as the perception of the cause behind obstruction of dranages
   precipitation                ;; average annual precipitation
   water_needed                 ;; Total water needed based on population size of colonia and water requirements per peson
   water_in                     ;; 1 if water enters to the ageb by any mean (truck pipes storage)
-  water_in_mc                  ;;water that get to the ageb in metter cubics
+  water_in_mc                  ;; water that get to the ageb in metter cubics
   water_distributed_pipes      ;; Water imported (not produced in) to the colonia
   water_distributed_trucks     ;; Water distributed by trucks
   water_in_buying              ;; Water bought from private sources
@@ -220,16 +227,16 @@ Agebs-own[
   surplus                      ;; When water_needed <  water_produced, surplus > 0
   deficits                     ;; > 0 if water_in_Mc < requeriment of the population
   storage_capasity             ;; number of storage devides (cisternas)
-  eficacia_servicio            ;;Gestion del servicio de Drenaje y agua potable (ej. interferencia politica, no llega la pipa, horario del tandeo, etc)
-  desperdicio_agua             ;;Por fugas, falta de conciencia del uso del agua
-  desviacion_agua              ;;Se llevan el agua a otros lugares
-  Capacidad_Ab                 ;;La Capacidad de la infraestructura hidraulica
+  eficacia_servicio            ;; Gestion del servicio de Drenaje y agua potable (ej. interferencia politica, no llega la pipa, horario del tandeo, etc)
+  desperdicio_agua             ;; Por fugas, falta de conciencia del uso del agua
+  desviacion_agua              ;; Se llevan el agua a otros lugares
+  Capacidad_Ab                 ;; La Capacidad de la infraestructura hidraulica
   Capacidad_D                  ;;
   infiltracion
-  R_tau                        ;;threshold of rainfall according to protocol
+  R_tau                        ;; Threshold of rainfall according to protocol
   altura
-  H_f                          ;; undesire state flood
-  H_s                          ;;undesire state no water
+  H_f                          ;; Undesire state flood
+  H_s                          ;; Undesire state no water
 ;#residents decisions metrics
 
   d_Compra_agua                          ;;distance from ideal point for Compra_agua (buying water)
@@ -333,7 +340,7 @@ to SETUP
   set fallas_d_max 1
   set precipitation_max 1
   set Abastecimiento_max 1
-  set disease_burden_max 1
+  set health_max 1
   set monto_max 1
   set scarcity_max 1
   set Presion_social_max 1
@@ -459,7 +466,7 @@ to residents-decisions  ;calculation of distance metrix using compromize program
   if group_kmean = 1 or group_kmean = 3[ ;#residents type Xochimilco
     ask Alternatives_Xo [
       update_criteria_and_valueFunctions_residentes
-      let ww filter [? > 0.1 ] w_C1                       ;; filter for the criterias that are most influential in the desition
+      let ww filter [? > 0.1 ] w_C1                       ;; filter for the criterias that are most influential (> 0.1) in the decision
       let vv []
       (foreach w_C1 V [
         if ?1 > 0.1 [
@@ -622,7 +629,7 @@ to update_globals  ;; update the maximum or minimum of values use by the model t
       set precipitation_max max [precipitation] of agebs
       set fallas_ab_max max [Falla_ab] of agebs
       set Abastecimiento_max max [Abastecimiento] of agebs
-      set disease_burden_max max [disease_burden] of agebs
+      set health_max max [health] of agebs
       set monto_max max [monto] of agebs
       set scarcity_max max [scarcity] of agebs
       set Presion_social_max max [Presion_social] of agebs
@@ -690,28 +697,28 @@ to load-gis                                                                     
   set pozos_sacmex gis:load-dataset  "data/Join_pozosColoniasAgebs.shp"                                 ;wells
   set Limites_delegacionales gis:load-dataset  "data/limites_deleg_DF_2013.shp"
   ;  set agebs_map gis:load-dataset "data/ageb8.shp";                                                      ;AGEB shape file
- set agebs_map gis:load-dataset "data/ageb14.shp";
+  set agebs_map gis:load-dataset "data/ageb14.shp";
 ;<<<<<<< HEAD
-  set Agebs_map_full gis:load-dataset "data/agebs_studyArea.shp";agebs_total_test.shp";orignal from C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/01febrero2017
-; ; set Limites_cuenca gis:load-dataset "data/Lim_Cuenca_Valle_Mexico_Proj.shp";mask.shp"                                                          ;Mask of study area
-;  set mascara gis:load-dataset "data/Mask.shp"                                                                                                                                          ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
-;>>>>>>> 247fb45929804fe520d04fb62e879cf1409142e5
-if escala = "ciudad"[
-  ;=======
-  set agebs_map13 gis:load-dataset "data/ageb14.shp";                                                      ;AGEB shape file
-  set ageb_encharc gis:load-dataset "data/DF_ageb_N_escalante_Project_withEncharcamientos.shp"
-  set Limites_cuenca gis:load-dataset "data/Lim_Cuenca_Valle_Mexico_Proj.shp";mask.shp"                                                          ;Mask of study area
-  set mascara gis:load-dataset "data/Mask.shp"                                                                                                                                          ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
+  set Agebs_map_full gis:load-dataset "data/studyArea2.shp";agebs_total_test.shp";orignal from C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/01febrero2017
+                                                                ; ; set Limites_cuenca gis:load-dataset "data/Lim_Cuenca_Valle_Mexico_Proj.shp";mask.shp"                                                          ;Mask of study area
+                                                                ;  set mascara gis:load-dataset "data/Mask.shp"                                                                                                                                          ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
+                                                                ;>>>>>>> 247fb45929804fe520d04fb62e879cf1409142e5
+  if escala = "ciudad"[
+    ;=======
+    set agebs_map13 gis:load-dataset "data/ageb14.shp";                                                      ;AGEB shape file
+    set ageb_encharc gis:load-dataset "data/DF_ageb_N_escalante_Project_withEncharcamientos.shp"
+    set Limites_cuenca gis:load-dataset "data/Lim_Cuenca_Valle_Mexico_Proj.shp";mask.shp"                                                          ;Mask of study area
+    set mascara gis:load-dataset "data/Mask.shp"                                                                                                                                          ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
   set elevation gis:load-dataset "data/rastert_dem1.asc"                                                             ;elevation
   gis:set-world-envelope-ds gis:envelope-of mascara ;ageb_encharc;mascara;Limites_delegacionales
   gis:apply-raster  elevation altitude
   set city_image  bitmap:import "data/DF_googleB.jpg"                                                   ; google earth image
   bitmap:copy-to-pcolors City_image false
-]
+  ]
 
-if escala = "cuenca"[
-  gis:set-world-envelope-ds gis:envelope-of Agebs_map_full;mascara ;ageb_encharc;mascara;Limites_delegacionales
-]
+  if escala = "cuenca"[
+    gis:set-world-envelope-ds gis:envelope-of Agebs_map_full;mascara ;ageb_encharc;mascara;Limites_delegacionales
+  ]
 
 
 
@@ -754,31 +761,53 @@ foreach gis:feature-list-of Agebs_map_full; "ID_ZONA" "0"
        set xcor item 0 centroid              ;define coodeantes of ageb at the center of the polygone
        set ycor item 1 centroid
        set ID gis:property-value ? "AGEB_ID"
+       set CVEGEO gis:property-value ? "CVGEO"
+       set CV_estado (substring CVEGEO 0 2)
+       set CV_municipio (substring CVEGEO 2 5)
+       set Localidad (substring CVEGEO 5 9)
+       set AGB_k (substring CVEGEO 9 13)
        set color grey
        set shape "circle"
        set size 0.5
        set hidden? false
-       set Income-index 0.1
+
        set group_kmean 1
-       set poblacion 1000
-       set Abastecimiento poblacion * Requerimiento_deAgua               ;;;C4_A1;;;
-       set Gasto_hidraulico 1
-       set desviacion_agua 1
+                  ;;;C4_A1;;;
        set eficacia_servicio 1                                                                               ;; Gestion del servicio de Drenaje y agua potable (ej. interferencia politica, no llega la pipa, horario del tandeo, etc)
        set desperdicio_agua 1                                                                        ;;Por fugas, falta de conciencia del uso del agua
-       set presion_hidraulica 1
-       set peticion_usuarios 1
-       set garbage 1
+
        set urban_growth 1
        set Capacidad_Ab 1
        set Capacidad_d 1
-       set Falla_ab 1
+
        set Falla_d 1
-       set falta_ab 1
-       set falta_d 1
        set Monto 1
-       set water_quality 1
        set scarcity_annual 0
+
+ set water_quality gis:property-value ? "CALAGUA"
+     set scarcity gis:property-value ? "ESCASEZ"
+     set FALTA_ab gis:property-value ? "Falta_ab"
+     set FALLA_ab gis:property-value ? "falla_AB"
+     set infiltracion gis:property-value ? "inf"
+     set presion_hidraulica gis:property-value ? "PRESHDRL"
+     set hundimientos gis:property-value ? "SUBSIDE"
+     set uso_suelo gis:property-value ? "USOSUEL"
+     set presion_de_medios gis:property-value ? "PRESME"
+     set desviacion_agua gis:property-value ? "dev_agua"
+     set falta_d gis:property-value ? "FALTA_D"
+     set gasto_hidraulico gis:property-value ? "gasto"
+     set Peticion_Delegacional_D gis:property-value ? "PET_DEL_DR"
+     set abastecimiento_b gis:property-value ? "abast"
+     set Antiguedad-infra_Ab 365 * gis:property-value ? "edad"
+     set poblacion gis:property-value ? "Pop_ageb"
+     set Income-index gis:property-value ? "I_ix"
+     set health gis:property-value ?  "S_M"
+     set health_sd gis:property-value ?  "S_sd"
+     set flooding  gis:property-value ? "F_M"
+     set flooding_sd  gis:property-value ? "F_sd"
+
+     set garbage poblacion * (1 - Income-index)
+     set Abastecimiento poblacion * Requerimiento_deAgua
 
  ;capas que falta incluir
         set peticion_usuarios 1 ;index densidad de infra por cuanca * falta de conexiones por ageb.
@@ -799,7 +828,7 @@ foreach gis:feature-list-of Agebs_map_full; "ID_ZONA" "0"
      ]
   ]
 ]
-import-agebslayers
+;import-agebslayers
 end
 
 ;######################################################################################################################################################
@@ -823,15 +852,20 @@ to define_agebs
         set poblacion ifelse-value (gis:property-value ?1 "POBTOT" > 0)[gis:property-value ?1 "POBTOT"][1]                                                  ;;population size per ageb
         set densidad_pop gis:property-value ?1 "DENSPOB"
         set ID gis:property-value ?1 "AGEB_ID"                                                                                                               ;;ageb ID Check witht the team in MX to have the same identifier
+        set CVEGEO gis:property-value ?1 "CVGEO"                       ;;key to define state, delegation
+        set CV_estado (substring CVEGEO 0 2)
+        set CV_municipio (substring CVEGEO 2 5)
+        set Localidad (substring CVEGEO 5 9)
+        set AGB_k (substring CVEGEO 9 13)
         set label ""
         set houses_with_abastecimiento gis:property-value ?1 "VPH_AGUADV" / (1 + gis:property-value ?1 "VPH_AGUADV" + gis:property-value ?1 "VPH_AGUAFV")  ;;% casas con toma de abastecimiento
         set houses_with_dranage gis:property-value ?1 "VPH_DRENAJ" / (1 + gis:property-value ?1 "VPH_DRENAJ" + gis:property-value ?1 "VPH_NODREN")         ;;% de casas con toma de drenage from encuesta ENGHI
         set hundimientos gis:property-value ?2 "HUND" ;Cambiar a velocidad de subsidencia                                                                                                    ;;variable hundimientos (Marco)
         set group_kmean gis:property-value ?2 "KMEANS5"                                                                                                    ;;grupos de vecindarios
-        set disease_burden  ((gis:property-value ?1 "N04_TODAS") + (gis:property-value ?1 "X05_TOTAL") + (gis:property-value ?1 "X06_TODAS") + gis:property-value ?1 "X07_TODAS" + gis:property-value ?1 "X08_TODAS" + gis:property-value ?1 "X09_TODAS" + gis:property-value ?1 "N10_TODAS" + gis:property-value ?1 "N11_TODAS" + gis:property-value ?1 "N12_TODAS"  + gis:property-value ?1 "N13_TODAS"  + gis:property-value ?1 "N14_TODAS") / 11
+        set health  ((gis:property-value ?1 "N04_TODAS") + (gis:property-value ?1 "X05_TOTAL") + (gis:property-value ?1 "X06_TODAS") + gis:property-value ?1 "X07_TODAS" + gis:property-value ?1 "X08_TODAS" + gis:property-value ?1 "X09_TODAS" + gis:property-value ?1 "N10_TODAS" + gis:property-value ?1 "N11_TODAS" + gis:property-value ?1 "N12_TODAS"  + gis:property-value ?1 "N13_TODAS"  + gis:property-value ?1 "N14_TODAS") / 11
         set Income-index ifelse-value ((gis:property-value ?1 "I05_INGRES") = nobody )[0][(gis:property-value ?1 "I05_INGRES")]
         set flooding ifelse-value ((gis:property-value ?2 "Mean_encha") = nobody )[0][(gis:property-value ?2 "Mean_encha")]
-        set sd_flooding standard-deviation (list gis:property-value ?2 "E07" gis:property-value ?2 "E08" gis:property-value ?2 "E09" gis:property-value ?2 "E10" gis:property-value ?2 "E11" gis:property-value ?2 "E12" gis:property-value ?2 "E13" gis:property-value ?2 "E14")
+        set flooding_sd standard-deviation (list gis:property-value ?2 "E07" gis:property-value ?2 "E08" gis:property-value ?2 "E09" gis:property-value ?2 "E10" gis:property-value ?2 "E11" gis:property-value ?2 "E12" gis:property-value ?2 "E13" gis:property-value ?2 "E14")
         set Antiguedad-infra_Ab 365 * gis:property-value ?2 "edad_infra"
         set Antiguedad-infra_D 365 * gis:property-value ?2 "edad_infra"
         set zona_aquifera gis:property-value ?2 "zonas"
@@ -1099,8 +1133,8 @@ to update_criteria_and_valueFunctions_residentes
         ]
         ;###########################################################
         if ? = "Salud"[
-          set C1 replace-item i C1 [disease_burden] of myself
-          set C1_max replace-item i C1_max disease_burden_max;change with update quantity for speed
+          set C1 replace-item i C1 [health] of myself
+          set C1_max replace-item i C1_max health_max;change with update quantity for speed
           set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.4 0.9] ["" "" "" ""] (item i C1_max)  [0.05 0.1 0.159 0.4 1])
         ]
         ;###########################################################
@@ -1287,16 +1321,16 @@ end
 
     ]
   ]
-  end
+end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
-  to edad_infra_change
-   set Antiguedad-infra_Ab Antiguedad-infra_Ab + 1
-    set Antiguedad-infra_D Antiguedad-infra_D + 1
-  end
+to edad_infra_change
+  set Antiguedad-infra_Ab Antiguedad-infra_Ab + 1
+  set Antiguedad-infra_D Antiguedad-infra_D + 1
+end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
-  to repair-Infra_D
+to repair-Infra_D
     let Budget 0
     foreach sort-on [(1 - d_mantencion_D) ] agebs[ ;+ (1 - densidad_pop / densidad_pop_max)
       ask ? [
@@ -1477,49 +1511,37 @@ to import-agebslayers
 
 ;file-open "data/text_alllayers.txt"
 let lay csv:from-file  "data/text_alllayers.csv"
- print item 5345 lay
- foreach sort-on [ID] agebs with [ID < 5346][    ;sort agebs by ID from low to high
+  foreach sort-on [ID] agebs with [ID < 5346][    ;sort agebs by ID from low to high
+   let countwe 0
    ask ?
    [
-     set water_quality item  0 (item ID lay)
-     set scarcity item  1 (item ID lay)
-     set FALTA_ab item  2 (item ID lay)
-     set FALLA_ab item  3 (item ID lay)
-     set infiltracion item  4 (item ID lay)
-     set presion_hidraulica item  5 (item ID lay)
-     set hundimientos item  6 (item ID lay)
-     set uso_suelo item  7 (item ID lay)
-     set presion_de_medios item  8 (item ID lay)
-     set desviacion_agua item  9 (item ID lay)
-     set falta_d item  10 (item ID lay)
-     set gasto_hidraulico item  11 (item ID lay)
-     set Peticion_Delegacional_D item  12 (item ID lay)
-     set abastecimiento_b item  13 (item ID lay)
-     set Antiguedad-infra_Ab 365 * item  14 (item ID lay)
-     set poblacion item  15 (item ID lay)
-     set Income-index item  16 (item ID lay)
+     set countwe countwe + 1
+     set water_quality item  2 (item countwe lay)
+     set scarcity item  3 (item countwe lay)
+     set FALTA_ab item  4 (item countwe lay)
+     set FALLA_ab item  5 (item countwe lay)
+     set infiltracion item  6 (item countwe lay)
+     set presion_hidraulica item  7 (item countwe lay)
+     set hundimientos item  8 (item countwe lay)
+     set uso_suelo item  9 (item countwe lay)
+     set presion_de_medios item  10 (item countwe lay)
+     set desviacion_agua item  11 (item countwe lay)
+     set falta_d item  12 (item countwe lay)
+     set gasto_hidraulico item  13 (item countwe lay)
+     set Peticion_Delegacional_D item  14 (item countwe lay)
+     set abastecimiento_b item  15 (item countwe lay)
+     set Antiguedad-infra_Ab 365 * item  16 (item countwe lay)
+     set poblacion item  17 (item countwe lay)
+     set Income-index ifelse-value (item  18 (item countwe lay) = "NA")[0][item  18 (item countwe lay)]
+     set health item  19 (item countwe lay)
+     set health_sd item  20 (item countwe lay)
+     set flooding  item  21 (item countwe lay)
+     set flooding_sd  item 22 (item countwe lay)
 
-
-;     set water_quality file-read
-;     set scarcity file-read
-;     set FALTA_ab file-read
-;     set FALLA_ab file-read
-;     set infiltracion file-read
-;     set presion_hidraulica file-read
-;     set hundimientos file-read
-;     set uso_suelo file-read
-;     set presion_de_medios file-read
-;     set desviacion_agua file-read
-;     set falta_d file-read
-;     set gasto_hidraulico file-read
-;     set Peticion_Delegacional_D file-read
-;     set abastecimiento_b file-read
-;     set Antiguedad-infra_Ab 365 * file-read
-;     set poblacion file-read
-;     set Income-index file-read
      set Antiguedad-infra_D Antiguedad-infra_Ab
      set houses_with_abastecimiento 1 - FALTA_ab
      set houses_with_dranage 1 - falta_d
+
    ]
  ]
  ;file-close
@@ -1570,12 +1592,14 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
 ;############################################################################################
       if visualization = "K_groups" and ticks > 1 [set color  15 +  10 * group_kmean] ; visualize K-mean clusterization
 ;############################################################################################
+      if visualization = "Income-index" and ticks > 1 [set color  10 * income-index] ; visualize Income index
+;############################################################################################
       if visualization = "Salud" and ticks > 1 [
-        set color scale-color green disease_burden 0 disease_burden_max] ;;visualized incidence of gastrointestinal diseases in MX 2004-2014
+        set color scale-color green health 0 health_max] ;;visualized incidence of gastrointestinal diseases in MX 2004-2014
 ;############################################################################################
       if visualization = "Encharcamientos" and ticks > 1 [
         let seasonal ifelse-value (months < 10)[months / 9][1 / 9]
-        let v_E random-normal (seasonal * flooding) (seasonal * sd_flooding)
+        let v_E random-normal (seasonal * flooding) (seasonal * flooding_sd)
         set size v_E * 0.1 * factor_scale
         set color  scale-color sky v_E 0 flooding_max] ;;visualized SACMEX flooding dataset MX 2004-2014
   ;############################################################################################
@@ -2009,13 +2033,13 @@ to define_alternativesCriteria
 
 
 
-       print matrix:pretty-print-text MMSACMEX_limit_D1
+ ;      print matrix:pretty-print-text MMSACMEX_limit_D1
 
 
 
-       print matrix:pretty-print-text MMSACMEX_limit_D
+    ;   print matrix:pretty-print-text MMSACMEX_limit_D
 
-       print MMSACMEX_limit_D2
+    ;   print MMSACMEX_limit_D2
 
 
        foreach actions [
@@ -2274,8 +2298,8 @@ CHOOSER
 494
 Visualization
 Visualization
-"Accion Colectiva" "Petición ciudadana" "Captacion de Agua" "Compra de Agua" "Modificacion de la vivienda" "Reparaciones SACMEX" "Nueva Infraestructura SACMEX" "Distribucion de Agua SACMEX" "GoogleEarth" "K_groups" "Salud" "Escasez" "Encharcamientos" "Infraestructura Abastecimiento" "P. Falla Ab" "P. Falla D" "Zonas Aquifero" "Infraestructura Edad Ab." "Infraestructura Edad D"
-12
+"Accion Colectiva" "Petición ciudadana" "Captacion de Agua" "Compra de Agua" "Modificacion de la vivienda" "Reparaciones SACMEX" "Nueva Infraestructura SACMEX" "Distribucion de Agua SACMEX" "GoogleEarth" "K_groups" "Salud" "Escasez" "Encharcamientos" "Infraestructura Abastecimiento" "P. Falla Ab" "P. Falla D" "Zonas Aquifero" "Infraestructura Edad Ab." "Infraestructura Edad D" "Income-index"
+17
 
 BUTTON
 1179
@@ -2398,7 +2422,7 @@ CHOOSER
 escala
 escala
 "cuenca" "ciudad"
-0
+1
 
 SWITCH
 114
@@ -2449,8 +2473,8 @@ SLIDER
 Recursos_para_distribucion
 Recursos_para_distribucion
 0
-2000
-2000
+4000
+4000
 1
 1
 NIL
@@ -2501,7 +2525,7 @@ factor_scale
 factor_scale
 0
 6
-0.1
+4.8
 0.1
 1
 NIL
