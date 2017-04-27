@@ -144,6 +144,7 @@ directed-link-breed [active-links active-link]
 breed [Alternatives_IZ action_IZ]
 breed [Alternatives_Xo action_Xo]
 breed [Alternatives_MC action_MC]
+breed [Alternatives_MCb action_MCb]
 breed [Alternatives_SACMEX action_SACMEX]
 breed [Alternatives_SACMEX_D action_SACMEX_D]
 breed [Alternatives_OCVAM action_OCVAM]
@@ -298,6 +299,7 @@ Pozos-own[
 Alternatives_IZ-own[ID name_action C1_name C1 C1_MAX w_C1 V v_scale_S v_scale_F alpha]
 Alternatives_Xo-own[ID name_action C1_name C1 C1_MAX w_C1 V v_scale_S v_scale_F alpha]
 Alternatives_MC-own[ID name_action C1_name C1 C1_MAX w_C1 V v_scale_S v_scale_F alpha]
+Alternatives_MCb-own[ID name_action C1_name C1 C1_MAX w_C1 V v_scale_S v_scale_F alpha]
 Alternatives_SACMEX-own[ID name_action C1_name C1 C1_MAX w_C1 V v_scale_S v_scale_F alpha domain]  ;value obtained for the action when calcualting the limiting matrix in super decition
 Alternatives_SACMEX_D-own[ID name_action C1_name C1 C1_MAX w_C1 V v_scale_S v_scale_F alpha domain]  ;value obtained for the action when calcualting the limiting matrix in super decition
 Alternatives_OCVAM-own[ID CLUSTER name_action C1_name C1 C1_MAX w_C1 V v_scale v_scale_F alpha]   ;value obtained for the action when calcualting the limiting matrix in super decition
@@ -412,7 +414,7 @@ to GO
   water_production_importation    ;;calculate total water available in a day
  if months = 1 and days = 1 [   ;annual changes
 
-   SACMEX-decisions              ;;decisions by SACMEX
+   SACMEX-decisions   "09"            ;;decisions by SACMEX
    water_extraccion
    ask agebs [indicators]
  ]
@@ -422,7 +424,7 @@ to GO
     repair-Infra_D "09"
   ]
 
-  water_distribution "09"
+  water_distribution "09" Recursos_para_distribucion ;distribute water to Mexico City using resources by SACMEX
 
   ask agebs [
     set water_in_mc 0
@@ -748,14 +750,14 @@ to load-gis                                                                     
 ;<<<<<<< HEAD
   set Agebs_map_full gis:load-dataset "data/studyArea2.shp";agebs_total_test.shp";orignal from C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/01febrero2017
                                                                 ; ; set Limites_cuenca gis:load-dataset "data/Lim_Cuenca_Valle_Mexico_Proj.shp";mask.shp"                                                          ;Mask of study area
+    set mascara gis:load-dataset "data/Mask.shp"                                                                                                                                          ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
+    set agebs_map13 gis:load-dataset "data/ageb14.shp";                                                      ;AGEB shape file
+    set ageb_encharc gis:load-dataset "data/DF_ageb_N_escalante_Project_withEncharcamientos.shp"
+    set Limites_cuenca gis:load-dataset "data/Lim_Cuenca_Valle_Mexico_Proj.shp";mask.shp"                                                          ;Mask of study area
                                                                 ;  set mascara gis:load-dataset "data/Mask.shp"                                                                                                                                          ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
                                                                 ;>>>>>>> 247fb45929804fe520d04fb62e879cf1409142e5
   if escala = "ciudad"[
     ;=======
-    set agebs_map13 gis:load-dataset "data/ageb14.shp";                                                      ;AGEB shape file
-    set ageb_encharc gis:load-dataset "data/DF_ageb_N_escalante_Project_withEncharcamientos.shp"
-    set Limites_cuenca gis:load-dataset "data/Lim_Cuenca_Valle_Mexico_Proj.shp";mask.shp"                                                          ;Mask of study area
-    set mascara gis:load-dataset "data/Mask.shp"                                                                                                                                          ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
     set elevation gis:load-dataset "data/rastert_dem1.asc"                                                             ;elevation
     gis:set-world-envelope-ds gis:envelope-of mascara ;ageb_encharc;mascara;Limites_delegacionales
     gis:apply-raster  elevation altitude
@@ -816,8 +818,9 @@ foreach gis:feature-list-of Agebs_map_full; "ID_ZONA" "0"
        set shape "circle"
        set size 0.5
        set hidden? false
-
        set group_kmean 1
+
+
                   ;;;C4_A1;;;
        set eficacia_servicio 1                                                                               ;; Gestion del servicio de Drenaje y agua potable (ej. interferencia politica, no llega la pipa, horario del tandeo, etc)
        set desperdicio_agua 1                                                                        ;;Por fugas, falta de conciencia del uso del agua
@@ -830,7 +833,7 @@ foreach gis:feature-list-of Agebs_map_full; "ID_ZONA" "0"
        set Monto 1
        set scarcity_annual 0
 
- set water_quality gis:property-value ? "CALAGUA"
+       set water_quality gis:property-value ? "CALAGUA"
      set scarcity gis:property-value ? "ESCASEZ"
      set FALTA_ab gis:property-value ? "Falta_ab"
      set FALLA_ab gis:property-value ? "falla_AB"
@@ -839,42 +842,51 @@ foreach gis:feature-list-of Agebs_map_full; "ID_ZONA" "0"
      set hundimientos gis:property-value ? "SUBSIDE"
      set uso_suelo gis:property-value ? "USOSUEL"
      set presion_de_medios gis:property-value ? "PRESME"
-     set desviacion_agua gis:property-value ? "dev_agua"
+     set desviacion_agua gis:property-value ? "dev_agua" ;; 1 si hay pozo en ageb o en agebs colindantes; 0 si no.
      set falta_d gis:property-value ? "FALTA_D"
      set gasto_hidraulico gis:property-value ? "gasto"
      set Peticion_Delegacional_D gis:property-value ? "PET_DEL_DR"
      set abastecimiento_b gis:property-value ? "abast"
      set Antiguedad-infra_Ab 365 * gis:property-value ? "edad"
+     set Antiguedad-infra_D 365 * gis:property-value ? "edad"
      set poblacion gis:property-value ? "Pop_ageb"
      set Income-index gis:property-value ? "I_ix"
      set health gis:property-value ?  "S_M"
      set health_sd gis:property-value ?  "S_sd"
-     set flooding  gis:property-value ? "F_M"
-     set flooding_sd  gis:property-value ? "F_sd"
+     set flooding gis:property-value ? "F_M"
+     set flooding_sd gis:property-value ? "F_sd"
 
      set garbage poblacion * (1 - Income-index)
      set Abastecimiento poblacion * Requerimiento_deAgua
 
  ;capas que falta incluir
-        set peticion_usuarios 1 ;index densidad de infra por cuanca * falta de conexiones por ageb.
-        set desviacion_agua 1   ;; 1 si hay pozo en ageb o en agebs colindantes; 0 si no.
-        set eficacia_servicio 1   ;; Gestion del servicio de Drenaje y agua potable (ej. interferencia politica, no llega la pipa, horario del tandeo, etc)
-        set desperdicio_agua 1       ;;Por fugas, falta de conciencia del uso del agua
-        set urban_growth 1
-        set Capacidad_Ab 1 ;
-        set Monto 1;
-        set tandeo 6 / 7
-        set water_in_mc 0
-        set water_quality 1
-        set sensitivity_F 1
-        set sensitivity_S 1
-        set vulnerability_S 1
-        set vulnerability_F 1
+     set peticion_usuarios 1 ;index densidad de infra por cuanca * falta de conexiones por ageb.
 
+     set eficacia_servicio 1   ;; Gestion del servicio de Drenaje y agua potable (ej. interferencia politica, no llega la pipa, horario del tandeo, etc)
+     set desperdicio_agua 1       ;;Por fugas, falta de conciencia del uso del agua
+     set urban_growth 1
+     set Capacidad_Ab 1 ;
+     set Monto 1;
+     set tandeo 6 / 7
+     set water_in_mc 0
+     set water_quality 1
+     set sensitivity_F 1
+     set sensitivity_S 1
+     set vulnerability_S 1
+     set vulnerability_F 1
      ]
   ]
 ]
-;import-agebslayers
+
+ask agebs with [CV_municipio = "007"][
+  set tandeo 3 / 7
+  ;set group_kmean
+   ];"Iztapalapa"
+ask agebs with [CV_municipio = "008"][set tandeo 3 / 7];"La Magdalena Contreras"
+ask agebs with [CV_municipio = "003"][set tandeo 5 / 7];"Coyoacan"
+ask agebs with [CV_municipio = "005"][set tandeo 6 / 7];"Gustavo A. Madero"
+ask agebs with [CV_municipio = "012"][set tandeo 3 / 7];"Tlalpan"
+ask agebs with [CV_municipio = "013"][set tandeo 3 / 7];"Xochimilco"
 end
 
 ;######################################################################################################################################################
@@ -999,12 +1011,12 @@ to update_criteria_and_valueFunctions_SACMEX    ;;update the biphisical value of
       if breed = alternatives_sacmex[
         set C1 replace-item i C1 ([Antiguedad-infra_Ab] of myself)
         set C1_max replace-item i C1_max Antiguedad-infra_Ab_max
-        set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
+        set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
       ]
       if breed = alternatives_sacmex_d[
         set C1 replace-item i C1 ([Antiguedad-infra_d] of myself)
         set C1_max replace-item i C1_max Antiguedad-infra_Ab_max
-        set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
+        set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
       ]
     ]
     ;###########################################################
@@ -1020,12 +1032,12 @@ to update_criteria_and_valueFunctions_SACMEX    ;;update the biphisical value of
       if breed = alternatives_sacmex[
         set C1 replace-item i C1 [Falla_Ab] of myself
         set C1_max replace-item i C1_max fallas_ab_max
-        set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
+        set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
       ]
       if breed = alternatives_sacmex[
         set C1 replace-item i C1 [Falla_d] of myself
         set C1_max replace-item i C1_max fallas_d_max
-        set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
+        set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
       ]
     ]
     ;###########################################################
@@ -1033,12 +1045,12 @@ to update_criteria_and_valueFunctions_SACMEX    ;;update the biphisical value of
       if breed = alternatives_sacmex[
         set C1  replace-item i C1 [falta_Ab] of myself
         set C1_max replace-item i C1_max falta_Ab_max
-        set V replace-item i V (Value-Function (item i C1) [0.9 0.95 0.97 0.99] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
+        set V replace-item i V (Value-Function (item i C1) [0.9 0.95 0.97 0.99] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
       ]
         if breed = alternatives_sacmex_d[
           set C1  replace-item i C1 [falta_d] of myself
           set C1_max replace-item i C1_max falta_d_max
-          set V replace-item i V (Value-Function (item i C1) [0.9 0.95 0.97 0.99] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
+          set V replace-item i V (Value-Function (item i C1) [0.9 0.95 0.97 0.99] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
         ]
     ]
     ;###########################################################
@@ -1057,7 +1069,7 @@ to update_criteria_and_valueFunctions_SACMEX    ;;update the biphisical value of
     if ? = "Basura"[
       set C1 replace-item i C1 [garbage] of myself
       set C1_max replace-item i C1_max garbage_max
-      set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
+      set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
     ]
     ;###########################################################
     if ? = "Monto"[
@@ -1082,7 +1094,7 @@ to update_criteria_and_valueFunctions_SACMEX    ;;update the biphisical value of
       [
         set C1 replace-item i C1 [days_wno_water] of myself
         set C1_max replace-item i C1_max 20
-        set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
+        set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
       ]
     ]
     ;###########################################################
@@ -1094,44 +1106,44 @@ to update_criteria_and_valueFunctions_SACMEX    ;;update the biphisical value of
         set V replace-item i V (Value-Function (item i C1) [0.3 0.4 0.5 0.6] ["" "" "" ""] (item i C1_max)  [1 0.5 0.25 0.125 0.0625])
       ]
       [
-        set V replace-item i V (Value-Function (item i C1) [0.1 0.4 0.6 0.8] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
+        set V replace-item i V (Value-Function (item i C1) [0.1 0.4 0.6 0.8] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
       ]
     ]
     ;###########################################################
     if ? = "Abastecimiento"[
       set C1 replace-item i C1 [Abastecimiento] of myself
       set C1_max replace-item i C1_max Abastecimiento_max
-      set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
+      set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
     ]
     ;###########################################################
     if ? = "Peticion de Delegaciones"[
       set C1 replace-item i C1 1;[Peticion_Delegaciones] of Delegaciones-here
       set C1_max replace-item i C1_max 1;Peticion_Delegaciones_max ;change with update quantity for speed
-      set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
+      set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
     ]
     ;###########################################################
     if ? = "Peticiones de usuarios"[
       set C1 replace-item i C1 [peticion_usuarios] of myself
       set C1_max replace-item i C1_max peticion_usuarios_max
-      set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
+      set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
     ]
     ;###########################################################
     if ? = "Presion de medios"[
       set C1 replace-item i C1 1;[Presion_de_medios] of myself
       set C1_max replace-item i C1_max Presion_de_medios_max ;change with update quantity for speed
-      set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
+      set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
     ]
     ;###########################################################
     if ? = "Presion social"[
       set C1 replace-item i C1 [Presion_social] of myself
       set C1_max replace-item i C1_max Presion_social_max;change with update quantity for speed
-      set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
+      set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
     ]
     ;###########################################################
     if ? = "Precipitacion"[
       set C1 replace-item i C1 [precipitation] of myself
       set C1_max replace-item i C1_max precipitation_max;change with update quantity for speed
-      set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
+      set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max) [0.056 0.1 0.15 0.42 1])
 
     ]
     ;###########################################################
@@ -1142,7 +1154,7 @@ to update_criteria_and_valueFunctions_SACMEX    ;;update the biphisical value of
         set V replace-item i V (Value-Function (item i C1) [0.3 0.4 0.5 0.6] ["" "" "" ""] (item i C1_max)  [1 0.5 0.25 0.125 0.0625])
       ]
       [
-        set V replace-item i V (Value-Function (item i C1) [0.1 0.4 0.6 0.8] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
+        set V replace-item i V (Value-Function (item i C1) [0.1 0.4 0.6 0.8] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
       ]
     ]
     ;###########################################################
@@ -1163,25 +1175,25 @@ to update_criteria_and_valueFunctions_residentes
         if ? = "Crecimiento urbano"[
           set C1 replace-item i C1 [urban_growth] of myself
           set C1_max replace-item i C1_max urban_growth_max  ;change with update quantity for speed
-          set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
+          set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
         ]
         ;###########################################################
         if ? = "Contaminacion de agua"[
           set C1 replace-item i C1 [water_quality] of myself
           set C1_max replace-item i C1_max water_quality_max  ;change with update quantity for speed
-          set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
+          set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
         ]
         ;###########################################################
         if ? = "Obstruccion de alcantarillado"[
           set C1 replace-item i C1 [garbage] of myself
           set C1_max replace-item i C1_max garbage_max  ;change with update quantity for speed
-          set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
+          set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
         ]
         ;###########################################################
         if ? = "Salud"[
           set C1 replace-item i C1 [health] of myself
           set C1_max replace-item i C1_max health_max;change with update quantity for speed
-          set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.4 0.9] ["" "" "" ""] (item i C1_max)  [0.05 0.1 0.159 0.4 1])
+          set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.4 0.9] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
         ]
         ;###########################################################
         if ? = "Escasez de agua"[
@@ -1193,7 +1205,7 @@ to update_criteria_and_valueFunctions_residentes
         if ? = "Inundaciones"[
           set C1 replace-item i C1 [flooding] of myself
           set C1_max replace-item i C1_max flooding_max
-          set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.05 0.1 0.159 0.4 1])
+          set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
         ]
         ;###########################################################
         if ? = "agua insuficiente" [
@@ -1254,7 +1266,7 @@ to update_criteria_and_valueFunctions_residentes
           if name_action = "Accion colectiva" [
             set C1 replace-item i C1 [falta_d + falta_ab] of myself
             set C1_max replace-item i C1_max  (falta_d_max +  falta_ab_max) ;change with update quantity for speed
-            set V replace-item i V (Value-Function (item i C1) [0.9 0.94 0.97 0.99] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
+            set V replace-item i V (Value-Function (item i C1) [0.9 0.94 0.97 0.99] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
           ]
           if name_action = "Modificacion vivienda"[
             set C1 replace-item i C1 [houses_with_dranage] of myself
@@ -1277,14 +1289,14 @@ end
 ;#################################################################################################################################################
 ;#################################################################################################################################################
 
-to SACMEX-decisions
+to SACMEX-decisions [estado]
  ;;; Define value functions
  ;;here government clasifies each ageb based on distan from ideal point to rank them and thus priotirized interventions
  ;we call each alternative to update the value of the criteria acording to the state of the ageb
  ;we set the value functions and define the distant metric based on compromisez programing function with exponent =2
   ;update maximum values of criteria for the municipalities influenced by sacmex
-  update_local "09"
-  ask  agebs with [CV_estado = "09"][
+  update_local estado
+  ask  agebs with [CV_estado = estado][
     ;;Tranform from natural scale to standarized scale given action 1 (Reparation of pozos)
     ;#################################################################################################################################################
     ask Alternatives_SACMEX [
@@ -1330,8 +1342,8 @@ to SACMEX-decisions
 
 
 ;create new connections to the dranage and supply system by assuming it occur 1 time a year ;need to add changes in the capasity of the infrastructure due to new investments
-  New-Infra_A "09"
-  New-Infra_D "09"
+  New-Infra_A estado
+  New-Infra_D estado
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -1410,8 +1422,8 @@ to water_extraccion
 ;  print from_d_to_bombeo
 end
 ;#############################################################################################################################################
-to water_distribution [estado] ;distribution of water from government by truck
-let available_trucks Recursos_para_distribucion
+to water_distribution [estado recursos] ;distribution of water from government by truck
+let available_trucks recursos
     foreach sort-on [(1 - d_water_distribution)]  agebs with [CV_estado = estado][
       ask ? [
         if-else available_trucks > 0 and daily_water_available > 0 [
@@ -1586,6 +1598,18 @@ end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
+
+  if escala = "cuenca"[
+    gis:set-world-envelope-ds gis:envelope-of Agebs_map_full;mascara ;ageb_encharc;mascara;Limites_delegacionales
+    update_globals
+  ]
+
+  if escala = "ciudad"[
+    gis:set-world-envelope-ds gis:envelope-of mascara ;ageb_encharc;mascara;Limites_delegacionales
+    update_local "09"
+  ]
+
+
   if visualization != "GoogleEarth"[
     ask agebs [
       set size factor_scale * 1
@@ -1758,15 +1782,15 @@ to define_alternativesCriteria
 
   set jj jj + 1
 ]
-
+; define scale for step value function
 ask Alternatives_IZ with [name_action = "Compra de agua"] [set v_scale_S [0.05 1 1 0.05 0.05]]
 ask Alternatives_IZ with [name_action = "Movilizaciones"] [set v_scale_S [0.05 0.05 0.05 0.4 1]]
 ask Alternatives_IZ with [name_action = "Accion colectiva"] [set v_scale_S [0.05 1 1 1 1]]
 ask Alternatives_IZ with [name_action = "Captacion de agua"] [set v_scale_S [0.05 1 1 1 1]]
 ask Alternatives_IZ with [name_action = "Modificacion vivienda"] [set v_scale_S [0.05 0.05 0.05 0.8 1]]
 
-
-
+print [name_action] of Alternatives_IZ
+print [v_scale_S] of Alternatives_IZ
  let MMXo_L csv:from-file  "data/X062916_OTR_a.limit.csv"
  let MMXo_W csv:from-file  "data/X062916_OTR_a.weighted.csv"
 
@@ -1831,7 +1855,74 @@ ask Alternatives_IZ with [name_action = "Modificacion vivienda"] [set v_scale_S 
   ask Alternatives_Xo with [name_action = "Captacion de agua"] [set v_scale_S [0.05 0.1 1 1 1]]
   ask Alternatives_Xo with [name_action = "Modificacion vivienda"] [set v_scale_S [0.05 0.05 0.05 0.4 1]]
 
+print [name_action] of Alternatives_Xo
+print [v_scale_S] of Alternatives_Xo
+
 ;#########################################################################
+
+       let MMMC csv:from-file  "data/MC080416_OTR_a.weighted.csv"
+       let MMMC_limit csv:from-file  "data/MC080416_OTR_a.limit.csv"
+
+
+
+       set actions (list item 1 item 2 MMMC_limit
+         item 1 item 3 MMMC_limit
+         item 1 item 4 MMMC_limit
+         item 1 item 5 MMMC_limit
+         item 1 item 6 MMMC_limit)
+       print actions
+       set jj 0
+       foreach actions [
+         create-Alternatives_MC 1[
+           set ID "MC080416"
+           set name_action ?
+           set label name_action
+           set C1 (list 0 0 0 0 0 0)
+           set C1_max (list 0 0 0 0 0 0)
+           set V (list 0 0 0 0 0 0)
+           let w_sum sum (list item 2 item 7 MMMC_limit
+             item 2 item 8 MMMC_limit
+             item 2 item 9 MMMC_limit
+             item 2 item 10 MMMC_limit
+             item 2 item 11 MMMC_limit
+             item 2 item 12 MMMC_limit)
+
+           set w_C1 (list (item 2 item 7 MMMC_limit / w_sum)
+             (item 2 item 8 MMMC_limit / w_sum)
+             (item 2 item 9 MMMC_limit / w_sum)
+             (item 2 item 10 MMMC_limit / w_sum)
+             (item 2 item 11 MMMC_limit / w_sum)
+             (item 2 item 12 MMMC_limit / w_sum))
+
+           set C1_name (list item 1 item 7 MMMC_limit
+             item 1 item 8 MMMC_limit
+             item 1 item 9 MMMC_limit
+             item 1 item 10 MMMC_limit
+             item 1 item 11 MMMC_limit
+             item 1 item 12 MMMC_limit)
+
+           if-else ANP = TRUE[
+           set alpha item (jj + 2) item (jj + 2) MMMC_limit /(item 5 item 5 MMMC_limit + item 4 item 4 MMMC_limit + item 3 item 3 MMMC_limit + item 6 item 6 MMMC_limit + item 2 item 2 MMMC_limit)
+           ][
+           set alpha 1
+           ]
+
+         ]
+         set jj jj + 1
+
+       ]
+
+       ask Alternatives_MC with [name_action = "Compra de agua"] [set v_scale_S [0.05 0.05 0.05 0.05 1]]
+       ask Alternatives_MC with [name_action = "Movilizaciones"] [set v_scale_S [0.05 0.05 0.05 0.4 1]]
+       ask Alternatives_MC with [name_action = "Accion colectiva"] [set v_scale_S [0.05 0.05 0.05 0.05 1]]
+       ask Alternatives_MC with [name_action = "Captacion de agua"] [set v_scale_S [0.05 0.1 1 1 1]]
+       ask Alternatives_MC with [name_action = "Modificacion vivienda"] [set v_scale_S [0.05 0.05 0.05 0.4 1]]
+       ask Alternatives_MC with [name_action = "Reuso del agua"][set v_scale_S [0.05 1 1 1 1]]
+       ask Alternatives_MC with [name_action = "Compra de infrestractura de agua"][set v_scale_S [0.05 0.1 0.15 0.1 1]]
+       print [v_scale_S] of Alternatives_MC
+       print [name_action] of Alternatives_MC
+ ;#########################################
+
 
        let MMMCb csv:from-file  "data/MC080416_OTR_b.weighted.csv"
        let MMMCb_limit csv:from-file  "data/MC080416_OTR_b.limit.csv"
@@ -1845,7 +1936,7 @@ ask Alternatives_IZ with [name_action = "Modificacion vivienda"] [set v_scale_S 
          item 1 item 6 MMMCb_limit)
        set jj 0
        foreach actions [
-         create-Alternatives_MC 1 [
+         create-Alternatives_MCb 1 [
            set ID "MC080416b"
            set name_action ?
            set label name_action
@@ -1898,72 +1989,15 @@ ask Alternatives_IZ with [name_action = "Modificacion vivienda"] [set v_scale_S 
 
        ]
 
-       ask Alternatives_MC with [name_action = "Compra de agua"] [set v_scale_S [0.05 0.1 1 0.05 0.05]]
-       ask Alternatives_MC with [name_action = "Movilizaciones"] [set v_scale_S [0.05 0.05 0.05 0.4 1]]
-       ask Alternatives_MC with [name_action = "Accion colectiva"] [set v_scale_S [0.05 0.1 1 1 1]]
-       ask Alternatives_MC with [name_action = "Captacion de agua"] [set v_scale_S [0.05 0.1 1 1 1]]
-       ask Alternatives_MC with [name_action = "Modificacion vivienda"] [set v_scale_S [0.05 0.05 0.05 0.4 1]]
-
+       ask Alternatives_MCb with [name_action = "Compra de agua"] [set v_scale_S [0.05 0.1 1 0.05 0.05]]
+       ask Alternatives_MCb with [name_action = "Movilizaciones"] [set v_scale_S [0.05 0.05 0.05 0.4 1]]
+       ask Alternatives_MCb with [name_action = "Accion colectiva"] [set v_scale_S [0.05 0.1 1 1 1]]
+       ask Alternatives_MCb with [name_action = "Captacion de agua"] [set v_scale_S [0.05 0.1 1 1 1]]
+       ask Alternatives_MCb with [name_action = "Modificacion vivienda"] [set v_scale_S [0.05 0.05 0.05 0.4 1]]
+       print [v_scale_S] of Alternatives_MCb
+       print [name_action] of Alternatives_MCb
 ;################################################
 
-       let MMMC csv:from-file  "data/MC080416_OTR_a.weighted.csv"
-       let MMMC_limit csv:from-file  "data/MC080416_OTR_a.limit.csv"
-
-
-
-       set actions (list item 1 item 2 MMMC_limit
-         item 1 item 3 MMMC_limit
-         item 1 item 4 MMMC_limit
-         item 1 item 5 MMMC_limit
-         item 1 item 6 MMMC_limit)
-
-       set jj 0
-       foreach actions [
-         create-Alternatives_MC 1[
-           set ID "MC080416"
-           set name_action "Accion_colectiva"
-           set label name_action
-           set C1 (list 0 0 0 0 0 0)
-           set C1_max (list 0 0 0 0 0 0)
-           set V (list 0 0 0 0 0 0)
-           let w_sum sum (list item 2 item 7 MMMC_limit
-             item 2 item 8 MMMC_limit
-             item 2 item 9 MMMC_limit
-             item 2 item 10 MMMC_limit
-             item 2 item 11 MMMC_limit
-             item 2 item 12 MMMC_limit)
-
-           set w_C1 (list (item 2 item 7 MMMC_limit / w_sum)
-             (item 2 item 8 MMMC_limit / w_sum)
-             (item 2 item 9 MMMC_limit / w_sum)
-             (item 2 item 10 MMMC_limit / w_sum)
-             (item 2 item 11 MMMC_limit / w_sum)
-             (item 2 item 12 MMMC_limit / w_sum))
-
-           set C1_name (list item 1 item 7 MMMC_limit
-             item 1 item 8 MMMC_limit
-             item 1 item 9 MMMC_limit
-             item 1 item 10 MMMC_limit
-             item 1 item 11 MMMC_limit
-             item 1 item 12 MMMC_limit)
-
-           if-else ANP = TRUE[
-           set alpha item (jj + 2) item (jj + 2) MMMC_limit /(item 5 item 5 MMMC_limit + item 4 item 4 MMMC_limit + item 3 item 3 MMMC_limit + item 6 item 6 MMMC_limit + item 2 item 2 MMMC_limit)
-           ][
-           set alpha 1
-           ]
-
-         ]
-         set jj jj + 1
-
-       ]
-
-       ask Alternatives_MC with [name_action = "Compra de agua"] [set v_scale_S [0.05 0.1 1 0.05 0.05]]
-       ask Alternatives_MC with [name_action = "Movilizaciones"] [set v_scale_S [0.05 0.05 0.05 0.4 1]]
-       ask Alternatives_MC with [name_action = "Accion colectiva"] [set v_scale_S [0.05 0.1 1 1 1]]
-       ask Alternatives_MC with [name_action = "Captacion de agua"] [set v_scale_S [0.05 0.1 1 1 1]]
-       ask Alternatives_MC with [name_action = "Modificacion vivienda"] [set v_scale_S [0.05 0.05 0.05 0.4 1]]
-       ;#########################################
 
        let MMSACMEX_S csv:from-file  "data/DF101215_GOV_AP modificado.weighted.csv" ;DF101215_GOV_AP modificado.weighted
         let MMSACMEX_limit csv:from-file  "data/DF101215_GOV_AP modificado.limit.csv"
@@ -2090,9 +2124,9 @@ ask Alternatives_IZ with [name_action = "Modificacion vivienda"] [set v_scale_S 
 
 
 
-       print matrix:pretty-print-text MMSACMEX_weighted_D
+       ;print matrix:pretty-print-text MMSACMEX_weighted_D
 
-       print MMSACMEX_D
+       ;print MMSACMEX_D
 
 
        foreach actions [
@@ -2361,7 +2395,7 @@ CHOOSER
 Visualization
 Visualization
 "Accion Colectiva" "Petición ciudadana" "Captacion de Agua" "Compra de Agua" "Modificacion de la vivienda" "Reparaciones SACMEX" "Nueva Infraestructura SACMEX" "Distribucion de Agua SACMEX" "GoogleEarth" "K_groups" "Salud" "Escasez" "Encharcamientos" "Infraestructura Abastecimiento" "P. Falla Ab" "P. Falla D" "Zonas Aquifero" "Infraestructura Edad Ab." "Infraestructura Edad D" "Income-index"
-11
+7
 
 BUTTON
 1179
@@ -2406,7 +2440,7 @@ Requerimiento_deAgua
 Requerimiento_deAgua
 0.007
 0.4
-0.2853
+0.1453
 0.0001
 1
 [m3/persona]
@@ -2421,7 +2455,7 @@ recursos_para_mantenimiento
 recursos_para_mantenimiento
 1
 2000
-500
+788
 1
 1
 NIL
@@ -2506,7 +2540,7 @@ Eficiencia_Mantenimiento
 Eficiencia_Mantenimiento
 0
 0.1
-0.07
+0.04
 0.01
 1
 NIL
@@ -2521,7 +2555,7 @@ recursos_nuevaInfrastructura
 recursos_nuevaInfrastructura
 0
 2000
-500
+253
 1
 1
 NIL
@@ -2536,7 +2570,7 @@ Recursos_para_distribucion
 Recursos_para_distribucion
 0
 4000
-1835
+1954
 1
 1
 NIL
@@ -2587,7 +2621,7 @@ factor_scale
 factor_scale
 0
 6
-0.6
+0.3
 0.1
 1
 NIL
@@ -2978,51 +3012,41 @@ NetLogo 5.2.1
     <setup>setup</setup>
     <go>go</go>
     <timeLimit steps="3650"/>
-    <metric>mean [Antiguedad-infra_Ab] of agebs</metric>
-    <metric>mean [Antiguedad-infra_D] of agebs</metric>
-    <metric>mean [scarcity_index] of agebs</metric>
-    <metric>mean [Antiguedad-infra_Ab] of agebs with [name_delegation ="Gustavo A. Madero"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of agebs with [name_delegation ="Venustiano Carranza"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of agebs with [name_delegation ="Iztacalco"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of agebs with [name_delegation ="Tlhuac"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of agebs with [name_delegation ="Miguel Hidalgo"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of agebs with [name_delegation ="Tlalpan"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of agebs with [name_delegation ="Iztapalapa"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of agebs with [name_delegation ="Coyoacn"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of agebs with [name_delegation ="Benito Jurez"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of agebs with [name_delegation ="Cuajimalpa de Morelos"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of agebs with [name_delegation ="lvaro Obregn"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of agebs with [name_delegation ="Cuauhtmoc"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of agebs with [name_delegation ="Milpa Alta"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of agebs with [name_delegation ="La Magdalena Contreras"]</metric>
-    <metric>mean [Antiguedad-infra_D] of agebs with [name_delegation ="Gustavo A. Madero"]</metric>
-    <metric>mean [Antiguedad-infra_D] of agebs with [name_delegation ="Venustiano Carranza"]</metric>
-    <metric>mean [Antiguedad-infra_D] of agebs with [name_delegation ="Iztacalco"]</metric>
-    <metric>mean [Antiguedad-infra_D] of agebs with [name_delegation ="Tlhuac"]</metric>
-    <metric>mean [Antiguedad-infra_D] of agebs with [name_delegation ="Miguel Hidalgo"]</metric>
-    <metric>mean [Antiguedad-infra_D] of agebs with [name_delegation ="Tlalpan"]</metric>
-    <metric>mean [Antiguedad-infra_D] of agebs with [name_delegation ="Iztapalapa"]</metric>
-    <metric>mean [Antiguedad-infra_D] of agebs with [name_delegation ="Coyoacn"]</metric>
-    <metric>mean [Antiguedad-infra_D] of agebs with [name_delegation ="Benito Jurez"]</metric>
-    <metric>mean [Antiguedad-infra_D] of agebs with [name_delegation ="Cuajimalpa de Morelos"]</metric>
-    <metric>mean [Antiguedad-infra_D] of agebs with [name_delegation ="lvaro Obregn"]</metric>
-    <metric>mean [Antiguedad-infra_D] of agebs with [name_delegation ="La Magdalena Contreras"]</metric>
-    <metric>mean [Antiguedad-infra_D] of agebs with [name_delegation ="Cuauhtmoc"]</metric>
-    <metric>mean [Antiguedad-infra_D] of agebs with [name_delegation ="Milpa Alta"]</metric>
-    <metric>mean [scarcity_index] of agebs with [name_delegation ="Gustavo A. Madero"]</metric>
-    <metric>mean [scarcity_index] of agebs with [name_delegation ="Venustiano Carranza"]</metric>
-    <metric>mean [scarcity_index] of agebs with [name_delegation ="Iztacalco"]</metric>
-    <metric>mean [scarcity_index] of agebs with [name_delegation ="Tlhuac"]</metric>
-    <metric>mean [scarcity_index] of agebs with [name_delegation ="Miguel Hidalgo"]</metric>
-    <metric>mean [scarcity_index] of agebs with [name_delegation ="Tlalpan"]</metric>
-    <metric>mean [scarcity_index] of agebs with [name_delegation ="Iztapalapa"]</metric>
-    <metric>mean [scarcity_index] of agebs with [name_delegation ="Coyoacn"]</metric>
-    <metric>mean [scarcity_index] of agebs with [name_delegation ="Benito Jurez"]</metric>
-    <metric>mean [scarcity_index] of agebs with [name_delegation ="Cuajimalpa de Morelos"]</metric>
-    <metric>mean [scarcity_index] of agebs with [name_delegation ="lvaro Obregn"]</metric>
-    <metric>mean [scarcity_index] of agebs with [name_delegation ="Cuauhtmoc"]</metric>
-    <metric>mean [scarcity_index] of agebs with [name_delegation ="Milpa Alta"]</metric>
-    <metric>mean [scarcity_index] of agebs with [name_delegation ="La Magdalena Contreras"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_estado = "09"]</metric>
+    <metric>mean [Antiguedad-infra_D] of agebs with [CV_estado = "09"]</metric>
+    <metric>mean [scarcity_index] of agebs with [CV_estado = "09"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_municipio = "002"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_municipio = "003"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_municipio = "004"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_municipio = "005"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_municipio = "006"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_municipio = "007"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_municipio = "008"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_municipio = "009"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_municipio = "010"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_municipio = "011"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_municipio = "012"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_municipio = "013"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_municipio = "014"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_municipio = "015"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_municipio = "016"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_municipio = "017"]</metric>
+    <metric>mean [scarcity_index] of agebs with [CV_municipio = "002"]</metric>
+    <metric>mean [scarcity_index] of agebs with [CV_municipio = "003"]</metric>
+    <metric>mean [scarcity_index] of agebs with [CV_municipio = "004"]</metric>
+    <metric>mean [scarcity_index] of agebs with [CV_municipio = "005"]</metric>
+    <metric>mean [scarcity_index] of agebs with [CV_municipio = "006"]</metric>
+    <metric>mean [scarcity_index] of agebs with [CV_municipio = "007"]</metric>
+    <metric>mean [scarcity_index] of agebs with [CV_municipio = "008"]</metric>
+    <metric>mean [scarcity_index] of agebs with [CV_municipio = "009"]</metric>
+    <metric>mean [scarcity_index] of agebs with [CV_municipio = "010"]</metric>
+    <metric>mean [scarcity_index] of agebs with [CV_municipio = "011"]</metric>
+    <metric>mean [scarcity_index] of agebs with [CV_municipio = "012"]</metric>
+    <metric>mean [scarcity_index] of agebs with [CV_municipio = "013"]</metric>
+    <metric>mean [scarcity_index] of agebs with [CV_municipio = "014"]</metric>
+    <metric>mean [scarcity_index] of agebs with [CV_municipio = "015"]</metric>
+    <metric>mean [scarcity_index] of agebs with [CV_municipio = "016"]</metric>
+    <metric>mean [scarcity_index] of agebs with [CV_municipio = "017"]</metric>
     <enumeratedValueSet variable="Eficiencia_NuevaInfra">
       <value value="0.0050"/>
     </enumeratedValueSet>
