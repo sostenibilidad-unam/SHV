@@ -2815,6 +2815,21 @@ cut-off_priorities
 NIL
 HORIZONTAL
 
+SLIDER
+272
+468
+444
+501
+n_runs
+n_runs
+0
+100
+20
+1
+1
+NIL
+HORIZONTAL
+
 @#$#@#$#@
 ## WHAT IS IT?
 
@@ -3255,6 +3270,7 @@ NetLogo 5.2.1
     <enumeratedValueSet variable="cut-off_priorities">
       <value value="0.05"/>
     </enumeratedValueSet>
+    <steppedValueSet variable="n_run" first="1" step="1" last="20"/>
   </experiment>
 </experiments>
 @#$#@#$#@
