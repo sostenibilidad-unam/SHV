@@ -22,3 +22,5 @@ recursos_para_mantenimiento = np.linspace( 500, 2000, 1)
 recursos_nuevainfrastructura = np.linspace( 500, 2000, 1)
 
 requerimiento_deagua = np.linspace( 0.007, 0.1, 1)
+
+n_runs = np.linspace( 1, 20, 20)

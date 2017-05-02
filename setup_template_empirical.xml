@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE experiments SYSTEM "behaviorspace.dtd">
 <experiments>
-  <experiment name="experiment1" repetitions="20" runMetricsEveryStep="false">
+  <experiment name="experiment1" repetitions="1" runMetricsEveryStep="false">
     <setup>setup</setup>
     <go>go</go>
     <timeLimit steps="{time_limit}"/>
@@ -73,6 +73,8 @@
     <enumeratedValueSet variable="cut-off_priorities">
       <value value="0.05"/>
     </enumeratedValueSet>
-    <steppedValueSet variable="n_run" first="1" step="1" last="20"/>
+    <enumeratedValueSet variable="n_runs">
+      <value value="{n_runs}"/>
+    </enumeratedValueSet>
   </experiment>
 </experiments>

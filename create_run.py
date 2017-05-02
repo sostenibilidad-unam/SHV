@@ -20,7 +20,7 @@ netlogo_jar = os.path.join( args.netlogo, "app/NetLogo.jar")
 assert os.path.exists(netlogo_jar)
 os.symlink(netlogo_jar, os.path.join(args.workdir, "NetLogo.jar"))
 
-# symlink extensions    
+# symlink extensions
 extensions = ['csv', 'matrix', 'gis', 'bitmap', 'profiler']
 for extension in extensions:
     ext_path = os.path.join( args.netlogo, "app/extensions/%s" % extension)
@@ -50,30 +50,33 @@ with open('%s/submit_all.condor' % args.workdir, 'w') as condorfile:
                         for recursos_para_mantenimiento in setup.recursos_para_mantenimiento:
                             for recursos_nuevainfrastructura in setup.recursos_nuevainfrastructura:
                                 for requerimiento_deagua in setup.requerimiento_deagua:
-                                    run_id = "r_%s_%s_%s_%s_%s_%s_%s_%s" % (eficiencia_nuevainfra,
-                                                                            eficiencia_mantenimiento,
-                                                                            Lambda,
-                                                                            factor_subsidencia,
-                                                                            recursos_para_distribucion,
-                                                                            recursos_para_mantenimiento,
-                                                                            recursos_nuevainfrastructura,
-                                                                            requerimiento_deagua)
+                                    for n_runs in setup.n_runs:
+                                        run_id = "r_%s_%s_%s_%s_%s_%s_%s_%s_%s" % (eficiencia_nuevainfra,
+                                                                                   eficiencia_mantenimiento,
+                                                                                   Lambda,
+                                                                                   factor_subsidencia,
+                                                                                   recursos_para_mantenimiento,
+                                                                                   recursos_para_distribucion,
+                                                                                   recursos_nuevainfrastructura,
+                                                                                   requerimiento_deagua,
+                                                                                   n_runs)
 
-                                    condorfile.write(condor_template.format(run_id=run_id,
-                                                                            threads=args.threads))
+                                        condorfile.write(condor_template.format(run_id=run_id,
+                                                                                threads=args.threads))
 
-                                    with open('%s/setup_%s.xml' % (args.workdir, run_id), 'w') as setupfile:
-                                        e = {"time_limit" : setup.years * 365,
-                                             "eficiencia_nuevainfra": eficiencia_nuevainfra,
-                                             "eficiencia_mantenimiento": eficiencia_mantenimiento,
-                                             "lambda": Lambda,
-                                             "escala": setup.escala,
-                                             "factor_subsidencia": factor_subsidencia,
-                                             "recursos_para_distribucion": recursos_para_distribucion,
-                                             "recursos_para_mantenimiento": recursos_para_mantenimiento,
-                                             "recursos_nuevainfrastructura": recursos_nuevainfrastructura,
-                                             "ANP": setup.ANP,
-                                             "requerimiento_deagua": requerimiento_deagua} 
-                                        setupfile.write(
-                                            setup_template.format(**e)
-                                            )
+                                        with open('%s/setup_%s.xml' % (args.workdir, run_id), 'w') as setupfile:
+                                            e = {"time_limit" : setup.years * 365,
+                                                 "eficiencia_nuevainfra": eficiencia_nuevainfra,
+                                                 "eficiencia_mantenimiento": eficiencia_mantenimiento,
+                                                 "lambda": Lambda,
+                                                 "escala": setup.escala,
+                                                 "factor_subsidencia": factor_subsidencia,
+                                                 "recursos_para_distribucion": recursos_para_distribucion,
+                                                 "recursos_para_mantenimiento": recursos_para_mantenimiento,
+                                                 "recursos_nuevainfrastructura": recursos_nuevainfrastructura,
+                                                 "ANP": setup.ANP,
+                                                 "requerimiento_deagua": requerimiento_deagua,
+                                                 "n_runs": n_runs}
+                                            setupfile.write(
+                                                setup_template.format(**e)
+                                                )
