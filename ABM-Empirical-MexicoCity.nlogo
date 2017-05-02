@@ -3270,7 +3270,9 @@ NetLogo 5.2.1
     <enumeratedValueSet variable="cut-off_priorities">
       <value value="0.05"/>
     </enumeratedValueSet>
-    <steppedValueSet variable="n_run" first="1" step="1" last="20"/>
+    <enumeratedValueSet variable="n_run">
+      <value value="1"/>
+    </enumeratedValueSet>
   </experiment>
 </experiments>
 @#$#@#$#@
