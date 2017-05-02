@@ -73,5 +73,6 @@
     <enumeratedValueSet variable="cut-off_priorities">
       <value value="0.05"/>
     </enumeratedValueSet>
+    <steppedValueSet variable="n_run" first="1" step="1" last="20"/>
   </experiment>
 </experiments>
