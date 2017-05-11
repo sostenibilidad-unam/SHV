@@ -57,6 +57,7 @@ globals [
   Peticion_Delegacional_max
   Peticion_Delegacional_D_max
   Presion_social_max
+  Presion_social_dy_max
   Presion_de_medios_max
   water_quality_max
   health_max
@@ -209,6 +210,7 @@ Agebs-own[
   Income-index                 ;; Actual income
   Presion_social               ;;social pressure index per ageb (e.g. %pop. involved in the protests?)
   Presion_social_dy               ;;social pressure index per ageb (e.g. %pop. involved in the protests?)
+  Presion_social_year          ;;number of protest per year
   peticion_usuarios
   Peticion_Delegacional
   Peticion_Delegacional_D
@@ -420,7 +422,6 @@ to GO
   ;profiler:start
 
 
-
   counter_days                   ;counter to define when actions occur
   water_production_importation    ;;calculate total water available in a day
  if months = 1 and days = 1 [   ;annual changes
@@ -465,23 +466,26 @@ to GO
       ]
     ]
   ]
+
 ;##########################################################
 
-  ;if days = 1 [
-  ;  ask agebs [
-  ;    residents-decisions]
-  ;]
-  update_globals
-  ;Landscape_visualization          ;;visualization of social and physical processes
+  Landscape_visualization          ;;visualization of social and physical processes
 
                                    ;Supermatrix to change weights and re-calculate priorities
-  if (years mod 10) = 0[supermatrix]
-  ;profiler:stop          ;; stop profiling
-  ;print profiler:report
-  ;profiler:reset         ;; clear the data
+ ; if (years mod 10) = 0[supermatrix]
+
+;export data by ageb
+;if years = 19 and months = 12 and days = 10 [export-map]
+ ;profiler:stop          ;; stop profiling
+ ;print profiler:report
+ ;profiler:reset         ;; clear the data
 
 end
 
+
+;  to-report agents_name
+;  report [(list who Antiguedad-infra_Ab)] of agebs
+;  end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -612,7 +616,7 @@ to take_action_residents
   [
     house-modification
   ]
-  if d_Movilizaciones > max (list d_Modificacion_vivienda d_Accion_colectiva d_Captacion_agua d_Compra_agua)
+  if d_Movilizaciones > random-float 1; max (list d_Modificacion_vivienda d_Accion_colectiva d_Captacion_agua d_Compra_agua)
   [
     protest
   ]
@@ -677,6 +681,7 @@ to update_globals  ;; update the maximum or minimum of values use by the model t
   set monto_max max [monto] of agebs
   set scarcity_max max [scarcity] of agebs
   set Presion_social_max max [Presion_social] of agebs
+  set Presion_social_dy_max max [Presion_social_dy] of agebs
   set falta_d_max 1
   set falta_Ab_max 1
   set d_Compra_agua_max max [d_Compra_agua] of agebs
@@ -695,7 +700,7 @@ to update_globals  ;; update the maximum or minimum of values use by the model t
   set Vulnerability_S_max max [vulnerability_S] of agebs
   set Vulnerability_F_max max [vulnerability_F] of agebs
   set densidad_pop_max max [densidad_pop] of agebs
-  end
+end
 ;#############################################################################################################################################
 to update_local [estado]  ;; update the maximum or minimum of values use by the model to calculate range of the value functions this time relative to the domain of the agent who needs the inforamtion to take decition
   set Antiguedad-infra_Ab_max max [Antiguedad-infra_Ab] of agebs with [CV_estado = estado]
@@ -720,6 +725,7 @@ to update_local [estado]  ;; update the maximum or minimum of values use by the 
   set monto_max max [monto] of agebs with [CV_estado = estado]
   set scarcity_max max [scarcity] of agebs with [CV_estado = estado]
   set Presion_social_max max [Presion_social] of agebs  with [CV_estado = estado]
+  set Presion_social_dy_max max [Presion_social_dy] of agebs with [CV_estado = estado]
   set falta_d_max 1
   set falta_Ab_max 1
   set d_Compra_agua_max max [d_Compra_agua] of agebs with [CV_estado = estado]
@@ -920,15 +926,22 @@ foreach gis:feature-list-of Agebs_map_full; "ID_ZONA" "0"
   ]
 ]
 ;to define areas with irregular water supply by pipes (e.g. tandeo)[days per week]
-ask agebs with [CV_municipio = "007"][
-  set tandeo 3 / 7
-  ;set group_kmean
-   ];"Iztapalapa"
-ask agebs with [CV_municipio = "008"][set tandeo 3 / 7];"La Magdalena Contreras"
-ask agebs with [CV_municipio = "003"][set tandeo 5 / 7];"Coyoacan"
-ask agebs with [CV_municipio = "005"][set tandeo 6 / 7];"Gustavo A. Madero"
-ask agebs with [CV_municipio = "012"][set tandeo 3 / 7];"Tlalpan"
-ask agebs with [CV_municipio = "013"][set tandeo 3 / 7];"Xochimilco"
+ask agebs with [CV_municipio = "002"][set tandeo 0.21];"Azcapotzalco"
+ask agebs with [CV_municipio = "003"][set tandeo 0.39];"Coyoacan"
+ask agebs with [CV_municipio = "004"][set tandeo 0.66];"Cuajimalpa"
+ask agebs with [CV_municipio = "005"][set tandeo 0.21];"Gustavo A. Madero"
+ask agebs with [CV_municipio = "006"][set tandeo 0.119];"Iztacalco"
+ask agebs with [CV_municipio = "007"][set tandeo 1.67];"Iztapalapa"
+ask agebs with [CV_municipio = "008"][set tandeo 0.57];"La Magdalena Contreras"
+ask agebs with [CV_municipio = "009"][set tandeo 2.149];"Milpa Alta"
+ask agebs with [CV_municipio = "010"][set tandeo 0.28];"Álvaro Obregón"
+ask agebs with [CV_municipio = "011"][set tandeo 1.01];"Tláhuac"
+ask agebs with [CV_municipio = "012"][set tandeo 1.43];"Tlalpan"
+ask agebs with [CV_municipio = "013"][set tandeo 1.13];"Xochimilco"
+ask agebs with [CV_municipio = "014"][set tandeo 0.098];"Benito Juárez"
+ask agebs with [CV_municipio = "015"][set tandeo 0.082];"Cuauhtémoc"
+ask agebs with [CV_municipio = "016"][set tandeo 0.048];"Miguel Hidalgo"
+ask agebs with [CV_municipio = "017"][set tandeo 0.116];"Venustiano Carranza"
 end
 
 ;######################################################################################################################################################
@@ -1003,13 +1016,23 @@ to define_agebs
         set hidden? false
       ]
     ])
-; ask agebs [set paches_set_agebs patch-set patches with [ageb_ID = round ([ID] of myself)]]   ;define the patches that belon to each ageb
-ask agebs with [name_delegation = "Iztapalapa"][set tandeo 3 / 7]
-ask agebs with [name_delegation = "La Magdalena Contreras"][set tandeo 3 / 7]
-ask agebs with [name_delegation = "Coyoacn"][set tandeo 5 / 7]
-ask agebs with [name_delegation = "Gustavo A. Madero"][set tandeo 6 / 7]
-ask agebs with [name_delegation = "Tlalpan"][set tandeo 3 / 7]
-ask agebs with [name_delegation = "Xochimilco"][set tandeo 3 / 7]
+;to define areas with irregular water supply by pipes (e.g. tandeo)[days per week]
+ask agebs with [CV_municipio = "002"][set tandeo 0.21];"Azcapotzalco"
+ask agebs with [CV_municipio = "003"][set tandeo 0.39];"Coyoacan"
+ask agebs with [CV_municipio = "004"][set tandeo 0.66];"Cuajimalpa"
+ask agebs with [CV_municipio = "005"][set tandeo 0.21];"Gustavo A. Madero"
+ask agebs with [CV_municipio = "006"][set tandeo 0.119];"Iztacalco"
+ask agebs with [CV_municipio = "007"][set tandeo 1.67];"Iztapalapa"
+ask agebs with [CV_municipio = "008"][set tandeo 0.57];"La Magdalena Contreras"
+ask agebs with [CV_municipio = "009"][set tandeo 2.149];"Milpa Alta"
+ask agebs with [CV_municipio = "010"][set tandeo 0.28];"Álvaro Obregón"
+ask agebs with [CV_municipio = "011"][set tandeo 1.01];"Tláhuac"
+ask agebs with [CV_municipio = "012"][set tandeo 1.43];"Tlalpan"
+ask agebs with [CV_municipio = "013"][set tandeo 1.13];"Xochimilco"
+ask agebs with [CV_municipio = "014"][set tandeo 0.098];"Benito Juárez"
+ask agebs with [CV_municipio = "015"][set tandeo 0.082];"Cuauhtémoc"
+ask agebs with [CV_municipio = "016"][set tandeo 0.048];"Miguel Hidalgo"
+ask agebs with [CV_municipio = "017"][set tandeo 0.116];"Venustiano Carranza"
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -1180,8 +1203,8 @@ to update_criteria_and_valueFunctions_SACMEX    ;;update the biphisical value of
     ]
     ;###########################################################
     if ? = "Presion social"[
-      set C1 replace-item i C1 [Presion_social] of myself
-      set C1_max replace-item i C1_max Presion_social_max;change with update quantity for speed
+      set C1 replace-item i C1 [Presion_social_dy] of myself
+      set C1_max replace-item i C1_max Presion_social_dy_max;change with update quantity for speed
       set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
     ]
     ;###########################################################
@@ -1413,8 +1436,8 @@ to repair-Infra_Ab [estado]
         if Budget < recursos_para_mantenimiento[                                       ;agebs that were selected for maitenance do not reduce its age
           set Antiguedad-infra_Ab Antiguedad-infra_Ab - Eficiencia_Mantenimiento * Antiguedad-infra_Ab
           set Budget Budget + 1
-        ]
 
+        ]
       ]
     ]
   ][
@@ -1433,8 +1456,8 @@ end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 to repair-Infra_D [estado]
-    let Budget 0
-    ifelse (actions_per_agebs = "single-action")[
+  let Budget 0
+  ifelse (actions_per_agebs = "single-action")[
     foreach sort-on [(1 - d_mantenimiento_D) ] agebs with [CV_estado = estado and d_mantenimiento_D > d_new_D][ ;+ (1 - densidad_pop / densidad_pop_max)
       ask ? [
         if Budget < recursos_para_mantenimiento [
@@ -1444,16 +1467,16 @@ to repair-Infra_D [estado]
       ]
     ]
     ]
-    [
-      foreach sort-on [(1 - d_mantenimiento_D) ] agebs with [CV_estado = estado][ ;+ (1 - densidad_pop / densidad_pop_max)
+  [
+    foreach sort-on [(1 - d_mantenimiento_D) ] agebs with [CV_estado = estado][ ;+ (1 - densidad_pop / densidad_pop_max)
       ask ? [
         if Budget < recursos_para_mantenimiento [
           set Antiguedad-infra_D Antiguedad-infra_D - Eficiencia_Mantenimiento * Antiguedad-infra_D
           set Budget Budget + 1
         ]
       ]
-      ]
-      ]
+    ]
+  ]
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -1543,7 +1566,10 @@ end
 ;##############################################################################################################
 to water_by_pipe
 ;having water by pipe depends on tandeo (p having water based on info collected by ALE,about days with water), infrastructure and ifra failure distribution of water by trucks
-  let pw ifelse-value (houses_with_abastecimiento > 0)[tandeo * (1 - p_falla_AB)][0]
+let p_tandeo random-poisson tandeo
+let pwater_tandeo ifelse-value (p_tandeo < 8)[1 - p_tandeo / 7 ][1]
+
+  let pw ifelse-value (houses_with_abastecimiento > 0)[pwater_tandeo * (1 - p_falla_AB)][0]
   if-else pw > random-float 1[
     set water_distributed_pipes 1
     set water_in_mc water_in_mc + Requerimiento_deAgua * poblacion * houses_with_abastecimiento
@@ -1579,13 +1605,11 @@ to water_production_importation
 end
 ;#############################################################################################################################################
 to protest  ;if the distant to ideal for protest is greater than
-
-    set Presion_social_dy Presion_social_dy
-
-  if months = 1 and days = 2 and ticks > 10 [
+  set Presion_social_dy Presion_social_dy + 1
+  set Presion_social_year Presion_social_year + 1
+  if months = 1 and days = 2 [
     set Presion_social_dy 0
   ]
-  if Presion_social_dy > 10 [set Presion_social_dy 0]
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -1597,25 +1621,26 @@ to export_view  ;;export snapshots of the landscape
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
-to-report export-table [atribute]
-;this procedure creates a txt file with a vector containing a particular atribute from the agebs
-let PATH "c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/CarpetasTrabajo/AndresBaeza/"
-let fn word years (word atribute ".txt")
-let file_n word PATH fn
-if file-exists? file_n
-  [ file-delete file_n]
- file-open file_n
- foreach sort-on [ID] agebs[
-   ask ?
-   [
-     file-write ID                                 ;write the ID of each ageb using a numeric value (update acording to Marco's Identification)
-     if atribute = "Antiguedad-infra"[
-       file-write Antiguedad-infra_Ab                  ;write the value of the atribute
-     ]
-   ]
- ]
- file-close                                        ;close the File
- report word "saved  " atribute
+to export-map
+  ;this procedure creates a txt file with a vector containing a particular atribute from the agebs
+  ;let PATH "c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/CarpetasTrabajo/AndresBaeza/"
+    let fn word n_runs (word recursos_nuevaInfrastructura (word recursos_para_mantenimiento (word Eficiencia_Mantenimiento (word Eficiencia_NuevaInfra ".txt"))))
+    if file-exists? fn
+    [ file-delete fn]
+    file-open fn
+    foreach sort-on [ID] agebs[
+      ask ?
+      [
+        file-write ID                                 ;write the ID of each ageb using a numeric value (update acording to Marco's Identification)
+        file-write Antiguedad-infra_Ab                  ;write the value of the atribute
+        file-write Antiguedad-infra_D
+        file-write houses_with_dranage          ;; % of houses connected to the dranage from ENEGI survey instrument
+        file-write houses_with_abastecimiento
+        file-write Presion_social_year          ;;report social dissatisfaction for the entire period of simulation ( 40 years)
+        file-write scarcity_index
+      ]
+    ]
+    file-close                                        ;close the File
 end
 
 ;to export-postgres
@@ -1673,7 +1698,6 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
   ]
 
 
-  if visualization != "GoogleEarth"[
     ask agebs [
       set size factor_scale * 1
       set shape "circle"
@@ -1683,7 +1707,7 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
 ;############################################################################################
       if Visualization = "Peticion ciudadana" and ticks > 1 [
         set size Presion_social_dy  * factor_scale
-        set color  scale-color red Presion_social_dy 0 Presion_social_max
+        set color  scale-color red Presion_social_dy 0 Presion_social_dy_max
       ] ;;social pressure
 ;############################################################################################
       if visualization = "Compra de Agua" and ticks > 1 [
@@ -1697,7 +1721,7 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
       if visualization = "Extraction Agua SACMEX" and ticks > 1 [set color scale-color magenta d_water_extraction 0 d_water_extraction_max]
 ;############################################################################################
       if visualization = "Areas prioritarias Mantenimiento" and ticks > 1 [
-        set size factor_scale * 100 * d_mantenimiento
+        set size factor_scale * 10 * d_mantenimiento
         set color scale-color magenta d_mantenimiento 0 d_mantenimiento_max
         ]
 ;############################################################################################
@@ -1759,7 +1783,6 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
       ;############################################################################################
       if visualization = "Zonas Aquifero" and ticks > 1 [set color  zona_aquifera]
     ]
-  ]
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -1865,8 +1888,8 @@ ask Alternatives_IZ with [name_action = "Accion colectiva"] [set v_scale_S [0.05
 ask Alternatives_IZ with [name_action = "Captacion de agua"] [set v_scale_S [0.05 1 1 1 1]]
 ask Alternatives_IZ with [name_action = "Modificacion vivienda"] [set v_scale_S [0.05 0.05 0.05 0.8 1]]
 
-print [name_action] of Alternatives_IZ
-print [v_scale_S] of Alternatives_IZ
+;print [name_action] of Alternatives_IZ
+;print [v_scale_S] of Alternatives_IZ
  let MMXo_L csv:from-file  "data/X062916_OTR_a.limit.csv"
  let MMXo_W csv:from-file  "data/X062916_OTR_a.weighted.csv"
 
@@ -1931,8 +1954,8 @@ print [v_scale_S] of Alternatives_IZ
   ask Alternatives_Xo with [name_action = "Captacion de agua"] [set v_scale_S [0.05 0.1 1 1 1]]
   ask Alternatives_Xo with [name_action = "Modificacion vivienda"] [set v_scale_S [0.05 0.05 0.05 0.4 1]]
 
-print [name_action] of Alternatives_Xo
-print [v_scale_S] of Alternatives_Xo
+;print [name_action] of Alternatives_Xo
+;print [v_scale_S] of Alternatives_Xo
 
 ;#########################################################################
 
@@ -2350,7 +2373,7 @@ to supermatrix; procedure to change the weights from the actions to the criteria
   ;print matrix:pretty-print-text MMSACMEX_weighted_D
 
   let MMSACMEX_limit_D_new  (matrix:times MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D)
-  print matrix:pretty-print-text MMSACMEX_limit_D_new
+  ;print matrix:pretty-print-text MMSACMEX_limit_D_new
   let w_sum sum (list matrix:get MMSACMEX_limit_D_new 2 2
     matrix:get MMSACMEX_limit_D_new 3 2
     matrix:get MMSACMEX_limit_D_new 4 2
@@ -2413,7 +2436,7 @@ end
 ;##############################################################################################################
 ;##############################################################################################################
 to indicators
-  set scarcity_index precision (scarcity_index + 0.01 * scarcity_annual) 2
+  set scarcity_index precision (scarcity_index + (1 / 40) * scarcity_annual) 4
   set scarcity_annual 0
 end
 ;#############################################################################################################################################
@@ -2512,11 +2535,11 @@ NIL
 CHOOSER
 249
 127
-517
+405
 172
 Visualization
 Visualization
-"Accion Colectiva" "Petición ciudadana" "Captacion de Agua" "Compra de Agua" "Modificacion de la vivienda" "Areas prioritarias Mantenimiento" "Areas prioritarias Nueva Infraestructura" "Distribucion de Agua SACMEX" "GoogleEarth" "K_groups" "Salud" "Escasez" "Encharcamientos" "% houses with supply" "% houses with drainage" "P. Falla Ab" "P. Falla D" "Zonas Aquifero" "Edad Infraestructura Ab." "Edad Infraestructura D" "Income-index"
+"Accion Colectiva" "Peticion ciudadana" "Captacion de Agua" "Compra de Agua" "Modificacion de la vivienda" "Areas prioritarias Mantenimiento" "Areas prioritarias Nueva Infraestructura" "Distribucion de Agua SACMEX" "GoogleEarth" "K_groups" "Salud" "Escasez" "Encharcamientos" "% houses with supply" "% houses with drainage" "P. Falla Ab" "P. Falla D" "Zonas Aquifero" "Edad Infraestructura Ab." "Edad Infraestructura D" "Income-index"
 11
 
 BUTTON
@@ -2640,7 +2663,7 @@ CHOOSER
 escala
 escala
 "cuenca" "ciudad"
-0
+1
 
 SWITCH
 40
@@ -2692,7 +2715,7 @@ Recursos_para_distribucion
 Recursos_para_distribucion
 0
 4000
-1382
+1340
 1
 1
 NIL
@@ -2707,7 +2730,7 @@ factor_subsidencia
 factor_subsidencia
 0
 0.1
-0.045
+0.0929
 0.0001
 1
 NIL
@@ -2743,7 +2766,7 @@ factor_scale
 factor_scale
 0
 6
-1.1
+2.1
 0.1
 1
 NIL
@@ -2791,20 +2814,20 @@ NIL
 HORIZONTAL
 
 CHOOSER
-286
-348
-425
-393
+249
+236
+406
+281
 actions_per_agebs
 actions_per_agebs
 "single-action" "multiple-actions"
 0
 
 SLIDER
-40
-465
-213
-498
+32
+447
+233
+480
 cut-off_priorities
 cut-off_priorities
 0
@@ -2816,10 +2839,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-272
-468
-444
-501
+29
+484
+232
+517
 n_runs
 n_runs
 0
@@ -3188,10 +3211,12 @@ NetLogo 5.2.1
   <experiment name="experiment1" repetitions="1" runMetricsEveryStep="false">
     <setup>setup</setup>
     <go>go</go>
+    <final>export-map</final>
     <timeLimit steps="3650"/>
     <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_estado = "09"]</metric>
     <metric>mean [Antiguedad-infra_D] of agebs with [CV_estado = "09"]</metric>
     <metric>mean [scarcity_index] of agebs with [CV_estado = "09"]</metric>
+    <metric>mean [Presion_social_year] of agebs with [CV_estado = "09"]</metric>
     <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_municipio = "002"]</metric>
     <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_municipio = "003"]</metric>
     <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_municipio = "004"]</metric>
@@ -3224,6 +3249,22 @@ NetLogo 5.2.1
     <metric>mean [scarcity_index] of agebs with [CV_municipio = "015"]</metric>
     <metric>mean [scarcity_index] of agebs with [CV_municipio = "016"]</metric>
     <metric>mean [scarcity_index] of agebs with [CV_municipio = "017"]</metric>
+    <metric>mean [Presion_social_year] of agebs with [CV_municipio = "002"]</metric>
+    <metric>mean [Presion_social_year] of agebs with [CV_municipio = "003"]</metric>
+    <metric>mean [Presion_social_year] of agebs with [CV_municipio = "004"]</metric>
+    <metric>mean [Presion_social_year] of agebs with [CV_municipio = "005"]</metric>
+    <metric>mean [Presion_social_year] of agebs with [CV_municipio = "006"]</metric>
+    <metric>mean [Presion_social_year] of agebs with [CV_municipio = "007"]</metric>
+    <metric>mean [Presion_social_year] of agebs with [CV_municipio = "008"]</metric>
+    <metric>mean [Presion_social_year] of agebs with [CV_municipio = "009"]</metric>
+    <metric>mean [Presion_social_year] of agebs with [CV_municipio = "010"]</metric>
+    <metric>mean [Presion_social_year] of agebs with [CV_municipio = "011"]</metric>
+    <metric>mean [Presion_social_year] of agebs with [CV_municipio = "012"]</metric>
+    <metric>mean [Presion_social_year] of agebs with [CV_municipio = "013"]</metric>
+    <metric>mean [Presion_social_year] of agebs with [CV_municipio = "014"]</metric>
+    <metric>mean [Presion_social_year] of agebs with [CV_municipio = "015"]</metric>
+    <metric>mean [Presion_social_year] of agebs with [CV_municipio = "016"]</metric>
+    <metric>mean [Presion_social_year] of agebs with [CV_municipio = "017"]</metric>
     <enumeratedValueSet variable="Eficiencia_NuevaInfra">
       <value value="0.0050"/>
     </enumeratedValueSet>
@@ -3272,6 +3313,9 @@ NetLogo 5.2.1
     </enumeratedValueSet>
     <enumeratedValueSet variable="n_run">
       <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="actions_per_agebs">
+      <value value="&quot;multiple-actions&quot;"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>
