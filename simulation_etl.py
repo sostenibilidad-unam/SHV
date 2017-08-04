@@ -14,7 +14,7 @@ class Vulnerability(db.Entity):
     recursos_nuevainfrastructura = Required(float)
     requerimiento_agua = Required(float)
 
-    municipio = Required(int)
+    municipio = Required(str)
 
     edad_infra = Required(float)
     scarcity = Required(float)
@@ -24,7 +24,8 @@ db.generate_mapping(create_tables=True)
 
 edad_mask = 'mean [Antiguedad-infra_Ab] of agebs with [CV_municipio = "%03d"]'
 scarc_mask = 'mean [scarcity_index] of agebs with [CV_municipio = "%03d"]'
-
+mun = [None, None, "Azcapotzalco","Coyoacan","Cuajimalpa","Gustavo A. Madero","Iztacalco","Iztapalapa","Magdalena Contreras",
+       "Milpa Alta","Alvaro Obregon","Tlahuac","Tlalpan","Xochimilco","Benito Juarez","Cuauhtemoc","Miguel Hidalgo","Venustiano Carranza"]
 
 with open('/srv/home/fidel/empirical_abm_runs/ex2/gran_output.csv') as f, db_session:
     r = csv.DictReader(f)
@@ -39,7 +40,7 @@ with open('/srv/home/fidel/empirical_abm_runs/ex2/gran_output.csv') as f, db_ses
               'requerimiento_agua': row['Requerimiento_deAgua'] }
 
         for municipio in range(2, 18):
-            v['municipio'] = municipio
+            v['municipio'] = mun[int(municipio)]
             v['edad_infra'] = row[edad_mask % municipio]
             v['scarcity'] = row[scarc_mask % municipio]
             Vulnerability(**v)
