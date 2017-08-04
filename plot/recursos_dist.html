@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="page-header">
+	<h1>SHV ABM</h1>
+	<p class="lead">Interactive plot.</p>
+      </div>
+
+      Recursos para distribución: 
+      <select id="recursos"
+	      data-htsql="/vulnerability{recursos_para_distribucion}^recursos_para_distribucion">
+      </select>
+
+      <div class="row">
+	<div class="col-md-8">
+      <div style="width: 700px; height: 350px"
+	   data-x-vertical="true"
+	   data-widget="chart"
+	   data-yint="true"
+	   data-title="Levels of scarcity by municipality"
+	   data-ref="recursos" 
+	   data-htsql="/vulnerability^{municipio, recursos_para_distribucion :as recursos} {municipio, avg(vulnerability.scarcity)}?recursos=$recursos">
+
+	 </div>
+
+      <div style="width: 700px; height: 350px"
+	   data-x-vertical="true"	   
+	   data-widget="chart"
+	   data-yint="true"
+	   data-title="Infrastructure Age by Municipality"
+	   data-ref="recursos"
+	   data-htsql="/vulnerability^{municipio, recursos_para_distribucion :as recursos} {municipio, avg(vulnerability.edad_infra)}?recursos=$recursos">	   
+
+      </div>
+	  
+	</div>
+
+	
+	<div class="col-md-4">
+      <div class="table-responsive">
+	<table class="table table-striped"
+	       data-htsql="/vulnerability^{municipio, recursos_para_distribucion :as recursos} {municipio, avg(vulnerability.edad_infra) :as edad, avg(vulnerability.scarcity) :as scarcity}?recursos=$recursos"
+	       data-ref="recursos">
+	</table>
+      </div>
+
+	</div>
+      </div>
+      
+
+
+
+    <script type="text/javascript"
+	    src="htraf/htraf.js"
+	    data-htsql-version="2"
+	    data-htsql-prefix="/dbapi">
+    </script>
+
+  </body>
+</html>

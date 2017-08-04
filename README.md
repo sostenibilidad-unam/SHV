@@ -9,9 +9,21 @@ urban hidric vulnerabilities agent based model
     sql:exec-update "INSERT into tabla values (?,?)" [5 "luis"] 
 
 
+# Python Environment
+
+The use of a python virtual environment is advised.
+
+To create one, run:
+
+   $ virtualenv venv
+
+Once created it should be activated, before use:
+
+    $ source venv/bin/activate
+    (venv) $ # environment is now active
+    
 
 # Extract, Transform & Load
-
 
 First grab the header of any output CSV, thusly:
 
