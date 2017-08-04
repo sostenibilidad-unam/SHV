@@ -30,10 +30,11 @@
 
 	  <div style="width: 700px; height: 350px"
 	       data-widget="chart"
+	       data-type="line"
 	       data-xint="false"	       
 	       data-title="Infrastructure age"
 	       data-ref="municipio"	   	   
-	       data-htsql="/vulnerability{municipio,edad_infra+}?municipio=$municipio">
+	       data-htsql="/vulnerability{id+,edad_infra}?municipio=$municipio">
 	  </div>
 	</div>
 
