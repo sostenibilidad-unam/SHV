@@ -28,23 +28,40 @@ require(rgdal) # requires sp, will use proj.4 if installed
 require(plyr)
 require(foreign)
 require(ggmap)
+library(gridExtra)
 #require(scales)
-source("C:/Users/abaezaca/Documents/MEGADAPT/ABM_V2/multiplot_function.R")
+#source("C:/Users/abaezaca/Documents/MEGADAPT/ABM_V2/multiplot_function.R")
 ```
 
 #ploting water scarcity thresholds and resources/priorities
 ```{r, echo=FALSE,fig.height=5,fig.width=10}
 A<-read.csv(file="C:/Users/abaezaca/Documents/MEGADAPT/SHV/outputs/concat_output_empirical_antiguedad_scarcity_protestas_C.csv",header = T,skip = 0)
 l <- reshape(A, 
-  varying = names(A)[35:50], 
+  varying = names(A)[35:50],
   v.names = "Scarcity",
   timevar = "Delegation", 
   times = names(A)[35:50], 
   direction = "long")
 names<-c("Azcapotzalco","Coyoac???n","Cuajimalpa","Gustavo A. Madero","Iztacalco","Iztapalapa","Magdalena Contreras","Milpa Alta","???lvaro Obreg???n","Tl???huac","Tlalpan","Xochimilco","Benito Ju???rez","Cuauht???moc","Miguel Hidalgo","Venustiano Carranza")
 ID=c("002","003","004","005","006","007","008","009","010","011","012","013","014","015","016","017")
+g1_d<-subset(l,Recursos_para_distribucion == 350)
+ 
 
-G1<-ggplot(subset(l,Recursos_para_distribucion == 350),aes(x=Delegation,y=Scarcity,colour=factor(Recursos_para_distribucion)))+geom_boxplot()+ theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+promedios_delega<-aggregate( . ~ Delegation, data=g1_d, FUN=mean)
+
+ O1<-ggplot(promedios_delega,aes(x=Delegation,y=Scarcity))+geom_boxplot()+ theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+  scale_x_discrete(labels=names[ order(promedios_delega$Scarcity)],limits=order(promedios_delega$Scarcity))+
+ scale_y_continuous(name = "scarcity [days w/n water]",limits = c(0, 80))+
+  scale_color_discrete(name="Resources ",label="10%")+
+   annotate("rect", xmin=0, xmax=18, ymin=0 , ymax=20, alpha=0.1, fill="green")+
+   annotate("rect", xmin=0, xmax=18, ymin=20 , ymax=40, alpha=0.1,  fill="blue")+
+   annotate("rect", xmin=0, xmax=18, ymin=40 , ymax=60, alpha=0.1,  fill="yellow")+   
+   annotate("rect", xmin=0, xmax=18, ymin=60 , ymax=80, alpha=0.1, fill="red")
+
+ 
+ 
+ 
+ G1<-ggplot(subset(l,Recursos_para_distribucion == 350),aes(x=Delegation,y=Scarcity,colour=factor(Recursos_para_distribucion)))+geom_boxplot()+ theme(axis.text.x = element_text(angle = 90, hjust = 1))+
   scale_x_discrete(labels=names)+
  scale_y_continuous(name = "scarcity [days w/n water]",limits = c(0, 80))+
   scale_color_discrete(name="Resources ",label="10%")+
@@ -83,7 +100,9 @@ G4<-ggplot(subset(l,Recursos_para_distribucion == 2250),aes(x=Delegation,y=Scarc
    annotate("rect", xmin=0, xmax=18, ymin=40 , ymax=60, alpha=0.1,  fill="yellow")+   
    annotate("rect", xmin=0, xmax=18, ymin=60 , ymax=80, alpha=0.1, fill="red")
 png(filename = "ranking_escasez.png",width = 18,height = 12,units = "in",res=300)
-multiplot(G4,G3 ,G2,G1, cols = 2)
+#multiplot(G4,G3 ,G2,G1, cols = 2)
+grid.arrange(G4,G3 ,G2,G1,ncol=2)#ncol=2)
+
 dev.off()
 ```
 
@@ -135,7 +154,7 @@ colnames(gor_df)<-c("long","lat")
 studyArea@data$antiguedad_inicial=antiguedad_inicial@data$VALUE
 studyArea@data$escazes_inicial=escazes_inicial@data$VALUE
 
-studyArea@data$escazes_final_L=numeric(length(escazes_inicial@data$escasez))
+studyArea@data$es_C1=numeric(length(escazes_inicial@data$escasez))
 studyArea@data$antiguedad_final_L=numeric(length(antiguedad_inicial@data$antiguedad))
 studyArea@data$social_pressure_L=numeric(length(antiguedad_inicial@data$antiguedad))
 studyArea@data$AB_m_L=numeric(length(antiguedad_inicial@data$antiguedad))
@@ -143,7 +162,7 @@ studyArea@data$AB_n_L=numeric(length(antiguedad_inicial@data$antiguedad))
 studyArea@data$D_m_L=numeric(length(antiguedad_inicial@data$antiguedad))
 studyArea@data$D_n_L=numeric(length(antiguedad_inicial@data$antiguedad))
 
-studyArea@data$escazes_final_M=numeric(length(escazes_inicial@data$escasez))
+studyArea@data$es_C2=numeric(length(escazes_inicial@data$escasez))
 studyArea@data$antiguedad_final_M=numeric(length(antiguedad_inicial@data$antiguedad))
 studyArea@data$social_pressure_M=numeric(length(antiguedad_inicial@data$antiguedad))
 studyArea@data$AB_m_M=numeric(length(antiguedad_inicial@data$antiguedad))
@@ -151,13 +170,15 @@ studyArea@data$AB_n_M=numeric(length(antiguedad_inicial@data$antiguedad))
 studyArea@data$D_m_M=numeric(length(antiguedad_inicial@data$antiguedad))
 studyArea@data$D_n_M=numeric(length(antiguedad_inicial@data$antiguedad))
 
-studyArea@data$escazes_final_H=numeric(length(escazes_inicial@data$escasez))
-  studyArea@data$antiguedad_final_H=numeric(length(antiguedad_inicial@data$antiguedad))
+studyArea@data$es_C3=numeric(length(escazes_inicial@data$escasez))
+studyArea@data$antiguedad_final_H=numeric(length(antiguedad_inicial@data$antiguedad))
 studyArea@data$social_pressure_H=numeric(length(antiguedad_inicial@data$antiguedad))
 studyArea@data$AB_m_H=numeric(length(antiguedad_inicial@data$antiguedad))
 studyArea@data$AB_n_H=numeric(length(antiguedad_inicial@data$antiguedad))
 studyArea@data$D_m_H=numeric(length(antiguedad_inicial@data$antiguedad))
 studyArea@data$D_n_H=numeric(length(antiguedad_inicial@data$antiguedad))
+
+studyArea@data$es_C4=numeric(length(escazes_inicial@data$escasez))
 
 #read data from netlogo output text file
 studyArea@data$estado<-as.factor(substring(studyArea@data$CVGEO,1,2))
@@ -174,7 +195,6 @@ map_a<-scan(file = 'C:/Users/abaezaca/Documents/MEGADAPT/SHV/125024000.00500.005
 for (i in seq(1,length(map_a),13)){
 studyArea@data$antiguedad_final_H[which(studyArea@data$AGEB_ID ==map_a[i])]<-  round(map_a[i+1] / 365)
 studyArea@data$social_pressure_H[which(studyArea@data$AGEB_ID ==map_a[i])]<-  round(map_a[i+5])
-studyArea@data$escazes_final_H[which(studyArea@data$AGEB_ID ==map_a[i])]<-  round(map_a[i+6])
 studyArea@data$AB_n_H[which(studyArea@data$AGEB_ID ==map_a[i])]<-  round(map_a[i+8])
 studyArea@data$AB_m_H[which(studyArea@data$AGEB_ID ==map_a[i])]<-  round(map_a[i+9])
 studyArea@data$D_n_H[which(studyArea@data$AGEB_ID ==map_a[i])]<-  round(map_a[i+11])
@@ -185,7 +205,6 @@ map_b<-scan(file = 'C:/Users/abaezaca/Documents/MEGADAPT/SHV/125012000.00500.005
 for (i in seq(1,length(map_b),13)){
 studyArea@data$antiguedad_final_M[which(studyArea@data$AGEB_ID ==map_b[i])]<-  round(map_b[i+1] / 365)
 studyArea@data$social_pressure_M[which(studyArea@data$AGEB_ID ==map_b[i])]<-  round(map_b[i+5])
-studyArea@data$escazes_final_M[which(studyArea@data$AGEB_ID ==map_b[i])]<-  round(map_b[i+6])
 studyArea@data$AB_n_M[which(studyArea@data$AGEB_ID ==map_b[i])]<-  round(map_b[i+8])
 studyArea@data$AB_m_M[which(studyArea@data$AGEB_ID ==map_b[i])]<-  round(map_b[i+9])
 studyArea@data$D_n_M[which(studyArea@data$AGEB_ID ==map_b[i])]<-  round(map_b[i+11])
@@ -196,7 +215,6 @@ map_C<-scan(file = 'C:/Users/abaezaca/Documents/MEGADAPT/SHV/12502400.00500.0050
 for (i in seq(1,length(map_C),13)){
 studyArea@data$antiguedad_final_L[which(studyArea@data$AGEB_ID ==map_C[i])]<-  round(map_C[i+1] / 365)
 studyArea@data$social_pressure_L[which(studyArea@data$AGEB_ID ==map_C[i])]<-  round(map_C[i+5])
-studyArea@data$escazes_final_L[which(studyArea@data$AGEB_ID ==map_C[i])]<-  round(map_C[i+6])
 studyArea@data$AB_n_L[which(studyArea@data$AGEB_ID ==map_C[i])]<-  round(map_C[i+8])
 studyArea@data$AB_m_L[which(studyArea@data$AGEB_ID ==map_C[i])]<-  round(map_C[i+9])
 studyArea@data$D_n_L[which(studyArea@data$AGEB_ID ==map_C[i])]<-  round(map_C[i+11])
@@ -204,7 +222,36 @@ studyArea@data$D_m_L[which(studyArea@data$AGEB_ID ==map_C[i])]<-  round(map_C[i+
 }
 
 
+#read scarcity for mapping
+map_ac<-scan(file = 'C:/Users/abaezaca/Documents/MEGADAPT/SHV/outputs/1-240-240-240-0.025-0.025.txt')
+for (i in seq(1,length(map_ac),13)){
+studyArea@data$es_C1[which(studyArea@data$AGEB_ID ==map_ac[i])]<-  round(map_ac[i+6])
+}
 
+map_bc<-scan(file = 'C:/Users/abaezaca/Documents/MEGADAPT/SHV/outputs/1-960-240-240-0.025-0.025.txt')
+for (i in seq(1,length(map_bc),13)){
+studyArea@data$es_C2[which(studyArea@data$AGEB_ID ==map_bc[i])]<-  round(map_bc[i+6])
+}
+#low
+map_cc<-scan(file = 'C:/Users/abaezaca/Documents/MEGADAPT/SHV/outputs/1-1680-240-240-0.025-0.025.txt')
+for (i in seq(1,length(map_cc),13)){
+studyArea@data$es_C3[which(studyArea@data$AGEB_ID ==map_cc[i])]<-  round(map_cc[i+6])
+}
+
+map_dc<-scan(file = 'C:/Users/abaezaca/Documents/MEGADAPT/SHV/outputs/1-2400-240-240-0.025-0.025.txt')
+for (i in seq(1,length(map_dc),13)){
+studyArea@data$es_C4[which(studyArea@data$AGEB_ID ==map_dc[i])]<-  round(map_dc[i+6])
+}
+
+
+
+studyArea@data<-transform(studyArea@data, z.scarcity_L=cut(studyArea@data$es_C1, breaks=c(0,10,20,40,60)))
+
+studyArea@data<-transform(studyArea@data, z.scarcity_M=cut(studyArea@data$es_C2, breaks=c(0,10,20,40,60)))
+
+studyArea@data<-transform(studyArea@data, z.scarcity_H=cut(studyArea@data$es_C3, breaks=c(0,10,20,40,60)))
+
+studyArea@data<-transform(studyArea@data, z.scarcity_VH=cut(studyArea@data$es_C4, breaks=c(0,10,20,40,60)))
 
 
 
@@ -229,7 +276,7 @@ studyArea@data<-transform(studyArea@data, z.AB_n_H=cut(studyArea@data$AB_n_H, br
 studyArea@data<-transform(studyArea@data, z.D_m_H=cut(studyArea@data$D_m_H, breaks=c(0,1,25,50,100,250)))
 studyArea@data<-transform(studyArea@data, z.D_n_H=cut(studyArea@data$D_n_H, breaks=c(0,1,25,50,100,250)))
 
-writePolyShape(studyArea,"C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/outputs/CDMX_vulnerability",proj4string=CRS("+proj=longlat +datum=WGS84"))
+writePolyShape(studyArea,"C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/outputs/CDMX_vulnerability")
 writeOGR(studyArea,layer="CDMX_vulnerability_prj",dsn = "C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/outputs",driver="ESRI Shapefile")
 
 colors1 <- colorRampPalette(c( "red","yellow","green","blue","lightblue"))(length(levels(studyArea@data$z.cut5)))
@@ -706,7 +753,7 @@ dev.off()
 
 #First analyses/results water scarcity
 ```{r, echo=FALSE,fig.height=10,fig.width=20}
-studyArea@data$escazes_diff_M=(studyArea@data$escazes_inicial - studyArea@data$escazes_final_M)
+studyArea@data$escazes_diff_M=(studyArea@data$escazes_inicial - studyArea@data$es_C1)
 
   studyArea@data<-transform(studyArea@data, z.cut6=cut(escazes_final_M, breaks=c(-1,10,15,20,30,110),labels = c("very-low","low","medium","high","very-high")))
 
@@ -894,11 +941,12 @@ d_R_AC
 #mapping water scarcity in space
 ```{r, echo=FALSE,fig.height=10,fig.width=20}
 studyArea<-readShapeSpatial("C:/Users/abaezaca/Documents/MEGADAPT/SHV/data/agebs_studyArea")
-antiguedad_inicial<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/13abril2017/antiguedad")
-escazes_inicial<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/13abril2017/ESCASEZLCS17a")
+antiguedad_inicial<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/Layers/Final/antiguedad_v1")
+escazes_inicial<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/Layers/Final/escasez_v1")
 Munic<-readShapeSpatial("C:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/limites_deleg_DF_2013")
 gor=readShapeSpatial("C:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/Medicas_ITRF_1992")
 gor_df<-as.data.frame(cbind(gor@coords[which(gor@data$TIPO_DE_ES=="CE"),]))
+
 
 colnames(gor_df)<-c("long","lat")
 #generate new variables to add todata frams study area
@@ -942,49 +990,35 @@ studyArea@data$municipio<-as.factor(substring(studyArea@data$CVGEO,3,5))
 #studyArea@data$escazes_final[which(studyArea@data$AGEB_ID ==Ant[i])]<-  round(Ant[i+6])
 #}
 #high budget
-map_a<-scan(file = 'C:/Users/abaezaca/Documents/MEGADAPT/SHV/outputs/1-240-240-240-0.025-0.025.txt')
-for (i in seq(1,length(map_a),13)){
-studyArea@data$antiguedad_final_H[which(studyArea@data$AGEB_ID ==map_a[i])]<-  round(map_a[i+1] / 365)
-studyArea@data$social_pressure_H[which(studyArea@data$AGEB_ID ==map_a[i])]<-  round(map_a[i+5])
-studyArea@data$escazes_final_H[which(studyArea@data$AGEB_ID ==map_a[i])]<-  round(map_a[i+6])
-studyArea@data$AB_n_H[which(studyArea@data$AGEB_ID ==map_a[i])]<-  round(map_a[i+8])
-studyArea@data$AB_m_H[which(studyArea@data$AGEB_ID ==map_a[i])]<-  round(map_a[i+9])
-studyArea@data$D_n_H[which(studyArea@data$AGEB_ID ==map_a[i])]<-  round(map_a[i+11])
-studyArea@data$D_m_H[which(studyArea@data$AGEB_ID ==map_a[i])]<-  round(map_a[i+12])
+map_ac<-scan(file = 'C:/Users/abaezaca/Documents/MEGADAPT/SHV/outputs/1-240-240-240-0.025-0.025.txt')
+for (i in seq(1,length(map_ac),13)){
+studyArea@data$es_C1[which(studyArea@data$AGEB_ID ==map_ac[i])]<-  round(map_ac[i+6])
 }
 
-map_b<-scan(file = 'C:/Users/abaezaca/Documents/MEGADAPT/SHV/outputs/1-960-240-240-0.025-0.025.txt')
-for (i in seq(1,length(map_b),13)){
-studyArea@data$antiguedad_final_M[which(studyArea@data$AGEB_ID ==map_b[i])]<-  round(map_b[i+1] / 365)
-studyArea@data$social_pressure_M[which(studyArea@data$AGEB_ID ==map_b[i])]<-  round(map_b[i+5])
-studyArea@data$escazes_final_M[which(studyArea@data$AGEB_ID ==map_b[i])]<-  round(map_b[i+6])
-studyArea@data$AB_n_M[which(studyArea@data$AGEB_ID ==map_b[i])]<-  round(map_b[i+8])
-studyArea@data$AB_m_M[which(studyArea@data$AGEB_ID ==map_b[i])]<-  round(map_b[i+9])
-studyArea@data$D_n_M[which(studyArea@data$AGEB_ID ==map_b[i])]<-  round(map_b[i+11])
-studyArea@data$D_m_M[which(studyArea@data$AGEB_ID ==map_b[i])]<-  round(map_b[i+12])
+map_bc<-scan(file = 'C:/Users/abaezaca/Documents/MEGADAPT/SHV/outputs/1-960-240-240-0.025-0.025.txt')
+for (i in seq(1,length(map_bc),13)){
+studyArea@data$es_C2[which(studyArea@data$AGEB_ID ==map_bc[i])]<-  round(map_bc[i+6])
 }
 #low
-map_C<-scan(file = 'C:/Users/abaezaca/Documents/MEGADAPT/SHV/outputs/1-1680-240-240-0.025-0.025.txt')
-for (i in seq(1,length(map_C),13)){
-studyArea@data$antiguedad_final_L[which(studyArea@data$AGEB_ID ==map_C[i])]<-  round(map_C[i+1] / 365)
-studyArea@data$social_pressure_L[which(studyArea@data$AGEB_ID ==map_C[i])]<-  round(map_C[i+5])
-studyArea@data$escazes_final_L[which(studyArea@data$AGEB_ID ==map_C[i])]<-  round(map_C[i+6])
-studyArea@data$AB_n_L[which(studyArea@data$AGEB_ID ==map_C[i])]<-  round(map_C[i+8])
-studyArea@data$AB_m_L[which(studyArea@data$AGEB_ID ==map_C[i])]<-  round(map_C[i+9])
-studyArea@data$D_n_L[which(studyArea@data$AGEB_ID ==map_C[i])]<-  round(map_C[i+11])
-studyArea@data$D_m_L[which(studyArea@data$AGEB_ID ==map_C[i])]<-  round(map_C[i+12])
+map_cc<-scan(file = 'C:/Users/abaezaca/Documents/MEGADAPT/SHV/outputs/1-1680-240-240-0.025-0.025.txt')
+for (i in seq(1,length(map_cc),13)){
+studyArea@data$es_C3[which(studyArea@data$AGEB_ID ==map_cc[i])]<-  round(map_cc[i+6])
+}
+
+map_dc<-scan(file = 'C:/Users/abaezaca/Documents/MEGADAPT/SHV/outputs/1-2400-240-240-0.025-0.025.txt')
+for (i in seq(1,length(map_dc),13)){
+studyArea@data$es_C3[which(studyArea@data$AGEB_ID ==map_dc[i])]<-  round(map_dc[i+6])
 }
 
 
-studyArea@data$antiguedad_diff_M=(studyArea@data$antiguedad_final_M-studyArea@data$antiguedad_inicial)
 
+studyArea@data<-transform(studyArea@data, z.scarcity_L=cut(studyArea@data$es_C1, breaks=c(0,10,20,40,60)))
 
+studyArea@data<-transform(studyArea@data, z.scarcity_M=cut(studyArea@data$es_C2, breaks=c(0,10,20,40,60)))
 
-studyArea@data<-transform(studyArea@data, z.scarcity_L=cut(studyArea@data$escazes_final_L, breaks=c(0,10,20,40,60)))
+studyArea@data<-transform(studyArea@data, z.scarcity_H=cut(studyArea@data$es_C3, breaks=c(0,10,20,40,60)))
 
-studyArea@data<-transform(studyArea@data, z.scarcity_M=cut(studyArea@data$escazes_final_M, breaks=c(0,10,20,40,60)))
-
-studyArea@data<-transform(studyArea@data, z.scarcity_H=cut(studyArea@data$escazes_final_H, breaks=c(0,10,20,40,60)))
+studyArea@data<-transform(studyArea@data, z.scarcity_VH=cut(studyArea@data$es_C4, breaks=c(0,10,20,40,60)))
 
 
 
