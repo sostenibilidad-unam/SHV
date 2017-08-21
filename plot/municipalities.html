@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="page-header">
+	<h1>SHV ABM</h1>
+	<p class="lead">Interactive plot.</p>
+      </div>
+
+      Municipality: 
+      <select id="municipio"
+	      data-htsql="/vulnerability{municipio}^municipio">
+      </select>
+
+      <div class="row">
+	<div class="col-md-8">      
+	  <div style="width: 700px; height: 350px"
+	       data-widget="chart"
+	       data-label="false"
+	       data-title="Levels of scarcity"
+	       data-ref="municipio"
+	       data-htsql="/vulnerability{municipio,scarcity+}?municipio=$municipio">
+	  </div>
+
+	  <div style="width: 700px; height: 350px"
+	       data-widget="chart"
+	       data-type="line"
+	       data-xint="false"	       
+	       data-title="Infrastructure age"
+	       data-ref="municipio"	   	   
+	       data-htsql="/vulnerability{id+,edad_infra}?municipio=$municipio">
+	  </div>
+	</div>
+
+	<div class="col-md-4">
+	  <div class="table-responsive">
+	    <table class="table table-striped"
+		   data-htsql="/vulnerability{municipio, scarcity, edad_infra :as age}?municipio=$municipio"
+		   data-ref="municipio">
+	    </table>
+	  </div>
+	</div>
+    </div>
+
+    <script type="text/javascript"
+	    src="htraf/htraf.js"
+	    data-htsql-version="2"
+	    data-htsql-prefix="/dbapi">
+    </script>
+
+  </body>
+</html>

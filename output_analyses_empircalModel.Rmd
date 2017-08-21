@@ -28,9 +28,14 @@ require(rgdal) # requires sp, will use proj.4 if installed
 require(plyr)
 require(foreign)
 require(ggmap)
+#<<<<<<< HEAD
 library(gridExtra)
 #require(scales)
 #source("C:/Users/abaezaca/Documents/MEGADAPT/ABM_V2/multiplot_function.R")
+#=======
+#require(scales)
+#source("C:/Users/abaezaca/Documents/MEGADAPT/ABM_V2/multiplot_function.R")
+#>>>>>>> c74c88e51d1a64b89da88a3d28c9bf0ff2d08703
 ```
 
 #ploting water scarcity thresholds and resources/priorities
@@ -42,32 +47,22 @@ l <- reshape(A,
   timevar = "Delegation", 
   times = names(A)[35:50], 
   direction = "long")
-names<-c("Azcapotzalco","Coyoac???n","Cuajimalpa","Gustavo A. Madero","Iztacalco","Iztapalapa","Magdalena Contreras","Milpa Alta","???lvaro Obreg???n","Tl???huac","Tlalpan","Xochimilco","Benito Ju???rez","Cuauht???moc","Miguel Hidalgo","Venustiano Carranza")
+#names<-c("Azcapotzalco","Coyoac???n","Cuajimalpa","Gustavo A. Madero","Iztacalco","Iztapalapa","Magdalena Contreras","Milpa Alta","???lvaro Obreg???n","Tl???huac","Tlalpan","Xochimilco","Benito Ju???rez","Cuauht???moc","Miguel Hidalgo","Venustiano Carranza")
+#ID=c("002","003","004","005","006","007","008","009","010","011","012","013","014","015","016","017")
+#g1_d<-subset(l,Recursos_para_distribucion == 350)
+ 
+
+
+names<-c("Azcapotzalco","Coyoacán","Cuajimalpa","Gustavo A. Madero","Iztacalco","Iztapalapa","Magdalena Contreras","Milpa Alta","Álvaro Obregón","Tláhuac","Tlalpan","Xochimilco","Benito Juárez","Cuauhtémoc","Miguel Hidalgo","Venustiano Carranza")
 ID=c("002","003","004","005","006","007","008","009","010","011","012","013","014","015","016","017")
-g1_d<-subset(l,Recursos_para_distribucion == 350)
- 
 
-promedios_delega<-aggregate( . ~ Delegation, data=g1_d, FUN=mean)
-
- O1<-ggplot(promedios_delega,aes(x=Delegation,y=Scarcity))+geom_boxplot()+ theme(axis.text.x = element_text(angle = 90, hjust = 1))+
-  scale_x_discrete(labels=names[ order(promedios_delega$Scarcity)],limits=order(promedios_delega$Scarcity))+
- scale_y_continuous(name = "scarcity [days w/n water]",limits = c(0, 80))+
-  scale_color_discrete(name="Resources ",label="10%")+
+G1<-ggplot(subset(l,Recursos_para_distribucion == 350),aes(x=Delegation,y=Scarcity,colour=factor(Recursos_para_distribucion)))+geom_boxplot()+ theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+   scale_x_discrete(labels=names)+
+   scale_y_continuous(name = "scarcity [days w/n water]",limits = c(0, 80))+
+   scale_color_discrete(name="Resources ",label="10%")+
    annotate("rect", xmin=0, xmax=18, ymin=0 , ymax=20, alpha=0.1, fill="green")+
    annotate("rect", xmin=0, xmax=18, ymin=20 , ymax=40, alpha=0.1,  fill="blue")+
-   annotate("rect", xmin=0, xmax=18, ymin=40 , ymax=60, alpha=0.1,  fill="yellow")+   
-   annotate("rect", xmin=0, xmax=18, ymin=60 , ymax=80, alpha=0.1, fill="red")
-
- 
- 
- 
- G1<-ggplot(subset(l,Recursos_para_distribucion == 350),aes(x=Delegation,y=Scarcity,colour=factor(Recursos_para_distribucion)))+geom_boxplot()+ theme(axis.text.x = element_text(angle = 90, hjust = 1))+
-  scale_x_discrete(labels=names)+
- scale_y_continuous(name = "scarcity [days w/n water]",limits = c(0, 80))+
-  scale_color_discrete(name="Resources ",label="10%")+
-   annotate("rect", xmin=0, xmax=18, ymin=0 , ymax=20, alpha=0.1, fill="green")+
-   annotate("rect", xmin=0, xmax=18, ymin=20 , ymax=40, alpha=0.1,  fill="blue")+
-   annotate("rect", xmin=0, xmax=18, ymin=40 , ymax=60, alpha=0.1,  fill="yellow")+   
+   annotate("rect", xmin=0, xmax=18, ymin=40 , ymax=60, alpha=0.1,  fill="yellow")+
    annotate("rect", xmin=0, xmax=18, ymin=60 , ymax=80, alpha=0.1, fill="red")
  
 
@@ -103,6 +98,7 @@ png(filename = "ranking_escasez.png",width = 18,height = 12,units = "in",res=300
 #multiplot(G4,G3 ,G2,G1, cols = 2)
 grid.arrange(G4,G3 ,G2,G1,ncol=2)#ncol=2)
 
+#multiplot(G4,G3 ,G2,G1, cols = 2)
 dev.off()
 ```
 
@@ -123,7 +119,7 @@ lp <- reshape(A,
   times = names(A)[35:50], 
   direction = "long")
 
-names<-c("Azcapotzalco","Coyoac???n","Cuajimalpa","Gustavo A. Madero","Iztacalco","Iztapalapa","Magdalena Contreras","Milpa Alta","???lvaro Obreg???n","Tl???huac","Tlalpan","Xochimilco","Benito Ju???rez","Cuauht???moc","Miguel Hidalgo","Venustiano Carranza")
+names<-c("Azcapotzalco","Coyoacán","Cuajimalpa","Gustavo A. Madero","Iztacalco","Iztapalapa","Magdalena Contreras","Milpa Alta","Álvaro Obregón","Tláhuac","Tlalpan","Xochimilco","Benito Juárez","Cuauhtémoc","Miguel Hidalgo","Venustiano Carranza")
 ID=c("002","003","004","005","006","007","008","009","010","011","012","013","014","015","016","017")
 
 ggplot(l,aes(x=Delegation,y=Antiguedad,colour=factor(recursos_para_mantenimiento)))+geom_boxplot()+ theme(axis.text.x = element_text(angle = 90, hjust = 1))+
@@ -278,6 +274,37 @@ studyArea@data<-transform(studyArea@data, z.D_n_H=cut(studyArea@data$D_n_H, brea
 
 writePolyShape(studyArea,"C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/outputs/CDMX_vulnerability")
 writeOGR(studyArea,layer="CDMX_vulnerability_prj",dsn = "C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/outputs",driver="ESRI Shapefile")
+studyArea@data$antiguedad_diff_M=(studyArea@data$antiguedad_final_M-studyArea@data$antiguedad_inicial)
+
+
+
+#cut-offs
+studyArea@data<-transform(studyArea@data, z.cut3=cut(antiguedad_diff_M, breaks=c(-32,-15,0,20),labels = c("high","medium","low")))
+studyArea@data<-transform(studyArea@data, z.cut5=cut(antiguedad_diff_M, breaks=c(-32,-15,-4,0,6,20),labels = c("very-high","high","medium","low","very-low")))
+
+#here we reate new variables to define threshold of based on actions and issue (scarcity or flooding)
+studyArea@data<-transform(studyArea@data, z.AB_m_L=cut(studyArea@data$AB_m_L, breaks=c(-10,1,25,50,100,250)))
+studyArea@data<-transform(studyArea@data, z.AB_n_L=cut(studyArea@data$AB_n_L, breaks=c(-10,1,25,50,100,250)))
+
+studyArea@data<-transform(studyArea@data, z.D_m_L=cut(studyArea@data$D_m_L, breaks=c(-10,1,25,50,100,250)))
+studyArea@data<-transform(studyArea@data, z.D_n_L=cut(studyArea@data$D_n_L, breaks=c(-10,1,25,50,100,250)))
+
+
+studyArea@data<-transform(studyArea@data, z.AB_m_M=cut(studyArea@data$AB_m_M, breaks=c(-10,1,25,50,100,250)))
+studyArea@data<-transform(studyArea@data, z.AB_n_M=cut(studyArea@data$AB_n_M, breaks=c(-10,1,25,50,100,250)))
+
+studyArea@data<-transform(studyArea@data, z.D_m_M=cut(studyArea@data$D_m_M, breaks=c(-10,1,25,50,100,250)))
+studyArea@data<-transform(studyArea@data, z.D_n_M=cut(studyArea@data$D_n_M, breaks=c(-10,1,25,50,100,250)))
+
+
+studyArea@data<-transform(studyArea@data, z.AB_m_H=cut(studyArea@data$AB_m_H, breaks=c(-10,1,25,50,100,250)))
+studyArea@data<-transform(studyArea@data, z.AB_n_H=cut(studyArea@data$AB_n_H, breaks=c(-10,1,25,50,100,250)))
+
+studyArea@data<-transform(studyArea@data, z.D_m_H=cut(studyArea@data$D_m_H, breaks=c(-10,1,25,50,100,250)))
+studyArea@data<-transform(studyArea@data, z.D_n_H=cut(studyArea@data$D_n_H, breaks=c(-10,1,25,50,100,250)))
+
+
+
 
 colors1 <- colorRampPalette(c( "red","yellow","green","blue","lightblue"))(length(levels(studyArea@data$z.cut5)))
 colors2 <- colorRampPalette(c( "red","yellow","blue"))(length(levels(studyArea@data$z.cut3)))
@@ -299,7 +326,6 @@ ll<-c(-98.9,19,-99.3,19.6)
 
 map<-get_map(location = c(mean(xl),mean(yl)) , maptype = "satellite",source='google',zoom = 1) #location="Mexico City"
 map<-get_map(location = ll , maptype = "satellite",source='google',zoom = 10) #location="Mexico 
-#create ggplot objects
 
 AI <- ggmap(map, base_layer=ggplot(data=gor_df, aes(x=long,y=lat)),extent = "normal", maprange=FALSE) 
 AI <- AI+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=antiguedad_inicial))+
@@ -457,6 +483,7 @@ dev.off()
 #png(filename = "expected_level_of_investments.png",width = 12,height = 12,units = "in",res=300)
 #ADiff
 #dev.off()
+
 #proposal
 
 #read google map
@@ -484,6 +511,7 @@ INv_D_N_cut_M <- INv_D_N_cut_M+geom_polygon(data=subset(studyArea.df,estado==lev
 png(filename = "C:/Users/abaezaca/Dropbox (ASU)/poposals/expected_level_of_investments.png",width = 8,height = 4,units = "in",res=400)
 multiplot(INv_D_M_cut_M,INv_D_N_cut_M,cols = 2)
 dev.off()
+INv_D_M_cut_M
 ```
 
 
@@ -946,7 +974,6 @@ escazes_inicial<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/Layers/Final/
 Munic<-readShapeSpatial("C:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/limites_deleg_DF_2013")
 gor=readShapeSpatial("C:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/Medicas_ITRF_1992")
 gor_df<-as.data.frame(cbind(gor@coords[which(gor@data$TIPO_DE_ES=="CE"),]))
-
 
 colnames(gor_df)<-c("long","lat")
 #generate new variables to add todata frams study area
