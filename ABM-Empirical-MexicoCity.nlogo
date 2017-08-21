@@ -118,6 +118,7 @@ globals [
   elevation                                                          ;elevation of the city
   Lumbreras_map
   desalojo_profundo
+  desalojo_primario                                                  ;red de can~erias con connection a casas
   estaciones_lluvia_SACMEX
   network_cutzamala                                                  ;large-scale supply network
   network_lerma                                                      ;large-scale supply network
@@ -151,7 +152,8 @@ breed [Pozos pozo]
 breed [Cutzamala tramo]
 breed [Lumbreras Lumbrera]
 breed [drenaje_profundo tramo]
-directed-link-breed [active-links active-link]
+breed [sewage_nodes sewage_node]
+directed-link-breed [D_pipes D_pipe]
 breed [Alternatives_IZ action_IZ]
 breed [Alternatives_Xo action_Xo]
 breed [Alternatives_MC action_MC]
@@ -307,6 +309,9 @@ Agebs-own[
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 rain_Stations-own[name p_rain shp rate_g Rain_t]
+sewage_nodes-own[ID age from_node to_node Btwn]
+
+D_pipes-own [ current-flow ]
 Pozos-own[
   Name
   col_ID                      ;;location of well in neighborhood
@@ -834,6 +839,7 @@ end
 ;; read GIS layers
 to load-gis                                                                                                                                 ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
   set estaciones_lluvia_SACMEX gis:load-dataset  "data/estacionesRain/rainfall_statistics_CDMX.shp"
+  set desalojo_primario gis:load-dataset  "data/Sewer_Nodes_July27_Project.shp"
   set pozos_WaterOperator gis:load-dataset  "data/Join_pozosColoniasAgebs.shp"                                 ;wells
   set PozosCMZM_Project gis:load-dataset  "data/PozosCMZM_Project.shp"
   set PozosPachuca_Project gis:load-dataset  "data/PozosPachuca_Project.shp"
@@ -1192,42 +1198,83 @@ to load_infra
           ]
       ]
     ]
-
-    ;Texcoco
-
-    foreach gis:feature-list-of PozosTexcoco_Project
+;
+;    ;Texcoco
+;
+;    foreach gis:feature-list-of PozosTexcoco_Project
+;    [ let centroid gis:location-of gis:centroid-of ?
+;      if not empty? centroid
+;      [ create-pozos 1
+;        [ set xcor item 0 centroid
+;          set ycor item 1 centroid
+;          set CVEGEO [CVEGEO] of min-one-of agebs [distance myself]
+;          if CVEGEO != 0 [
+;            set CV_estado (substring CVEGEO 0 2)
+;            set CV_municipio (substring CVEGEO 2 5)
+;            set Localidad (substring CVEGEO 5 9)
+;            set AGB_k (substring CVEGEO 9 13)
+;          ]
+;          set shape "circle 2"
+;          set size 0.1
+;          set color white
+;          set age_pozo (1 + random 20) * 365
+;          set H 1
+;          set extraction_rate 87225 ;m3/dia
+;          ]
+;      ]
+;    ]
+;
+;
+;    ask pozos [set production extraction_rate * (1 / count pozos)] ; set daily production of water in [mts^3/s]*[s/min]*[min/hour]*[hours/day]*[1/tot pozos]=[mts^3/(day*pozo)]
+;    ;let tpz 0
+;    ask agebs [
+;      set pozos_agebs turtle-set pozos with [AGB_k = [AGB_k] of myself]
+;    ]
+;;    #############################
+;;read nodes secondary sewer
+    foreach gis:feature-list-of desalojo_primario
     [ let centroid gis:location-of gis:centroid-of ?
       if not empty? centroid
-      [ create-pozos 1
-        [ set xcor item 0 centroid
+      [ create-sewage_nodes 1
+        [
+          set xcor item 0 centroid
           set ycor item 1 centroid
-          set CVEGEO [CVEGEO] of min-one-of agebs [distance myself]
-          if CVEGEO != 0 [
-            set CV_estado (substring CVEGEO 0 2)
-            set CV_municipio (substring CVEGEO 2 5)
-            set Localidad (substring CVEGEO 5 9)
-            set AGB_k (substring CVEGEO 9 13)
-          ]
+          set ID  gis:property-value ? "Id"
+          set age [Antiguedad-infra_D] of agebs-here
           set shape "circle 2"
-          set size 0.1
-          set color white
-          set age_pozo (1 + random 20) * 365
-          set H 1
-          set extraction_rate 87225 ;m3/dia
+          set size 3
+          set color red
+          set Btwn gis:property-value ? "Norm_Betwe"
           ]
       ]
     ]
 
+;read link between nodes
+    let canerias csv:from-file "data/network_directed_sewage.csv"
+    let m_pipes matrix:from-row-list but-first canerias
 
-    ask pozos [set production extraction_rate * (1 / count pozos)] ; set daily production of water in [mts^3/s]*[s/min]*[min/hour]*[hours/day]*[1/tot pozos]=[mts^3/(day*pozo)]
-    ;let tpz 0
-    ask agebs [
-      set pozos_agebs turtle-set pozos with [AGB_k = [AGB_k] of myself]
-    ]
+    print matrix:pretty-print-text m_pipes
+    let to_node_l matrix:get-column  m_pipes 0
+    let from_node_l matrix:get-column  m_pipes 1
+
+    print to_node_l
+    (foreach to_node_l from_node_l[
+
+        let nn sewage_nodes with [ID = ?1]
+        let mm sewage_nodes with [ID = ?2]
+
+        ask mm [create-D_pipes-to nn[]]
+    ])
+
+;    #############################
+
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
-
+to show_sewer
+  ask sewage_nodes [ifelse hidden? = false [set hidden? true][set hidden? false]]
+  ask D_pipes [ifelse hidden? = false [set hidden? true][set hidden? false]]
+end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 
@@ -2746,13 +2793,13 @@ end
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 @#$#@#$#@
 GRAPHICS-WINDOW
-418
-89
-1103
-795
+465
+15
+1377
+957
 -1
 -1
-1.6833
+1.5661
 1
 40
 1
@@ -2834,10 +2881,10 @@ Visualization
 11
 
 BUTTON
-1179
-46
-1351
-115
+1593
+45
+1765
+114
 NIL
 show_limitesDelegaciones
 NIL
@@ -2851,10 +2898,10 @@ NIL
 1
 
 BUTTON
-1179
-129
-1349
-193
+1586
+133
+1756
+197
 NIL
 show_AGEBS
 NIL
@@ -2913,10 +2960,10 @@ NIL
 HORIZONTAL
 
 BUTTON
-1179
-196
-1349
-259
+1586
+200
+1756
+263
 NIL
 show-actors-actions
 NIL
@@ -2930,10 +2977,10 @@ NIL
 1
 
 BUTTON
-1179
-259
-1350
-323
+1592
+269
+1763
+333
 NIL
 clear-plots
 NIL
@@ -3021,7 +3068,7 @@ cut-off_priorities
 cut-off_priorities
 0
 1
-0.7
+0.11
 0.01
 1
 NIL
@@ -3124,10 +3171,10 @@ NIL
 HORIZONTAL
 
 PLOT
-1180
-440
-1876
-625
+1402
+390
+2098
+575
 plot 1
 NIL
 NIL
@@ -3140,6 +3187,23 @@ false
 "" ""
 PENS
 "default" 1.0 0 -16777216 true "" "plot mean [rain_t] of Rain_Stations"
+
+BUTTON
+716
+1169
+818
+1204
+NIL
+show_sewer
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
