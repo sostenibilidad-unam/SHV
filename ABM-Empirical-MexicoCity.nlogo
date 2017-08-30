@@ -1,16 +1,14 @@
 extensions [GIS bitmap profiler csv matrix]
+;scenarios of climate change 20 years
 globals [
 
-;<<<<<<< HEAD
-;=======
   timestep                     ;;time step for postgres history
-;>>>>>>> 444d49d996310c8bccd80a414c78f519adf60687
 ;;Importacion de agua
   Tot_water_Imported_Cutzamala ;;total water that enter to MC every day by importation from Cutzamala. for now a constant in the future connected as a network
   Tot_water_Imported_Lerma     ;;total water that enter to MC every day by importation from Lerma system. for now a constant int he future connected as a network
   water_produced               ;;Water produced by the city wells
   water_imported               ;;Water imported from external watersheds
-  daily_water_available        ;;total water in a day
+  weekly_water_available        ;;total water in a day
   truck_capasity               ;;capasity for each truck (pipas) to deliver water [mt3]
   capacidad_cisterna           ;;capasity of an individual water storage devide based on information from residents (compendio de datos funcion de valor)
   zonas_aquiferas           ;;ID de las zonas aquiferas en MXC
@@ -130,14 +128,18 @@ globals [
 
 
 ;;Other auxiliar variables
-  days                         ;; Days counter
   counter
+  days
+  weeks
   months
   years
 ;MCDA imput files
 MMWaterOperator_D
 MMWaterOperator_D_limit
 MMWaterOperator_weighted_D
+;;tables
+flood_rain           ;table with probabilities of flooding based on frequqncies and rainfall
+
 ]
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -189,6 +191,7 @@ Agebs-own[
   zona_aquifera                ;;zone of the aquifer
   aquifer                      ;;Aquifer ID
   pozos_agebs                  ;;set the pozos in ageb
+  rainfall_station_influ
   name_delegation              ;;the name of the delegation the ageb belongs to
   paches_set_agebs             ;;the set of patches that bellow to the ageb
   Monto                        ;; resources designated to each ageb (delegations?)
@@ -234,8 +237,9 @@ Agebs-own[
   precipitation                ;; average annual precipitation
   water_needed                 ;; Total water needed based on population size of colonia and water requirements per peson
   water_in                     ;; 1 if water enters to the ageb by any mean (truck pipes storage)
-  water_in_mc                  ;; water that get to the ageb in metter cubics
+  days_water_in                  ;; water that get to the ageb in metter cubics
   water_distributed_pipes      ;; Water imported (not produced in) to the colonia
+  NOWater_week_pois            ;; days in aweek with no water based on data and a poisson model fitting
   water_distributed_trucks     ;; Water distributed by trucks
   water_in_buying              ;; Water bought from private sources
   tandeo                       ;; days a week with water distributed by pipes
@@ -243,18 +247,16 @@ Agebs-own[
   days_wno_water               ;; Days with no water
   resources_water              ;; index 0 1 defining the purchase power to buy water
   surplus                      ;; When water_needed <  water_produced, surplus > 0
-  deficits                     ;; > 0 if water_in_Mc < requeriment of the population
+  deficits                     ;; > 0 if days_water_in < requeriment of the population
   storage_capasity             ;; number of storage devides (cisternas)
   eficacia_servicio            ;; Gestion del servicio de Drenaje y agua potable (ej. interferencia politica, no llega la pipa, horario del tandeo, etc)
   desperdicio_agua             ;; Por fugas, falta de conciencia del uso del agua
   desviacion_agua              ;; Se llevan el agua a otros lugares
   Capacidad_Ab                 ;; La Capacidad de la infraestructura hidraulica
   Capacidad_D                  ;;
-  infiltracion
+  Infiltracion
   R_tau                        ;; Threshold of rainfall according to protocol
   altura
-  H_f                          ;; Undesire state flood
-  H_s                          ;; Undesire state no water
 ;#residents decisions metrics
 
   d_Compra_agua                          ;;distance from ideal point for Compra_agua (buying water)
@@ -309,9 +311,9 @@ Agebs-own[
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 rain_Stations-own[name p_rain shp rate_g Rain_t]
-sewage_nodes-own[ID age from_node to_node Btwn]
+sewage_nodes-own[ID age from_node to_node Btwn new-val]
 
-D_pipes-own [ current-flow ]
+D_pipes-own [current-flow]
 Pozos-own[
   Name
   col_ID                      ;;location of well in neighborhood
@@ -325,7 +327,6 @@ Pozos-own[
   age_pozo         ;;age of well  p_failure        ;;probability of infrastructure failure here 1 if not infra here
   H                ;;1 if the well is working 0 otherwise
 ]
-
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 ;define alternatives for residents using MC Iz Xo
@@ -357,10 +358,9 @@ to SETUP
  ; sql:configure "defaultconnection" [["brand" "PostgreSQL"]["host" "localhost"]["port" 5432] ["user" "postgres"]["password" "x"]["database" "new"]]
   set timestep 0
   load-gis
-
+  rainfall_prob   ;read data on daily rainfall from sacmex stations
   ;;set global variables
-  set max-elevation 1;gis:maximum-of elevation           ;;to visualize elevation
-  set min-elevation 1;gis:minimum-of elevation           ;;to visualize elevation
+
   set days 0                                           ;; count days
   set months 1
   set years 1
@@ -404,9 +404,9 @@ to SETUP
   set Sensitivity_F_Max 1
   set Sensitivity_S_Max 1
   set densidad_pop_max 1
- ; if escala = "cuenca"[
+
+
     define_agebs_full
-  ;]
   ;if escala = "ciudad" [
   ;  define_agebs
   ;]
@@ -418,9 +418,12 @@ to SETUP
   set municipios_CVEGEO [["Álvaro Obregón"  "010"] ["Azcapotzalco"  "002"] ["Benito Juárez" "014"] ["Coyoacán"  "003"] ["Cuajimalpa"  "004"] ["Cuauhtémoc"  "015"] ["Gustavo A. Madero"  "005"] ["Iztacalco"  "006"] ["Iztapalapa"  "007"] ["Magdalena Contreras"  "008"] ["Miguel Hidalgo"  "016"] ["Milpa Alta"  "009"] ["Tláhuac"  "011"] ["Tlalpan"  "012"] ["Venustiano Carranza"  "017"] ["Xochimilco"  "013"]]
   set value_function_numeric_scale_residents [0.056 0.1013 1.596 0.4203 1]
   set scarcity_scale [1 3 7 20]
+  set max-elevation max [altitude] of agebs           ;;to visualize elevation
+  set min-elevation min [altitude] of agebs           ;;to visualize elevation
   define_alternativesCriteria
   load_infra
-  rainfall_prob
+  read_data_flooding
+  flood_risk
 ;############################################3
   ;# scenarios (resources; efficiency)
   ;if escenarios = "Escenario A"[
@@ -451,21 +454,24 @@ to GO
   ;profiler:start
 ;if ticks = 2 [export-map]
 
-  counter_days                   ;counter to define when actions occur
-  make_rain
-  water_production_importation    ;;calculate total water available in a day
- if months = 1 and days = 1 [   ;annual changes
+;  counter_days                   ;counter to define when actions occur
+  counter_weeks
+ ; make_rain
 
-   WaterOperator-decisions "09"            ;;decisions by WaterOperator
-   water_extraccion
+  water_production_importation    ;;calculate total water available in a day
+ ;if months = 1 and days = 1 [   ;annual changes
+ if weeks = 4 [
+     if months = 12 [flood_risk]
+     WaterOperator-decisions "09"            ;;decisions by WaterOperator
+     water_extraccion
 
    if escala = "cuenca"[
      WaterOperator-decisions "15"            ;;decisions by infra operator WaterOperator (estado de Mexico)
    ]
-;   ask agebs [indicators]
  ]
 ;;actions WaterOperator
-  if days = 1 [
+;  if days = 1 [
+  if weeks = 1 [
     repair-Infra_Ab "09"
     repair-Infra_D "09"
     New-Infra_A "09"
@@ -476,7 +482,7 @@ to GO
      New-Infra_A "15"
      New-Infra_D "15"
    ]
-  ]
+ ]
 ;##########################################################
 ;distribute water to Mexico City using resources by WaterOperator
   water_distribution "09" Recursos_para_distribucion
@@ -485,7 +491,7 @@ to GO
   ]
 ;##########################################################
   ask agebs [
-    set water_in_mc 0
+    set days_water_in 0
     set investment_here_AB 0
     set investment_here_D 0
     set investment_here_AB_mant 0
@@ -494,16 +500,19 @@ to GO
     set investment_here_D_new 0
 
     water_by_pipe  ;define if an ageb will receive water by pipe. It depends on tandeo and the probability of failure,
-    water_in_aday
+    water_in_a_week
     p_falla_infra
     take_action_residents
     Vulnerability_indicator
     edad_infra_change
-    if days = 1 [
+;    if days = 1 [
+    if weeks = 4 [
       residents-decisions
+
       if months = 1 [
         indicators
       ]
+
     ]
   ]
 ;##########################################################
@@ -660,7 +669,7 @@ to take_action_residents
   if d_Movilizaciones >  max (list d_Modificacion_vivienda d_Accion_colectiva d_Captacion_agua) ;random-float 1;
   [
     protest
-    print "dale"
+  ;  print "dale"
   ]
   if d_Accion_colectiva > max (list d_Modificacion_vivienda d_Movilizaciones d_Captacion_agua)
   [
@@ -718,7 +727,7 @@ to update_globals  ;; update the maximum or minimum of values use by the model t
   set garbage_max max [garbage] of agebs
   set hundimientos_max max [hundimientos] of agebs
   set water_quality_max 1
-  set max_water_in_mc max [water_in_mc] of agebs
+  set max_water_in_mc max [days_water_in] of agebs
   set infra_abast_max max [houses_with_abastecimiento] of agebs
   set infra_dranage_max max [houses_with_dranage] of agebs
   set flooding_max max [flooding] of agebs ;;max level of flooding (encharcamientos) recored over the last 10 years
@@ -762,10 +771,10 @@ to update_local [estado]  ;; update the maximum or minimum of values use by the 
   set garbage_max max [garbage] of agebs  with [CV_estado = estado]
   set hundimientos_max max [hundimientos] of agebs with [CV_estado = estado]
   set water_quality_max 1
-  set max_water_in_mc max [water_in_mc] of agebs  with [CV_estado = estado]
+  set max_water_in_mc max [days_water_in] of agebs  with [CV_estado = estado]
   set infra_abast_max max [houses_with_abastecimiento] of agebs  with [CV_estado = estado]
   set infra_dranage_max max [houses_with_dranage] of agebs  with [CV_estado = estado]
-  set flooding_max max [flooding] of agebs ;;max level of flooding (encharcamientos) recored over the last 10 years
+  set flooding_max max [flooding] of agebs with [CV_estado = estado];;max level of flooding (encharcamientos) recored over the last 10 years
   set precipitation_max max [precipitation] of agebs  with [CV_estado = estado]
   set fallas_ab_max max [Falla_ab] of agebs with [CV_estado = estado]
   set Abastecimiento_max max [Abastecimiento] of agebs  with [CV_estado = estado]
@@ -782,7 +791,7 @@ to update_local [estado]  ;; update the maximum or minimum of values use by the 
   set d_Modificacion_vivienda_max max [d_Modificacion_vivienda] of agebs  with [CV_estado = estado]
   set d_Accion_colectiva_max max [d_Accion_colectiva] of agebs with [CV_estado = estado]
   set d_water_extraction_max max [d_water_extraction] of agebs with [CV_estado = estado]
-  set d_mantenimiento_D_max max [d_mantenimiento] of agebs with [CV_estado = estado]
+  set d_mantenimiento_D_max max [d_mantenimiento_D] of agebs with [CV_estado = estado]
   set d_mantenimiento_max max [d_mantenimiento] of agebs with [CV_estado = estado]
   set d_new_max max [d_new] of agebs with [CV_estado = estado]
   set d_water_distribution_max max [d_water_distribution] of agebs with [CV_estado = estado]
@@ -801,6 +810,7 @@ to p_falla_infra    ;;update age and probability of failure and also is color if
      set p_failure_hund  hundimientos * factor_subsidencia
      set p_falla_AB p_failure_hund + P_failure_AB
      set p_falla_D p_failure_hund + P_failure_D
+     set Capacidad_D Capacidad_D - Capacidad_D * P_failure_AB
      ;update extraction rate based on p_failure
      ask pozos_agebs [set extraction_rate [p_falla_AB] of myself * 87225]
 end
@@ -834,6 +844,30 @@ to counter_days
 
   ;print (list days months years)
 end
+
+
+to counter_weeks
+  ;print (years mod 4)
+  if (months = 12 and weeks = 4)[
+    set years years + 1
+    set weeks 0
+    set months 1
+  ]
+;  if days = 31 and (months = 1 or months = 3 or months = 5 or months = 7 or months = 9 or months = 11) [
+ ;   set months months + 1
+ ;   set days 0
+;  ]
+  if weeks = 4 [
+    set months months + 1
+    set weeks 0
+  ]
+
+
+
+  set weeks weeks + 1
+
+  print (list weeks months years)
+end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 ;; read GIS layers
@@ -847,6 +881,7 @@ to load-gis                                                                     
   set PozosChalco_Project gis:load-dataset  "data/PozosChalco_Project.shp"
   set Limites_delegacionales gis:load-dataset  "data/limites_deleg_DF_2013.shp"
   set zonas_aquif_map gis:load-dataset  "data/AGEB_Zona_Project.shp"
+  set elevation gis:load-dataset  "data/AGEB_elev.shp"
   ;  set agebs_map gis:load-dataset "data/ageb8.shp";                                                      ;AGEB shape file
   set agebs_map gis:load-dataset "data/ageb14.shp";
 ;<<<<<<< HEAD
@@ -860,17 +895,17 @@ to load-gis                                                                     
                                                                 ;>>>>>>> 247fb45929804fe520d04fb62e879cf1409142e5
   if escala = "ciudad"[
     ;=======
-    set elevation gis:load-dataset "data/rastert_dem1.asc"                                                             ;elevation
     gis:set-world-envelope-ds gis:envelope-of mascara ;ageb_encharc;mascara;Limites_delegacionales
-    gis:apply-raster  elevation altitude
-    set city_image  bitmap:import "data/DF_googleB.jpg"                                                   ; google earth image
-    bitmap:copy-to-pcolors City_image false
   ]
 
   if escala = "cuenca"[
     gis:set-world-envelope-ds gis:envelope-of Agebs_map_full;mascara ;ageb_encharc;mascara;Limites_delegacionales
   ]
 
+  ;set elevation gis:load-dataset "data/rastert_dem1.asc"                                                             ;elevation
+  ;gis:apply-raster  elevation altitude
+  ;set city_image  bitmap:import "data/DF_googleB.jpg"                                                   ; google earth image
+  ;bitmap:copy-to-pcolors City_image false
 
 
 
@@ -921,10 +956,16 @@ foreach gis:feature-list-of Agebs_map_full; "ID_ZONA" "0"
        set size 0.5
        set hidden? false
        set group_kmean 1
+       ;print (gis:find-one-feature elevation "CVGEO" CVEGEO)
+       set altitude gis:property-value (gis:find-one-feature elevation "CVGEO" CVEGEO) "ELEV"
 
        set zona_aquifera gis:property-value (gis:find-one-feature zonas_aquif_map "CVEGEO" CVEGEO) "ID_ZONA"
        set aquifer gis:property-value (gis:find-one-feature zonas_aquif_map "CVEGEO" CVEGEO) "ACUIF"
                   ;;;C4_A1;;;
+      ; set group_kmean gis:property-value (gis:find-one-feature ageb_encharc "CVEGEO" CVEGEO) "KMEANS5"
+      ; set precipitation gis:property-value (gis:find-one-feature ageb_encharc "CVEGEO" CVEGEO) "PRECIP"
+
+
        set eficacia_servicio 1                                                                               ;; Gestion del servicio de Drenaje y agua potable (ej. interferencia politica, no llega la pipa, horario del tandeo, etc)
        set desperdicio_agua 1                                                                        ;;Por fugas, falta de conciencia del uso del agua
 
@@ -959,7 +1000,7 @@ foreach gis:feature-list-of Agebs_map_full; "ID_ZONA" "0"
        set Income-index gis:property-value ? "I_ix"
        set health gis:property-value ?  "S_M"
        set health_sd gis:property-value ?  "S_sd"
-       set flooding gis:property-value ? "F_M"
+       set flooding 0
        set flooding_sd gis:property-value ? "F_sd"
        set garbage poblacion * (1 - Income-index)
        set Abastecimiento poblacion * Requerimiento_deAgua
@@ -973,7 +1014,7 @@ foreach gis:feature-list-of Agebs_map_full; "ID_ZONA" "0"
      set Capacidad_Ab 1 ;
      set Monto 1;
      set tandeo 6 / 7
-     set water_in_mc 0
+     set days_water_in 0
      set water_quality 1
      set sensitivity_F 1
      set sensitivity_S 1
@@ -1002,7 +1043,10 @@ ask agebs with [CV_municipio = "016"][set tandeo 0.048];"Miguel Hidalgo"
 ask agebs with [CV_municipio = "017"][set tandeo 0.116];"Venustiano Carranza"
 
 (foreach gis:find-features agebs_map13 "NOM_LOC" "Total AGEB urbana"   gis:find-features ageb_encharc "NOM_LOC" "Total AGEB urbana"[
-  ask agebs with [ID = gis:property-value ?1 "AGEB_ID"][set group_kmean gis:property-value ?2 "KMEANS5"]
+  ask agebs with [ID = gis:property-value ?1 "AGEB_ID"][
+   set group_kmean gis:property-value ?2 "KMEANS5"
+   set precipitation gis:property-value ?2 "PRECIP"
+  ]
 ])
 
 end
@@ -1040,12 +1084,13 @@ to define_agebs
         set group_kmean gis:property-value ?2 "KMEANS5"                                                                                                    ;;grupos de vecindarios
         set health  ((gis:property-value ?1 "N04_TODAS") + (gis:property-value ?1 "X05_TOTAL") + (gis:property-value ?1 "X06_TODAS") + gis:property-value ?1 "X07_TODAS" + gis:property-value ?1 "X08_TODAS" + gis:property-value ?1 "X09_TODAS" + gis:property-value ?1 "N10_TODAS" + gis:property-value ?1 "N11_TODAS" + gis:property-value ?1 "N12_TODAS"  + gis:property-value ?1 "N13_TODAS"  + gis:property-value ?1 "N14_TODAS") / 11
         set Income-index ifelse-value ((gis:property-value ?1 "I05_INGRES") = nobody )[0][(gis:property-value ?1 "I05_INGRES")]
-        set flooding ifelse-value ((gis:property-value ?2 "Mean_encha") = nobody )[0][(gis:property-value ?2 "Mean_encha")]
+        set flooding 0;ifelse-value ((gis:property-value ?2 "Mean_encha") = nobody )[0][(gis:property-value ?2 "Mean_encha")]
         set flooding_sd standard-deviation (list gis:property-value ?2 "E07" gis:property-value ?2 "E08" gis:property-value ?2 "E09" gis:property-value ?2 "E10" gis:property-value ?2 "E11" gis:property-value ?2 "E12" gis:property-value ?2 "E13" gis:property-value ?2 "E14")
         set Antiguedad-infra_Ab 365 * gis:property-value ?2 "edad_infra"
         set Antiguedad-infra_D 365 * gis:property-value ?2 "edad_infra"
         set zona_aquifera gis:property-value ?2 "zonas"
         set precipitation  gis:property-value ?2 "PRECIP"
+
         set Abastecimiento poblacion * Requerimiento_deAgua               ;;;C4_A1;;;
         set Peticion_Delegacional gis:property-value ?1 "PETDELS"  ;; nivel socio-economico * peso politico (differencia entre partido gobernante a nivel local y estatal)
         set Presion_social gis:property-value ?1 "protests"
@@ -1067,7 +1112,7 @@ to define_agebs
         set Capacidad_Ab 1 ;
         set Monto 1;
         set tandeo 6 / 7
-        set water_in_mc 0
+        set days_water_in 0
         set water_quality 1
         set sensitivity_F 1
         set sensitivity_S 1
@@ -1200,36 +1245,35 @@ to load_infra
     ]
 ;
 ;    ;Texcoco
-;
-;    foreach gis:feature-list-of PozosTexcoco_Project
-;    [ let centroid gis:location-of gis:centroid-of ?
-;      if not empty? centroid
-;      [ create-pozos 1
-;        [ set xcor item 0 centroid
-;          set ycor item 1 centroid
-;          set CVEGEO [CVEGEO] of min-one-of agebs [distance myself]
-;          if CVEGEO != 0 [
-;            set CV_estado (substring CVEGEO 0 2)
-;            set CV_municipio (substring CVEGEO 2 5)
-;            set Localidad (substring CVEGEO 5 9)
-;            set AGB_k (substring CVEGEO 9 13)
-;          ]
-;          set shape "circle 2"
-;          set size 0.1
-;          set color white
-;          set age_pozo (1 + random 20) * 365
-;          set H 1
-;          set extraction_rate 87225 ;m3/dia
-;          ]
-;      ]
-;    ]
-;
-;
-;    ask pozos [set production extraction_rate * (1 / count pozos)] ; set daily production of water in [mts^3/s]*[s/min]*[min/hour]*[hours/day]*[1/tot pozos]=[mts^3/(day*pozo)]
-;    ;let tpz 0
-;    ask agebs [
-;      set pozos_agebs turtle-set pozos with [AGB_k = [AGB_k] of myself]
-;    ]
+
+    foreach gis:feature-list-of PozosTexcoco_Project
+    [ let centroid gis:location-of gis:centroid-of ?
+      if not empty? centroid
+      [ create-pozos 1
+        [ set xcor item 0 centroid
+          set ycor item 1 centroid
+          set CVEGEO [CVEGEO] of min-one-of agebs [distance myself]
+          if CVEGEO != 0 [
+            set CV_estado (substring CVEGEO 0 2)
+            set CV_municipio (substring CVEGEO 2 5)
+            set Localidad (substring CVEGEO 5 9)
+            set AGB_k (substring CVEGEO 9 13)
+          ]
+          set shape "circle 2"
+          set size 0.1
+          set color white
+          set age_pozo (1 + random 20) * 365
+          set H 1
+          set extraction_rate 87225 ;m3/dia
+          ]
+      ]
+    ]
+
+
+    ask pozos [set production extraction_rate * (1 / count pozos)] ; set daily production of water in [mts^3/s]*[s/min]*[min/hour]*[hours/day]*[1/tot pozos]=[mts^3/(day*pozo)]
+    ;let tpz 0
+
+
 ;;    #############################
 ;;read nodes secondary sewer
     foreach gis:feature-list-of desalojo_primario
@@ -1253,11 +1297,11 @@ to load_infra
     let canerias csv:from-file "data/network_directed_sewage.csv"
     let m_pipes matrix:from-row-list but-first canerias
 
-    print matrix:pretty-print-text m_pipes
+  ;  print matrix:pretty-print-text m_pipes
     let to_node_l matrix:get-column  m_pipes 0
     let from_node_l matrix:get-column  m_pipes 1
 
-    print to_node_l
+   ; print to_node_l
     (foreach to_node_l from_node_l[
 
         let nn sewage_nodes with [ID = ?1]
@@ -1265,6 +1309,19 @@ to load_infra
 
         ask mm [create-D_pipes-to nn[]]
     ])
+
+
+
+    ask agebs [
+      set pozos_agebs turtle-set pozos with [AGB_k = [AGB_k] of myself]
+      if CV_estado = 09[
+        set rainfall_station_influ turtle-set Rain_Stations in-radius 30
+   ;     print rainfall_station_influ
+      ]
+
+    ]
+
+
 
 ;    #############################
 
@@ -1291,7 +1348,7 @@ to update_criteria_and_valueFunctions_WaterOperator    ;;update the biphisical v
       ]
       if breed = alternatives_WaterOperator_d[
         set C1 replace-item i C1 ([Antiguedad-infra_d] of myself)
-        set C1_max replace-item i C1_max Antiguedad-infra_Ab_max
+        set C1_max replace-item i C1_max Antiguedad-infra_D_max
         set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
       ]
     ]
@@ -1302,6 +1359,11 @@ to update_criteria_and_valueFunctions_WaterOperator    ;;update the biphisical v
          set C1_max replace-item i C1_max  Capacidad_max_Ab ;change with update quantity for speed
          set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [1 0.5 0.25 0.125 0.0625])
        ]
+       if breed = alternatives_WaterOperator_D [
+         set C1 replace-item i C1 [Capacidad_D] of myself
+         set C1_max replace-item i C1_max  Capacidad_max_D ;change with update quantity for speed
+         set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [1 0.5 0.25 0.125 0.0625])
+       ]
      ]
     ;###########################################################
     if ? = "Falla"[
@@ -1310,7 +1372,7 @@ to update_criteria_and_valueFunctions_WaterOperator    ;;update the biphisical v
         set C1_max replace-item i C1_max fallas_ab_max
         set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
       ]
-      if breed = alternatives_WaterOperator[
+      if breed = Alternatives_WaterOperator_D[
         set C1 replace-item i C1 [Falla_d] of myself
         set C1_max replace-item i C1_max fallas_d_max
         set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
@@ -1364,12 +1426,12 @@ to update_criteria_and_valueFunctions_WaterOperator    ;;update the biphisical v
 ;      set C1 replace-item i C1 [scarcity] of myself
       if-else name_action = "Distribucion_agua"[
         set C1 replace-item i C1 [days_wno_water] of myself
-        set C1_max replace-item i C1_max 20
+        set C1_max replace-item i C1_max 28
         set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
       ]
       [
         set C1 replace-item i C1 [days_wno_water] of myself
-        set C1_max replace-item i C1_max 20
+        set C1_max replace-item i C1_max 28
         set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
       ]
     ]
@@ -1483,7 +1545,7 @@ to update_criteria_and_valueFunctions_residentes
         if ? = "Escasez de agua"[
             set C1 replace-item i C1 [days_wno_water] of myself
             set C1_max replace-item i C1_max 30
-            set V replace-item i V (Value-Function (item i C1) map [ (1 / 20)  * ? ] scarcity_scale ["" "" "" ""] (item i C1_max) value_function_numeric_scale_residents)
+            set V replace-item i V (Value-Function (item i C1) map [ (1 / 30)  * ? ] scarcity_scale ["" "" "" ""] (item i C1_max) value_function_numeric_scale_residents)
 
         ]
         ;###########################################################
@@ -1722,6 +1784,7 @@ to repair-Infra_D [estado]
       ask ? [
         if Budget < recursos_para_mantenimiento [
           set Antiguedad-infra_D Antiguedad-infra_D - Eficiencia_Mantenimiento * Antiguedad-infra_D
+          set Capacidad_D Capacidad_D + 1
           set Budget Budget + 1
           set investment_here_D 1
           set investment_here_accumulated_D investment_here_accumulated_D + 1
@@ -1738,6 +1801,7 @@ to repair-Infra_D [estado]
         if Budget < recursos_para_mantenimiento [
           set Antiguedad-infra_D Antiguedad-infra_D - Eficiencia_Mantenimiento * Antiguedad-infra_D
           set Budget Budget + 1
+          set Capacidad_D Capacidad_D + 1
           set investment_here_D 1
           set investment_here_accumulated_D investment_here_accumulated_D + 1
           set investment_here_D_mant 1
@@ -1803,11 +1867,11 @@ to water_distribution [estado recursos] ;distribution of water from government b
 let available_trucks recursos
     foreach sort-on [(1 - d_water_distribution)]  agebs with [CV_estado = estado][
       ask ? [
-        if-else available_trucks > 0 and daily_water_available > 0 [
+        if-else available_trucks > 0 and weekly_water_available > 0 [
           set water_distributed_trucks 1
           set available_trucks available_trucks - 1
-          set water_in_mc water_in_mc + truck_capasity
-          set daily_water_available daily_water_available - truck_capasity
+          set days_water_in days_water_in + 7 * truck_capasity
+          set weekly_water_available weekly_water_available - 7 * truck_capasity
           if available_trucks < 0 [set available_trucks 0]
         ]
         [
@@ -1819,47 +1883,42 @@ end
 ;##############################################################################################################
 to water_by_pipe
 ;having water by pipe depends on tandeo (p having water based on info collected by ALE,about days with water), infrastructure and ifra failure distribution of water by trucks
-  let p_tandeo random-poisson tandeo
-  let pwater_tandeo ifelse-value (p_tandeo < 8)[1 - p_tandeo / 7 ][1]
+  set NOWater_week_pois random-poisson (tandeo + alpha_alt *(altitude / max-elevation) + alpha_failure * (ifelse-value ((1 - p_falla_AB) > random-float 1) [1][0]))
+  if NOWater_week_pois > 8[set NOWater_week_pois  7]
 
-  let pw ifelse-value (houses_with_abastecimiento > 0)[pwater_tandeo * (1 - p_falla_AB)][0]
-  if-else pw > random-float 1[
-    set water_distributed_pipes 1
-    set water_in_mc water_in_mc + Requerimiento_deAgua * poblacion * houses_with_abastecimiento
-    set daily_water_available  daily_water_available - Requerimiento_deAgua * poblacion * houses_with_abastecimiento
-  ][
-  set water_distributed_pipes 0
-  ]
+  set  days_water_in 7 - NOWater_week_pois
+  set water_distributed_pipes  days_water_in * Requerimiento_deAgua * poblacion * houses_with_abastecimiento
+  set weekly_water_available  weekly_water_available -  water_distributed_pipes
 end
 ;##############################################################################################################
-to water_in_aday  ;this procedure check if water was distributed to an ageb. This is true if water came from pipes, trucks or buying water
-  if-else water_distributed_pipes = 1 or water_distributed_trucks = 1 or water_in_buying = 1[
-    set water_in 1
+to water_in_a_week  ;this procedure check if water was distributed to an ageb. This is true if water came from pipes, trucks or buying water
+  if-else water_distributed_trucks = 1 [
+    set water_in 7
     set days_wno_water 0
   ]
   [
-    set water_in 0
-    set days_wno_water days_wno_water + 1
-    set scarcity_annual scarcity_annual + 1
+    set water_in days_water_in
+    set days_wno_water days_wno_water + NOWater_week_pois
+    set scarcity_annual scarcity_annual + NOWater_week_pois
   ]
-  if days_wno_water > 20 [set days_wno_water 0]
+  if days_wno_water > 28 [set days_wno_water 0]
 end
 ;#############################################################################################################################################
 to edad_infra_change
-  set Antiguedad-infra_Ab Antiguedad-infra_Ab + 1
-  set Antiguedad-infra_D Antiguedad-infra_D + 1
+  set Antiguedad-infra_Ab Antiguedad-infra_Ab + 7
+  set Antiguedad-infra_D Antiguedad-infra_D + 7
 end
 ;##############################################################################################################
 to water_production_importation
-  set water_produced sum [extraction_rate] of pozos
-  set water_imported Tot_water_Imported_Cutzamala + Tot_water_Imported_Lerma
-  set daily_water_available water_produced + water_imported
+  set water_produced 7 * sum [extraction_rate] of pozos
+  set water_imported 7 * Tot_water_Imported_Cutzamala + Tot_water_Imported_Lerma
+  set weekly_water_available water_produced + water_imported
 end
 ;#############################################################################################################################################
 to protest  ;if the distant to ideal for protest is greater than
   set Presion_social_dy Presion_social_dy + 1
   set Presion_social_year Presion_social_year + 1
-  if months = 1 and days = 2 [
+  if months = 1 and weeks = 1 [
     set Presion_social_dy 0
   ]
 end
@@ -1985,7 +2044,8 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
 ;############################################################################################
       if visualization = "Areas prioritarias Mantenimiento" and ticks > 1 [
         set size factor_scale * 10 * d_mantenimiento
-        set color scale-color magenta d_mantenimiento 0 d_mantenimiento_max
+
+        set color scale-color magenta d_mantenimiento 0 ifelse-value (d_mantenimiento_max = 0)[0][d_mantenimiento_max]
         ]
 ;############################################################################################
       if visualization = "Areas prioritarias Nueva Infraestructura" and ticks > 1 [
@@ -2007,10 +2067,8 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
       ] ;;visualized incidence of gastrointestinal diseases in MX 2004-2014
 ;############################################################################################
       if visualization = "Encharcamientos" and ticks > 1 [
-        let seasonal ifelse-value (months < 10)[months / 9][1 / 9]
-        let v_E random-normal (seasonal * flooding) (seasonal * flooding_sd)
-        set size v_E * 0.1 * factor_scale
-        set color  scale-color sky v_E 0 flooding_max
+        set size flooding * factor_scale
+        set color  scale-color sky flooding 0 100
       ] ;;visualized WaterOperator flooding dataset MX 2004-2014
   ;############################################################################################
       if visualization =  "% houses with drainage" and ticks > 1 [
@@ -2041,7 +2099,7 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
       if visualization = "Escasez" and ticks > 1 [
         ;set shape "drop"
         set size factor_scale * days_wno_water
-        set color scale-color red days_wno_water 0 20
+        set color scale-color red days_wno_water 0 30
       ]
       ;############################################################################################
       if visualization = "Zonas Aquifero" and ticks > 1 [set color  zona_aquifera]
@@ -2160,9 +2218,8 @@ ask Alternatives_IZ with [name_action = "Accion colectiva"] [set v_scale_F [0 1 
 ask Alternatives_IZ with [name_action = "Captacion de agua"] [set v_scale_F [0 0 0 0 0]]
 ask Alternatives_IZ with [name_action = "Modificacion vivienda"] [set v_scale_F [0 1 1 1 1]]
 
-;>>>>>>> c74c88e51d1a64b89da88a3d28c9bf0ff2d08703
-;;print [name_action] of Alternatives_IZ
-;print [v_scale_S] of Alternatives_IZ
+
+
  let MMXo_L csv:from-file  "data/X062916_OTR_a.limit.csv"
  let MMXo_W csv:from-file  "data/X062916_OTR_a.weighted.csv"
 
@@ -2231,9 +2288,7 @@ ask Alternatives_IZ with [name_action = "Modificacion vivienda"] [set v_scale_F 
 ;=======
   ask Alternatives_Xo [set v_scale_F [0 0 0 0 0]]
 
-;>>>>>>> c74c88e51d1a64b89da88a3d28c9bf0ff2d08703
-;print [name_action] of Alternatives_Xo
-;print [v_scale_S] of Alternatives_Xo
+
 
 ;#########################################################################
 
@@ -2315,7 +2370,7 @@ ask Alternatives_IZ with [name_action = "Modificacion vivienda"] [set v_scale_F 
            set ID "MC080416b"
            set name_action ?
            set label name_action
-;           print item 6 (item 7 MMMCb_limit)
+
            set C1 (list 0 0 0 0 0 0 0 0 0 0)
            set C1_max (list 0 0 0 0 0 0 0 0 0 0)
            set V (list 0 0 0 0 0 0 0 0 0 0)
@@ -2383,8 +2438,8 @@ ask Alternatives_IZ with [name_action = "Modificacion vivienda"] [set v_scale_F 
 
 
        let MMWaterOperator_S csv:from-file  "data/DF101215_GOV_AP modificado PNAS.weighted.csv" ;DF101215_GOV_AP modificado.weighted
-        let MMWaterOperator_limit csv:from-file  "data/DF101215_GOV_AP modificado PNAS.limit.csv"
-print MMWaterOperator_limit
+       let MMWaterOperator_limit csv:from-file  "data/DF101215_GOV_AP modificado PNAS.limit.csv"
+
        set actions (list item 1 item 2 MMWaterOperator_limit   ;define the alternatives
          item 1 item 3 MMWaterOperator_limit
          item 1 item 4 MMWaterOperator_limit
@@ -2409,9 +2464,6 @@ print MMWaterOperator_limit
        ]
        set MMWaterOperator_weighed_S matrix:from-row-list MMWaterOperator_weighed_S
        set MMWaterOperator_limit_S matrix:eigenvectors MMWaterOperator_weighed_S
-;
-
-;print matrix:pretty-print-text MMWaterOperator_weighed_S
 
        foreach actions [
          create-Alternatives_WaterOperator 1[    ;create an alternative, the criteria and the weights. Also in the case of HNP network the weight of each alternative in the limit matrix
@@ -2503,13 +2555,6 @@ print MMWaterOperator_limit
        ;let MMWaterOperator_limit_D2 matrix:real-eigenvalues MMWaterOperator_weighted_D
        set MMWaterOperator_limit_D_new (matrix:times MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D)
 
-
-
-       ;print matrix:pretty-print-text MMWaterOperator_weighted_D
-
-
-
-       ;print matrix:pretty-print-text MMWaterOperator_weighted_D
 
        ;print MMWaterOperator_D
 
@@ -2657,10 +2702,10 @@ to supermatrix; procedure to change the weights from the actions to the criteria
 ; ; print matrix:pretty-print-text MMSACMEX_weighted_D
 ;  matrix:set MMSACMEX_weighted_D 0 14 super_matrix_parameter     ;super_matrix_parameter controls between two weights from actions (maintenance and new-infra) to criteria. together sum up to 1.
 ;  matrix:set MMSACMEX_weighted_D 1 14 (1 - super_matrix_parameter)
-;  ;print matrix:pretty-print-text MMSACMEX_weighted_D
+
 ;
 ;  let MMSACMEX_limit_D_new  (matrix:times MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D)
-;  ;print matrix:pretty-print-text MMSACMEX_limit_D_new
+
 ;  let w_sum sum (list matrix:get MMSACMEX_limit_D_new 2 2
 ;    matrix:get MMSACMEX_limit_D_new 3 2
 ;    matrix:get MMSACMEX_limit_D_new 4 2
@@ -2679,10 +2724,10 @@ to supermatrix; procedure to change the weights from the actions to the criteria
  ; print matrix:pretty-print-text MMWaterOperator_weighted_D
   matrix:set MMWaterOperator_weighted_D 0 14 super_matrix_parameter     ;super_matrix_parameter controls between two weights from actions (maintenance and new-infra) to criteria. together sum up to 1.
   matrix:set MMWaterOperator_weighted_D 1 14 (1 - super_matrix_parameter)
-  ;print matrix:pretty-print-text MMWaterOperator_weighted_D
+
 
   let MMWaterOperator_limit_D_new  (matrix:times MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D)
-  ;print matrix:pretty-print-text MMWaterOperator_limit_D_new
+
   let w_sum sum (list matrix:get MMWaterOperator_limit_D_new 2 2
     matrix:get MMWaterOperator_limit_D_new 3 2
     matrix:get MMWaterOperator_limit_D_new 4 2
@@ -2719,8 +2764,7 @@ to supermatrix; procedure to change the weights from the actions to the criteria
         (matrix:get MMWaterOperator_limit_D_new 15 2 / w_sum))
 
       set alpha matrix:get MMWaterOperator_limit_D_new jj jj / (matrix:get MMWaterOperator_limit_D_new 0 0 + matrix:get MMWaterOperator_limit_D_new 1 1)
-;      print w_C1
- ;     print alpha
+
       set jj jj + 1
     ]
   ]
@@ -2731,12 +2775,69 @@ end
 ;##############################################################################################################
 to flood_risk  ;replace by fault
   ask Agebs [
-    if P_failure_D > random 1 or Mantenimiento? = TRUE or precipitation > R_tau [
-      set H_f H_f + 1
+    if precipitation < 700 [
+     if ((item 1 item 1 flood_rain) > random-float 1)[ set flooding   5]
+      if ((item 1 item 2 flood_rain) > random-float 1)[ set flooding  flooding + 5]
+      if ((item 1 item 3 flood_rain) > random-float 1)[ set flooding  flooding + 5]
+      if ((item 1 item 4 flood_rain) > random-float 1)[ set flooding  flooding + 15]
+      if ((item 1 item 5 flood_rain) > random-float 1)[ set flooding  flooding + 15]
+      if ((item 1 item 6 flood_rain) > random-float 1)[ set flooding  flooding + 5]
+      if ((item 1 item 7 flood_rain) > random-float 1)[ set flooding  flooding + 5]
+      if ((item 1 item 8 flood_rain) > random-float 1)[ set flooding  flooding + 15]
+      if ((item 1 item 9 flood_rain) > random-float 1)[ set flooding  flooding + 25]
+    ]
+    if precipitation >= 700 and precipitation < 800 [
+     if ((item 2 item 1 flood_rain) > random-float 1)[ set flooding   5]
+      if ((item 2 item 2 flood_rain) > random-float 1)[ set flooding  flooding + 5]
+      if ((item 2 item 3 flood_rain) > random-float 1)[ set flooding  flooding + 5]
+      if ((item 2 item 4 flood_rain) > random-float 1)[ set flooding  flooding + 15]
+      if ((item 2 item 5 flood_rain) > random-float 1)[ set flooding  flooding + 15]
+      if ((item 2 item 6 flood_rain) > random-float 1)[ set flooding  flooding + 15]
+      if ((item 2 item 7 flood_rain) > random-float 1)[ set flooding  flooding + 15]
+      if ((item 2 item 8 flood_rain) > random-float 1)[ set flooding  flooding + 15]
+      if ((item 2 item 9 flood_rain) > random-float 1)[ set flooding  flooding + 25]
+    ]
+    if precipitation >= 800 and precipitation < 900 [
+      if ((item 3 item 1 flood_rain) > random-float 1)[ set flooding  5]
+      if ((item 3 item 2 flood_rain) > random-float 1)[ set flooding  flooding + 5]
+      if ((item 3 item 3 flood_rain) > random-float 1)[ set flooding  flooding + 5]
+      if ((item 3 item 4 flood_rain) > random-float 1)[ set flooding  flooding + 15]
+      if ((item 3 item 5 flood_rain) > random-float 1)[ set flooding  flooding + 15]
+      if ((item 3 item 6 flood_rain) > random-float 1)[ set flooding  flooding + 15]
+      if ((item 3 item 7 flood_rain) > random-float 1)[ set flooding  flooding + 15]
+      if ((item 3 item 8 flood_rain) > random-float 1)[ set flooding  flooding + 15]
+      if ((item 3 item 9 flood_rain) > random-float 1)[ set flooding  flooding + 25]
+    ]
+    if precipitation >= 900 and precipitation < 1000 [
+      if ((item 4 item 1 flood_rain) > random-float 1)[ set flooding  5]
+      if ((item 4 item 2 flood_rain) > random-float 1)[ set flooding  flooding + 5]
+      if ((item 4 item 3 flood_rain) > random-float 1)[ set flooding  flooding + 5]
+      if ((item 4 item 4 flood_rain) > random-float 1)[ set flooding  flooding + 15]
+      if ((item 4 item 5 flood_rain) > random-float 1)[ set flooding  flooding + 15]
+      if ((item 4 item 6 flood_rain) > random-float 1)[ set flooding  flooding + 15]
+      if ((item 4 item 7 flood_rain) > random-float 1)[ set flooding  flooding + 15]
+      if ((item 4 item 8 flood_rain) > random-float 1)[ set flooding  flooding + 15]
+      if ((item 4 item 9 flood_rain) > random-float 1)[ set flooding  flooding + 25]
+    ]
+    if precipitation >= 1000 and precipitation < 1200 [
+      if ((item 5 item 1 flood_rain) > random-float 1)[ set flooding  5]
+      if ((item 5 item 2 flood_rain) > random-float 1)[ set flooding  flooding + 5]
+      if ((item 5 item 3 flood_rain) > random-float 1)[ set flooding  flooding + 5]
+      if ((item 5 item 4 flood_rain) > random-float 1)[ set flooding  flooding + 15]
+      if ((item 5 item 5 flood_rain) > random-float 1)[ set flooding  flooding + 15]
+      if ((item 5 item 6 flood_rain) > random-float 1)[ set flooding  flooding + 15]
+      if ((item 5 item 7 flood_rain) > random-float 1)[ set flooding  flooding + 15]
+      if ((item 5 item 8 flood_rain) > random-float 1)[ set flooding  flooding + 15]
+      if ((item 5 item 9 flood_rain) > random-float 1)[ set flooding  flooding + 25]
     ]
   ]
 end
 ;##############################################################################################################
+
+to read_data_flooding
+  set flood_rain csv:from-file "data/frequencia_encharcamientos_probabilities.csv"
+
+end
 ;##############################################################################################################
 
 to Vulnerability_indicator
@@ -2776,9 +2877,14 @@ foreach gis:feature-list-of estaciones_lluvia_SACMEX; "ID_ZONA" "0"
    ]
 ]
 
+
+
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
+
+
+
 ;code ends here
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -2795,8 +2901,8 @@ end
 GRAPHICS-WINDOW
 465
 15
-1377
-957
+1103
+674
 -1
 -1
 1.5661
@@ -2816,7 +2922,7 @@ GRAPHICS-WINDOW
 1
 1
 1
-days
+weeks
 30.0
 
 BUTTON
@@ -2878,13 +2984,13 @@ CHOOSER
 Visualization
 Visualization
 "Accion Colectiva" "Peticion ciudadana" "Captacion de Agua" "Compra de Agua" "Modificacion de la vivienda" "Areas prioritarias Mantenimiento" "Areas prioritarias Nueva Infraestructura" "Distribucion de Agua SACMEX" "GoogleEarth" "K_groups" "Salud" "Escasez" "Encharcamientos" "% houses with supply" "% houses with drainage" "P. Falla Ab" "P. Falla D" "Zonas Aquifero" "Edad Infraestructura Ab." "Edad Infraestructura D" "Income-index"
-11
+12
 
 BUTTON
-1593
-45
-1765
-114
+1122
+52
+1294
+121
 NIL
 show_limitesDelegaciones
 NIL
@@ -2898,10 +3004,10 @@ NIL
 1
 
 BUTTON
-1586
-133
-1756
-197
+1114
+140
+1284
+204
 NIL
 show_AGEBS
 NIL
@@ -2923,7 +3029,7 @@ Requerimiento_deAgua
 Requerimiento_deAgua
 0.007
 0.4
-0.2683
+0.1939
 0.0001
 1
 [m3/persona]
@@ -2938,7 +3044,7 @@ recursos_para_mantenimiento
 recursos_para_mantenimiento
 1
 2400
-772
+1479
 1
 1
 NIL
@@ -2953,17 +3059,17 @@ Eficiencia_NuevaInfra
 Eficiencia_NuevaInfra
 0
 0.05
-0.0050
+0.01
 0.001
 1
 NIL
 HORIZONTAL
 
 BUTTON
-1586
-200
-1756
-263
+1114
+207
+1284
+270
 NIL
 show-actors-actions
 NIL
@@ -2977,10 +3083,10 @@ NIL
 1
 
 BUTTON
-1592
-269
-1763
-333
+1120
+277
+1291
+341
 NIL
 clear-plots
 NIL
@@ -3023,7 +3129,7 @@ Eficiencia_Mantenimiento
 Eficiencia_Mantenimiento
 0
 0.1
-0.0050
+0.04
 0.01
 1
 NIL
@@ -3038,7 +3144,7 @@ recursos_nuevaInfrastructura
 recursos_nuevaInfrastructura
 0
 2000
-250
+559
 1
 1
 NIL
@@ -3060,10 +3166,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-41
-477
-213
-510
+30
+429
+202
+462
 cut-off_priorities
 cut-off_priorities
 0
@@ -3082,8 +3188,8 @@ SLIDER
 lambda
 lambda
 0
-4.0E-6
-1.0E-6
+0.001
+5.479452054794521E-5
 1 / (100 * 365)
 1
 NIL
@@ -3138,7 +3244,7 @@ factor_scale
 factor_scale
 0
 6
-5.4
+0.3
 0.1
 1
 NIL
@@ -3151,7 +3257,7 @@ SWITCH
 454
 ANP
 ANP
-1
+0
 1
 -1000
 
@@ -3171,10 +3277,10 @@ NIL
 HORIZONTAL
 
 PLOT
-1402
-390
-2098
-575
+1127
+367
+1561
+664
 plot 1
 NIL
 NIL
@@ -3189,10 +3295,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot mean [rain_t] of Rain_Stations"
 
 BUTTON
-716
-1169
-818
-1204
+291
+533
+393
+568
 NIL
 show_sewer
 NIL
@@ -3204,6 +3310,54 @@ NIL
 NIL
 NIL
 1
+
+SLIDER
+28
+494
+229
+527
+alpha_alt
+alpha_alt
+0
+3
+0.32
+0.01
+1
+NIL
+HORIZONTAL
+
+SLIDER
+26
+528
+229
+561
+alpha_failure
+alpha_failure
+0
+1
+0.1
+0.1
+1
+NIL
+HORIZONTAL
+
+PLOT
+1352
+158
+1552
+308
+hist
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 1 -16777216 true "" "histogram [flooding] of agebs"
 
 @#$#@#$#@
 ## WHAT IS IT?
