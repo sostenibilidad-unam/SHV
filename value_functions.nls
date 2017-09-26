@@ -1,0 +1,335 @@
+;#############################################################################################################################################
+;#############################################################################################################################################
+to-report Value-Function [A B C D EE]    ;This function reports a standarized value for the relationship between value of criteria and motivation to act
+  ;A the value of a biophysical variable in its natural scale
+  ;B a list of values eith the proportion of the biofisical variable that reflexts on the cut-offs to define the limits of the range in the linguistic scale
+  ;C list of streengs that define the lisguistice scale associate with a viobisical variable
+  ;D the ideal or anti ideal point of the criteria define based on the linguistic scale (e.g. intolerable ~= anti-ideal)
+  ;EE a list of standard values to map the natural scales
+    if A > (item 3 B) * D [set SM (item 4 EE)]
+    if A > (item 2 B) * D and  A <= (item 3 B) * D [set SM(item 3 EE)]
+    if A > (item 1 B) * D and  A <= (item 2 B) * D [set SM (item 2 EE)]
+    if A > (item 0 B) * D and  A <= (item 1 B) * D [set SM (item 1 EE)]
+    if A <= (item 0 B) * D [set SM (item 0 EE)]
+    Report SM  ;return a list of
+end
+to update_criteria_and_valueFunctions_WaterOperator    ;;update the biphisical value of variables used as criterias and update the value function
+  let i 0
+  (foreach C1_name
+    [? ->
+    ;###########################################################
+    if ? = "Antiguedad"[
+      if breed = alternatives_WaterOperator[
+        set C1 replace-item i C1 ([Antiguedad-infra_Ab] of myself)
+        set C1_max replace-item i C1_max Antiguedad-infra_Ab_max
+        set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
+      ]
+      if breed = alternatives_WaterOperator_d[
+        set C1 replace-item i C1 ([Antiguedad-infra_d] of myself)
+        set C1_max replace-item i C1_max Antiguedad-infra_D_max
+        set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
+      ]
+    ]
+    ;###########################################################
+     if ? = "Capacidad"[
+       if breed = alternatives_WaterOperator[
+         set C1 replace-item i C1 [Capacidad_Ab] of myself
+         set C1_max replace-item i C1_max  Capacidad_max_Ab ;change with update quantity for speed
+         set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [1 0.5 0.25 0.125 0.0625])
+       ]
+       if breed = alternatives_WaterOperator_D [
+         set C1 replace-item i C1 [Capacidad_D] of myself
+         set C1_max replace-item i C1_max  Capacidad_max_D ;change with update quantity for speed
+         set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [1 0.5 0.25 0.125 0.0625])
+       ]
+     ]
+    ;###########################################################
+    if ? = "Falla"[
+      if breed = alternatives_WaterOperator[
+        set C1 replace-item i C1 [Falla_Ab] of myself
+        set C1_max replace-item i C1_max fallas_ab_max
+        set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
+      ]
+      if breed = Alternatives_WaterOperator_D[
+        set C1 replace-item i C1 [Falla_d] of myself
+        set C1_max replace-item i C1_max fallas_d_max
+        set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
+      ]
+    ]
+    ;###########################################################
+    if ? = "Falta"[
+      if breed = alternatives_WaterOperator[
+        set C1  replace-item i C1 [falta_Ab] of myself
+        set C1_max replace-item i C1_max falta_Ab_max
+        set V replace-item i V (Value-Function (item i C1) [0.9 0.95 0.97 0.99] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
+      ]
+        if breed = alternatives_WaterOperator_d[
+          set C1  replace-item i C1 [falta_d] of myself
+          set C1_max replace-item i C1_max falta_d_max
+          set V replace-item i V (Value-Function (item i C1) [0.9 0.95 0.97 0.99] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
+        ]
+    ]
+    ;###########################################################
+    if ? = "Presion_hidraulica"[
+      set C1 replace-item i C1 [Presion_hidraulica] of myself
+      set C1_max replace-item i C1_max presion_hidraulica_max
+      set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [1 0.5 0.25 0.125 0.0625])
+    ]
+    ;###########################################################
+    if ? = "Gasto_hidraulico"[
+      set C1 replace-item i C1 [Gasto_hidraulico] of myself
+      set C1_max replace-item i C1_max Gasto_hidraulico_max
+      set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
+    ]
+    ;###########################################################
+    if ? = "Basura"[
+      set C1 replace-item i C1 [garbage] of myself
+      set C1_max replace-item i C1_max garbage_max
+      set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
+    ]
+    ;###########################################################
+    if ? = "Monto"[
+      set C1 replace-item i C1 [Monto] of myself
+      set C1_max replace-item i C1_max Monto_max
+      set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
+    ]
+    ;###########################################################
+    if ? = "Calidad_agua"[
+      set C1 replace-item i C1 [water_quality] of myself
+      set C1_max replace-item i C1_max water_quality_max
+      set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [1 0.5 0.25 0.125 0.0625])
+    ]
+    ;###########################################################
+    if ? = "Escasez de agua"[
+;      set C1 replace-item i C1 [scarcity] of myself
+      if-else name_action = "Distribucion_agua"[
+        set C1 replace-item i C1 [days_wno_water] of myself
+        set C1_max replace-item i C1_max days_wno_water_max
+        set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
+      ]
+      [
+        set C1 replace-item i C1 [days_wno_water] of myself
+        set C1_max replace-item i C1_max days_wno_water_max
+        set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
+      ]
+    ]
+    ;###########################################################
+    if ? = "Inundaciones"[  ;grandes inundaciones !!need to change variable for criteria
+      set C1 replace-item i C1 [Flooding] of myself
+      set C1_max replace-item i C1_max Flooding_max  ;change with update quantity for speed
+
+      if-else name_action = "Extraccion_agua"[
+        set V replace-item i V (Value-Function (item i C1) [0.3 0.4 0.5 0.6] ["" "" "" ""] (item i C1_max)  [1 0.5 0.25 0.125 0.0625])
+      ]
+      [
+        set V replace-item i V (Value-Function (item i C1) [0.1 0.4 0.6 0.8] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
+      ]
+    ]
+    ;###########################################################
+    if ? = "Abastecimiento"[
+      set C1 replace-item i C1 [Abastecimiento] of myself
+      set C1_max replace-item i C1_max Abastecimiento_max
+      set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
+    ]
+    ;###########################################################
+    if ? = "Peticion de Delegaciones"[
+      set C1 replace-item i C1 1;[Peticion_Delegaciones] of Delegaciones-here
+      set C1_max replace-item i C1_max 1;Peticion_Delegaciones_max ;change with update quantity for speed
+      set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
+    ]
+    ;###########################################################
+    if ? = "Peticiones de usuarios"[
+      set C1 replace-item i C1 [peticion_usuarios] of myself
+      set C1_max replace-item i C1_max peticion_usuarios_max
+      set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
+    ]
+    ;###########################################################
+    if ? = "Presion de medios"[
+      set C1 replace-item i C1 1;[Presion_de_medios] of myself
+      set C1_max replace-item i C1_max Presion_de_medios_max ;change with update quantity for speed
+      set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
+    ]
+    ;###########################################################
+    if ? = "Presion social"[
+      set C1 replace-item i C1 [Presion_social_annual] of myself
+      set C1_max replace-item i C1_max Presion_social_annual_max;change with update quantity for speed
+      set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
+    ]
+    ;###########################################################
+    if ? = "Precipitacion"[
+      set C1 replace-item i C1 [precipitation] of myself
+      set C1_max replace-item i C1_max precipitation_max;change with update quantity for speed
+      set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max) [0.056 0.1 0.15 0.42 1])
+
+    ]
+    ;###########################################################
+    if ? = "Hundimientos"[
+      set C1 replace-item i C1 [hundimientos] of myself
+      set C1_max replace-item i C1_max hundimientos_max;change with update quantity for speed
+      set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max) [0.056 0.1 0.15 0.42 1])
+
+    ]
+    ;###########################################################
+    if ? = "Encharcamientos"[
+      set C1 replace-item i C1 [Flooding] of myself
+      set C1_max replace-item i C1_max Flooding_max  ;change with update quantity for speed
+      if-else name_action = "Extraccion_agua"[
+        set V replace-item i V (Value-Function (item i C1) [0.3 0.4 0.5 0.6] ["" "" "" ""] (item i C1_max)  [1 0.5 0.25 0.125 0.0625])
+      ]
+      [
+        set V replace-item i V (Value-Function (item i C1) [0.1 0.4 0.6 0.8] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
+      ]
+    ]
+    ;###########################################################
+      set i i + 1
+  ]
+  )
+end
+
+to update_criteria_and_valueFunctions_residentes
+  let cc 0
+    let i 0
+  (foreach C1_name criteria_weights
+    [[a b] ->
+      if b > cut-off_priorities [  ;to consider only weights greaters than a threshold =0.1
+        set cc cc + 1
+
+        ;###########################################################
+        if a = "Crecimiento urbano"[
+          set C1 replace-item i C1 [urban_growth] of myself
+          set C1_max replace-item i C1_max urban_growth_max  ;change with update quantity for speed
+          set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
+
+        ]
+        ;###########################################################
+        if a = "Contaminacion de agua"[
+          set C1 replace-item i C1 [water_quality] of myself
+          set C1_max replace-item i C1_max water_quality_max  ;change with update quantity for speed
+          set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
+        ]
+        ;###########################################################
+        if a = "Obstruccion de alcantarillado"[
+          set C1 replace-item i C1 [Obstruccion_dren] of myself
+          set C1_max replace-item i C1_max Obstruccion_dren_max  ;change with update quantity for speed
+          set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
+        ]
+        ;###########################################################
+        if a = "Salud"[
+          set C1 replace-item i C1 [health] of myself
+          set C1_max replace-item i C1_max health_max;change with update quantity for speed
+          set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.4 0.9] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
+        ]
+        ;###########################################################
+        if a = "Escasez de agua"[
+            set C1 replace-item i C1 [days_wno_water] of myself
+            set C1_max replace-item i C1_max days_wno_water_max
+            set V replace-item i V (Value-Function (item i C1) map [ii -> (1 / days_wno_water_max)  * ii ] scarcity_scale ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
+
+        ]
+        ;###########################################################
+        if a = "Inundaciones"[
+          set C1 replace-item i C1 [flooding] of myself
+          set C1_max replace-item i C1_max flooding_max
+          set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
+          if name_action = "Captacion de agua" or name_action = "Compra de agua" or name_action = "Movilizaciones"[
+            set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0 0 0 0 0])
+          ]
+        ]
+        ;###########################################################
+        if a = "agua insuficiente" [
+          set C1 replace-item i C1 [houses_with_abastecimiento] of myself ;#escasez
+          set C1_max replace-item i C1_max  infra_abast_max ;change with update quantity for speed
+          set V replace-item i V (Value-Function (item i C1) [0.9 0.94 0.97 0.99] ["" "" "" ""] (item i C1_max)  [1 0.5 0.25 0.125 0.0625])
+        ]
+        ;###########################################################
+        if a = "Desviacion de agua" [
+          set C1 replace-item i C1 [desviacion_agua] of myself ;#escasez
+          set C1_max replace-item i C1_max  desviacion_agua_max ;change with update quantity for speed
+          set V replace-item i V (Value-Function (item i C1) [0.9 0.94 0.97 0.99] ["" "" "" ""] (item i C1_max)   [0.056 0.1 0.15 0.42 1])
+          if name_action = "Modificacion vivienda"[
+            set V replace-item i V (Value-Function (item i C1) [0.9 0.94 0.97 0.99] ["" "" "" ""] (item i C1_max)  [0 0 0 0 0])
+          ]
+        ]
+        ;###########################################################
+        if a = "Falta de infraestructura" [
+          if name_action = "Accion colectiva" [
+            set C1 replace-item i C1 [falta_ab + falta_d] of myself
+            set C1_max replace-item i C1_max  (falta_ab_max + falta_d_max) ;change with update quantity for speed
+            set V replace-item i V (Value-Function (item i C1) [0.8 0.9 0.95 0.99] ["" "" "" ""] (item i C1_max)  [0.05 0.1 0.5 0.8 1])
+          ]
+
+          if name_action = "Modificacion vivienda"[
+            set C1 replace-item i C1 [falta_d] of myself
+            set C1_max replace-item i C1_max  infra_dranage_max ;change with update quantity for speed
+            set V replace-item i V (Value-Function (item i C1) [0.9 0.94 0.97 0.99] ["" "" "" ""] (item i C1_max)  [0.05 0.1 0.5 0.8 1])
+          ]
+          if name_action = "Captacion de agua" or name_action = "Compra de agua" or name_action = "Movilizaciones"[
+            set C1 replace-item i C1 [falta_ab] of myself
+            set C1_max replace-item i C1_max  falta_ab_max ;change with update quantity for speed
+            set V replace-item i V (Value-Function (item i C1) [0.9 0.94 0.97 0.99] ["" "" "" ""] (item i C1_max)  [0.05 0.1 0.5 0.8 1])
+          ]
+        ]
+        ;###########################################################
+        if a = "Infraestructura insuficiente" [
+          if name_action = "Accion colectiva" [
+            set C1 replace-item i C1 [(falta_Ab + falta_d) / 2] of myself
+            set C1_max replace-item i C1_max  ((falta_Ab_max + falta_d_max) / 2) ;change with update quantity for speed
+            set V replace-item i V (Value-Function (item i C1) [0.8 0.9 0.95 0.99] ["" "" "" ""] (item i C1_max)  [1 0.5 0.25 0.125 0.0625])
+          ]
+          if name_action = "Modificacion vivienda"[
+            set C1 replace-item i C1 [houses_with_dranage] of myself
+            set C1_max replace-item i C1_max  infra_dranage_max ;change with update quantity for speed
+            set V replace-item i V (Value-Function (item i C1) [0.9 0.94 0.97 0.99] ["" "" "" ""] (item i C1_max)  [1 0.5 0.25 0.125 0.0625])
+          ]
+          if name_action = "Compra de agua" [
+            set C1 replace-item i C1 [houses_with_abastecimiento] of myself
+            set C1_max replace-item i C1_max  infra_abast_max ;change with update quantity for speed
+            set V replace-item i V (Value-Function (item i C1) [0.9 0.94 0.97 0.99] ["" "" "" ""] (item i C1_max)  [1 0.99 0.95 0.5 0.0625])
+          ]
+          if name_action = "Captacion de agua" or name_action = "Movilizaciones"[
+            set C1 replace-item i C1 [houses_with_abastecimiento] of myself
+            set C1_max replace-item i C1_max  infra_abast_max ;change with update quantity for speed
+            set V replace-item i V (Value-Function (item i C1) [0.9 0.94 0.97 0.99] ["" "" "" ""] (item i C1_max)  [1 0.5 0.25 0.125 0.0625])
+          ]
+        ]
+        ;###########################################################
+        if a = "Desperdicio de agua" [
+          set C1 replace-item i C1 [desperdicio_agua] of myself
+          set C1_max replace-item i C1_max desperdicio_agua_max  ;change with update quantity for speed
+          set V replace-item i V (Value-Function (item i C1) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i C1_max)  [0.0625 0.125 0.25 0.5 1])
+        ]
+        ;###########################################################
+        if a = "Eficacia del servicio" [
+          if name_action = "Accion colectiva" [
+            set C1 replace-item i C1 [days_wno_water] of myself
+            set C1_max replace-item i C1_max  (days_wno_water_max) ;change with update quantity for speed
+            set V replace-item i V (Value-Function (item i C1) [0.9 0.94 0.97 0.99] ["" "" "" ""] (item i C1_max)  [0.056 0.1 0.15 0.42 1])
+          ]
+          if name_action = "Modificacion vivienda"[
+            set C1 replace-item i C1 [houses_with_dranage] of myself
+            set C1_max replace-item i C1_max  infra_dranage_max ;change with update quantity for speed
+            set V replace-item i V (Value-Function (item i C1) [0.9 0.94 0.97 0.99] ["" "" "" ""] (item i C1_max)  [1 0.5 0.25 0.125 0.0625])
+          ]
+          if name_action = "Captacion de agua" or (name_action = "Compra de agua" or name_action = "Movilizaciones")[
+            set C1 replace-item i C1 [falta_ab] of myself
+            set C1_max replace-item i C1_max  falta_ab_max ;change with update quantity for speed
+            set V replace-item i V (Value-Function (item i C1) [0.9 0.94 0.97 0.99]["" "" "" ""] (item i C1_max)  [1 0.5 0.25 0.125 0.0625])
+          ]
+        ]
+        ;###########################################################
+      ]
+        set i i + 1
+      ]
+      )
+end
+;#############################################################################################################################################
+;#############################################################################################################################################
+to-report distance-ideal[alternative_weights_w VF_list weight_list h_Cp]
+  ;this function calcualte a distance to ideal point using compromized programing metric
+  ;arguments:
+     ;VF_list: a list of value functions
+     ;weight_list a list of weights from the alternatives criteria links (CA_links)
+     ;h_Cp to control the type of distance h_Cp=2 euclidian; h_Cp=1 manhattan
+  set dist (( alternative_weights * sum (map [[a b] -> (a ^ h_Cp) * (b ^ h_Cp)] weight_list VF_list)) ^ (1 / h_Cp))
+     report dist
+end
