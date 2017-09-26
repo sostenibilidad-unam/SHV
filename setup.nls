@@ -1,0 +1,260 @@
+to SETUP
+  clear-all
+  ;profiler:start
+ ; sql:configure "defaultconnection" [["brand" "PostgreSQL"]["host" "localhost"]["port" 5432] ["user" "postgres"]["password" "x"]["database" "new"]]
+  set timestep 0
+  ;load-gis
+  ;#################################################################################################################################################
+   set estaciones_lluvia_SACMEX gis:load-dataset  "data/estacionesRain/rainfall_statistics_CDMX.shp"
+  set desalojo_primario gis:load-dataset  "data/Sewer_Nodes_July27_Project.shp"
+  set pozos_WaterOperator gis:load-dataset  "data/Join_pozosColoniasAgebs.shp"                                 ;wells
+  set PozosCMZM_Project gis:load-dataset  "data/PozosCMZM_Project.shp"
+  set PozosPachuca_Project gis:load-dataset  "data/PozosPachuca_Project.shp"
+  set PozosTexcoco_Project gis:load-dataset  "data/PozosTexcoco_Project.shp"
+  set PozosChalco_Project gis:load-dataset  "data/PozosChalco_Project.shp"
+  set Limites_delegacionales gis:load-dataset  "data/limites_deleg_DF_2013.shp"
+  set zonas_aquif_map gis:load-dataset  "data/AGEB_Zona_Project.shp"
+ ; set elevation gis:load-dataset  "data/AGEB_elev.shp"
+  ;  set agebs_map gis:load-dataset "data/ageb8.shp";                                                      ;AGEB shape file
+ ; set agebs_map gis:load-dataset "data/ageb14.shp";
+  set Agebs_map_full gis:load-dataset "data/agebs_abm.shp"                  ; ; set Limites_cuenca gis:load-dataset "data/Lim_Cuenca_Valle_Mexico_Proj.shp";mask.shp"                                                          ;Mask of study area
+  set mascara gis:load-dataset "data/Mask.shp"                                                                                                                                          ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
+  set agebs_map14 gis:load-dataset "data/ageb14.shp";                                                      ;AGEB shape file
+  set ageb13 gis:load-dataset "data/DF_ageb_N_escalante_Project_withEncharcamientos.shp"
+  set Limites_cuenca gis:load-dataset "data/Lim_Cuenca_Valle_Mexico_Proj.shp";mask.shp"                                                          ;Mask of study area
+                                                                             ;  set mascara gis:load-dataset "data/Mask.shp"                                                                                                                                          ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
+ ;define city or watersheed scale                                                                             ;>>>>>>> 247fb45929804fe520d04fb62e879cf1409142e5
+  if escala = "ciudad"[
+    ;=======
+    gis:set-world-envelope-ds gis:envelope-of mascara ;ageb13;mascara;Limites_delegacionales
+  ]
+
+  if escala = "cuenca"[
+    gis:set-world-envelope-ds gis:envelope-of Agebs_map_full;mascara ;ageb13;mascara;Limites_delegacionales
+  ]
+  set city_image  bitmap:import "data/image_googleEarth_cuencaMexicoB.jpg";"data/DF_googleB.jpg"                                                   ; google earth image
+  bitmap:copy-to-pcolors City_image false
+
+
+  ;
+  ;gis:apply-coverage agebs_map "NOM_MUN" delegation_ID
+
+  ;#################################################################################################################################################  
+  ;#################################################################################################################################################  
+  
+  ;rainfall_prob   ;read data on daily rainfall from sacmex stations
+  ;;read data from shape file that summarize the paramters to simulate a daily rainfall with gamma distribution
+  foreach gis:feature-list-of estaciones_lluvia_SACMEX; "ID_ZONA" "0"
+  [ ? ->
+    let centroid gis:location-of gis:centroid-of ?
+    
+    if not empty? centroid[
+      create-Rain_Stations 1
+      [
+        set xcor item 0 centroid              ;define coodeantes of ageb at the center of the polygone
+        set ycor item 1 centroid
+       set color blue
+        set name gis:property-value ? "name"
+        set p_rain (list gis:property-value ? "jan_P" gis:property-value ? "feb_P" gis:property-value ? "mar_P" gis:property-value ? "apr_P" gis:property-value ? "may_P" gis:property-value ? "jun_P" gis:property-value ? "jul_P" gis:property-value ? "aug_P" gis:property-value ? "sep_P" gis:property-value ? "oct_P" gis:property-value ? "nov_P" gis:property-value ? "dec_P")
+        set shp (list gis:property-value ? "jan_S" gis:property-value ? "feb_S" gis:property-value ? "mar_S" gis:property-value ? "apr_S" gis:property-value ? "may_S" gis:property-value ? "jun_S" gis:property-value ? "jul_S" gis:property-value ? "aug_S" gis:property-value ? "sep_S" gis:property-value ? "oct_S" gis:property-value ? "nov_S" gis:property-value ? "dec_S")
+        set rate_g (list gis:property-value ? "jan_R" gis:property-value ? "feb_R" gis:property-value ? "mar_R" gis:property-value ? "apr_R" gis:property-value ? "may_R" gis:property-value ? "jun_R" gis:property-value ? "jul_R" gis:property-value ? "aug_R" gis:property-value ? "sep_R" gis:property-value ? "oct_R" gis:property-value ? "nov_R" gis:property-value ? "dec_R")
+        set shape "drop"
+      ]
+    ]
+  ]
+
+;#################################################################################################################################################  
+;#################################################################################################################################################  
+
+
+  ;;set global variables
+
+  set weeks 0                                           ;; count weeks
+  set months 1
+  set years 1
+  set Presion_de_medios 1 ;;need to define as a layer?
+
+;set global variables and the
+
+  set Tot_water_Imported_Cutzamala 14 * 60 * 60 * 24 ;[m3/s][s/min][min/hour][hours/day]   ;;total water imported from Cutzamala System
+  set Tot_water_Imported_Lerma 5 * 60 * 60 * 24                                            ;;total water imported from Lerma System
+  set truck_capasity 2                                                                     ; set capasity of a pipa [m3/truck]
+  set capacidad_cisterna 2                                                                 ;set storage capasity [m3/cisterna]
+  set Antiguedad-infra_Ab_max 1
+  set desperdicio_agua_max 1
+  set desviacion_agua_max 1
+  set garbage_max 1
+  set water_quality_max 1
+  set infra_abast_max 1
+  set infra_dranage_max 1
+  set flooding_max 1
+  set fallas_Ab_max 1
+  set fallas_d_max 1
+  set precipitation_max 1
+  set Abastecimiento_max 1
+  set health_max 1
+  set monto_max 1
+  set scarcity_max 1
+  set Presion_social_max 1
+  set peticion_usuarios_max 1
+  set d_Compra_agua_max 1
+  set d_Captacion_agua_max 1
+  set d_Movilizaciones_max 1
+  set d_Modificacion_vivienda_max 1
+  set d_Accion_colectiva_max 1
+  set d_water_extraction_max 1
+  set d_mantenimiento_D_max 1
+  set d_new_max 1
+  set d_water_distribution_max 1
+  set d_water_importacion_max 1
+  set d_water_extraction_max 1
+  set Sensitivity_F_Max 1
+  set Sensitivity_S_Max 1
+  set densidad_pop_max 1
+
+;#################################################################################################################################
+;  define_agebs_full ;;REFERS TO THE FULL AREA OF STUDY. THAT IS THE ENTIRE WATERSHED OF MEXICO CITY VALEY  (need to complete information for other areas)
+foreach gis:feature-list-of Agebs_map_full; "ID_ZONA" "0"
+[ ? ->
+   let centroid gis:location-of gis:centroid-of ?
+
+   if not empty? centroid[
+
+
+     ;if not empty? centroid[
+     create-agebs 1
+     [
+       set xcor item 0 centroid              ;define coodeantes of ageb at the center of the polygone
+       set ycor item 1 centroid
+       set ID gis:property-value ? "AGEB_ID"
+       set CVEGEO gis:property-value ? "CVEGEO"
+       set CV_estado (substring CVEGEO 0 2)
+       set CV_municipio (substring CVEGEO 2 5)
+       set Localidad (substring CVEGEO 5 9)
+       set AGB_k (substring CVEGEO 9 13)
+       set color grey
+       set shape "circle"
+       set size 0.5
+       set hidden? false
+       set group_kmean 1
+       set Abastecimiento gis:property-value ?  "abastecimi"; poblacion * Requerimiento_deAgua
+       set Antiguedad-infra_Ab 365 * gis:property-value ? "antiguedad"
+       set Antiguedad-infra_D 365 * gis:property-value ? "antiguedad"
+       set altitude gis:property-value ? "elevacion"
+       set aquifer gis:property-value (gis:find-one-feature zonas_aquif_map "CVEGEO" CVEGEO) "ACUIF"
+
+      ; set group_kmean gis:property-value (gis:find-one-feature ageb13 "CVEGEO" CVEGEO) "KMEANS5"
+      ; set precipitation gis:property-value (gis:find-one-feature ageb13 "CVEGEO" CVEGEO) "PRECIP"
+
+
+       set Capacidad_Ab 1
+       set Capacidad_d ifelse-value(gis:property-value ? "capacidad" != nobody)[gis:property-value ? "capacidad"][0]
+       set Falla_d 1
+
+
+
+       set water_quality gis:property-value ? "cal_agua"
+       set scarcity gis:property-value ? "escasez"
+       set FALTA_ab gis:property-value ? "Falta_in"
+       set houses_with_abastecimiento 1 - FALTA_ab
+       set FALLA_ab gis:property-value ? "falla_in"
+       set falta_d gis:property-value ? "falta_dren"
+
+       set presion_hidraulica gis:property-value ? "pres_hid"
+       set hundimientos gis:property-value ? "CM"
+       ;set uso_suelo gis:property-value ? "USOSUEL"
+       set presion_de_medios 1;gis:property-value ? "pres_med"
+       set desviacion_agua gis:property-value ? "desv_agua" ;; 1 si hay pozo en ageb o en agebs colindantes; 0 si no.
+
+       set houses_with_dranage 1 - falta_d
+       set gasto_hidraulico gis:property-value ? "gasto"
+       set Peticion_Delegacional_D gis:property-value ? "pet_del_dr"
+       set abastecimiento_b gis:property-value ? "abastecimi"
+
+       set poblacion gis:property-value ? "poblacion"
+       set Income-index ifelse-value(gis:property-value ? "ingreso" != nobody)[gis:property-value ? "ingreso"][random-float 1]
+       set health ifelse-value(gis:property-value ? "health" != nobody)[gis:property-value ?  "health"][random-float 0]
+       set flooding gis:property-value ?  "ponding"
+       set garbage ifelse-value (Income-index != nobody)[poblacion * (1 - Income-index)][poblacion * (1 - random-float 1)]
+       set Obstruccion_dren gis:property-value ? "obstruc"
+
+       set Monto gis:property-value ? "monto"
+
+       set desperdicio_agua gis:property-value ? "desp_agua"       ;;Por fugas, falta de conciencia del uso del agua
+
+     set peticion_usuarios gis:property-value ? "pet_usr_d"  ;index densidad de infra por cuanca * falta de conexiones por ageb.
+     set urban_growth gis:property-value ? "crec_urb"
+     set zona_aquifera gis:property-value (gis:find-one-feature zonas_aquif_map "CVEGEO" CVEGEO) "ID_ZONA"
+
+     set scarcity_annual 0
+     set tandeo 6 / 7
+     set days_water_in 0
+     set sensitivity_F 1
+     set sensitivity_S 1
+     set vulnerability_S 1
+     set vulnerability_F 1
+     ]
+  ]
+]
+;to define areas with irregular water supply by pipes (e.g. tandeo)[days per week]
+;crear csv table and read the values from it
+ask agebs with [CV_municipio = "002"][set tandeo 0.21];"Azcapotzalco"
+ask agebs with [CV_municipio = "003"][set tandeo 0.39];"Coyoacan"
+ask agebs with [CV_municipio = "004"][set tandeo 0.66];"Cuajimalpa"
+ask agebs with [CV_municipio = "005"][set tandeo 0.21];"Gustavo A. Madero"
+ask agebs with [CV_municipio = "006"][set tandeo 0.119];"Iztacalco"
+ask agebs with [CV_municipio = "007"][set tandeo 1.67];"Iztapalapa"
+ask agebs with [CV_municipio = "008"][set tandeo 0.57];"La Magdalena Contreras"
+ask agebs with [CV_municipio = "009"][set tandeo 2.149];"Milpa Alta"
+ask agebs with [CV_municipio = "010"][set tandeo 0.28];"Álvaro Obregón"
+ask agebs with [CV_municipio = "011"][set tandeo 1.01];"Tláhuac"
+ask agebs with [CV_municipio = "012"][set tandeo 1.43];"Tlalpan"
+ask agebs with [CV_municipio = "013"][set tandeo 1.13];"Xochimilco"
+ask agebs with [CV_municipio = "014"][set tandeo 0.098];"Benito Juárez"
+ask agebs with [CV_municipio = "015"][set tandeo 0.082];"Cuauhtémoc"
+ask agebs with [CV_municipio = "016"][set tandeo 0.048];"Miguel Hidalgo"
+ask agebs with [CV_municipio = "017"][set tandeo 0.116];"Venustiano Carranza"
+
+  (foreach gis:find-features agebs_map14 "NOM_LOC" "Total AGEB urbana"   gis:find-features ageb13 "NOM_LOC" "Total AGEB urbana"[ [a b] ->
+  ask agebs with [ID = gis:property-value a "AGEB_ID"][
+   set group_kmean gis:property-value b "KMEANS5"
+   set precipitation gis:property-value b "PRECIP"
+  ]
+])
+;###########################################################################################################################################################  
+  set zonas_aquiferas [4 12 14 15 16 17 19 20 24 26 27 28 29 31 32 33 34 36 37 38 41 42 43 44 48]
+  set from_d_to_bombeo [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+
+ ;names and CVEGEO of municipalities inside DF
+  set value_function_numeric_scale_residents [0.056 0.1013 0.4203 0.596 1]
+  set scarcity_scale [1 3 7 20]
+  set max-elevation max [altitude] of agebs           ;;to visualize elevation
+  set min-elevation min [altitude] of agebs           ;;to visualize elevation
+  define_alternativesCriteria
+  load_infra
+  read_data_flooding
+  flood_risk
+  show_sewer
+    water_production_importation                                                             ;;calculate total water available in a day
+;############################################3
+  ;# scenarios (resources; efficiency)
+  ;if escenarios = "Escenario A"[
+  ;  set recursos_para_mantenimiento 100
+  ;  set recursos_nuevaInfrastructura 100
+  ;  set Eficiencia_Mantenimiento 0.001
+  ;  set NuevaInfra 0.001
+  ;]
+  ;if escenarios = "Escenario B"[
+  ;  set recursos_para_mantenimiento 500
+  ;  set recursos_nuevaInfrastructura 500
+  ;  set Eficiencia_Mantenimiento 0.005
+  ;  set NuevaInfra 0.005
+  ;]
+  ;############################################3
+
+ ;profiler:stop          ;; stop profiling
+ ;print profiler:report  ;; view the results
+ ;profiler:reset         ;; clear the data
+ reset-ticks
+
+end
