@@ -120,7 +120,7 @@ to residents-decisions  ;calculation of distance metric using compromize program
       update_criteria_and_valueFunctions_residentes
       let ww filter [ii -> ii > cut-off_priorities] criteria_weights                       ;; filter for the criterias that are most influential (> 0.1) in the decision
       let vv []
-      (foreach criteria_weights V [
+      (foreach criteria_weights rescaled_criteria_values [
         [a b]->
         if a > cut-off_priorities[
           set vv lput b vv
@@ -129,7 +129,7 @@ to residents-decisions  ;calculation of distance metric using compromize program
       set ww map[ii -> ii / sum ww] ww
 
 
-      let ddd (distance-ideal alternative_weights vv ww 1)
+      let ddd (ideal_distance alternative_weights vv ww 1)
       if name_action = "Movilizaciones"[
         ask myself [set d_Movilizaciones ddd]
       ]
@@ -153,14 +153,14 @@ to residents-decisions  ;calculation of distance metric using compromize program
       update_criteria_and_valueFunctions_residentes
       let ww filter [ii -> ii > cut-off_priorities] criteria_weights                 ;; filter for the criterias that are most influential in the desition
       let vv []
-      (foreach criteria_weights V [ [a b] ->
+      (foreach criteria_weights rescaled_criteria_values [ [a b] ->
         if a > cut-off_priorities [
           set vv lput b vv
         ]
       ])
       set ww map[? -> ? / sum ww] ww
 
-      let  ddd (distance-ideal alternative_weights vv ww 1)
+      let  ddd (ideal_distance alternative_weights vv ww 1)
       if name_action = "Movilizaciones"[
         ask myself [
           set d_Movilizaciones ddd]
@@ -187,14 +187,14 @@ to residents-decisions  ;calculation of distance metric using compromize program
 
       let ww filter [? -> ? > cut-off_priorities] criteria_weights               ;; filter for the criterias that are most influential in the decision
       let vv []
-      (foreach criteria_weights V [[a b] ->
+      (foreach criteria_weights rescaled_criteria_values [[a b] ->
         if a > cut-off_priorities[
           set vv lput b vv
         ]
       ])
       set ww map[? -> ? / sum ww] ww
 
-      let ddd (distance-ideal alternative_weights vv ww 1)
+      let ddd (ideal_distance alternative_weights vv ww 1)
       if name_action = "Movilizaciones"[
         ask myself [set d_Movilizaciones ddd]
       ]
@@ -476,7 +476,7 @@ to WaterOperator-decisions [estado]
     ask Alternatives_WaterOperator [
       update_criteria_and_valueFunctions_WaterOperator;
 
-      let ddd (distance-ideal alternative_weights V criteria_weights 1)
+      let ddd (ideal_distance alternative_weights rescaled_criteria_values criteria_weights 1)
 
       ;#Alternative Mantenimiento Infrastructura
       if name_action = "Mantenimiento"[
@@ -503,7 +503,7 @@ to WaterOperator-decisions [estado]
   ;#alternative_namesof drenage
     ask Alternatives_WaterOperator_D [
       update_criteria_and_valueFunctions_WaterOperator   ;
-      let ddd (distance-ideal alternative_weights V criteria_weights 1)
+      let ddd (ideal_distance alternative_weights rescaled_criteria_values criteria_weights 1)
       if name_action = "Nueva_infraestructura"[
         ask myself[set d_new_D ddd]
       ]

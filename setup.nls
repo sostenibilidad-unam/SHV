@@ -329,19 +329,19 @@ Pozos-own[
   age_pozo         ;;age of well  p_failure        ;;probability of infrastructure failure here 1 if not infra here
 ]
 
-Alternatives_IZ-own[ID name_action C1_name C1 C1_MAX criteria_weights V v_scale_S v_scale_F alternative_weights]
+Alternatives_IZ-own[ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights]
 
-Alternatives_Xo-own[ID name_action C1_name C1 C1_MAX criteria_weights V v_scale_S v_scale_F alternative_weights]
+Alternatives_Xo-own[ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights]
 
-Alternatives_MC-own[ID name_action C1_name C1 C1_MAX criteria_weights V v_scale_S v_scale_F alternative_weights]
+Alternatives_MC-own[ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights]
 
-Alternatives_MCb-own[ID name_action C1_name C1 C1_MAX criteria_weights V v_scale_S v_scale_F alternative_weights]
+Alternatives_MCb-own[ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights]
 
-Alternatives_WaterOperator-own[ID name_action C1_name C1 C1_MAX criteria_weights V v_scale_S v_scale_F alternative_weights domain]  ;value obtained for the action when calcualting the limiting matrix in super decition
+Alternatives_WaterOperator-own[ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights domain]  ;value obtained for the action when calcualting the limiting matrix in super decition
 
-Alternatives_WaterOperator_D-own[ID name_action C1_name C1 C1_MAX criteria_weights V v_scale_S v_scale_F alternative_weights domain]  ;value obtained for the action when calcualting the limiting matrix in super decition
+Alternatives_WaterOperator_D-own[ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights domain]  ;value obtained for the action when calcualting the limiting matrix in super decition
 
-Alternatives_OCVAM-own[ID CLUSTER name_action C1_name C1 C1_MAX criteria_weights V v_scale v_scale_F alternative_weights]   ;value obtained for the action when calcualting the limiting matrix in super decition
+Alternatives_OCVAM-own[ID CLUSTER name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale v_scale_F alternative_weights]   ;value obtained for the action when calcualting the limiting matrix in super decition
 
 
 
@@ -587,9 +587,9 @@ to SETUP
       set ID "IO80316"
       set name_action ?
       set label name_action
-      set C1 (list 0 0 0 0 0 0 0 0 0)
-      set C1_max (list 0 0 0 0 0 0 0 0 0)
-      set V (list 0 0 0 0 0 0 0 0 0)
+      set criteria_values (list 0 0 0 0 0 0 0 0 0)
+      set criteria_max (list 0 0 0 0 0 0 0 0 0)
+      set rescaled_criteria_values (list 0 0 0 0 0 0 0 0 0)
       let w_sum sum (list
         item 6 item 7 MMIz_limit
         item 6 item 8 MMIz_limit
@@ -611,7 +611,7 @@ to SETUP
         (item 6 item 14 MMIz_limit / w_sum)
         (item 6 item 15 MMIz_limit / w_sum))
       ;read critera names
-      set C1_name (
+      set criteria_names (
         list item 1 item 7 MMIz_limit
         item 1 item 8 MMIz_limit
         item 1 item 9 MMIz_limit
@@ -660,9 +660,9 @@ to SETUP
       set ID "XO62916_a"
       set name_action ?
       set label name_action
-      set C1 (list 0 0 0 0 0 0 0 0 0)
-      set C1_max (list 0 0 0 0 0 0 0 0 0)
-      set V (list 0 0 0 0 0 0 0 0 0)
+      set criteria_values (list 0 0 0 0 0 0 0 0 0)
+      set criteria_max (list 0 0 0 0 0 0 0 0 0)
+      set rescaled_criteria_values (list 0 0 0 0 0 0 0 0 0)
       let w_sum sum (list item 6 item 7 MMXo_L
         item 6 item 8 MMXo_L
         item 6 item 9 MMXo_L
@@ -683,7 +683,7 @@ to SETUP
         (item 6 item 14 MMXo_L / w_sum)
         (item 6 item 15 MMXo_L / w_sum))
       
-      set C1_name (list item 1 item 7 MMXo_L
+      set criteria_names (list item 1 item 7 MMXo_L
         item 1 item 8 MMXo_L
         item 1 item 9 MMXo_L
         item 1 item 10 MMXo_L
@@ -732,9 +732,9 @@ to SETUP
       set ID "MC080416"
       set name_action ?
       set label name_action
-      set C1 (list 0 0 0 0 0 0)
-      set C1_max (list 0 0 0 0 0 0)
-      set V (list 0 0 0 0 0 0)
+      set criteria_values (list 0 0 0 0 0 0)
+      set criteria_max (list 0 0 0 0 0 0)
+      set rescaled_criteria_values (list 0 0 0 0 0 0)
       let w_sum sum (list item 2 item 7 MMMC_limit
         item 2 item 8 MMMC_limit
         item 2 item 9 MMMC_limit
@@ -749,7 +749,7 @@ to SETUP
         (item 2 item 11 MMMC_limit / w_sum)
         (item 2 item 12 MMMC_limit / w_sum))
       
-      set C1_name (list item 1 item 7 MMMC_limit
+      set criteria_names (list item 1 item 7 MMMC_limit
         item 1 item 8 MMMC_limit
         item 1 item 9 MMMC_limit
         item 1 item 10 MMMC_limit
@@ -796,9 +796,9 @@ to SETUP
       set name_action ?
       set label name_action
       
-      set C1 (list 0 0 0 0 0 0 0 0 0 0)
-      set C1_max (list 0 0 0 0 0 0 0 0 0 0)
-      set V (list 0 0 0 0 0 0 0 0 0 0)
+      set criteria_values (list 0 0 0 0 0 0 0 0 0 0)
+      set criteria_max (list 0 0 0 0 0 0 0 0 0 0)
+      set rescaled_criteria_values (list 0 0 0 0 0 0 0 0 0 0)
       let w_sum sum (list item 6 item 7 MMMCb_limit
         item 6 item 8 MMMCb_limit
         item 6 item 9 MMMCb_limit
@@ -823,7 +823,7 @@ to SETUP
       
       
       
-      set C1_name (list item 1 item 7 MMMCb_limit
+      set criteria_names (list item 1 item 7 MMMCb_limit
         item 1 item 8 MMMCb_limit
         item 1 item 9 MMMCb_limit
         item 1 item 10 MMMCb_limit
@@ -896,9 +896,9 @@ to SETUP
       set ID "DF101215_GOV"
       set name_action ?
       set label name_action
-      set C1 (list 0 0 0 0 0 0 0 0 0 0 0 0)
-      set C1_max (list 0 0 0 0 0 0 0 0 0 0 0 0)
-      set V (list 0 0 0 0 0 0 0 0 0 0 0 0)
+      set criteria_values (list 0 0 0 0 0 0 0 0 0 0 0 0)
+      set criteria_max (list 0 0 0 0 0 0 0 0 0 0 0 0)
+      set rescaled_criteria_values (list 0 0 0 0 0 0 0 0 0 0 0 0)
       let w_sum sum (list item 2 item 7 MMWaterOperator_limit
         item 2 item 8 MMWaterOperator_limit
         item 2 item 9 MMWaterOperator_limit
@@ -928,7 +928,7 @@ to SETUP
         (item 2 item 18 MMWaterOperator_limit / w_sum)
       )
       
-      set C1_name (list item 1 item 7 MMWaterOperator_limit
+      set criteria_names (list item 1 item 7 MMWaterOperator_limit
         item 1 item 8 MMWaterOperator_limit
         item 1 item 9 MMWaterOperator_limit
         item 1 item 10 MMWaterOperator_limit
@@ -988,9 +988,9 @@ to SETUP
       set ID "no-defined Drenage"
       set name_action ?
       set label name_action
-      set C1 (list 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
-      set C1_max (list 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
-      set V (list 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
+      set criteria_values (list 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
+      set criteria_max (list 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
+      set rescaled_criteria_values (list 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
       
       let w_sum sum (list matrix:get MMWaterOperator_limit_D_new 2 2
         matrix:get MMWaterOperator_limit_D_new 3 2
@@ -1023,7 +1023,7 @@ to SETUP
         (matrix:get MMWaterOperator_limit_D_new 15 2 / w_sum))
       
       
-      set C1_name (list item 1 item 4 MMWaterOperator_D
+      set criteria_names (list item 1 item 4 MMWaterOperator_D
         item 1 item 5 MMWaterOperator_D
         item 1 item 6 MMWaterOperator_D
         item 1 item 7 MMWaterOperator_D
