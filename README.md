@@ -1,12 +1,7 @@
 
-# uhv
-urban hidric vulnerabilities agent based model
+# Socio Hidrological Vulnerability
 
-
-## postgres intagration
-    sql:configure "defaultconnection" [["brand" "PostgreSQL"]["host" "localhost"]["port" 5432] ["user" "fidel"]["database" "netlogo"]]
-
-    sql:exec-update "INSERT into tabla values (?,?)" [5 "luis"] 
+Urban hidric vulnerabilities agent based model.
 
 
 # Python Environment
@@ -21,9 +16,20 @@ Once created it should be activated, before use:
 
     $ source venv/bin/activate
     (venv) $ # environment is now active
-    
 
-# Extract, Transform & Load
+Then you may want to install the dependencies.
+
+    (venv) $ pip install -r requirements.txt
+
+Experiments are configured in the setup.py file. To create a batch for
+HT-Condor use the provided create_run.py script.
+
+
+
+
+# On-Line Analytical Processing
+
+## Extract, Transform & Load
 
 First grab the header of any output CSV, thusly:
 
@@ -37,9 +43,7 @@ Finally run the ETL script:
 
     $ python simulation_etl.py
 
-
-
-# On-Line Analytical Processing
+## HT-SQL
 
 HT-SQL for OLAP can be used:
 
