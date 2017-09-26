@@ -250,7 +250,7 @@ end
 ;#############################################################################################################################################
 to make_rain
 ask Rain_Stations[
-  set Rain_t ifelse-value ((item (months - 1) p_rain) > random-float 1)[random-gamma (item (months - 1) shp) ((item (months - 1) rate_g))][0]
+  set Rain_t ifelse-value ((item (months - 1) p_rain) > random-float 1)[random-gamma (item (months - 1) shp_gamma) ((item (months - 1) rate_gamma))][0]
   set size Rain_t
 ]
 end
