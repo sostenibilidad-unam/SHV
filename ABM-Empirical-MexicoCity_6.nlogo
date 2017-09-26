@@ -1423,10 +1423,10 @@ escala
 0
 
 SWITCH
-254
-502
-404
-535
+255
+515
+405
+548
 export-to-postgres
 export-to-postgres
 1
@@ -1479,10 +1479,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-239
-393
-423
-426
+241
+406
+425
+439
 cut-off_priorities
 cut-off_priorities
 0
@@ -1564,10 +1564,10 @@ NIL
 HORIZONTAL
 
 SWITCH
-254
-469
-401
-502
+255
+482
+402
+515
 ANP
 ANP
 0
@@ -1575,10 +1575,10 @@ ANP
 -1000
 
 SLIDER
-243
+245
+442
 430
-428
-463
+475
 super_matrix_parameter
 super_matrix_parameter
 0
@@ -1637,10 +1637,10 @@ NIL
 HORIZONTAL
 
 PLOT
-1485
-372
-1685
-522
+1220
+543
+1469
+693
 Frequencia de Encharcamientos
 NIL
 NIL
@@ -1688,10 +1688,10 @@ NIL
 HORIZONTAL
 
 PLOT
-1218
-237
-1470
-387
+1222
+233
+1468
+383
 Capacidad Systema de Drenaje
 NIL
 NIL
