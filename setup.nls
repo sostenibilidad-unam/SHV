@@ -1,7 +1,7 @@
 globals [
-
+  
   timestep                     ;;time step for postgres history
-;;Importacion de agua
+                               ;;Importacion de agua
   Tot_water_Imported_Cutzamala ;;total water that enter to MC every day by importation from Cutzamala. for now a constant in the future connected as a network
   Tot_water_Imported_Lerma     ;;total water that enter to MC every day by importation from Lerma system. for now a constant int he future connected as a network
   water_produced               ;;Water produced by the city wells
@@ -12,21 +12,21 @@ globals [
   zonas_aquiferas              ;;ID de las zonas aquiferas en MXC
   municipios_CVEGEO            ;;names and CVEGEO of municipalities inside DF
   from_d_to_bombeo
-;; agua en tuberias
+  ;; agua en tuberias
   background_fugas             ;; % water lost every day by fugas
   max-elevation                ;;max altitude
   min-elevation                ;;max altitude
-
-;;############################################################################################################################################
+  
+  ;;############################################################################################################################################
   SM   ;standarized measure from the value function
   dist ;the reported value of distance from the ideal point function
-;#####################################################################################
-;;Government decision-making process
-;#####################################################################################
-
-;;RANGE of Biophisical variables
-;;Auxiliar variables that define range of value functions for all criteria
-
+       ;#####################################################################################
+       ;;Government decision-making process
+       ;#####################################################################################
+  
+  ;;RANGE of Biophisical variables
+  ;;Auxiliar variables that define range of value functions for all criteria
+  
   presion_hidraulica_max        ;;min hydraulic pressure
   Gasto_hidraulico_max
   Antiguedad-infra_Ab_max       ;;the area with the oldest infrastructure
@@ -64,8 +64,8 @@ globals [
   densidad_pop_max
   Capacidad_max_Ab_max
   Capacidad_max_d_max
-;#####################################################################################
-;;Residents decision metrics max ;variables for plotting distance
+  ;#####################################################################################
+  ;;Residents decision metrics max ;variables for plotting distance
   value_function_numeric_scale_residents
   scarcity_scale
   flooding_scale
@@ -74,31 +74,31 @@ globals [
   d_Movilizaciones_max            ;;distance from ideal point for Movilizaciones
   d_Modificacion_vivienda_max     ;;distance from ideal point for Modificacion_vivienda
   d_Accion_colectiva_max                     ;;distance from ideal point for Accion_colectiva
-;#WaterOperator decision metrics max
+                                             ;#WaterOperator decision metrics max
   d_water_extraction_max
   d_mantenimiento_max                     ;;distance from ideal point for decision to repare infrastructure
   d_new_max                            ;;distance from ideal point for decision to create new infrastructure
   d_water_distribution_max              ;;distance from ideal point for decision to distribute water
   d_water_importacion_max
   d_mantenimiento_D_max
-;#####################################################################################
-;#####################################################################################
-;;Vulnerability
-;#####################################################################################
+  ;#####################################################################################
+  ;#####################################################################################
+  ;;Vulnerability
+  ;#####################################################################################
   Sensitivity_F_Max      ;max level of changes made to houses to reduce damage by flooding
   Vulnerability_F_max
   Sensitivity_S_Max      ;max level of changes made to houses to reduce scarcity
   Vulnerability_S_max
-;#####################################################################################
-;;Indicators
-;#####################################################################################
+  ;#####################################################################################
+  ;;Indicators
+  ;#####################################################################################
   age_infra_Ab_index
   age_infra_F_index
-
-;;############################################################################################################################################
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;define geo coded GIS (maps) variables
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  
+  ;;############################################################################################################################################
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;define geo coded GIS (maps) variables
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   Agebs_map                                                          ;includes economic index water-related infrastructure
   agebs_map14
   Agebs_map_full
@@ -125,26 +125,25 @@ globals [
   failure_of_dranage                                                 ;(translated from residents mental model concept "obstruccion de alcantarillado")
   presion_hidraulica_map                                             ;water in the pipes. related to tandeo and fugas. places with more fugas may have less pressure. places with less pressure would have more tandeo.
   Presion_de_medios
-
-
-;;Other auxiliar variables
+    
+  ;;Other auxiliar variables
   counter
   days
   weeks
   months
   years
-;MCDA imput files
-MMWaterOperator_D
-MMWaterOperator_D_limit
-MMWaterOperator_weighted_D
-;;tables
-
+  ;MCDA imput files
+  MMWaterOperator_D
+  MMWaterOperator_D_limit
+  MMWaterOperator_weighted_D
+  ;;tables
+  
   ;read_data_flooding
   flood_rain           ;table with probabilities of flooding based on frequqncies and rainfall
   flood_capacity_riskOldCity
   flood_capacity_riskNewCity
-]
-;create Agents#############################################################################################################################################
+]  ; /globals
+
 
 breed [Agebs Ageb]
 breed [Delegaciones Delegacion]
@@ -163,9 +162,14 @@ breed [Alternatives_WaterOperator alternative_WaterOperator]
 breed [Alternatives_WaterOperator_D alternative_WaterOperator_D]
 breed [Alternatives_OCVAM alternative_OCVAM]
 breed [Alternatives_DELEGATIONS alternative_DELEGATION]
-;#############################################################################################################################################
+
+
+
+
 ;#############################################################################################################################################
 ;define patch variables
+;#############################################################################################################################################
+
 patches-own[
   altitude          ;; real altitude
   Ageb_ID           ;; AGEB in
@@ -174,11 +178,8 @@ patches-own[
   LU_type           ;;land use type [Regular, irregular] (not included yet)
 ]
 
-
 Delegaciones-own[name_delegacion Peticion_Delegaciones]
-;#############################################################################################################################################
-;#############################################################################################################################################
-;define AGEBS
+
 Agebs-own[
   CVEGEO                       ;;key to define state, delegation/delegation
   CV_estado                    ;Estate
@@ -226,7 +227,7 @@ Agebs-own[
   Peticion_Delegacional_D
   Flooding                     ;; mean number of encharcamientos during between 2004 and 2014
   flooding_sd                  ;;standard deviation flooding per ageb
-;;Charactersitics of the agebs that define criteria
+                               ;;Charactersitics of the agebs that define criteria
   houses_with_dranage          ;; % of houses connected to the dranage from ENEGI survey instrument
   houses_with_abastecimiento   ;; % houses connected to distribution network
   health               ;; Number of gastrointestinal cases per ageb (from disease model)
@@ -257,25 +258,25 @@ Agebs-own[
   Infiltracion
   R_tau                        ;; Threshold of rainfall according to protocol
   altura
-;#residents decisions metrics
-
+  ;#residents decisions metrics
+  
   d_Compra_agua                          ;;distance from ideal point for Compra_agua (buying water)
   d_Captacion_agua                       ;;distance from ideal point for Captacion_agua (buying tinaco, ranfall storage)
   d_Movilizaciones                       ;;distance from ideal point for Movilizaciones
   d_Modificacion_vivienda                ;;distance from ideal point for Modificacion_vivienda
   d_Accion_colectiva                     ;;distance from ideal point for Accion_colectiva
-
-
-;#WaterOperator decition metrics
+  
+  
+  ;#WaterOperator decition metrics
   d_water_extraction
   d_mantenimiento                     ;;distance from ideal point for decision to repare infrastructure
   d_new                            ;;distance from ideal point for decision to create new infrastructure
   d_water_distribution              ;;distance from ideal point for decision to distribute water
   d_water_importacion
-;WaterOperator drenaje
+  ;WaterOperator drenaje
   d_mantenimiento_D
   d_new_D
-;Vulnerability indicators
+  ;Vulnerability indicators
   sensitivity_F
   Sensitivity_S                   ;indicators of how sensitive, relative to level of adaptations (house modifications)
   Exposure_S                      ;indicators of level of scarcity
@@ -285,35 +286,36 @@ Agebs-own[
   Vulnerability_S
   investment_here_AB               ;;record if an ANY action  was taken in a census block
   investment_here_accumulated_AB   ;;record the accumulated number of ANY alternative_namestaken in a census block
-
+  
   investment_here_AB_new               ;;record if an action to create NEW was taken in a census block
   investment_here_accumulated_AB_new   ;;record the accumulated number of alternative_namesto create NEW taken in a census block
-
+  
   investment_here_AB_mant               ;;record if an action to maintain was taken in a census block
   investment_here_accumulated_AB_mant   ;;record the accumulated number of alternative_namesto maintain  taken in a census block
-
-
+  
+  
   investment_here_D             ;;record if an action was taken in a census block
   investment_here_accumulated_D ;;record the accumulated number of alternative_namestaken in a census block
-
+  
   investment_here_D_new              ;;record if an action was taken in a census block
   investment_here_accumulated_D_new  ;;record the accumulated number of alternative_namestaken in a census block
-
+  
   investment_here_D_mant              ;;record if an action to maintain was taken in a census block
   investment_here_accumulated_D_mant  ;;record the accumulated number of alternative_namesto maintain taken in a census block
-
-
-;indicators at the level of the ageb
+  
+  
+  ;indicators at the level of the ageb
   scarcity_annual        ;report number of days without water in a year
   scarcity_index
   flooding_index
 ]
-;#############################################################################################################################################
-;#############################################################################################################################################
+
 rain_Stations-own[name p_rain shp_gamma rate_gamma Rain_t]
+
 sewage_nodes-own[ID age from_node to_node Betweeness new-val]
 
 D_pipes-own [current-flow]
+
 Pozos-own[
   Name
   col_ID                      ;;location of well in neighborhood
@@ -326,23 +328,22 @@ Pozos-own[
   extraction_rate  ;;total extraction (defined by zones 1 to 32)
   age_pozo         ;;age of well  p_failure        ;;probability of infrastructure failure here 1 if not infra here
 ]
-;#############################################################################################################################################
-;#############################################################################################################################################
-;define alternatives for residents using MC Iz Xo
-;each alternative is consider an object with properties
-;ID of the mental model
-;name of the action
-;varibles that influence the alternative
-;maximal level of the variable to define
-;value function
 
 Alternatives_IZ-own[ID name_action C1_name C1 C1_MAX criteria_weights V v_scale_S v_scale_F alternative_weights]
+
 Alternatives_Xo-own[ID name_action C1_name C1 C1_MAX criteria_weights V v_scale_S v_scale_F alternative_weights]
+
 Alternatives_MC-own[ID name_action C1_name C1 C1_MAX criteria_weights V v_scale_S v_scale_F alternative_weights]
+
 Alternatives_MCb-own[ID name_action C1_name C1 C1_MAX criteria_weights V v_scale_S v_scale_F alternative_weights]
+
 Alternatives_WaterOperator-own[ID name_action C1_name C1 C1_MAX criteria_weights V v_scale_S v_scale_F alternative_weights domain]  ;value obtained for the action when calcualting the limiting matrix in super decition
+
 Alternatives_WaterOperator_D-own[ID name_action C1_name C1 C1_MAX criteria_weights V v_scale_S v_scale_F alternative_weights domain]  ;value obtained for the action when calcualting the limiting matrix in super decition
+
 Alternatives_OCVAM-own[ID CLUSTER name_action C1_name C1 C1_MAX criteria_weights V v_scale v_scale_F alternative_weights]   ;value obtained for the action when calcualting the limiting matrix in super decition
+
+
 
 
 
@@ -351,7 +352,8 @@ to SETUP
   ;profiler:start
   set timestep 0
   ;load-gis
-  ;#################################################################################################################################################
+
+
   set estaciones_lluvia_SACMEX gis:load-dataset  "data/estacionesRain/rainfall_statistics_CDMX.shp"
   set desalojo_primario gis:load-dataset  "data/Sewer_Nodes_July27_Project.shp"
   set pozos_WaterOperator gis:load-dataset  "data/Join_pozosColoniasAgebs.shp"                                 ;wells
@@ -365,33 +367,33 @@ to SETUP
   set mascara gis:load-dataset "data/Mask.shp"                  ;Mask of study area                                                                                                                         ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
   set agebs_map14 gis:load-dataset "data/ageb14.shp";                                                      ;AGEB shape file
   set ageb13 gis:load-dataset "data/DF_ageb_N_escalante_Project_withEncharcamientos.shp"
-  ;set Limites_cuenca gis:load-dataset "data/Lim_Cuenca_Valle_Mexico_Proj.shp"                                                    
-                                                                                                                                                                                                                 ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
- ;define city or watersheed scale                                                                             
+
+  ;define city or watersheed scale                                                                             
   if escala = "ciudad"[
-    ;=======
     gis:set-world-envelope-ds gis:envelope-of mascara ;ageb13;mascara;Limites_delegacionales
   ]
-
+  
   if escala = "cuenca"[
     gis:set-world-envelope-ds gis:envelope-of Agebs_map_full;mascara ;ageb13;mascara;Limites_delegacionales
   ]
+
   set city_image  bitmap:import "data/image_googleEarth_cuencaMexicoB.jpg";"data/DF_googleB.jpg"                                                   ; google earth image
   bitmap:copy-to-pcolors City_image false
 
+
+  
   ;#################################################################################################################################################  
   ;create infraestructure as agents
   ;#################################################################################################################################################  
-  foreach gis:feature-list-of estaciones_lluvia_SACMEX; "ID_ZONA" "0"
-  [ ? ->
+  foreach gis:feature-list-of estaciones_lluvia_SACMEX [
+    ? ->
     let centroid gis:location-of gis:centroid-of ?
     
     if not empty? centroid[
-      create-Rain_Stations 1
-      [
+      create-Rain_Stations 1 [
         set xcor item 0 centroid              ;define coodeantes of ageb at the center of the polygone
         set ycor item 1 centroid
-       set color blue
+        set color blue
         set name gis:property-value ? "name"
         set p_rain (list gis:property-value ? "jan_P" gis:property-value ? "feb_P" gis:property-value ? "mar_P" gis:property-value ? "apr_P" gis:property-value ? "may_P" gis:property-value ? "jun_P" gis:property-value ? "jul_P" gis:property-value ? "aug_P" gis:property-value ? "sep_P" gis:property-value ? "oct_P" gis:property-value ? "nov_P" gis:property-value ? "dec_P")
         set shp_gamma (list gis:property-value ? "jan_S" gis:property-value ? "feb_S" gis:property-value ? "mar_S" gis:property-value ? "apr_S" gis:property-value ? "may_S" gis:property-value ? "jun_S" gis:property-value ? "jul_S" gis:property-value ? "aug_S" gis:property-value ? "sep_S" gis:property-value ? "oct_S" gis:property-value ? "nov_S" gis:property-value ? "dec_S")
@@ -400,13 +402,8 @@ to SETUP
       ]
     ]
   ]
-
-;#################################################################################################################################################  
-;#################################################################################################################################################  
-
-
-  ;;set global variables
-
+  
+  
   set weeks 0                                          
   set months 1
   set years 1
@@ -446,7 +443,7 @@ to SETUP
   set Sensitivity_F_Max 1
   set Sensitivity_S_Max 1
   set densidad_pop_max 1
-
+  
   ;#################################################################################################################################
   ;  define_agebs_full ;;REFERS TO THE FULL AREA OF STUDY. THAT IS THE ENTIRE WATERSHED OF MEXICO CITY VALEY  (need to complete information for other areas)
   foreach gis:feature-list-of Agebs_map_full; "ID_ZONA" "0"
@@ -457,8 +454,7 @@ to SETUP
       
       
       ;if not empty? centroid[
-      create-agebs 1
-      [
+      create-agebs 1 [
         set xcor item 0 centroid              ;define coodeantes of ageb at the center of the polygone
         set ycor item 1 centroid
         set ID gis:property-value ? "AGEB_ID"
@@ -479,14 +475,11 @@ to SETUP
         set aquifer gis:property-value (gis:find-one-feature zonas_aquif_map "CVEGEO" CVEGEO) "ACUIF"
         
         ; set group_kmean gis:property-value (gis:find-one-feature ageb13 "CVEGEO" CVEGEO) "KMEANS5"
-        ; set precipitation gis:property-value (gis:find-one-feature ageb13 "CVEGEO" CVEGEO) "PRECIP"
-        
+        ; set precipitation gis:property-value (gis:find-one-feature ageb13 "CVEGEO" CVEGEO) "PRECIP"        
         
         set Capacidad_Ab 1
         set Capacidad_d ifelse-value(gis:property-value ? "capacidad" != nobody)[gis:property-value ? "capacidad"][0]
         set Falla_d 1
-        
-        
         
         set water_quality gis:property-value ? "cal_agua"
         set scarcity gis:property-value ? "escasez"
@@ -497,7 +490,6 @@ to SETUP
         
         set presion_hidraulica gis:property-value ? "pres_hid"
         set hundimientos gis:property-value ? "CM"
-        ;set uso_suelo gis:property-value ? "USOSUEL"
         set presion_de_medios 1;gis:property-value ? "pres_med"
         set desviacion_agua gis:property-value ? "desv_agua" ;; 1 si hay pozo en ageb o en agebs colindantes; 0 si no.
         
@@ -531,66 +523,67 @@ to SETUP
       ]
     ]
   ]
-;to define areas with irregular water supply by pipes (e.g. tandeo)[days per week]
-;crear csv table and read the values from it
-ask agebs with [CV_municipio = "002"][set tandeo 0.21];"Azcapotzalco"
-ask agebs with [CV_municipio = "003"][set tandeo 0.39];"Coyoacan"
-ask agebs with [CV_municipio = "004"][set tandeo 0.66];"Cuajimalpa"
-ask agebs with [CV_municipio = "005"][set tandeo 0.21];"Gustavo A. Madero"
-ask agebs with [CV_municipio = "006"][set tandeo 0.119];"Iztacalco"
-ask agebs with [CV_municipio = "007"][set tandeo 1.67];"Iztapalapa"
-ask agebs with [CV_municipio = "008"][set tandeo 0.57];"La Magdalena Contreras"
-ask agebs with [CV_municipio = "009"][set tandeo 2.149];"Milpa Alta"
-ask agebs with [CV_municipio = "010"][set tandeo 0.28];"Álvaro Obregón"
-ask agebs with [CV_municipio = "011"][set tandeo 1.01];"Tláhuac"
-ask agebs with [CV_municipio = "012"][set tandeo 1.43];"Tlalpan"
-ask agebs with [CV_municipio = "013"][set tandeo 1.13];"Xochimilco"
-ask agebs with [CV_municipio = "014"][set tandeo 0.098];"Benito Juárez"
-ask agebs with [CV_municipio = "015"][set tandeo 0.082];"Cuauhtémoc"
-ask agebs with [CV_municipio = "016"][set tandeo 0.048];"Miguel Hidalgo"
-ask agebs with [CV_municipio = "017"][set tandeo 0.116];"Venustiano Carranza"
 
+  ;to define areas with irregular water supply by pipes (e.g. tandeo)[days per week]
+  ;crear csv table and read the values from it
+  ask agebs with [CV_municipio = "002"][set tandeo 0.21];"Azcapotzalco"
+  ask agebs with [CV_municipio = "003"][set tandeo 0.39];"Coyoacan"
+  ask agebs with [CV_municipio = "004"][set tandeo 0.66];"Cuajimalpa"
+  ask agebs with [CV_municipio = "005"][set tandeo 0.21];"Gustavo A. Madero"
+  ask agebs with [CV_municipio = "006"][set tandeo 0.119];"Iztacalco"
+  ask agebs with [CV_municipio = "007"][set tandeo 1.67];"Iztapalapa"
+  ask agebs with [CV_municipio = "008"][set tandeo 0.57];"La Magdalena Contreras"
+  ask agebs with [CV_municipio = "009"][set tandeo 2.149];"Milpa Alta"
+  ask agebs with [CV_municipio = "010"][set tandeo 0.28];"Álvaro Obregón"
+  ask agebs with [CV_municipio = "011"][set tandeo 1.01];"Tláhuac"
+  ask agebs with [CV_municipio = "012"][set tandeo 1.43];"Tlalpan"
+  ask agebs with [CV_municipio = "013"][set tandeo 1.13];"Xochimilco"
+  ask agebs with [CV_municipio = "014"][set tandeo 0.098];"Benito Juárez"
+  ask agebs with [CV_municipio = "015"][set tandeo 0.082];"Cuauhtémoc"
+  ask agebs with [CV_municipio = "016"][set tandeo 0.048];"Miguel Hidalgo"
+  ask agebs with [CV_municipio = "017"][set tandeo 0.116];"Venustiano Carranza"
+  
   (foreach gis:find-features agebs_map14 "NOM_LOC" "Total AGEB urbana"   gis:find-features ageb13 "NOM_LOC" "Total AGEB urbana"[ [a b] ->
-  ask agebs with [ID = gis:property-value a "AGEB_ID"][
-   set group_kmean gis:property-value b "KMEANS5"
-   set precipitation gis:property-value b "PRECIP"
-  ]
-])
-;###########################################################################################################################################################  
+    ask agebs with [ID = gis:property-value a "AGEB_ID"][
+      set group_kmean gis:property-value b "KMEANS5"
+      set precipitation gis:property-value b "PRECIP"
+    ]
+  ])
+  ;###########################################################################################################################################################  
   set zonas_aquiferas [4 12 14 15 16 17 19 20 24 26 27 28 29 31 32 33 34 36 37 38 41 42 43 44 48]
   set from_d_to_bombeo [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
-
- ;names and CVEGEO of municipalities inside DF
+  
+  ;names and CVEGEO of municipalities inside DF
   set value_function_numeric_scale_residents [0.056 0.1013 0.4203 0.596 1]
   set scarcity_scale [1 3 7 20]
   set max-elevation max [altitude] of agebs           ;;to visualize elevation
   set min-elevation min [altitude] of agebs           ;;to visualize elevation
   
   
- ;####################################################################################################### 
+  ;####################################################################################################### 
   ;define_alternativesCriteria
- ;This procedure defines each alternative as a object, with atributes defined by:
-;1)ID: identification of the mental model network where weights are elicited
-;2)name_action: the name of the alternative of the MCDA
-;3)w: a set of weight that connect each criteria
-;4) alternative_weightss: a set of weights for each action when HNP is used (supermatrix)
- 
+  ;This procedure defines each alternative as a object, with atributes defined by:
+  ;1)ID: identification of the mental model network where weights are elicited
+  ;2)name_action: the name of the alternative of the MCDA
+  ;3)w: a set of weight that connect each criteria
+  ;4) alternative_weightss: a set of weights for each action when HNP is used (supermatrix)
+  
   let MMIz csv:from-file  "data/I080316_OTR.weighted.csv"
   let MMIz_limit csv:from-file  "data/I080316_OTR.limit.csv"
-
-;read alternative's names from limit matrix
+  
+  ;read alternative's names from limit matrix
   let alternative_names (list item 1 item 2 MMIz_limit
     item 1 item 3 MMIz_limit
     item 1 item 4 MMIz_limit
     item 1 item 5 MMIz_limit
     item 1 item 6 MMIz_limit)
   let jj 0
-
-;read criteria names and weights to set agent's attributes
+  
+  ;read criteria names and weights to set agent's attributes
   foreach alternative_names[
-? ->
+    ? ->
     create-Alternatives_IZ 1[
-
+      
       set ID "IO80316"
       set name_action ?
       set label name_action
@@ -607,7 +600,7 @@ ask agebs with [CV_municipio = "017"][set tandeo 0.116];"Venustiano Carranza"
         item 6 item 13 MMIz_limit
         item 6 item 14 MMIz_limit
         item 6 item 15 MMIz_limit)
-;read criteria weight
+      ;read criteria weight
       set criteria_weights (list (item 6 item 7 MMIz_limit / w_sum)
         (item 6 item 8 MMIz_limit / w_sum)
         (item 6 item 9 MMIz_limit / w_sum)
@@ -617,7 +610,7 @@ ask agebs with [CV_municipio = "017"][set tandeo 0.116];"Venustiano Carranza"
         (item 6 item 13 MMIz_limit / w_sum)
         (item 6 item 14 MMIz_limit / w_sum)
         (item 6 item 15 MMIz_limit / w_sum))
-;read critera names
+      ;read critera names
       set C1_name (
         list item 1 item 7 MMIz_limit
         item 1 item 8 MMIz_limit
@@ -628,39 +621,39 @@ ask agebs with [CV_municipio = "017"][set tandeo 0.116];"Venustiano Carranza"
         item 1 item 13 MMIz_limit
         item 1 item 14 MMIz_limit
         item 1 item 15 MMIz_limit)
-
-;read and normalize alternative's weights to compute ratings for distance to the ideal point
+      
+      ;read and normalize alternative's weights to compute ratings for distance to the ideal point
       if-else ANP = TRUE[
         set alternative_weights item (jj + 2) item (jj + 2) MMIz_limit / (item 5 item 5 MMIz_limit + item 4 item 4 MMIz_limit + item 3 item 3 MMIz_limit + item 6 item 6 MMIz_limit + item 2 item 2 MMIz_limit)
       ]
       [
         set alternative_weights 1
       ]
-
+      
     ]
-
-  set jj jj + 1
-]
-; define scale for step value function
+    
+    set jj jj + 1
+  ]
+  ; define scale for step value function
   ask Alternatives_IZ with [name_action = "Compra de agua"] [set v_scale_S [0 0 0 0 0]]
   ask Alternatives_IZ with [name_action = "Movilizaciones"] [set v_scale_S [0.05 0.05 0.05 1 1]]
   ask Alternatives_IZ with [name_action = "Accion colectiva"] [set v_scale_S [0 1 1 1 1]]
   ask Alternatives_IZ with [name_action = "Captacion de agua"] [set v_scale_S [0 0 0 0 0]]
   ask Alternatives_IZ with [name_action = "Modificacion vivienda"] [set v_scale_S [0 1 1 1 1]]
-
-;#############################################################################################
-;Xochimilco
- let MMXo_L csv:from-file  "data/X062916_OTR_a.limit.csv"
- let MMXo_W csv:from-file  "data/X062916_OTR_a.weighted.csv"
-
+  
+  ;#############################################################################################
+  ;Xochimilco
+  let MMXo_L csv:from-file  "data/X062916_OTR_a.limit.csv"
+  let MMXo_W csv:from-file  "data/X062916_OTR_a.weighted.csv"
+  
   set jj 0
-
+  
   set alternative_names(list item 1 item 2 MMXo_L   ;obtain the name of the alternatives performed
     item 1 item 3 MMXo_L
     item 1 item 4 MMXo_L
     item 1 item 5 MMXo_L
     item 1 item 6 MMXo_L)
-
+  
   foreach alternative_names[
     ? ->
     create-Alternatives_Xo 1[
@@ -679,7 +672,7 @@ ask agebs with [CV_municipio = "017"][set tandeo 0.116];"Venustiano Carranza"
         item 6 item 13 MMXo_L
         item 6 item 14 MMXo_L
         item 6 item 15 MMXo_L)
-
+      
       set criteria_weights (list (item 6 item 7 MMXo_L / w_sum)
         (item 6 item 8 MMXo_L / w_sum)
         (item 6 item 9 MMXo_L / w_sum)
@@ -689,7 +682,7 @@ ask agebs with [CV_municipio = "017"][set tandeo 0.116];"Venustiano Carranza"
         (item 6 item 13 MMXo_L / w_sum)
         (item 6 item 14 MMXo_L / w_sum)
         (item 6 item 15 MMXo_L / w_sum))
-
+      
       set C1_name (list item 1 item 7 MMXo_L
         item 1 item 8 MMXo_L
         item 1 item 9 MMXo_L
@@ -702,470 +695,378 @@ ask agebs with [CV_municipio = "017"][set tandeo 0.116];"Venustiano Carranza"
       if-else ANP = TRUE[
         set alternative_weights (item (jj + 2) item (jj + 2) MMXo_L) / (item 5 item 5 MMXo_L + item 4 item 4 MMXo_L + item 3 item 3 MMXo_L + item 6 item 6 MMXo_L + item 2 item 2 MMXo_L)
       ][
-      set alternative_weights 1
+        set alternative_weights 1
       ]
     ]
-
-  set jj jj + 1
+    
+    set jj jj + 1
   ]
-
+  
   ask Alternatives_Xo with [name_action = "Compra de agua"] [set v_scale_S [0.05 0.1 1 1 1]]
   ask Alternatives_Xo with [name_action = "Movilizaciones"] [set v_scale_S [0.05 0.05 0.05 1 1]]
   ask Alternatives_Xo with [name_action = "Accion colectiva"] [set v_scale_S [0.05 0.1 1 1 1]]
   ask Alternatives_Xo with [name_action = "Captacion de agua"] [set v_scale_S [0.05 0.1 1 1 1]]
   ask Alternatives_Xo with [name_action = "Modificacion vivienda"] [set v_scale_S [0 0 0 0 1]]
-
-
+  
+  
   ask Alternatives_Xo [set v_scale_F [0 0 0 0 0]]
-
-
-
-;#########################################################################
-
-       let MMMC csv:from-file  "data/MC080416_OTR_a.weighted.csv"
-       let MMMC_limit csv:from-file  "data/MC080416_OTR_a.limit.csv"
-
-
-
-       set alternative_names(list item 1 item 2 MMMC_limit
-         item 1 item 3 MMMC_limit
-         item 1 item 4 MMMC_limit
-         item 1 item 5 MMMC_limit
-         item 1 item 6 MMMC_limit)
-       set jj 0
-       foreach alternative_names[
+  
+  
+  
+  ;#########################################################################
+  
+  let MMMC csv:from-file  "data/MC080416_OTR_a.weighted.csv"
+  let MMMC_limit csv:from-file  "data/MC080416_OTR_a.limit.csv"
+  
+  
+  
+  set alternative_names(list item 1 item 2 MMMC_limit
+    item 1 item 3 MMMC_limit
+    item 1 item 4 MMMC_limit
+    item 1 item 5 MMMC_limit
+    item 1 item 6 MMMC_limit)
+  set jj 0
+  foreach alternative_names[
     ? ->
-         create-Alternatives_MC 1[
-           set ID "MC080416"
-           set name_action ?
-           set label name_action
-           set C1 (list 0 0 0 0 0 0)
-           set C1_max (list 0 0 0 0 0 0)
-           set V (list 0 0 0 0 0 0)
-           let w_sum sum (list item 2 item 7 MMMC_limit
-             item 2 item 8 MMMC_limit
-             item 2 item 9 MMMC_limit
-             item 2 item 10 MMMC_limit
-             item 2 item 11 MMMC_limit
-             item 2 item 12 MMMC_limit)
-
-           set criteria_weights (list (item 2 item 7 MMMC_limit / w_sum)
-             (item 2 item 8 MMMC_limit / w_sum)
-             (item 2 item 9 MMMC_limit / w_sum)
-             (item 2 item 10 MMMC_limit / w_sum)
-             (item 2 item 11 MMMC_limit / w_sum)
-             (item 2 item 12 MMMC_limit / w_sum))
-
-           set C1_name (list item 1 item 7 MMMC_limit
-             item 1 item 8 MMMC_limit
-             item 1 item 9 MMMC_limit
-             item 1 item 10 MMMC_limit
-             item 1 item 11 MMMC_limit
-             item 1 item 12 MMMC_limit)
-
-           if-else ANP = TRUE[
-           set alternative_weights item (jj + 2) item (jj + 2) MMMC_limit /(item 5 item 5 MMMC_limit + item 4 item 4 MMMC_limit + item 3 item 3 MMMC_limit + item 6 item 6 MMMC_limit + item 2 item 2 MMMC_limit)
-           ][
-           set alternative_weights 1
-           ]
-
-         ]
-         set jj jj + 1
-
-       ]
-
-       ask Alternatives_MC with [name_action = "Compra de agua"] [set v_scale_S [0.05 1 1 1 1]]
-       ask Alternatives_MC with [name_action = "Movilizaciones"] [set v_scale_S [0.05 0.05 0.05 0.4 1]]
-       ask Alternatives_MC with [name_action = "Accion colectiva"] [set v_scale_S [0.05 0.05 0.05 0.05 1]]
-       ask Alternatives_MC with [name_action = "Captacion de agua"] [set v_scale_S [0.05 0.1 1 1 1]]
-       ask Alternatives_MC with [name_action = "Modificacion vivienda"] [set v_scale_S [0.05 0.05 0.05 0.4 1]]
-       ask Alternatives_MC with [name_action = "Reuso del agua"][set v_scale_S [0.05 1 1 1 1]]
-       ask Alternatives_MC with [name_action = "Compra de infrestractura de agua"][set v_scale_S [0.05 0.1 0.15 0.1 1]]
-
-       ask Alternatives_MC [set v_scale_F [0 0 0 0 0]]
-
- ;#########################################
-
-
-       let MMMCb csv:from-file  "data/MC080416_OTR_b.weighted.csv"
-       let MMMCb_limit csv:from-file  "data/MC080416_OTR_b.limit.csv"
-
-       set alternative_names(list item 1 item 2 MMMCb_limit
-         item 1 item 3 MMMCb_limit
-         item 1 item 4 MMMCb_limit
-         item 1 item 5 MMMCb_limit
-         item 1 item 6 MMMCb_limit)
-       set jj 0
-       foreach alternative_names[
+    create-Alternatives_MC 1[
+      set ID "MC080416"
+      set name_action ?
+      set label name_action
+      set C1 (list 0 0 0 0 0 0)
+      set C1_max (list 0 0 0 0 0 0)
+      set V (list 0 0 0 0 0 0)
+      let w_sum sum (list item 2 item 7 MMMC_limit
+        item 2 item 8 MMMC_limit
+        item 2 item 9 MMMC_limit
+        item 2 item 10 MMMC_limit
+        item 2 item 11 MMMC_limit
+        item 2 item 12 MMMC_limit)
+      
+      set criteria_weights (list (item 2 item 7 MMMC_limit / w_sum)
+        (item 2 item 8 MMMC_limit / w_sum)
+        (item 2 item 9 MMMC_limit / w_sum)
+        (item 2 item 10 MMMC_limit / w_sum)
+        (item 2 item 11 MMMC_limit / w_sum)
+        (item 2 item 12 MMMC_limit / w_sum))
+      
+      set C1_name (list item 1 item 7 MMMC_limit
+        item 1 item 8 MMMC_limit
+        item 1 item 9 MMMC_limit
+        item 1 item 10 MMMC_limit
+        item 1 item 11 MMMC_limit
+        item 1 item 12 MMMC_limit)
+      
+      if-else ANP = TRUE[
+        set alternative_weights item (jj + 2) item (jj + 2) MMMC_limit /(item 5 item 5 MMMC_limit + item 4 item 4 MMMC_limit + item 3 item 3 MMMC_limit + item 6 item 6 MMMC_limit + item 2 item 2 MMMC_limit)
+      ][
+        set alternative_weights 1
+      ]
+      
+    ]
+    set jj jj + 1
+    
+  ]
+  
+  ask Alternatives_MC with [name_action = "Compra de agua"] [set v_scale_S [0.05 1 1 1 1]]
+  ask Alternatives_MC with [name_action = "Movilizaciones"] [set v_scale_S [0.05 0.05 0.05 0.4 1]]
+  ask Alternatives_MC with [name_action = "Accion colectiva"] [set v_scale_S [0.05 0.05 0.05 0.05 1]]
+  ask Alternatives_MC with [name_action = "Captacion de agua"] [set v_scale_S [0.05 0.1 1 1 1]]
+  ask Alternatives_MC with [name_action = "Modificacion vivienda"] [set v_scale_S [0.05 0.05 0.05 0.4 1]]
+  ask Alternatives_MC with [name_action = "Reuso del agua"][set v_scale_S [0.05 1 1 1 1]]
+  ask Alternatives_MC with [name_action = "Compra de infrestractura de agua"][set v_scale_S [0.05 0.1 0.15 0.1 1]]
+  
+  ask Alternatives_MC [set v_scale_F [0 0 0 0 0]]
+  
+  ;#########################################
+  
+  
+  let MMMCb csv:from-file  "data/MC080416_OTR_b.weighted.csv"
+  let MMMCb_limit csv:from-file  "data/MC080416_OTR_b.limit.csv"
+  
+  set alternative_names(list item 1 item 2 MMMCb_limit
+    item 1 item 3 MMMCb_limit
+    item 1 item 4 MMMCb_limit
+    item 1 item 5 MMMCb_limit
+    item 1 item 6 MMMCb_limit)
+  set jj 0
+  foreach alternative_names[
     ? ->
-         create-Alternatives_MCb 1 [
-           set ID "MC080416b"
-           set name_action ?
-           set label name_action
-
-           set C1 (list 0 0 0 0 0 0 0 0 0 0)
-           set C1_max (list 0 0 0 0 0 0 0 0 0 0)
-           set V (list 0 0 0 0 0 0 0 0 0 0)
-           let w_sum sum (list item 6 item 7 MMMCb_limit
-             item 6 item 8 MMMCb_limit
-             item 6 item 9 MMMCb_limit
-             item 6 item 10 MMMCb_limit
-             item 6 item 11 MMMCb_limit
-             item 6 item 12 MMMCb_limit
-             item 6 item 13 MMMCb_limit
-             item 6 item 14 MMMCb_limit
-             item 6 item 15 MMMCb_limit
-             item 6 item 16 MMMCb_limit)
-
-           set criteria_weights (list (item 6 item 7 MMMCb_limit / w_sum)
-             (item 6 item 8 MMMCb_limit / w_sum)
-             (item 6 item 9 MMMCb_limit / w_sum)
-             (item 6 item 10 MMMCb_limit / w_sum)
-             (item 6 item 11 MMMCb_limit / w_sum)
-             (item 6 item 12 MMMCb_limit / w_sum)
-             (item 6 item 13 MMMCb_limit / w_sum)
-             (item 6 item 14 MMMCb_limit / w_sum)
-             (item 6 item 15 MMMCb_limit / w_sum)
-             (item 6 item 16 MMMCb_limit / w_sum))
-
-
-
-           set C1_name (list item 1 item 7 MMMCb_limit
-             item 1 item 8 MMMCb_limit
-             item 1 item 9 MMMCb_limit
-             item 1 item 10 MMMCb_limit
-             item 1 item 11 MMMCb_limit
-             item 1 item 12 MMMCb_limit
-             item 1 item 13 MMMCb_limit
-             item 1 item 14 MMMCb_limit
-             item 1 item 15 MMMCb_limit
-             item 1 item 16 MMMCb_limit)
-
-           if-else ANP = TRUE[
-             set alternative_weights item (jj + 2) item (jj + 2) MMMCb_limit /(item 5 item 5 MMMCb_limit + item 4 item 4 MMMCb_limit + item 3 item 3 MMMCb_limit + item 6 item 6 MMMCb_limit + item 2 item 2 MMMCb_limit)
-           ][
-           set alternative_weights 1
-           ]
-         ]
-  set jj jj + 1
-
-       ]
-
-       ask Alternatives_MCb with [name_action = "Compra de agua"] [set v_scale_S [0.05 0.1 1 1 1]]
-       ask Alternatives_MCb with [name_action = "Movilizaciones"] [set v_scale_S [0.05 0.05 0.05 0.4 1]]
-       ask Alternatives_MCb with [name_action = "Accion colectiva"] [set v_scale_S [0.05 0.1 1 1 1]]
-       ask Alternatives_MCb with [name_action = "Captacion de agua"] [set v_scale_S [0.05 0.1 1 1 1]]
-       ask Alternatives_MCb with [name_action = "Modificacion vivienda"] [set v_scale_S [0 0 0 0 0]]
-
-
-       ask Alternatives_MCb with [name_action = "Compra de agua"] [set v_scale_F [0 0 0 0 0]]
-       ask Alternatives_MCb with [name_action = "Movilizaciones"] [set v_scale_F [0 0 0 0 0]]
-       ask Alternatives_MCb with [name_action = "Accion colectiva"] [set v_scale_F [0 0 0 0 0]]
-       ask Alternatives_MCb with [name_action = "Captacion de agua"] [set v_scale_F [0 0 0 0 0]]
-       ask Alternatives_MCb with [name_action = "Modificacion vivienda"] [set v_scale_F [0 1 1 1 1]]
-
-
-
-;################################################
-
-
-       let MMWaterOperator_S csv:from-file  "data/DF101215_GOV_AP modificado PNAS.weighted.csv" ;DF101215_GOV_AP modificado.weighted
-       let MMWaterOperator_limit csv:from-file  "data/DF101215_GOV_AP modificado PNAS.limit.csv"
-
-       set alternative_names(list item 1 item 2 MMWaterOperator_limit   ;define the alternatives
-         item 1 item 3 MMWaterOperator_limit
-         item 1 item 4 MMWaterOperator_limit
-         item 1 item 5 MMWaterOperator_limit
-         item 1 item 6 MMWaterOperator_limit)
-       set jj 0
-       let MMWaterOperator_weighed_S []
-       let MMWaterOperator_limit_S []
-       let VWaterOperator_limit_S []
-       let cc 2
-       let cri 2
-;
-       while [cri < 19][   ;tranfor the data from.csv to a matrix to manipulte using matrix extention
-         set cc 2
-         while [cc < 19][
-           set VWaterOperator_limit_S lput (item cc item cri MMWaterOperator_S) VWaterOperator_limit_S
-           set cc cc + 1
-         ]
-         set cri cri + 1
-         set MMWaterOperator_weighed_S lput VWaterOperator_limit_S MMWaterOperator_weighed_S
-         set VWaterOperator_limit_S []
-       ]
-       set MMWaterOperator_weighed_S matrix:from-row-list MMWaterOperator_weighed_S
-       set MMWaterOperator_limit_S matrix:eigenvectors MMWaterOperator_weighed_S
-
-       foreach alternative_names[
+    create-Alternatives_MCb 1 [
+      set ID "MC080416b"
+      set name_action ?
+      set label name_action
+      
+      set C1 (list 0 0 0 0 0 0 0 0 0 0)
+      set C1_max (list 0 0 0 0 0 0 0 0 0 0)
+      set V (list 0 0 0 0 0 0 0 0 0 0)
+      let w_sum sum (list item 6 item 7 MMMCb_limit
+        item 6 item 8 MMMCb_limit
+        item 6 item 9 MMMCb_limit
+        item 6 item 10 MMMCb_limit
+        item 6 item 11 MMMCb_limit
+        item 6 item 12 MMMCb_limit
+        item 6 item 13 MMMCb_limit
+        item 6 item 14 MMMCb_limit
+        item 6 item 15 MMMCb_limit
+        item 6 item 16 MMMCb_limit)
+      
+      set criteria_weights (list (item 6 item 7 MMMCb_limit / w_sum)
+        (item 6 item 8 MMMCb_limit / w_sum)
+        (item 6 item 9 MMMCb_limit / w_sum)
+        (item 6 item 10 MMMCb_limit / w_sum)
+        (item 6 item 11 MMMCb_limit / w_sum)
+        (item 6 item 12 MMMCb_limit / w_sum)
+        (item 6 item 13 MMMCb_limit / w_sum)
+        (item 6 item 14 MMMCb_limit / w_sum)
+        (item 6 item 15 MMMCb_limit / w_sum)
+        (item 6 item 16 MMMCb_limit / w_sum))
+      
+      
+      
+      set C1_name (list item 1 item 7 MMMCb_limit
+        item 1 item 8 MMMCb_limit
+        item 1 item 9 MMMCb_limit
+        item 1 item 10 MMMCb_limit
+        item 1 item 11 MMMCb_limit
+        item 1 item 12 MMMCb_limit
+        item 1 item 13 MMMCb_limit
+        item 1 item 14 MMMCb_limit
+        item 1 item 15 MMMCb_limit
+        item 1 item 16 MMMCb_limit)
+      
+      if-else ANP = TRUE[
+        set alternative_weights item (jj + 2) item (jj + 2) MMMCb_limit /(item 5 item 5 MMMCb_limit + item 4 item 4 MMMCb_limit + item 3 item 3 MMMCb_limit + item 6 item 6 MMMCb_limit + item 2 item 2 MMMCb_limit)
+      ][
+        set alternative_weights 1
+      ]
+    ]
+    set jj jj + 1
+    
+  ]
+  
+  ask Alternatives_MCb with [name_action = "Compra de agua"] [set v_scale_S [0.05 0.1 1 1 1]]
+  ask Alternatives_MCb with [name_action = "Movilizaciones"] [set v_scale_S [0.05 0.05 0.05 0.4 1]]
+  ask Alternatives_MCb with [name_action = "Accion colectiva"] [set v_scale_S [0.05 0.1 1 1 1]]
+  ask Alternatives_MCb with [name_action = "Captacion de agua"] [set v_scale_S [0.05 0.1 1 1 1]]
+  ask Alternatives_MCb with [name_action = "Modificacion vivienda"] [set v_scale_S [0 0 0 0 0]]
+  
+  
+  ask Alternatives_MCb with [name_action = "Compra de agua"] [set v_scale_F [0 0 0 0 0]]
+  ask Alternatives_MCb with [name_action = "Movilizaciones"] [set v_scale_F [0 0 0 0 0]]
+  ask Alternatives_MCb with [name_action = "Accion colectiva"] [set v_scale_F [0 0 0 0 0]]
+  ask Alternatives_MCb with [name_action = "Captacion de agua"] [set v_scale_F [0 0 0 0 0]]
+  ask Alternatives_MCb with [name_action = "Modificacion vivienda"] [set v_scale_F [0 1 1 1 1]]
+  
+  
+  
+  ;################################################
+  
+  
+  let MMWaterOperator_S csv:from-file  "data/DF101215_GOV_AP modificado PNAS.weighted.csv" ;DF101215_GOV_AP modificado.weighted
+  let MMWaterOperator_limit csv:from-file  "data/DF101215_GOV_AP modificado PNAS.limit.csv"
+  
+  set alternative_names(list item 1 item 2 MMWaterOperator_limit   ;define the alternatives
+    item 1 item 3 MMWaterOperator_limit
+    item 1 item 4 MMWaterOperator_limit
+    item 1 item 5 MMWaterOperator_limit
+    item 1 item 6 MMWaterOperator_limit)
+  set jj 0
+  let MMWaterOperator_weighed_S []
+  let MMWaterOperator_limit_S []
+  let VWaterOperator_limit_S []
+  let cc 2
+  let cri 2
+  ;
+  while [cri < 19][   ;tranfor the data from.csv to a matrix to manipulte using matrix extention
+    set cc 2
+    while [cc < 19][
+      set VWaterOperator_limit_S lput (item cc item cri MMWaterOperator_S) VWaterOperator_limit_S
+      set cc cc + 1
+    ]
+    set cri cri + 1
+    set MMWaterOperator_weighed_S lput VWaterOperator_limit_S MMWaterOperator_weighed_S
+    set VWaterOperator_limit_S []
+  ]
+  set MMWaterOperator_weighed_S matrix:from-row-list MMWaterOperator_weighed_S
+  set MMWaterOperator_limit_S matrix:eigenvectors MMWaterOperator_weighed_S
+  
+  foreach alternative_names[
     ? ->
     create-Alternatives_WaterOperator 1[    ;create an alternative, the criteria and the weights. Also in the case of HNP network the weight of each alternative in the limit matrix
-           set ID "DF101215_GOV"
-           set name_action ?
-           set label name_action
-           set C1 (list 0 0 0 0 0 0 0 0 0 0 0 0)
-           set C1_max (list 0 0 0 0 0 0 0 0 0 0 0 0)
-           set V (list 0 0 0 0 0 0 0 0 0 0 0 0)
-           let w_sum sum (list item 2 item 7 MMWaterOperator_limit
-             item 2 item 8 MMWaterOperator_limit
-             item 2 item 9 MMWaterOperator_limit
-             item 2 item 10 MMWaterOperator_limit
-             item 2 item 11 MMWaterOperator_limit
-             item 2 item 12 MMWaterOperator_limit
-             item 2 item 13 MMWaterOperator_limit
-             item 2 item 14 MMWaterOperator_limit
-             item 2 item 15 MMWaterOperator_limit
-             item 2 item 16 MMWaterOperator_limit
-             item 2 item 17 MMWaterOperator_limit
-             item 2 item 18 MMWaterOperator_limit
-             )
-
-           set criteria_weights (
-             list (item 2 item 7 MMWaterOperator_limit / w_sum)
-             (item 2 item 8 MMWaterOperator_limit / w_sum)
-             (item 2 item 9 MMWaterOperator_limit / w_sum)
-             (item 2 item 10 MMWaterOperator_limit / w_sum)
-             (item 2 item 11 MMWaterOperator_limit / w_sum)
-             (item 2 item 12 MMWaterOperator_limit / w_sum)
-             (item 2 item 13 MMWaterOperator_limit / w_sum)
-             (item 2 item 14 MMWaterOperator_limit / w_sum)
-             (item 2 item 15 MMWaterOperator_limit / w_sum)
-             (item 2 item 16 MMWaterOperator_limit / w_sum)
-             (item 2 item 17 MMWaterOperator_limit / w_sum)
-             (item 2 item 18 MMWaterOperator_limit / w_sum)
-             )
-
-           set C1_name (list item 1 item 7 MMWaterOperator_limit
-             item 1 item 8 MMWaterOperator_limit
-             item 1 item 9 MMWaterOperator_limit
-             item 1 item 10 MMWaterOperator_limit
-             item 1 item 11 MMWaterOperator_limit
-             item 1 item 12 MMWaterOperator_limit
-             item 1 item 13 MMWaterOperator_limit
-             item 1 item 14 MMWaterOperator_limit
-             item 1 item 15 MMWaterOperator_limit
-             item 1 item 16 MMWaterOperator_limit
-             item 1 item 17 MMWaterOperator_limit
-             item 1 item 18 MMWaterOperator_limit
-             )
-           if-else ANP = TRUE[
-           set alternative_weights item (jj + 2) item (jj + 2) MMWaterOperator_limit /(item 5 item 5 MMWaterOperator_limit + item 4 item 4 MMWaterOperator_limit + item 3 item 3 MMWaterOperator_limit + item 6 item 6 MMWaterOperator_limit + item 2 item 2 MMWaterOperator_limit)
-           ][
-           set alternative_weights 1]
-         ]
-         set jj jj + 1
-
-
-       ]
-
-
-
-       set MMWaterOperator_D csv:from-file  "data/SACMEX_Drenaje modificada febrero 2017.weighted.csv"
-       set MMWaterOperator_D_limit csv:from-file  "data/SACMEX_Drenaje modificada febrero 2017.limit.csv"
-       set alternative_names(list item 1 item 2 MMWaterOperator_D   ;define the alternatives
-         item 1 item 3 MMWaterOperator_D)
-       set jj 0
-       set MMWaterOperator_weighted_D []
-       let MMWaterOperator_limit_D_new []
-       let VWaterOperator_limit_D []
-       set cc 2
-       set cri 2
-
-       while [cri < 18][   ;tranfor the data from.csv to a matrix to manipulte using matrix extention
-         set cc 2
-         while [cc < 18][
-           set VWaterOperator_limit_D lput (item cc item cri MMWaterOperator_D) VWaterOperator_limit_D
-           set cc cc + 1
-         ]
-         set cri cri + 1
-         set MMWaterOperator_limit_D_new lput VWaterOperator_limit_D MMWaterOperator_limit_D_new
-         set VWaterOperator_limit_D []
-       ]
-       set MMWaterOperator_weighted_D matrix:from-row-list MMWaterOperator_limit_D_new
-
-       let MMWaterOperator_limit_D1_new matrix:eigenvectors MMWaterOperator_weighted_D
-
-       ;let MMWaterOperator_limit_D2 matrix:real-eigenvalues MMWaterOperator_weighted_D
-       set MMWaterOperator_limit_D_new (matrix:times MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D)
-
-
-       foreach alternative_names[
+      set ID "DF101215_GOV"
+      set name_action ?
+      set label name_action
+      set C1 (list 0 0 0 0 0 0 0 0 0 0 0 0)
+      set C1_max (list 0 0 0 0 0 0 0 0 0 0 0 0)
+      set V (list 0 0 0 0 0 0 0 0 0 0 0 0)
+      let w_sum sum (list item 2 item 7 MMWaterOperator_limit
+        item 2 item 8 MMWaterOperator_limit
+        item 2 item 9 MMWaterOperator_limit
+        item 2 item 10 MMWaterOperator_limit
+        item 2 item 11 MMWaterOperator_limit
+        item 2 item 12 MMWaterOperator_limit
+        item 2 item 13 MMWaterOperator_limit
+        item 2 item 14 MMWaterOperator_limit
+        item 2 item 15 MMWaterOperator_limit
+        item 2 item 16 MMWaterOperator_limit
+        item 2 item 17 MMWaterOperator_limit
+        item 2 item 18 MMWaterOperator_limit
+      )
+      
+      set criteria_weights (
+        list (item 2 item 7 MMWaterOperator_limit / w_sum)
+        (item 2 item 8 MMWaterOperator_limit / w_sum)
+        (item 2 item 9 MMWaterOperator_limit / w_sum)
+        (item 2 item 10 MMWaterOperator_limit / w_sum)
+        (item 2 item 11 MMWaterOperator_limit / w_sum)
+        (item 2 item 12 MMWaterOperator_limit / w_sum)
+        (item 2 item 13 MMWaterOperator_limit / w_sum)
+        (item 2 item 14 MMWaterOperator_limit / w_sum)
+        (item 2 item 15 MMWaterOperator_limit / w_sum)
+        (item 2 item 16 MMWaterOperator_limit / w_sum)
+        (item 2 item 17 MMWaterOperator_limit / w_sum)
+        (item 2 item 18 MMWaterOperator_limit / w_sum)
+      )
+      
+      set C1_name (list item 1 item 7 MMWaterOperator_limit
+        item 1 item 8 MMWaterOperator_limit
+        item 1 item 9 MMWaterOperator_limit
+        item 1 item 10 MMWaterOperator_limit
+        item 1 item 11 MMWaterOperator_limit
+        item 1 item 12 MMWaterOperator_limit
+        item 1 item 13 MMWaterOperator_limit
+        item 1 item 14 MMWaterOperator_limit
+        item 1 item 15 MMWaterOperator_limit
+        item 1 item 16 MMWaterOperator_limit
+        item 1 item 17 MMWaterOperator_limit
+        item 1 item 18 MMWaterOperator_limit
+      )
+      if-else ANP = TRUE[
+        set alternative_weights item (jj + 2) item (jj + 2) MMWaterOperator_limit /(item 5 item 5 MMWaterOperator_limit + item 4 item 4 MMWaterOperator_limit + item 3 item 3 MMWaterOperator_limit + item 6 item 6 MMWaterOperator_limit + item 2 item 2 MMWaterOperator_limit)
+      ][
+        set alternative_weights 1]
+    ]
+    set jj jj + 1
+    
+    
+  ]
+  
+  
+  
+  set MMWaterOperator_D csv:from-file  "data/SACMEX_Drenaje modificada febrero 2017.weighted.csv"
+  set MMWaterOperator_D_limit csv:from-file  "data/SACMEX_Drenaje modificada febrero 2017.limit.csv"
+  set alternative_names(list item 1 item 2 MMWaterOperator_D   ;define the alternatives
+    item 1 item 3 MMWaterOperator_D)
+  set jj 0
+  set MMWaterOperator_weighted_D []
+  let MMWaterOperator_limit_D_new []
+  let VWaterOperator_limit_D []
+  set cc 2
+  set cri 2
+  
+  while [cri < 18][   ;tranfor the data from.csv to a matrix to manipulte using matrix extention
+    set cc 2
+    while [cc < 18][
+      set VWaterOperator_limit_D lput (item cc item cri MMWaterOperator_D) VWaterOperator_limit_D
+      set cc cc + 1
+    ]
+    set cri cri + 1
+    set MMWaterOperator_limit_D_new lput VWaterOperator_limit_D MMWaterOperator_limit_D_new
+    set VWaterOperator_limit_D []
+  ]
+  set MMWaterOperator_weighted_D matrix:from-row-list MMWaterOperator_limit_D_new
+  
+  let MMWaterOperator_limit_D1_new matrix:eigenvectors MMWaterOperator_weighted_D
+  
+  ;let MMWaterOperator_limit_D2 matrix:real-eigenvalues MMWaterOperator_weighted_D
+  set MMWaterOperator_limit_D_new (matrix:times MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D)
+  
+  
+  foreach alternative_names[
     ? ->
-         create-Alternatives_WaterOperator_D 1[    ;create an alternative, the criteria and the weights. Also in the case of HNP network the weight of each alternative in the limit matrix (alternative_weights)
-           set ID "no-defined Drenage"
-           set name_action ?
-           set label name_action
-           set C1 (list 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
-           set C1_max (list 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
-           set V (list 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
-
-           let w_sum sum (list matrix:get MMWaterOperator_limit_D_new 2 2
-             matrix:get MMWaterOperator_limit_D_new 3 2
-             matrix:get MMWaterOperator_limit_D_new 4 2
-             matrix:get MMWaterOperator_limit_D_new 5 2
-             matrix:get MMWaterOperator_limit_D_new 6 2
-             matrix:get MMWaterOperator_limit_D_new 7 2
-             matrix:get MMWaterOperator_limit_D_new 8 2
-             matrix:get MMWaterOperator_limit_D_new 9 2
-             matrix:get MMWaterOperator_limit_D_new 10 2
-             matrix:get MMWaterOperator_limit_D_new 11 2
-             matrix:get MMWaterOperator_limit_D_new 12 2
-             matrix:get MMWaterOperator_limit_D_new 13 2
-             matrix:get MMWaterOperator_limit_D_new 14 2
-             matrix:get MMWaterOperator_limit_D_new 15 2
-             )
-           set criteria_weights (list (matrix:get MMWaterOperator_limit_D_new 2 2 / w_sum)
-             (matrix:get MMWaterOperator_limit_D_new 3 2 / w_sum)
-             (matrix:get MMWaterOperator_limit_D_new 4 2 / w_sum)
-             (matrix:get MMWaterOperator_limit_D_new 5 2 / w_sum)
-             (matrix:get MMWaterOperator_limit_D_new 6 2 / w_sum)
-             (matrix:get MMWaterOperator_limit_D_new 7 2 / w_sum)
-             (matrix:get MMWaterOperator_limit_D_new 8 2 / w_sum)
-             (matrix:get MMWaterOperator_limit_D_new 9 2 / w_sum)
-             (matrix:get MMWaterOperator_limit_D_new 10 2 / w_sum)
-             (matrix:get MMWaterOperator_limit_D_new 11 2 / w_sum)
-             (matrix:get MMWaterOperator_limit_D_new 12 2 / w_sum)
-             (matrix:get MMWaterOperator_limit_D_new 13 2 / w_sum)
-             (matrix:get MMWaterOperator_limit_D_new 14 2 / w_sum)
-             (matrix:get MMWaterOperator_limit_D_new 15 2 / w_sum))
-
-
-          set C1_name (list item 1 item 4 MMWaterOperator_D
-             item 1 item 5 MMWaterOperator_D
-             item 1 item 6 MMWaterOperator_D
-             item 1 item 7 MMWaterOperator_D
-             item 1 item 8 MMWaterOperator_D
-             item 1 item 9 MMWaterOperator_D
-             item 1 item 10 MMWaterOperator_D
-             item 1 item 11 MMWaterOperator_D
-             item 1 item 12 MMWaterOperator_D
-             item 1 item 13 MMWaterOperator_D
-             item 1 item 14 MMWaterOperator_D
-             item 1 item 15 MMWaterOperator_D
-             item 1 item 16 MMWaterOperator_D
-             item 1 item 17 MMWaterOperator_D)
-          if-else ANP = TRUE[
-            set alternative_weights matrix:get MMWaterOperator_limit_D_new jj jj / (matrix:get MMWaterOperator_limit_D_new 0 0 + matrix:get MMWaterOperator_limit_D_new 1 1)
-          ][set alternative_weights 1]
-         ]
-         set jj jj + 1
-       ]
-
-;#############################################################################################################################################
-;#############################################################################################################################################
-
-
-
-
-       let MMOCVAM csv:from-file  "data/OCVAM_Version_sin_GEO.limit.csv"
-
-
-       ;create-Alternatives_OCVAM 1[
-       ;    set ID "OCVAM"
-       ;    set label name_action
-       ;    set criteria_weights (list item 6 item 2 MMOCVAM
-       ;    item 6 item 3 MMOCVAM
-       ;    item 6 item 4 MMOCVAM
-       ;    item 6 item 5 MMOCVAM
-       ;    item 6 item 6 MMOCVAM
-       ;    item 6 item 7 MMOCVAM
-       ;    item 6 item 8 MMOCVAM
-       ;    item 6 item 9 MMOCVAM
-       ;    item 6 item 10 MMOCVAM
-       ;    item 6 item 11 MMOCVAM
-       ;
-       ;    item 6 item 12 MMOCVAM
-       ;    item 6 item 13 MMOCVAM
-       ;    item 6 item 14 MMOCVAM
-       ;    item 6 item 15 MMOCVAM
-       ;    item 6 item 16 MMOCVAM
-       ;    item 6 item 17 MMOCVAM
-       ;    item 6 item 18 MMOCVAM
-       ;    item 6 item 19 MMOCVAM
-       ;    item 6 item 20 MMOCVAM
-       ;    item 6 item 21 MMOCVAM
-       ;
-       ;    item 6 item 22 MMOCVAM
-       ;    item 6 item 23 MMOCVAM
-       ;    item 6 item 24 MMOCVAM
-       ;    item 6 item 25 MMOCVAM
-       ;    item 6 item 26 MMOCVAM)
-       ;
-       ;
-       ;
-       ;    set C1_name (list item 1 item 2 MMOCVAM
-       ;    item 1 item 3 MMOCVAM
-       ;    item 1 item 4 MMOCVAM
-       ;    item 1 item 5 MMOCVAM
-       ;    item 1 item 6 MMOCVAM
-       ;    item 1 item 7 MMOCVAM
-       ;    item 1 item 8 MMOCVAM
-       ;    item 1 item 9 MMOCVAM
-       ;    item 1 item 10 MMOCVAM
-       ;    item 1 item 11 MMOCVAM
-       ;
-       ;    item 1 item 12 MMOCVAM
-       ;    item 1 item 13 MMOCVAM
-       ;    item 1 item 14 MMOCVAM
-       ;    item 1 item 15 MMOCVAM
-       ;    item 1 item 16 MMOCVAM
-       ;    item 1 item 17 MMOCVAM
-       ;    item 1 item 18 MMOCVAM
-       ;    item 1 item 19 MMOCVAM
-       ;    item 1 item 20 MMOCVAM
-       ;    item 1 item 21 MMOCVAM
-       ;    item 1 item 23 MMOCVAM
-       ;    item 1 item 24 MMOCVAM
-       ;    item 1 item 25 MMOCVAM
-       ;    item 1 item 26 MMOCVAM)
-       ;
-       ;    set w_limit  0.02017 /(0.05471 + 0.05212 + 0.01843 + 0.05545 + 0.02017)
-       ;  ]
-       ;
-
- ;######################################################################################################## 
+    create-Alternatives_WaterOperator_D 1[    ;create an alternative, the criteria and the weights. Also in the case of HNP network the weight of each alternative in the limit matrix (alternative_weights)
+      set ID "no-defined Drenage"
+      set name_action ?
+      set label name_action
+      set C1 (list 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
+      set C1_max (list 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
+      set V (list 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
+      
+      let w_sum sum (list matrix:get MMWaterOperator_limit_D_new 2 2
+        matrix:get MMWaterOperator_limit_D_new 3 2
+        matrix:get MMWaterOperator_limit_D_new 4 2
+        matrix:get MMWaterOperator_limit_D_new 5 2
+        matrix:get MMWaterOperator_limit_D_new 6 2
+        matrix:get MMWaterOperator_limit_D_new 7 2
+        matrix:get MMWaterOperator_limit_D_new 8 2
+        matrix:get MMWaterOperator_limit_D_new 9 2
+        matrix:get MMWaterOperator_limit_D_new 10 2
+        matrix:get MMWaterOperator_limit_D_new 11 2
+        matrix:get MMWaterOperator_limit_D_new 12 2
+        matrix:get MMWaterOperator_limit_D_new 13 2
+        matrix:get MMWaterOperator_limit_D_new 14 2
+        matrix:get MMWaterOperator_limit_D_new 15 2
+      )
+      set criteria_weights (list (matrix:get MMWaterOperator_limit_D_new 2 2 / w_sum)
+        (matrix:get MMWaterOperator_limit_D_new 3 2 / w_sum)
+        (matrix:get MMWaterOperator_limit_D_new 4 2 / w_sum)
+        (matrix:get MMWaterOperator_limit_D_new 5 2 / w_sum)
+        (matrix:get MMWaterOperator_limit_D_new 6 2 / w_sum)
+        (matrix:get MMWaterOperator_limit_D_new 7 2 / w_sum)
+        (matrix:get MMWaterOperator_limit_D_new 8 2 / w_sum)
+        (matrix:get MMWaterOperator_limit_D_new 9 2 / w_sum)
+        (matrix:get MMWaterOperator_limit_D_new 10 2 / w_sum)
+        (matrix:get MMWaterOperator_limit_D_new 11 2 / w_sum)
+        (matrix:get MMWaterOperator_limit_D_new 12 2 / w_sum)
+        (matrix:get MMWaterOperator_limit_D_new 13 2 / w_sum)
+        (matrix:get MMWaterOperator_limit_D_new 14 2 / w_sum)
+        (matrix:get MMWaterOperator_limit_D_new 15 2 / w_sum))
+      
+      
+      set C1_name (list item 1 item 4 MMWaterOperator_D
+        item 1 item 5 MMWaterOperator_D
+        item 1 item 6 MMWaterOperator_D
+        item 1 item 7 MMWaterOperator_D
+        item 1 item 8 MMWaterOperator_D
+        item 1 item 9 MMWaterOperator_D
+        item 1 item 10 MMWaterOperator_D
+        item 1 item 11 MMWaterOperator_D
+        item 1 item 12 MMWaterOperator_D
+        item 1 item 13 MMWaterOperator_D
+        item 1 item 14 MMWaterOperator_D
+        item 1 item 15 MMWaterOperator_D
+        item 1 item 16 MMWaterOperator_D
+        item 1 item 17 MMWaterOperator_D)
+      if-else ANP = TRUE[
+        set alternative_weights matrix:get MMWaterOperator_limit_D_new jj jj / (matrix:get MMWaterOperator_limit_D_new 0 0 + matrix:get MMWaterOperator_limit_D_new 1 1)
+      ][set alternative_weights 1]
+    ]
+    set jj jj + 1
+  ]
+  
+  ;#############################################################################################################################################
   
   load_infra
- 
- 
   ;read_data_flooding
   set flood_rain csv:from-file "data/bayesianofrequencia_encharcamientos.csv"
   set flood_capacity_riskOldCity csv:from-file "data/ABMtable_Flood_risk_capacity_oldCity.csv"
   set flood_capacity_riskNewCity csv:from-file "data/ABMtable_Flood_risk_capacity_newCityB.csv"
-
+  
   show_sewer
-    water_production_importation                                                             ;;calculate total water available in a day
-;############################################3
-  ;# scenarios (resources; efficiency)
-  ;if escenarios = "Escenario A"[
-  ;  set recursos_para_mantenimiento 100
-  ;  set recursos_nuevaInfrastructura 100
-  ;  set Eficiencia_Mantenimiento 0.001
-  ;  set NuevaInfra 0.001
-  ;]
-  ;if escenarios = "Escenario B"[
-  ;  set recursos_para_mantenimiento 500
-  ;  set recursos_nuevaInfrastructura 500
-  ;  set Eficiencia_Mantenimiento 0.005
-  ;  set NuevaInfra 0.005
-  ;]
-  ;############################################3
-
- ;profiler:stop          ;; stop profiling
- ;print profiler:report  ;; view the results
- ;profiler:reset         ;; clear the data
- reset-ticks
-
+  water_production_importation                                                             ;;calculate total water available in a day
+  
+  ;profiler:stop          ;; stop profiling
+  ;print profiler:report  ;; view the results
+  ;profiler:reset         ;; clear the data
+  reset-ticks
 end
 
-;#############################################################################################################################################
-;#############################################################################################################################################
 to load_infra
-;define infrastructure as agents
-  foreach gis:feature-list-of pozos_WaterOperator
-    [? ->
-      let centroid gis:location-of gis:centroid-of ?
-      if not empty? centroid
+  ;define infrastructure as agents
+  foreach gis:feature-list-of pozos_WaterOperator [
+    ? ->
+    let centroid gis:location-of gis:centroid-of ?
+    if not empty? centroid
       [ create-pozos 1
         [ set xcor item 0 centroid
           set ycor item 1 centroid
@@ -1179,17 +1080,15 @@ to load_infra
           set color red
           set age_pozo (1 + random 20) * 365
           set extraction_rate 87225 ;m3/dia
-          ]
-      ]
+        ]
     ]
-
-    ;CMZM
-
-
-   foreach gis:feature-list-of PozosCMZM_Project
-    [ ? ->
-      let centroid gis:location-of gis:centroid-of ?
-      if not empty? centroid
+  ]
+  
+  ;CMZM
+  foreach gis:feature-list-of PozosCMZM_Project [
+    ? ->
+    let centroid gis:location-of gis:centroid-of ?
+    if not empty? centroid
       [ create-pozos 1
         [ set xcor item 0 centroid
           set ycor item 1 centroid
@@ -1205,15 +1104,15 @@ to load_infra
           set color sky
           set age_pozo (1 + random 20) * 365
           set extraction_rate 87225 ;m3/dia
-
-          ]
-      ]
+        ]
     ]
-    ; chalco
-    foreach gis:feature-list-of PozosChalco_Project
-    [? ->
+  ]
+  
+  ; chalco
+  foreach gis:feature-list-of PozosChalco_Project [
+    ? ->
     let centroid gis:location-of gis:centroid-of ?
-      if not empty? centroid
+    if not empty? centroid
       [ create-pozos 1
         [ set xcor item 0 centroid
           set ycor item 1 centroid
@@ -1229,15 +1128,15 @@ to load_infra
           set color magenta
           set age_pozo (1 + random 20) * 365
           set extraction_rate 87225 ;m3/dia
-
-          ]
-      ]
+        ]
     ]
-    ;pachuca
-    foreach gis:feature-list-of PozosPachuca_Project
-    [? ->
+  ]
+  
+  ;pachuca
+  foreach gis:feature-list-of PozosPachuca_Project [
+    ? ->
     let centroid gis:location-of gis:centroid-of ?
-      if not empty? centroid
+    if not empty? centroid
       [ create-pozos 1
         [ set xcor item 0 centroid
           set ycor item 1 centroid
@@ -1253,17 +1152,16 @@ to load_infra
           set color green
           set age_pozo (1 + random 20) * 365
           set extraction_rate 87225 ;m3/dia
-
-          ]
-      ]
+        ]
     ]
-;
-;    ;Texcoco
-
-    foreach gis:feature-list-of PozosTexcoco_Project
-    [? ->
+  ]
+  
+  ;Texcoco
+  
+  foreach gis:feature-list-of PozosTexcoco_Project [
+    ? ->
     let centroid gis:location-of gis:centroid-of ?
-      if not empty? centroid
+    if not empty? centroid
       [ create-pozos 1
         [ set xcor item 0 centroid
           set ycor item 1 centroid
@@ -1279,57 +1177,50 @@ to load_infra
           set color white
           set age_pozo (1 + random 20) * 365
           set extraction_rate 87225 ;m3/dia
-          ]
-      ]
-    ]
-
-
-    ask pozos [set production extraction_rate * (1 / count pozos)] ; set daily production of water in [mts^3/s]*[s/min]*[min/hour]*[hours/day]*[1/tot pozos]=[mts^3/(day*pozo)]
-    ;let tpz 0
-
-
-;;    #############################
-;;read nodes secondary sewer
-    foreach gis:feature-list-of desalojo_primario
-    [ ? ->
-    let centroid gis:location-of gis:centroid-of ?
-      if not empty? centroid
-      [ create-sewage_nodes 1
-        [
-          set xcor item 0 centroid
-          set ycor item 1 centroid
-          set ID  gis:property-value ? "Id"
-          set age [Antiguedad-infra_D] of agebs-here
-          set shape "circle 2"
-          set size 3
-          set color red
-          set Betweeness gis:property-value ? "Norm_Betwe"
         ]
-      ]
     ]
-
-
-    let pipes csv:from-file "data/network_directed_sewage.csv"
-    let pipes_matrix matrix:from-row-list but-first pipes
-    let destination_node matrix:get-column  pipes_matrix 0
-    let source_node matrix:get-column  pipes_matrix 1
-
-  (foreach destination_node source_node[[a b] ->
-
-        let nn sewage_nodes with [ID = a]
-        let mm sewage_nodes with [ID = b]
-
-        ask mm [create-D_pipes-to nn[]]
-    ])
-
-    ask agebs [
-      set pozos_agebs turtle-set pozos with [AGEB_key = [AGEB_key] of myself]
-      if CV_estado = 09[
-        set rainfall_station_influ turtle-set Rain_Stations in-radius 30
-
-      ]
-
+  ]
+  
+  
+  ask pozos [
+    set production extraction_rate * (1 / count pozos)
+  ] ; set daily production of water in [mts^3/s]*[s/min]*[min/hour]*[hours/day]*[1/tot pozos]=[mts^3/(day*pozo)]
+  
+  
+  ;;read nodes secondary sewer
+  foreach gis:feature-list-of desalojo_primario [
+    ? ->
+    let centroid gis:location-of gis:centroid-of ?
+    if not empty? centroid
+      [ create-sewage_nodes 1 [
+        set xcor item 0 centroid
+        set ycor item 1 centroid
+        set ID  gis:property-value ? "Id"
+        set age [Antiguedad-infra_D] of agebs-here
+        set shape "circle 2"
+        set size 3
+        set color red
+        set Betweeness gis:property-value ? "Norm_Betwe"
+        ]
     ]
-
-
+  ]
+  
+  let pipes csv:from-file "data/network_directed_sewage.csv"
+  let pipes_matrix matrix:from-row-list but-first pipes
+  let destination_node matrix:get-column  pipes_matrix 0
+  let source_node matrix:get-column  pipes_matrix 1
+  
+  (foreach destination_node source_node [
+    [a b] ->
+    let nn sewage_nodes with [ID = a]
+    let mm sewage_nodes with [ID = b]
+    ask mm [create-D_pipes-to nn[]]
+  ])
+  
+  ask agebs [
+    set pozos_agebs turtle-set pozos with [AGEB_key = [AGEB_key] of myself]
+    if CV_estado = 09[
+      set rainfall_station_influ turtle-set Rain_Stations in-radius 30
+    ]
+  ]
 end
