@@ -1341,7 +1341,7 @@ CHOOSER
 Visualization
 Visualization
 "Accion Colectiva" "Peticion ciudadana" "Captacion de Agua" "Compra de Agua" "Modificacion de la vivienda" "Areas prioritarias Mantenimiento" "Areas prioritarias Nueva Infraestructura" "Distribucion de Agua SACMEX" "GoogleEarth" "K_groups" "Salud" "Escasez" "Encharcamientos" "% houses with supply" "% houses with drainage" "P. Falla Ab" "P. Falla D" "Capacidad_D" "Zonas Aquifero" "Edad Infraestructura Ab." "Edad Infraestructura D" "Income-index"
-5
+11
 
 BUTTON
 1482
@@ -1386,7 +1386,7 @@ Requerimiento_deAgua
 Requerimiento_deAgua
 0.007
 0.4
-0.0
+0.07
 0.0001
 1
 [m3/persona]
@@ -1401,7 +1401,7 @@ recursos_para_mantenimiento
 recursos_para_mantenimiento
 1
 2400
-0.0
+727.0
 1
 1
 NIL
@@ -1416,7 +1416,7 @@ Eficiencia_NuevaInfra
 Eficiencia_NuevaInfra
 0
 0.001
-0.0
+5.0E-4
 0.0005
 1
 NIL
@@ -1486,7 +1486,7 @@ Eficiencia_Mantenimiento
 Eficiencia_Mantenimiento
 0
 0.05
-0.0
+0.015
 0.005
 1
 NIL
@@ -1501,7 +1501,7 @@ recursos_nuevaInfrastructura
 recursos_nuevaInfrastructura
 0
 2400
-0.0
+929.0
 1
 1
 NIL
@@ -1516,7 +1516,7 @@ Recursos_para_distribucion
 Recursos_para_distribucion
 0
 2400
-0.0
+1168.0
 1
 1
 NIL
@@ -1561,7 +1561,7 @@ factor_subsidencia
 factor_subsidencia
 0
 0.01
-0.0
+8.0E-4
 0.0001
 1
 NIL
@@ -1586,7 +1586,7 @@ n_runs
 n_runs
 0
 100
-0.0
+1.0
 1
 1
 NIL
@@ -1659,7 +1659,7 @@ alt
 alt
 0
 3
-0.0
+0.23
 0.01
 1
 NIL
@@ -1674,7 +1674,7 @@ a_failure
 a_failure
 0
 1
-0.0
+0.2
 0.1
 1
 NIL
@@ -1725,7 +1725,7 @@ decay_capacity
 decay_capacity
 0
 0.001
-0.0
+2.0E-4
 0.0001
 1
 NIL
@@ -2111,7 +2111,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.0.2
+NetLogo 6.0.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
