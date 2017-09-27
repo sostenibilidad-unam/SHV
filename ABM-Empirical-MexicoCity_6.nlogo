@@ -1706,11 +1706,15 @@ PENS
 @#$#@#$#@
 ## WHAT IS IT?
 
-(The model represents the decision-making process of the water authorities based on evaluating the condition of the landscape across the neighborhoods, and take actions in selected neighborhoods according to the particular policy of the water operator.)
+The model simulates the spatial distribution of hydrological vulnerability in Mexico City due to the actions of the water authority of sewer, potable water systems and the residents of MC neighborhoods.
+
+The model represents the decision-making process of the water authorities based on evaluating the condition of the landscape across the neighborhoods, and take actions in selected neighborhoods according to the particular policy of the water operator.
+
+The actions of the residents modify their local environment to adapt to and cope with water supply shortage and recurrent flood events. These decisions were obtained from translating interviews to mental models and then to a multi-criteria framework. 
 
 ## HOW IT WORKS
 
-(what rules the agents use to create the overall behavior of the model)
+
 
 ## HOW TO USE IT
 
