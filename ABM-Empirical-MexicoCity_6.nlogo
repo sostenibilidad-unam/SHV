@@ -2,9 +2,6 @@ extensions [GIS bitmap profiler csv matrix]
 __includes["setup.nls" "value_functions.nls"]
 ;#############################################################################################################################################
 ;#############################################################################################################################################
-
-;#############################################################################################################################################
-;#############################################################################################################################################
 ;#############################################################################################################################################
 to GO
   tick
@@ -707,7 +704,7 @@ end
 ;##############################################################################################################
 to water_by_pipe
 ;having water by pipe depends on tandeo (p having water based on info collected by ALE,about days with water), infrastructure and ifra failure distribution of water by trucks
-  set NOWater_week_pois random-poisson (tandeo + alt *(altitude / max-elevation) + a_failure * (ifelse-value (p_falla_AB > random-float 1) [1][0]))
+  set NOWater_week_pois random-poisson (tandeo + alt * (altitude - alt_mean_Delegation) + a_failure * (ifelse-value (p_falla_AB > random-float 1) [1][0]))
   if NOWater_week_pois > 7[set NOWater_week_pois  7]
   set days_water_in 7 - NOWater_week_pois
   set water_distributed_pipes  days_water_in * Requerimiento_deAgua * poblacion * houses_with_abastecimiento
@@ -1615,7 +1612,7 @@ alt
 alt
 0
 3
-0.21
+1.03
 0.01
 1
 NIL
