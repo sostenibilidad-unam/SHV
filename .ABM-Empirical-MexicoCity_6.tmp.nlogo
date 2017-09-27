@@ -1761,14 +1761,6 @@ The actions of the residents modify their local environment to adapt to and cope
 
 ## HOW IT WORKS
 
-Water authority agents:
-
-Each tick, water authority evaluates the state of each neighborhood and makes decisons, this decisions are escentially wich alternative of action and in wich neighborhoods.
-In the model this is implemented in as many "moving agents" as alternatives of action water authority has, for instance (Maintenance, new_infrastructure, water_distribution, water_extraction, water_imports, water_extraction), and each of this agents calculates de distance to ideal for each neighborhood property. With all distances to ideal situations for all properties and for all neighborhoods calculated, the water authority agent makes decisions depending on the type of policy selected by the user.
-
-The decision taken transforms the properties of neighborhoods for example the "lack of water distribution infrastructure" for selected neighborhoods  
-
-Residents agents:
 
 
 ## HOW TO USE IT
