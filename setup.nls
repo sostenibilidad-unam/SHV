@@ -158,7 +158,7 @@ breed [Alternatives_IZ alternative_IZ]
 breed [Alternatives_Xo alternative_Xo]
 breed [Alternatives_MC alternative_MC]
 breed [Alternatives_MCb alternative_MCb]
-breed [Alternatives_WaterOperator alternative_WaterOperator]
+breed [alternatives_WaterOperator_AB alternative_WaterOperator]
 breed [Alternatives_WaterOperator_D alternative_WaterOperator_D]
 breed [Alternatives_OCVAM alternative_OCVAM]
 breed [Alternatives_DELEGATIONS alternative_DELEGATION]
@@ -257,7 +257,7 @@ Agebs-own[
   Capacidad_D                  ;;
   Infiltracion
   R_tau                        ;; Threshold of rainfall according to protocol
-  altura
+  alt_mean_Delegation           ;; Mean altitude of delegation to adjust water distributed by pipes; areas above the mean have higher days without water in average 
   ;#residents decisions metrics
   
   d_Compra_agua                          ;;distance from ideal point for Compra_agua (buying water)
@@ -337,7 +337,7 @@ Alternatives_MC-own[ID name_action criteria_names criteria_values criteria_max c
 
 Alternatives_MCb-own[ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights]
 
-Alternatives_WaterOperator-own[ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights domain]  ;value obtained for the action when calcualting the limiting matrix in super decition
+alternatives_WaterOperator_AB-own[ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights domain]  ;value obtained for the action when calcualting the limiting matrix in super decition
 
 Alternatives_WaterOperator_D-own[ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights domain]  ;value obtained for the action when calcualting the limiting matrix in super decition
 
@@ -526,22 +526,55 @@ to SETUP
 
   ;to define areas with irregular water supply by pipes (e.g. tandeo)[days per week]
   ;crear csv table and read the values from it
-  ask agebs with [CV_municipio = "002"][set tandeo 0.21];"Azcapotzalco"
-  ask agebs with [CV_municipio = "003"][set tandeo 0.39];"Coyoacan"
-  ask agebs with [CV_municipio = "004"][set tandeo 0.66];"Cuajimalpa"
-  ask agebs with [CV_municipio = "005"][set tandeo 0.21];"Gustavo A. Madero"
-  ask agebs with [CV_municipio = "006"][set tandeo 0.119];"Iztacalco"
-  ask agebs with [CV_municipio = "007"][set tandeo 1.67];"Iztapalapa"
-  ask agebs with [CV_municipio = "008"][set tandeo 0.57];"La Magdalena Contreras"
-  ask agebs with [CV_municipio = "009"][set tandeo 2.149];"Milpa Alta"
-  ask agebs with [CV_municipio = "010"][set tandeo 0.28];"Álvaro Obregón"
-  ask agebs with [CV_municipio = "011"][set tandeo 1.01];"Tláhuac"
-  ask agebs with [CV_municipio = "012"][set tandeo 1.43];"Tlalpan"
-  ask agebs with [CV_municipio = "013"][set tandeo 1.13];"Xochimilco"
-  ask agebs with [CV_municipio = "014"][set tandeo 0.098];"Benito Juárez"
-  ask agebs with [CV_municipio = "015"][set tandeo 0.082];"Cuauhtémoc"
-  ask agebs with [CV_municipio = "016"][set tandeo 0.048];"Miguel Hidalgo"
-  ask agebs with [CV_municipio = "017"][set tandeo 0.116];"Venustiano Carranza"
+  ask agebs with [CV_municipio = "002"][
+    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "002"]
+    set tandeo 0.21
+  ];"Azcapotzalco"
+  ask agebs with [CV_municipio = "003"][
+    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "003"]
+    set tandeo 0.39];"Coyoacan"
+  ask agebs with [CV_municipio = "004"][
+    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "004"]
+    set tandeo 0.66];"Cuajimalpa"
+  ask agebs with [CV_municipio = "005"][
+    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "005"]
+    set tandeo 0.21];"Gustavo A. Madero"
+  ask agebs with [CV_municipio = "006"][
+    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "006"]
+    set tandeo 0.119];"Iztacalco"
+  ask agebs with [CV_municipio = "007"][
+    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "007"]
+    set tandeo 1.67];"Iztapalapa"
+  ask agebs with [CV_municipio = "008"][
+    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "008"]
+    set tandeo 0.57];"La Magdalena Contreras"
+  ask agebs with [CV_municipio = "009"][
+    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "009"]
+    set tandeo 2.149];"Milpa Alta"
+  ask agebs with [CV_municipio = "010"][
+    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "010"]
+    set tandeo 0.28];"Álvaro Obregón"
+  ask agebs with [CV_municipio = "011"][
+    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "011"]
+    set tandeo 1.01];"Tláhuac"
+  ask agebs with [CV_municipio = "012"][
+    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "012"]
+    set tandeo 1.43];"Tlalpan"
+  ask agebs with [CV_municipio = "013"][
+    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "013"]
+    set tandeo 1.13];"Xochimilco"
+  ask agebs with [CV_municipio = "014"][
+    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "014"]
+    set tandeo 0.098];"Benito Juárez"
+  ask agebs with [CV_municipio = "015"][
+    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "015"]
+    set tandeo 0.082];"Cuauhtémoc"
+  ask agebs with [CV_municipio = "016"][
+    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "016"]
+    set tandeo 0.048];"Miguel Hidalgo"
+  ask agebs with [CV_municipio = "017"][
+    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "017"]
+    set tandeo 0.116];"Venustiano Carranza"
   
   (foreach gis:find-features agebs_map14 "NOM_LOC" "Total AGEB urbana"   gis:find-features ageb13 "NOM_LOC" "Total AGEB urbana"[ [a b] ->
     ask agebs with [ID = gis:property-value a "AGEB_ID"][
@@ -892,7 +925,7 @@ to SETUP
   
   foreach alternative_names[
     ? ->
-    create-Alternatives_WaterOperator 1[    ;create an alternative, the criteria and the weights. Also in the case of HNP network the weight of each alternative in the limit matrix
+    create-alternatives_WaterOperator_AB 1[    ;create an alternative, the criteria and the weights. Also in the case of HNP network the weight of each alternative in the limit matrix
       set ID "DF101215_GOV"
       set name_action ?
       set label name_action
@@ -1045,7 +1078,7 @@ to SETUP
   ]
   
   ;#############################################################################################################################################
-  
+ ;#############################################################################################################################################
   load_infra
   ;read_data_flooding
   set flood_rain csv:from-file "data/bayesianofrequencia_encharcamientos.csv"

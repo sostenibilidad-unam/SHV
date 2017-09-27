@@ -100,7 +100,7 @@ end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 to show-actors-actions
-   inspect one-of alternatives_WaterOperator
+   inspect one-of alternatives_WaterOperator_AB
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -362,6 +362,53 @@ to update_maximum [estado]  ;; update the maximum or minimum of values use by th
   set densidad_pop_max max [densidad_pop] of agebs with [CV_estado = estado]
 end
 
+
+to set_maximum [estado]  ;; update the maximum or minimum of values use by the model to calculate range of the value functions this time relative to the domain of the agent who needs the inforamtion to take decition
+  set Antiguedad-infra_Ab_max 60 * 54
+  set Antiguedad-infra_D_max 60 * 54
+  set desperdicio_agua_max max [desperdicio_agua] of agebs with [CV_estado = estado];;max level of perception of deviation
+  set days_wno_water_max max[days_wno_water] of agebs with [CV_estado = estado]
+  set Gasto_hidraulico_max max [Gasto_hidraulico] of agebs with [CV_estado = estado]
+  set presion_hidraulica_max max [presion_hidraulica] of agebs  with [CV_estado = estado]
+  set desviacion_agua_max max [desviacion_agua] of agebs with [CV_estado = estado]
+  set Capacidad_max_Ab_max max [Capacidad_max_Ab] of agebs with [CV_estado = estado]
+  set Capacidad_max_d_max max [Capacidad_max_d] of agebs with [CV_estado = estado]
+  set garbage_max max [garbage] of agebs  with [CV_estado = estado]
+  set Obstruccion_dren_max max[Obstruccion_dren] of agebs  with [CV_estado = estado]
+  set hundimientos_max max [hundimientos] of agebs with [CV_estado = estado]
+  set water_quality_max 1
+  set max_water_in_mc max [days_water_in] of agebs with [CV_estado = estado]
+  set infra_abast_max max [houses_with_abastecimiento] of agebs  with [CV_estado = estado]
+  set infra_dranage_max max [houses_with_dranage] of agebs with [CV_estado = estado]
+  set flooding_max max [flooding] of agebs with [CV_estado = estado];;max level of flooding (encharcamientos) recored over the last 10 years
+  set precipitation_max max [precipitation] of agebs  with [CV_estado = estado]
+  set fallas_ab_max max [Falla_ab] of agebs with [CV_estado = estado]
+  set Abastecimiento_max max [Abastecimiento] of agebs  with [CV_estado = estado]
+  set health_max max [health] of agebs with [CV_estado = estado]
+  set monto_max max [monto] of agebs with [CV_estado = estado]
+  set scarcity_max max [scarcity] of agebs with [CV_estado = estado]
+  set Presion_social_max max [Presion_social] of agebs  with [CV_estado = estado]
+  set Presion_social_annual_max max [Presion_social_annual] of agebs with [CV_estado = estado]
+  set falta_d_max 1
+  set falta_Ab_max 1
+  set d_Compra_agua_max max [d_Compra_agua] of agebs with [CV_estado = estado]
+  set d_Captacion_agua_max max [d_Captacion_agua] of agebs with [CV_estado = estado]
+  set d_Movilizaciones_max max [d_Movilizaciones] of agebs with [CV_estado = estado]
+  set d_Modificacion_vivienda_max max [d_Modificacion_vivienda] of agebs  with [CV_estado = estado]
+  set d_Accion_colectiva_max max [d_Accion_colectiva] of agebs with [CV_estado = estado]
+  set d_water_extraction_max max [d_water_extraction] of agebs with [CV_estado = estado]
+  set d_mantenimiento_D_max max [d_mantenimiento_D] of agebs with [CV_estado = estado]
+  set d_mantenimiento_max max [d_mantenimiento] of agebs with [CV_estado = estado]
+  set d_new_max max [d_new] of agebs with [CV_estado = estado]
+  set d_water_distribution_max max [d_water_distribution] of agebs with [CV_estado = estado]
+  set d_water_importacion_max max [d_water_importacion] of agebs with [CV_estado = estado]
+  set Sensitivity_F_Max  max [sensitivity_F] of agebs with [CV_estado = estado]    ;max level of changes made to houses
+  set Sensitivity_S_Max  max [sensitivity_S] of agebs with [CV_estado = estado]   ;max level of changes made to houses
+  set Vulnerability_S_max max [vulnerability_S] of agebs with [CV_estado = estado]
+  set Vulnerability_F_max max [vulnerability_F] of agebs with [CV_estado = estado]
+  set densidad_pop_max max [densidad_pop] of agebs with [CV_estado = estado]
+end
+
 ;#############################################################################################################################################
 to p_falla_infra    ;;update age and probability of failure and also is color if well is working
      set P_failure_AB 1 - exp(Antiguedad-infra_Ab  * (- lambda))
@@ -470,7 +517,7 @@ to WaterOperator-decisions [estado]
   ask  agebs with [CV_estado = estado][
     ;;Tranform from natural scale to standarized scale given action 1 (Reparation of pozos)
     ;#################################################################################################################################################
-    ask Alternatives_WaterOperator [
+    ask alternatives_WaterOperator_AB [
       update_criteria_and_valueFunctions_WaterOperator;
 
       let ddd (ideal_distance alternative_weights rescaled_criteria_values criteria_weights 1)
@@ -1294,7 +1341,7 @@ CHOOSER
 Visualization
 Visualization
 "Accion Colectiva" "Peticion ciudadana" "Captacion de Agua" "Compra de Agua" "Modificacion de la vivienda" "Areas prioritarias Mantenimiento" "Areas prioritarias Nueva Infraestructura" "Distribucion de Agua SACMEX" "GoogleEarth" "K_groups" "Salud" "Escasez" "Encharcamientos" "% houses with supply" "% houses with drainage" "P. Falla Ab" "P. Falla D" "Capacidad_D" "Zonas Aquifero" "Edad Infraestructura Ab." "Edad Infraestructura D" "Income-index"
-11
+5
 
 BUTTON
 1482
@@ -1554,7 +1601,7 @@ factor_scale
 factor_scale
 0.000000000000000001
 4
-0.752
+2.217
 0.001
 1
 NIL
