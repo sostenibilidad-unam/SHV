@@ -16,7 +16,13 @@ to GO
  ;  flood_risk
    flood_risk_capacitysewer
   ; flooding_glm
- ]
+
+    water_extraction2 "09"            ;the action by the Water authority on where to increase the extraction of water
+    if escala = "cuenca"[
+      water_extraction2 "15"            ;;decisions by WaterOperator in  estado de Mexico
+    ]
+    change_subsidence_rate
+  ]
   ;
  if weeks = 4 [
      WaterOperator-decisions "09"            ;;decisions by WaterOperator
@@ -31,12 +37,12 @@ to GO
   if weeks = 1 [
     repair-Infra_Ab "09"
     repair-Infra_D "09"
-    New-Infra_A "09"
+    New-Infra_Ab "09"
     New-Infra_D "09"
-   if escala = "cuenca"[
+    if escala = "cuenca"[
      repair-Infra_Ab "15"
      repair-Infra_D "15"
-     New-Infra_A "15"
+     New-Infra_Ab "15"
      New-Infra_D "15"
    ]
  ]
@@ -282,7 +288,7 @@ to update_maximum_full  ;; update the maximum or minimum of values use by the mo
   set Capacidad_max_d_max max [Capacidad_max_d] of agebs
   set garbage_max max [garbage] of agebs
   set Obstruccion_dren_max max[Obstruccion_dren] of agebs
-  set hundimientos_max max [hundimientos] of agebs
+  set hundimientos_max max [hundimiento] of agebs
   set water_quality_max 1
   set max_water_in_mc max [days_water_in] of agebs
   set infra_abast_max max [houses_with_abastecimiento] of agebs
@@ -328,7 +334,7 @@ to update_maximum [estado]  ;; update the maximum or minimum of values use by th
   set Capacidad_max_d_max max [Capacidad_max_d] of agebs with [CV_estado = estado]
   set garbage_max max [garbage] of agebs  with [CV_estado = estado]
   set Obstruccion_dren_max max[Obstruccion_dren] of agebs  with [CV_estado = estado]
-  set hundimientos_max max [hundimientos] of agebs with [CV_estado = estado]
+  set hundimientos_max max [hundimiento] of agebs with [CV_estado = estado]
   set water_quality_max 1
   set max_water_in_mc max [days_water_in] of agebs with [CV_estado = estado]
   set infra_abast_max max [houses_with_abastecimiento] of agebs  with [CV_estado = estado]
@@ -375,7 +381,7 @@ to set_maximum [estado]  ;; update the maximum or minimum of values use by the m
   set Capacidad_max_d_max max [Capacidad_max_d] of agebs with [CV_estado = estado]
   set garbage_max max [garbage] of agebs  with [CV_estado = estado]
   set Obstruccion_dren_max max[Obstruccion_dren] of agebs  with [CV_estado = estado]
-  set hundimientos_max max [hundimientos] of agebs with [CV_estado = estado]
+  set hundimientos_max max [hundimiento] of agebs with [CV_estado = estado]
   set water_quality_max 1
   set max_water_in_mc max [days_water_in] of agebs with [CV_estado = estado]
   set infra_abast_max max [houses_with_abastecimiento] of agebs  with [CV_estado = estado]
@@ -413,7 +419,7 @@ end
 to p_falla_infra    ;;update age and probability of failure and also is color if well is working
      set P_failure_AB 1 - exp(Antiguedad-infra_Ab  * (- lambda))
      set P_failure_D  1 - exp(Antiguedad-infra_D  * (- lambda))
-     set p_failure_hund  hundimientos * factor_subsidencia
+     set p_failure_hund  hundimiento * factor_subsidencia
      set p_falla_AB p_failure_hund + P_failure_AB
      set p_falla_D p_failure_hund + P_failure_D
 
@@ -566,7 +572,7 @@ end
 to repair-Infra_Ab [estado]
   let Budget 0
   ifelse (actions_per_agebs = "single-action")[
-    foreach sort-on [(1 - d_mantenimiento)] agebs with [CV_estado = estado and d_mantenimiento > d_new][    ;sort census blocks (+ (1 - densidad_pop / densidad_pop_max))
+    foreach sort-on [(1 - d_mantenimiento)] agebs with [CV_estado = estado and d_mantenimiento > d_new and d_mantenimiento > d_water_extraction][    ;sort census blocks (+ (1 - densidad_pop / densidad_pop_max))
       ? ->
       ask ? [
         if Budget < recursos_para_mantenimiento[                                       ;agebs that were selected for maitenance do not reduce its age
@@ -599,10 +605,10 @@ to repair-Infra_Ab [estado]
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
-to New-Infra_A [estado]
+to New-Infra_Ab [estado]
     let Budget 0
     ifelse (actions_per_agebs = "single-action")[
-    foreach sort-on [(1 - d_new)]  agebs with [CV_estado = estado and investment_here_AB_mant = 0][
+    foreach sort-on [(1 - d_new)]  agebs with [CV_estado = estado and investment_here_AB_mant = 0 and d_new > d_water_extraction][
       ? ->
       ask ? [
         if Budget < recursos_nuevaInfrastructura and houses_with_abastecimiento < 0.99 [
@@ -727,6 +733,83 @@ to water_extraccion
   ]
 
 end
+
+;#############################################################################################################################################
+to water_extraction2 [estado]
+  let Budget 0
+  ifelse (actions_per_agebs = "single-action")[
+    foreach sort-on [(1 - d_water_extraction)]  agebs with [CV_estado = estado and investment_here_AB_mant = 0 and investment_here_AB_new = 0][
+      ageb_sorted ->
+      if Budget < recursos_extraccion [
+        set Budget Budget + 1
+        create-pozos 1
+        [ set xcor [xcor] of ageb_sorted
+          set ycor [ycor] of ageb_sorted
+          set CVEGEO [CVEGEO] of ageb_sorted
+          set CV_estado [CV_estado] of ageb_sorted
+          set CV_municipio [CV_municipio] of ageb_sorted
+          set Localidad [Localidad] of ageb_sorted
+          set AGEB_key [AGEB_key] of ageb_sorted
+          set shape "circle 2"
+          set size 2
+          set color red
+          set age_pozo 0
+          set extraction_rate 87225 ;m3/dia
+        ]
+      ]
+
+      ask ageb_sorted [
+        set investment_here_Waterextraction 1
+        set investment_here_accumulated_Waterextraction investment_here_accumulated_Waterextraction + 1
+        set pozos_agebs turtle-set pozos with [CVEGEO = [CVEGEO] of myself]   ;add new pozo to the list of pozos
+        ask pozos_agebs [
+          set zone [zona_aquifera] of myself
+          set aquifer [aquifer] of myself
+        ]
+      ]
+    ]
+    ]
+    [
+    foreach sort-on [(1 - d_water_extraction)]  agebs with [CV_estado = estado][
+      ageb_sorted ->
+      if Budget < recursos_extraccion [
+        set Budget Budget + 1
+        create-pozos 1
+        [ set xcor [xcor] of ageb_sorted
+          set ycor [ycor] of ageb_sorted
+          set CVEGEO [CVEGEO] of ageb_sorted
+          set CV_estado [CV_estado] of ageb_sorted
+          set CV_municipio [CV_municipio] of ageb_sorted
+          set Localidad [Localidad] of ageb_sorted
+          set AGEB_key [AGEB_key] of ageb_sorted
+          set shape "circle 2"
+          set size 2
+          set color red
+          set age_pozo 0
+          set extraction_rate 87225 ;m3/dia
+        ]
+      ]
+      ask ageb_sorted [
+        set investment_here_Waterextraction 1
+        set investment_here_accumulated_Waterextraction investment_here_accumulated_Waterextraction + 1
+        set pozos_agebs turtle-set pozos with [CVEGEO = [CVEGEO] of myself]
+        ask pozos_agebs [
+          set zone [zona_aquifera] of myself
+          set aquifer [aquifer] of myself
+        ]
+        ;add new pozo to the list of pozos
+      ]
+    ]
+  ]
+end
+;#############################################################################################################################################
+to change_subsidence_rate
+  let count_pozos count pozos with [aquifer = "2"]
+  ask agebs with [aquifer = "2"][
+    set hundimiento hundimiento *  (count_pozos / count_pozos_initial)
+  ]
+end
+
 ;#############################################################################################################################################
 to water_distribution [estado recursos] ;distribution of water from government by truck
 let available_trucks recursos
@@ -986,8 +1069,16 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
         set color  scale-color green p_falla_AB 0 1
       ]
  ;############################################################################################
-      if visualization = "Zonas Aquifero" and ticks > 1 [set color  zona_aquifera]
+      if visualization = "Zonas Aquifero" and ticks > 1 [
+      set size 2
+      set color  zona_aquifera
     ]
+ ;############################################################################################
+     if visualization = "hundimiento" and ticks > 1 [
+      set size 2
+      set color  scale-color magenta hundimiento 0 hundimientos_max
+    ]
+]
 end
 
 
@@ -999,7 +1090,7 @@ to flooding_glm
   let p4 0.0082776
   let p5  1.0044008
  ask agebs [
-   set Flooding random-poisson (p1 + p2 * (Antiguedad-infra_D / 365) + p3 * Capacidad_D + p4 * gasto_hidraulico + p5 * hundimientos)
+   set Flooding random-poisson (p1 + p2 * (Antiguedad-infra_D / 365) + p3 * Capacidad_D + p4 * gasto_hidraulico + p5 * hundimiento)
  ]
 end
 ;#############################################################################################################################################
@@ -1340,14 +1431,14 @@ CHOOSER
 172
 Visualization
 Visualization
-"Accion Colectiva" "Peticion ciudadana" "Captacion de Agua" "Compra de Agua" "Modificacion de la vivienda" "Areas prioritarias Mantenimiento" "Areas prioritarias Nueva Infraestructura" "Distribucion de Agua SACMEX" "GoogleEarth" "K_groups" "Salud" "Escasez" "Encharcamientos" "% houses with supply" "% houses with drainage" "P. Falla Ab" "P. Falla D" "Capacidad_D" "Zonas Aquifero" "Edad Infraestructura Ab." "Edad Infraestructura D" "Income-index"
-11
+"Accion Colectiva" "Peticion ciudadana" "Captacion de Agua" "Compra de Agua" "Modificacion de la vivienda" "Areas prioritarias Mantenimiento" "Areas prioritarias Nueva Infraestructura" "Distribucion de Agua SACMEX" "GoogleEarth" "K_groups" "Salud" "Escasez" "Encharcamientos" "% houses with supply" "% houses with drainage" "P. Falla Ab" "P. Falla D" "Capacidad_D" "Zonas Aquifero" "Edad Infraestructura Ab." "Edad Infraestructura D" "Income-index" "hundimiento"
+22
 
 BUTTON
-1482
-85
-1654
-154
+1222
+17
+1394
+86
 NIL
 show_limitesDelegaciones
 NIL
@@ -1361,10 +1452,10 @@ NIL
 1
 
 BUTTON
-1482
-157
-1652
-221
+1222
+89
+1392
+153
 NIL
 show_AGEBS
 NIL
@@ -1378,10 +1469,10 @@ NIL
 1
 
 SLIDER
-28
-310
-228
-343
+27
+421
+227
+454
 Requerimiento_deAgua
 Requerimiento_deAgua
 0.007
@@ -1408,10 +1499,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-27
-212
-233
-245
+31
+299
+237
+332
 Eficiencia_NuevaInfra
 Eficiencia_NuevaInfra
 0
@@ -1423,10 +1514,10 @@ NIL
 HORIZONTAL
 
 BUTTON
-1482
-224
-1652
-287
+1222
+156
+1392
+219
 NIL
 show-actors-actions
 NIL
@@ -1440,10 +1531,10 @@ NIL
 1
 
 BUTTON
-1657
-157
-1828
-221
+1397
+89
+1568
+153
 NIL
 clear-plots
 NIL
@@ -1469,7 +1560,7 @@ escala
 SWITCH
 255
 515
-405
+428
 548
 export-to-postgres
 export-to-postgres
@@ -1478,10 +1569,10 @@ export-to-postgres
 -1000
 
 SLIDER
-27
-248
-230
-281
+31
+335
+234
+368
 Eficiencia_Mantenimiento
 Eficiencia_Mantenimiento
 0
@@ -1523,9 +1614,9 @@ NIL
 HORIZONTAL
 
 SLIDER
-241
+245
 406
-425
+422
 439
 cut-off_priorities
 cut-off_priorities
@@ -1538,10 +1629,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-30
-351
-231
-384
+29
+462
+230
+495
 lambda
 lambda
 0
@@ -1553,10 +1644,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-248
-322
-420
-355
+244
+334
+421
+367
 factor_subsidencia
 factor_subsidencia
 0
@@ -1578,10 +1669,10 @@ actions_per_agebs
 0
 
 SLIDER
-249
-286
+244
+299
 421
-319
+332
 n_runs
 n_runs
 0
@@ -1593,10 +1684,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-248
-363
-411
-396
+245
+369
+422
+402
 factor_scale
 factor_scale
 0.000000000000000001
@@ -1621,7 +1712,7 @@ ANP
 SLIDER
 245
 442
-430
+422
 475
 super_matrix_parameter
 super_matrix_parameter
@@ -1634,10 +1725,10 @@ NIL
 HORIZONTAL
 
 BUTTON
-1662
-84
-1835
-153
+1402
+16
+1575
+85
 NIL
 show_sewer
 NIL
@@ -1651,10 +1742,10 @@ NIL
 1
 
 SLIDER
-31
-401
-232
-434
+30
+512
+231
+545
 alt
 alt
 0
@@ -1666,10 +1757,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-29
-436
-232
-469
+28
+547
+231
+580
 a_failure
 a_failure
 0
@@ -1749,6 +1840,21 @@ false
 PENS
 "CDMX" 1.0 0 -16777216 true "" "plot mean [capacidad_D] of agebs with [CV_estado = \"09\"]"
 "Estado" 1.0 0 -7500403 true "" "plot mean [capacidad_D] of agebs with [CV_estado = \"15\"]"
+
+SLIDER
+34
+194
+235
+227
+recursos_extraccion
+recursos_extraccion
+0
+2400
+20.0
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
