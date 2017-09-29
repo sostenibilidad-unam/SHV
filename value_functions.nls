@@ -121,7 +121,7 @@ to update_criteria_and_valueFunctions_WaterOperator    ;;update the biphisical v
       set criteria_max replace-item i criteria_max 109.28  ;change with update quantity for speed
 
       if-else name_action = "Extraccion_agua"[
-        set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
+        set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937] ["" "" "" ""] (item i criteria_max)  [1 0.8 0.6 0.4 0.2])
       ]
       [
         set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
@@ -165,16 +165,21 @@ to update_criteria_and_valueFunctions_WaterOperator    ;;update the biphisical v
     ]
     ;###########################################################
     if ? = "Hundimientos"[
-      set criteria_values replace-item i criteria_values [hundimientos] of myself
+      set criteria_values replace-item i criteria_values [hundimiento] of myself
       set criteria_max replace-item i criteria_max 1;change with update quantity for speed
-      set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
+      if-else name_action = "Extraccion_agua"[
+        set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937] ["" "" "" ""] (item i criteria_max)  [1 0.8 0.6 0.4 0.2])
+      ]
+      [
+        set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
+      ]
     ]
     ;###########################################################
     if ? = "Encharcamientos"[
       set criteria_values replace-item i criteria_values [Flooding] of myself
       set criteria_max replace-item i criteria_max 109.28  ;change with update quantity for speed
       if-else name_action = "Extraccion_agua"[
-        set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
+        set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937] ["" "" "" ""] (item i criteria_max)  [1 0.8 0.6 0.4 0.2])
       ]
       [
         set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])

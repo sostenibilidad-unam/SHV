@@ -10,6 +10,7 @@ globals [
   truck_capasity               ;;capasity for each truck (pipas) to deliver water [mt3]
   capacidad_cisterna           ;;capasity of an individual water storage devide based on information from residents (compendio de datos funcion de valor)
   zonas_aquiferas              ;;ID de las zonas aquiferas en MXC
+  count_pozos_initial          ;;number of wells at timestep 1
   municipios_CVEGEO            ;;names and CVEGEO of municipalities inside DF
   from_d_to_bombeo
   ;; agua en tuberias
@@ -123,7 +124,7 @@ globals [
   Water_contamination
   Urban_g                                                        ;change in population, urban coverage, construction or other perception of more pressure to the service of water
   failure_of_dranage                                                 ;(translated from residents mental model concept "obstruccion de alcantarillado")
-  presion_hidraulica_map                                             ;water in the pipes. related to tandeo and fugas. places with more fugas may have less pressure. places with less pressure would have more tandeo.
+  presion_hidraulica_map                                             ;water in the pipes. related to mean_days_withNo_water and fugas. places with more fugas may have less pressure. places with less pressure would have more mean_days_withNo_water.
   Presion_de_medios
     
   ;;Other auxiliar variables
@@ -167,7 +168,7 @@ breed [Alternatives_DELEGATIONS alternative_DELEGATION]
 
 
 ;#############################################################################################################################################
-;define patch variables
+;define patch and agents' attributes
 ;#############################################################################################################################################
 
 patches-own[
@@ -211,8 +212,8 @@ Agebs-own[
   p_failure_hund               ;;probabilidad de falla debido a hundimientos
   p_falla_AB                   ;;probability of failure due to age and subsidence
   p_falla_D
-  hundimientos
-  presion_hidraulica           ;;or an index of low volume of water in the pipes (tandeo)
+  hundimiento
+  presion_hidraulica           ;;or an index of low volume of water in the pipes (mean_days_withNo_water)
   Gasto_hidraulico             ;;water the enter the sewage system in each ageb
   poblacion                    ;; Population size ageb
   densidad_pop                 ;;people per hectare
@@ -243,14 +244,14 @@ Agebs-own[
   NOWater_week_pois            ;; days in aweek with no water based on data and a poisson model fitting
   water_distributed_trucks     ;; Water distributed by trucks
   water_in_buying              ;; Water bought from private sources
-  tandeo                       ;; days a week with water distributed by pipes
+  mean_days_withNo_water                       ;; days a week with water distributed by pipes
   scarcity                     ;; When water_needed >  water_produced, deficit > 0
   days_wno_water               ;; Days with no water
   resources_water              ;; index 0 1 defining the purchase power to buy water
   surplus                      ;; When water_needed <  water_produced, surplus > 0
   deficits                     ;; > 0 if days_water_in < requeriment of the population
   storage_capasity             ;; number of storage devides (cisternas)
-  eficacia_servicio            ;; Gestion del servicio de Drenaje y agua potable (ej. interferencia politica, no llega la pipa, horario del tandeo, etc)
+  eficacia_servicio            ;; Gestion del servicio de Drenaje y agua potable (ej. interferencia politica, no llega la pipa, horario del mean_days_withNo_water, etc)
   desperdicio_agua             ;; Por fugas, falta de conciencia del uso del agua
   desviacion_agua              ;; Se llevan el agua a otros lugares
   Capacidad_Ab                 ;; La Capacidad de la infraestructura hidraulica
@@ -268,7 +269,7 @@ Agebs-own[
   
   
   ;#WaterOperator decition metrics
-  d_water_extraction
+  d_water_extraction                   ;;distance from ideal point for decision water extraction
   d_mantenimiento                     ;;distance from ideal point for decision to repare infrastructure
   d_new                            ;;distance from ideal point for decision to create new infrastructure
   d_water_distribution              ;;distance from ideal point for decision to distribute water
@@ -303,7 +304,8 @@ Agebs-own[
   investment_here_D_mant              ;;record if an action to maintain was taken in a census block
   investment_here_accumulated_D_mant  ;;record the accumulated number of alternative_namesto maintain taken in a census block
   
-  
+  investment_here_Waterextraction              ;;to record if the action of extract more water was taken
+  investment_here_accumulated_Waterextraction
   ;indicators at the level of the ageb
   scarcity_annual        ;report number of days without water in a year
   scarcity_index
@@ -327,6 +329,8 @@ Pozos-own[
   Production       ;;water production [ m3/day]
   extraction_rate  ;;total extraction (defined by zones 1 to 32)
   age_pozo         ;;age of well  p_failure        ;;probability of infrastructure failure here 1 if not infra here
+  aquifer
+  zone
 ]
 
 Alternatives_IZ-own[ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights]
@@ -343,48 +347,42 @@ Alternatives_WaterOperator_D-own[ID name_action criteria_names criteria_values c
 
 Alternatives_OCVAM-own[ID CLUSTER name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale v_scale_F alternative_weights]   ;value obtained for the action when calcualting the limiting matrix in super decition
 
-
-
-
+;############################################################################################################################################################################################
 
 to SETUP
   clear-all
   ;profiler:start
   set timestep 0
-  ;load-gis
+  load-gis
+    
+;#################################################################################################################################
+  define_agebs
+;###########################################################################################################################################################  
+  define_alternativesCriteria 
+;#############################################################################################################################################
+  load_infra
+;#############################################################################################################################################
+  ;read_data_flooding
+  set flood_rain csv:from-file "data/bayesianofrequencia_encharcamientos.csv"
+  set flood_capacity_riskOldCity csv:from-file "data/ABMtable_Flood_risk_capacity_oldCity.csv"
+  set flood_capacity_riskNewCity csv:from-file "data/ABMtable_Flood_risk_capacity_newCityB.csv"
+;#############################################################################################################################################
+;  water_production_importation                                                             ;;calculate total water available in a day
+ set_Intialvalues_globals
+ 
+  ;profiler:stop          ;; stop profiling
+  ;print profiler:report  ;; view the results
+  ;profiler:reset         ;; clear the data
+  reset-ticks
+end
 
+to load_infra
+  ;define infrastructure as agents
 
-  set estaciones_lluvia_SACMEX gis:load-dataset  "data/estacionesRain/rainfall_statistics_CDMX.shp"
-  set desalojo_primario gis:load-dataset  "data/Sewer_Nodes_July27_Project.shp"
-  set pozos_WaterOperator gis:load-dataset  "data/Join_pozosColoniasAgebs.shp"                                 ;wells
-  set PozosCMZM_Project gis:load-dataset  "data/PozosCMZM_Project.shp"
-  set PozosPachuca_Project gis:load-dataset  "data/PozosPachuca_Project.shp"
-  set PozosTexcoco_Project gis:load-dataset  "data/PozosTexcoco_Project.shp"
-  set PozosChalco_Project gis:load-dataset  "data/PozosChalco_Project.shp"
-  set Limites_delegacionales gis:load-dataset  "data/limites_deleg_DF_2013.shp"
-  set zonas_aquif_map gis:load-dataset  "data/AGEB_Zona_Project.shp"
-  set Agebs_map_full gis:load-dataset "data/agebs_abm.shp"                                                                 
-  set mascara gis:load-dataset "data/Mask.shp"                  ;Mask of study area                                                                                                                         ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
-  set agebs_map14 gis:load-dataset "data/ageb14.shp";                                                      ;AGEB shape file
-  set ageb13 gis:load-dataset "data/DF_ageb_N_escalante_Project_withEncharcamientos.shp"
-
-  ;define city or watersheed scale                                                                             
-  if escala = "ciudad"[
-    gis:set-world-envelope-ds gis:envelope-of mascara ;ageb13;mascara;Limites_delegacionales
-  ]
-  
-  if escala = "cuenca"[
-    gis:set-world-envelope-ds gis:envelope-of Agebs_map_full;mascara ;ageb13;mascara;Limites_delegacionales
-  ]
-
-  set city_image  bitmap:import "data/image_googleEarth_cuencaMexicoB.jpg";"data/DF_googleB.jpg"                                                   ; google earth image
-  bitmap:copy-to-pcolors City_image false
-
-
-  
   ;#################################################################################################################################################  
   ;create infraestructure as agents
   ;#################################################################################################################################################  
+  ;rainfall stations
   foreach gis:feature-list-of estaciones_lluvia_SACMEX [
     ? ->
     let centroid gis:location-of gis:centroid-of ?
@@ -403,48 +401,194 @@ to SETUP
     ]
   ]
   
+ ;#################################################################################################################################################  
+ ;Wells
+ ;#################################################################################################################################################  
+ 
+  ;CMZM
+  foreach gis:feature-list-of PozosCMZM_Project [
+    ? ->
+    let centroid gis:location-of gis:centroid-of ?
+    if not empty? centroid
+      [ create-pozos 1
+        [ set xcor item 0 centroid
+          set ycor item 1 centroid
+          set CVEGEO [CVEGEO] of min-one-of agebs [distance myself]
+          if CVEGEO != 0 [
+            set CV_estado (substring CVEGEO 0 2)
+            set CV_municipio (substring CVEGEO 2 5)
+            set Localidad (substring CVEGEO 5 9)
+            set AGEB_key (substring CVEGEO 9 13)
+          ]
+          set shape "circle 2"
+          set size 2
+          set color sky
+          set hidden? TRUE
+          set age_pozo (1 + random 20) * 365
+          set extraction_rate 87225 ;m3/dia
+          set aquifer "2"
+        ]
+    ]
+  ]
   
-  set weeks 0                                          
-  set months 1
-  set years 1
-  set Presion_de_medios 1
-  set Tot_water_Imported_Cutzamala 14 * 60 * 60 * 24 ;[m3/s][s/min][min/hour][hours/day]   ;;total water imported from Cutzamala System
-  set Tot_water_Imported_Lerma 5 * 60 * 60 * 24                                            ;;total water imported from Lerma System
-  set truck_capasity 2                                                                     ; set capasity of a pipa [m3/truck]
-  set capacidad_cisterna 2                                                                 ;set storage capasity [m3/cisterna]
-  set Antiguedad-infra_Ab_max 1
-  set desperdicio_agua_max 1
-  set desviacion_agua_max 1
-  set garbage_max 1
-  set water_quality_max 1
-  set infra_abast_max 1
-  set infra_dranage_max 1
-  set flooding_max 1
-  set fallas_Ab_max 1
-  set fallas_d_max 1
-  set precipitation_max 1
-  set Abastecimiento_max 1
-  set health_max 1
-  set monto_max 1
-  set scarcity_max 1
-  set Presion_social_max 1
-  set peticion_usuarios_max 1
-  set d_Compra_agua_max 1
-  set d_Captacion_agua_max 1
-  set d_Movilizaciones_max 1
-  set d_Modificacion_vivienda_max 1
-  set d_Accion_colectiva_max 1
-  set d_water_extraction_max 1
-  set d_mantenimiento_D_max 1
-  set d_new_max 1
-  set d_water_distribution_max 1
-  set d_water_importacion_max 1
-  set d_water_extraction_max 1
-  set Sensitivity_F_Max 1
-  set Sensitivity_S_Max 1
-  set densidad_pop_max 1
+  ; chalco
+  foreach gis:feature-list-of PozosChalco_Project [
+    ? ->
+    let centroid gis:location-of gis:centroid-of ?
+    if not empty? centroid
+      [ create-pozos 1
+        [ set xcor item 0 centroid
+          set ycor item 1 centroid
+          set CVEGEO [CVEGEO] of min-one-of agebs [distance myself]
+          if CVEGEO != 0 [
+            set CV_estado (substring CVEGEO 0 2)
+            set CV_municipio (substring CVEGEO 2 5)
+            set Localidad (substring CVEGEO 5 9)
+            set AGEB_key (substring CVEGEO 9 13)
+          ]
+          set shape "circle 2"
+          set size 2
+          set color magenta
+          set hidden? TRUE
+          set age_pozo (1 + random 20) * 365
+          set extraction_rate 87225 ;m3/dia
+        ;  set aquifer "Chalco"
+        ]
+    ]
+  ]
   
-  ;#################################################################################################################################
+  ;pachuca
+  foreach gis:feature-list-of PozosPachuca_Project [
+    ? ->
+    let centroid gis:location-of gis:centroid-of ?
+    if not empty? centroid
+      [ create-pozos 1
+        [ set xcor item 0 centroid
+          set ycor item 1 centroid
+          set CVEGEO [CVEGEO] of min-one-of agebs [distance myself]
+          if CVEGEO != 0 [
+            set CV_estado (substring CVEGEO 0 2)
+            set CV_municipio (substring CVEGEO 2 5)
+            set Localidad (substring CVEGEO 5 9)
+            set AGEB_key (substring CVEGEO 9 13)
+          ]
+          set shape "circle 2"
+          set size 2
+          set color green
+          set hidden? TRUE
+          set age_pozo (1 + random 20) * 365
+          set extraction_rate 87225 ;m3/dia
+        ;  set aquifer "Pachuca"
+        ]
+    ]
+  ]
+  
+  ;Texcoco
+  
+  foreach gis:feature-list-of PozosTexcoco_Project [
+    ? ->
+    let centroid gis:location-of gis:centroid-of ?
+    if not empty? centroid
+      [ create-pozos 1
+        [ set xcor item 0 centroid
+          set ycor item 1 centroid
+          set CVEGEO [CVEGEO] of min-one-of agebs [distance myself]
+          if CVEGEO != 0 [
+            set CV_estado (substring CVEGEO 0 2)
+            set CV_municipio (substring CVEGEO 2 5)
+            set Localidad (substring CVEGEO 5 9)
+            set AGEB_key (substring CVEGEO 9 13)
+          ]
+          set shape "circle 2"
+          set size 2
+          set color white
+          set hidden? TRUE
+          set age_pozo (1 + random 20) * 365
+          set extraction_rate 87225 ;m3/dia
+         ;set aquifer "Texcoco"
+        ]
+    ]
+  ]
+  
+  
+  ask pozos [
+    set production extraction_rate * (1 / count pozos)
+  ] ; set daily production of water in [mts^3/s]*[s/min]*[min/hour]*[hours/day]*[1/tot pozos]=[mts^3/(day*pozo)]
+  
+  
+  ;;read nodes secondary sewer
+  foreach gis:feature-list-of desalojo_primario [
+    ? ->
+    let centroid gis:location-of gis:centroid-of ?
+    if not empty? centroid
+      [ create-sewage_nodes 1 [
+        set xcor item 0 centroid
+        set ycor item 1 centroid
+        set ID  gis:property-value ? "Id"
+        set age [Antiguedad-infra_D] of agebs-here
+        set shape "circle 2"
+        set size 3
+        set color red
+        set Betweeness gis:property-value ? "Norm_Betwe"
+        ]
+    ]
+  ]
+  
+  let pipes csv:from-file "data/network_directed_sewage.csv"
+  let pipes_matrix matrix:from-row-list but-first pipes
+  let destination_node matrix:get-column  pipes_matrix 0
+  let source_node matrix:get-column  pipes_matrix 1
+  
+  (foreach destination_node source_node [
+    [a b] ->
+    let nn sewage_nodes with [ID = a]
+    let mm sewage_nodes with [ID = b]
+    ask mm [create-D_pipes-to nn[]]
+  ])
+  
+  ask agebs [
+    set pozos_agebs turtle-set pozos with [CVEGEO = [CVEGEO] of myself]
+    ask pozos_agebs [
+      set zone [zona_aquifera] of myself
+      set aquifer [aquifer] of myself
+    ]
+    if CV_estado = 09[
+      set rainfall_station_influ turtle-set Rain_Stations in-radius 30
+    ]
+  ]
+  
+  set count_pozos_initial count pozos with [aquifer = "2"]
+end
+
+to load-gis
+  set estaciones_lluvia_SACMEX gis:load-dataset  "data/estacionesRain/rainfall_statistics_CDMX.shp"
+  set desalojo_primario gis:load-dataset  "data/Sewer_Nodes_July27_Project.shp"
+  ;set pozos_WaterOperator gis:load-dataset  "data/Join_pozosColoniasAgebs.shp"                                 ;wells
+  set PozosCMZM_Project gis:load-dataset  "data/PozosCMZM_Project.shp"
+  set PozosPachuca_Project gis:load-dataset  "data/PozosPachuca_Project.shp"
+  set PozosTexcoco_Project gis:load-dataset  "data/PozosTexcoco_Project.shp"
+  set PozosChalco_Project gis:load-dataset  "data/PozosChalco_Project.shp"
+  set Limites_delegacionales gis:load-dataset  "data/limites_deleg_DF_2013.shp"
+  set zonas_aquif_map gis:load-dataset  "data/AGEB_Zona_Project.shp"
+  set Agebs_map_full gis:load-dataset "data/ageb_abm_full.shp"                                                                 
+  set mascara gis:load-dataset "data/Mask.shp"                  ;Mask of study area                                                                                                                         ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
+  ;set agebs_map14 gis:load-dataset "data/ageb14.shp";                                                      ;AGEB shape file
+  ;set ageb13 gis:load-dataset "data/DF_ageb_N_escalante_Project_withEncharcamientos.shp"
+
+  ;define city or watersheed scale                                                                             
+  if escala = "ciudad"[
+    gis:set-world-envelope-ds gis:envelope-of mascara ;ageb13;mascara;Limites_delegacionales
+  ]
+  
+  if escala = "cuenca"[
+    gis:set-world-envelope-ds gis:envelope-of Agebs_map_full;mascara ;ageb13;mascara;Limites_delegacionales
+  ]
+
+  set city_image  bitmap:import "data/image_googleEarth_cuencaMexicoB.jpg";"data/DF_googleB.jpg"                                                   ; google earth image
+  bitmap:copy-to-pcolors City_image false
+
+end
+  to define_agebs
   ;  define_agebs_full ;;REFERS TO THE FULL AREA OF STUDY. THAT IS THE ENTIRE WATERSHED OF MEXICO CITY VALEY  (need to complete information for other areas)
   foreach gis:feature-list-of Agebs_map_full; "ID_ZONA" "0"
   [ ? ->
@@ -467,7 +611,7 @@ to SETUP
         set shape "circle"
         set size 0.5
         set hidden? false
-        set group_kmean 1
+        set group_kmean gis:property-value ? "KMEANS5"
         set Abastecimiento gis:property-value ?  "abastecimi"; poblacion * Requerimiento_deAgua
         set Antiguedad-infra_Ab 365 * gis:property-value ? "antiguedad"
         set Antiguedad-infra_D 365 * gis:property-value ? "antiguedad"
@@ -480,7 +624,7 @@ to SETUP
         set Capacidad_Ab 1
         set Capacidad_d ifelse-value(gis:property-value ? "capacidad" != nobody)[gis:property-value ? "capacidad"][0]
         set Falla_d 1
-        
+        set precipitation gis:property-value ? "PRECIP"
         set water_quality gis:property-value ? "cal_agua"
         set scarcity gis:property-value ? "escasez"
         set FALTA_ab gis:property-value ? "Falta_in"
@@ -489,7 +633,7 @@ to SETUP
         set falta_d gis:property-value ? "falta_dren"
         
         set presion_hidraulica gis:property-value ? "pres_hid"
-        set hundimientos gis:property-value ? "CM"
+        set hundimiento gis:property-value ? "CM"
         set presion_de_medios 1;gis:property-value ? "pres_med"
         set desviacion_agua gis:property-value ? "desv_agua" ;; 1 si hay pozo en ageb o en agebs colindantes; 0 si no.
         
@@ -514,7 +658,7 @@ to SETUP
         set zona_aquifera gis:property-value (gis:find-one-feature zonas_aquif_map "CVEGEO" CVEGEO) "ID_ZONA"
         
         set scarcity_annual 0
-        set tandeo 6 / 7
+        set mean_days_withNo_water 6 / 7
         set days_water_in 0
         set sensitivity_F 1
         set sensitivity_S 1
@@ -524,77 +668,60 @@ to SETUP
     ]
   ]
 
-  ;to define areas with irregular water supply by pipes (e.g. tandeo)[days per week]
+  ;to define areas with irregular water supply by pipes (e.g. mean_days_withNo_water)[days per week]
   ;crear csv table and read the values from it
   ask agebs with [CV_municipio = "002"][
     set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "002"]
-    set tandeo 0.21
+    set mean_days_withNo_water 0.21
   ];"Azcapotzalco"
   ask agebs with [CV_municipio = "003"][
     set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "003"]
-    set tandeo 0.39];"Coyoacan"
+    set mean_days_withNo_water 0.39];"Coyoacan"
   ask agebs with [CV_municipio = "004"][
     set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "004"]
-    set tandeo 0.66];"Cuajimalpa"
+    set mean_days_withNo_water 0.66];"Cuajimalpa"
   ask agebs with [CV_municipio = "005"][
     set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "005"]
-    set tandeo 0.21];"Gustavo A. Madero"
+    set mean_days_withNo_water 0.21];"Gustavo A. Madero"
   ask agebs with [CV_municipio = "006"][
     set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "006"]
-    set tandeo 0.119];"Iztacalco"
+    set mean_days_withNo_water 0.119];"Iztacalco"
   ask agebs with [CV_municipio = "007"][
     set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "007"]
-    set tandeo 1.67];"Iztapalapa"
+    set mean_days_withNo_water 1.67];"Iztapalapa"
   ask agebs with [CV_municipio = "008"][
     set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "008"]
-    set tandeo 0.57];"La Magdalena Contreras"
+    set mean_days_withNo_water 0.57];"La Magdalena Contreras"
   ask agebs with [CV_municipio = "009"][
     set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "009"]
-    set tandeo 2.149];"Milpa Alta"
+    set mean_days_withNo_water 2.149];"Milpa Alta"
   ask agebs with [CV_municipio = "010"][
     set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "010"]
-    set tandeo 0.28];"Álvaro Obregón"
+    set mean_days_withNo_water 0.28];"Álvaro Obregón"
   ask agebs with [CV_municipio = "011"][
     set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "011"]
-    set tandeo 1.01];"Tláhuac"
+    set mean_days_withNo_water 1.01];"Tláhuac"
   ask agebs with [CV_municipio = "012"][
     set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "012"]
-    set tandeo 1.43];"Tlalpan"
+    set mean_days_withNo_water 1.43];"Tlalpan"
   ask agebs with [CV_municipio = "013"][
     set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "013"]
-    set tandeo 1.13];"Xochimilco"
+    set mean_days_withNo_water 1.13];"Xochimilco"
   ask agebs with [CV_municipio = "014"][
     set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "014"]
-    set tandeo 0.098];"Benito Juárez"
+    set mean_days_withNo_water 0.098];"Benito Juárez"
   ask agebs with [CV_municipio = "015"][
     set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "015"]
-    set tandeo 0.082];"Cuauhtémoc"
+    set mean_days_withNo_water 0.082];"Cuauhtémoc"
   ask agebs with [CV_municipio = "016"][
     set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "016"]
-    set tandeo 0.048];"Miguel Hidalgo"
+    set mean_days_withNo_water 0.048];"Miguel Hidalgo"
   ask agebs with [CV_municipio = "017"][
     set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "017"]
-    set tandeo 0.116];"Venustiano Carranza"
-  
-  (foreach gis:find-features agebs_map14 "NOM_LOC" "Total AGEB urbana"   gis:find-features ageb13 "NOM_LOC" "Total AGEB urbana"[ [a b] ->
-    ask agebs with [ID = gis:property-value a "AGEB_ID"][
-      set group_kmean gis:property-value b "KMEANS5"
-      set precipitation gis:property-value b "PRECIP"
-    ]
-  ])
-  ;###########################################################################################################################################################  
-  set zonas_aquiferas [4 12 14 15 16 17 19 20 24 26 27 28 29 31 32 33 34 36 37 38 41 42 43 44 48]
-  set from_d_to_bombeo [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
-  
-  ;names and CVEGEO of municipalities inside DF
-  set value_function_numeric_scale_residents [0.056 0.1013 0.4203 0.596 1]
-  set scarcity_scale [1 3 7 20]
-  set max-elevation max [altitude] of agebs           ;;to visualize elevation
-  set min-elevation min [altitude] of agebs           ;;to visualize elevation
-  
-  
-  ;####################################################################################################### 
-  ;define_alternativesCriteria
+    set mean_days_withNo_water 0.116];"Venustiano Carranza"
+end
+;####################################################################################################### 
+   to define_alternativesCriteria
   ;This procedure defines each alternative as a object, with atributes defined by:
   ;1)ID: identification of the mental model network where weights are elicited
   ;2)name_action: the name of the alternative of the MCDA
@@ -1076,184 +1203,50 @@ to SETUP
     ]
     set jj jj + 1
   ]
-  
-  ;#############################################################################################################################################
- ;#############################################################################################################################################
-  load_infra
-  ;read_data_flooding
-  set flood_rain csv:from-file "data/bayesianofrequencia_encharcamientos.csv"
-  set flood_capacity_riskOldCity csv:from-file "data/ABMtable_Flood_risk_capacity_oldCity.csv"
-  set flood_capacity_riskNewCity csv:from-file "data/ABMtable_Flood_risk_capacity_newCityB.csv"
-  
-  show_sewer
-  water_production_importation                                                             ;;calculate total water available in a day
-  
-  ;profiler:stop          ;; stop profiling
-  ;print profiler:report  ;; view the results
-  ;profiler:reset         ;; clear the data
-  reset-ticks
 end
 
-to load_infra
-  ;define infrastructure as agents
-  foreach gis:feature-list-of pozos_WaterOperator [
-    ? ->
-    let centroid gis:location-of gis:centroid-of ?
-    if not empty? centroid
-      [ create-pozos 1
-        [ set xcor item 0 centroid
-          set ycor item 1 centroid
-          set CVEGEO ifelse-value (gis:property-value ? "CVEGEO" != "")[gis:property-value ? "CVEGEO"][[CVEGEO] of min-one-of agebs [distance myself]]
-          set CV_estado (substring CVEGEO 0 2)
-          set CV_municipio (substring CVEGEO 2 5)
-          set Localidad (substring CVEGEO 5 9)
-          set AGEB_key (substring CVEGEO 9 13)
-          set shape "circle 2"
-          set size 0.1
-          set color red
-          set age_pozo (1 + random 20) * 365
-          set extraction_rate 87225 ;m3/dia
-        ]
-    ]
-  ]
-  
-  ;CMZM
-  foreach gis:feature-list-of PozosCMZM_Project [
-    ? ->
-    let centroid gis:location-of gis:centroid-of ?
-    if not empty? centroid
-      [ create-pozos 1
-        [ set xcor item 0 centroid
-          set ycor item 1 centroid
-          set CVEGEO [CVEGEO] of min-one-of agebs [distance myself]
-          if CVEGEO != 0 [
-            set CV_estado (substring CVEGEO 0 2)
-            set CV_municipio (substring CVEGEO 2 5)
-            set Localidad (substring CVEGEO 5 9)
-            set AGEB_key (substring CVEGEO 9 13)
-          ]
-          set shape "circle 2"
-          set size 0.1
-          set color sky
-          set age_pozo (1 + random 20) * 365
-          set extraction_rate 87225 ;m3/dia
-        ]
-    ]
-  ]
-  
-  ; chalco
-  foreach gis:feature-list-of PozosChalco_Project [
-    ? ->
-    let centroid gis:location-of gis:centroid-of ?
-    if not empty? centroid
-      [ create-pozos 1
-        [ set xcor item 0 centroid
-          set ycor item 1 centroid
-          set CVEGEO [CVEGEO] of min-one-of agebs [distance myself]
-          if CVEGEO != 0 [
-            set CV_estado (substring CVEGEO 0 2)
-            set CV_municipio (substring CVEGEO 2 5)
-            set Localidad (substring CVEGEO 5 9)
-            set AGEB_key (substring CVEGEO 9 13)
-          ]
-          set shape "circle 2"
-          set size 0.1
-          set color magenta
-          set age_pozo (1 + random 20) * 365
-          set extraction_rate 87225 ;m3/dia
-        ]
-    ]
-  ]
-  
-  ;pachuca
-  foreach gis:feature-list-of PozosPachuca_Project [
-    ? ->
-    let centroid gis:location-of gis:centroid-of ?
-    if not empty? centroid
-      [ create-pozos 1
-        [ set xcor item 0 centroid
-          set ycor item 1 centroid
-          set CVEGEO [CVEGEO] of min-one-of agebs [distance myself]
-          if CVEGEO != 0 [
-            set CV_estado (substring CVEGEO 0 2)
-            set CV_municipio (substring CVEGEO 2 5)
-            set Localidad (substring CVEGEO 5 9)
-            set AGEB_key (substring CVEGEO 9 13)
-          ]
-          set shape "circle 2"
-          set size 0.1
-          set color green
-          set age_pozo (1 + random 20) * 365
-          set extraction_rate 87225 ;m3/dia
-        ]
-    ]
-  ]
-  
-  ;Texcoco
-  
-  foreach gis:feature-list-of PozosTexcoco_Project [
-    ? ->
-    let centroid gis:location-of gis:centroid-of ?
-    if not empty? centroid
-      [ create-pozos 1
-        [ set xcor item 0 centroid
-          set ycor item 1 centroid
-          set CVEGEO [CVEGEO] of min-one-of agebs [distance myself]
-          if CVEGEO != 0 [
-            set CV_estado (substring CVEGEO 0 2)
-            set CV_municipio (substring CVEGEO 2 5)
-            set Localidad (substring CVEGEO 5 9)
-            set AGEB_key (substring CVEGEO 9 13)
-          ]
-          set shape "circle 2"
-          set size 0.1
-          set color white
-          set age_pozo (1 + random 20) * 365
-          set extraction_rate 87225 ;m3/dia
-        ]
-    ]
-  ]
-  
-  
-  ask pozos [
-    set production extraction_rate * (1 / count pozos)
-  ] ; set daily production of water in [mts^3/s]*[s/min]*[min/hour]*[hours/day]*[1/tot pozos]=[mts^3/(day*pozo)]
-  
-  
-  ;;read nodes secondary sewer
-  foreach gis:feature-list-of desalojo_primario [
-    ? ->
-    let centroid gis:location-of gis:centroid-of ?
-    if not empty? centroid
-      [ create-sewage_nodes 1 [
-        set xcor item 0 centroid
-        set ycor item 1 centroid
-        set ID  gis:property-value ? "Id"
-        set age [Antiguedad-infra_D] of agebs-here
-        set shape "circle 2"
-        set size 3
-        set color red
-        set Betweeness gis:property-value ? "Norm_Betwe"
-        ]
-    ]
-  ]
-  
-  let pipes csv:from-file "data/network_directed_sewage.csv"
-  let pipes_matrix matrix:from-row-list but-first pipes
-  let destination_node matrix:get-column  pipes_matrix 0
-  let source_node matrix:get-column  pipes_matrix 1
-  
-  (foreach destination_node source_node [
-    [a b] ->
-    let nn sewage_nodes with [ID = a]
-    let mm sewage_nodes with [ID = b]
-    ask mm [create-D_pipes-to nn[]]
-  ])
-  
-  ask agebs [
-    set pozos_agebs turtle-set pozos with [AGEB_key = [AGEB_key] of myself]
-    if CV_estado = 09[
-      set rainfall_station_influ turtle-set Rain_Stations in-radius 30
-    ]
-  ]
+ to set_Intialvalues_globals
+  set weeks 0                                          
+  set months 1
+  set years 1
+  set Presion_de_medios 1
+  set Tot_water_Imported_Cutzamala 14 * 60 * 60 * 24 ;[m3/s][s/min][min/hour][hours/day]   ;;total water imported from Cutzamala System
+  set Tot_water_Imported_Lerma 5 * 60 * 60 * 24                                            ;;total water imported from Lerma System
+  set truck_capasity 2                                                                     ; set capasity of a pipa [m3/truck]
+  set capacidad_cisterna 2                                                                 ;set storage capasity [m3/cisterna]
+  set Antiguedad-infra_Ab_max 1
+  set desperdicio_agua_max 1
+  set desviacion_agua_max 1
+  set garbage_max 1
+  set water_quality_max 1
+  set infra_abast_max 1
+  set infra_dranage_max 1
+  set flooding_max 1
+  set fallas_Ab_max 1
+  set fallas_d_max 1
+  set precipitation_max 1
+  set Abastecimiento_max 1
+  set health_max 1
+  set monto_max 1
+  set scarcity_max 1
+  set Presion_social_max 1
+  set peticion_usuarios_max 1
+  set d_Compra_agua_max 1
+  set d_Captacion_agua_max 1
+  set d_Movilizaciones_max 1
+  set d_Modificacion_vivienda_max 1
+  set d_Accion_colectiva_max 1
+  set d_water_extraction_max 1
+  set d_mantenimiento_D_max 1
+  set d_new_max 1
+  set d_water_distribution_max 1
+  set d_water_importacion_max 1
+  set d_water_extraction_max 1
+  set Sensitivity_F_Max 1
+  set Sensitivity_S_Max 1
+  set densidad_pop_max 1
+ ;names and CVEGEO of municipalities inside DF
+  set scarcity_scale [1 3 7 20]
+  set max-elevation max [altitude] of agebs           ;;to visualize elevation
+  set min-elevation min [altitude] of agebs           ;;to visualize elevation 
 end

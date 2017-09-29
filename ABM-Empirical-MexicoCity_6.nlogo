@@ -57,7 +57,7 @@ to GO
     set investment_here_AB_new 0
     set investment_here_D_new 0
 
-    water_by_pipe  ;define if an ageb will receive water by pipe. It depends on tandeo and the probability of failure,
+    water_by_pipe  ;define if an ageb will receive water by pipe. It depends on mean_days_withNo_water and the probability of failure,
     p_falla_infra ;
     take_action_residents
     Vulnerability_indicator
@@ -826,15 +826,15 @@ let available_trucks recursos
         [
           set water_distributed_trucks 0
         ]
-        water_in_a_week ;define if agebs receive water or not after the tandeo, and the decision of the manager to sent water by other means (trucks)
+        water_in_a_week ;define if agebs receive water or not after the mean_days_withNo_water, and the decision of the manager to sent water by other means (trucks)
 
       ]
     ]
 end
 ;##############################################################################################################
 to water_by_pipe
-;having water by pipe depends on tandeo (p having water based on info collected by ALE,about days with water), infrastructure and ifra failure distribution of water by trucks
-  set NOWater_week_pois random-poisson (tandeo + alt * (altitude - alt_mean_Delegation) + a_failure * (ifelse-value (p_falla_AB > random-float 1) [1][0]))
+;having water by pipe depends on mean_days_withNo_water (p having water based on info collected by ALE,about days with water), infrastructure and ifra failure distribution of water by trucks
+  set NOWater_week_pois random-poisson (mean_days_withNo_water + alt * (altitude - alt_mean_Delegation) + a_failure * (ifelse-value (p_falla_AB > random-float 1) [1][0]))
   if NOWater_week_pois > 7[set NOWater_week_pois  7]
   set days_water_in 7 - NOWater_week_pois
   set water_distributed_pipes  days_water_in * Requerimiento_deAgua * poblacion * houses_with_abastecimiento
