@@ -39,20 +39,20 @@ globals [
   eficacia_servicio_max         ;;ideal state of efficancy desired by actors
   garbage_max                   ;;max level of garbage percived as intolerable
   Obstruccion_dren_max
-  hundimientos_max              ;;max level of subside
+  hundimiento_max              ;;max level of subside
   infra_abast_max               ;;max % of houses per ageb covered by the water supply network
   infra_dranage_max             ;;max % of houses per ageb covered by the water dranage network
   flooding_max                  ;;max level of flooding (encharcamientos) recored over the last 10 years
   precipitation_max             ;;max amount of precipitation recorded
-  fallas_Ab_max                 ;;max number of fugas /likage, failure to distribute water in an ageb
-  fallas_d_max
+  falla_Ab_max                 ;;max number of fugas /likage, failure to distribute water in an ageb
+  falla_d_max
   falta_d_max
   falta_Ab_max                  ;;max lack of connextion to water
   max_water_in_mc                  ;;
   days_wno_water_max            ;;max number of day of an ageb without water
   Abastecimiento_max            ;;
-  Capacidad_max_Ab                 ;;
-  Capacidad_max_d
+  Capacidad_Ab_max                 ;;
+  Capacidad_d_max
   Peticion_Delegacional_max
   Peticion_Delegacional_D_max
   Presion_social_max
@@ -63,8 +63,6 @@ globals [
   monto_max
   scarcity_max
   densidad_pop_max
-  Capacidad_max_Ab_max
-  Capacidad_max_d_max
   ;#####################################################################################
   ;;Residents decision metrics max ;variables for plotting distance
   value_function_numeric_scale_residents
@@ -103,6 +101,8 @@ globals [
   Agebs_map                                                          ;includes economic index water-related infrastructure
   agebs_map14
   Agebs_map_full
+  Agebs_map_full_csv
+  Agebs_map_full_csv_list
   ageb13                                                       ;data set of ageb taht includes the floodings events
   Limites_delegacionales                                             ;limits of borrows
   Limites_cuenca                                                     ;limits of the watershed
@@ -277,6 +277,7 @@ Agebs-own[
   ;WaterOperator drenaje
   d_mantenimiento_D
   d_new_D
+  value_function_Age_Ab
   ;Vulnerability indicators
   sensitivity_F
   Sensitivity_S                   ;indicators of how sensitive, relative to level of adaptations (house modifications)
@@ -369,7 +370,9 @@ to SETUP
 ;#############################################################################################################################################
 ;  water_production_importation                                                             ;;calculate total water available in a day
  set_Intialvalues_globals
- 
+  set_maximum "09"
+  set_maximum "15"
+  
   ;profiler:stop          ;; stop profiling
   ;print profiler:report  ;; view the results
   ;profiler:reset         ;; clear the data
@@ -561,6 +564,11 @@ to load_infra
 end
 
 to load-gis
+  set Agebs_map_full_csv_list csv:from-file "data/ageb_abm_full_centroid_acuif.csv"
+  set Agebs_map_full_csv matrix:from-row-list  Agebs_map_full_csv_list
+  
+;  print matrix:pretty-print-text Agebs_map_full_csv 
+  
   set estaciones_lluvia_SACMEX gis:load-dataset  "data/estacionesRain/rainfall_statistics_CDMX.shp"
   set desalojo_primario gis:load-dataset  "data/Sewer_Nodes_July27_Project.shp"
   ;set pozos_WaterOperator gis:load-dataset  "data/Join_pozosColoniasAgebs.shp"                                 ;wells
@@ -572,16 +580,24 @@ to load-gis
   set zonas_aquif_map gis:load-dataset  "data/AGEB_Zona_Project.shp"
   set Agebs_map_full gis:load-dataset "data/ageb_abm_full.shp"                                                                 
   set mascara gis:load-dataset "data/Mask.shp"                  ;Mask of study area                                                                                                                         ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
-  ;set agebs_map14 gis:load-dataset "data/ageb14.shp";                                                      ;AGEB shape file
+   ;set agebs_map14 gis:load-dataset "data/ageb14.shp";                                                      ;AGEB shape file
   ;set ageb13 gis:load-dataset "data/DF_ageb_N_escalante_Project_withEncharcamientos.shp"
 
   ;define city or watersheed scale                                                                             
   if escala = "ciudad"[
     gis:set-world-envelope-ds gis:envelope-of mascara ;ageb13;mascara;Limites_delegacionales
+  
   ]
   
   if escala = "cuenca"[
-    gis:set-world-envelope-ds gis:envelope-of Agebs_map_full;mascara ;ageb13;mascara;Limites_delegacionales
+    gis:set-world-envelope-ds gis:envelope-of Agebs_map_full ;mascara ;ageb13;mascara;Limites_delegacionales
+   
+;    let xx_min  min (matrix:get-column Agebs_map_full_csv 0) 
+;    let xx_max  max (matrix:get-column Agebs_map_full_csv 0) 
+;    let yy_min  min (matrix:get-column Agebs_map_full_csv 1) 
+;    let yy_max  max (matrix:get-column Agebs_map_full_csv 1) 
+;    
+;    gis:set-world-envelope-ds (list xx_min xx_max yy_min yy_max)
   ]
 
   set city_image  bitmap:import "data/image_googleEarth_cuencaMexicoB.jpg";"data/DF_googleB.jpg"                                                   ; google earth image
@@ -590,13 +606,86 @@ to load-gis
 end
   to define_agebs
   ;  define_agebs_full ;;REFERS TO THE FULL AREA OF STUDY. THAT IS THE ENTIRE WATERSHED OF MEXICO CITY VALEY  (need to complete information for other areas)
+  
+;  let j 0
+;    
+; foreach gis:feature-list-of Agebs_map_full; "ID_ZONA" "0"  
+; [ ? ->
+;   let centroid gis:location-of gis:centroid-of ?
+;   if not empty? centroid[
+;     create-agebs 1 [      
+;       let row_ageb matrix:get-row Agebs_map_full_csv j 
+;        print row_ageb
+;       set xcor item 0 centroid              ;define coodeantes of ageb at the center of the polygone
+;       set ycor item 1 centroid 
+;       set ID item 3 row_ageb 
+;       set CVEGEO gis:property-value ? "CVEGEO"
+;       ;(gis:location-of gis:centroid-of gis:find-one-feature Agebs_map_full "CVEGEO" CVEGEO)      
+;       
+;       set CV_estado (substring CVEGEO 0 2)
+;       set CV_municipio (substring CVEGEO 2 5)
+;       set Localidad (substring CVEGEO 5 9)
+;       set AGEB_key (substring CVEGEO 9 13)
+;       set color grey
+;       set shape "circle"
+;       set size 0.5
+;       set hidden? false
+;       set Antiguedad-infra_Ab 365 *  item 5 row_ageb 
+;        print item 5 row_ageb 
+;       set Antiguedad-infra_D 365 *  item 5 row_ageb 
+;       set Abastecimiento item 6 row_ageb 
+;       set Capacidad_d item 7 row_ageb ;ifelse-value(gis:property-value ? "capacidad" != nobody)[gis:property-value ? "capacidad"][0]
+;       set water_quality item 8 row_ageb 
+;       set urban_growth item 10 row_ageb 
+;       set desperdicio_agua item 11 row_ageb       ;;Por fugas, falta de conciencia del uso del agua
+;       set desviacion_agua item 12 row_ageb ;; 1 si hay pozo en ageb o en agebs colindantes; 0 si no.
+;       set altitude item 14 row_ageb 
+;       set scarcity item 15 row_ageb 
+;       set FALLA_ab item 16 row_ageb 
+;       set FAlta_ab item 17 row_ageb 
+;       set houses_with_abastecimiento 1 - FALTA_ab
+;       set FAlta_d item 18 row_ageb 
+;        print FAlta_d
+;       set houses_with_dranage 1 - falta_d
+;       set gasto_hidraulico item 19 row_ageb 
+;       set health item 20 row_ageb ;ifelse-value(gis:property-value ? "health" != nobody)[gis:property-value ?  "health"][random-float 0]
+;       set Income-index item 21 row_ageb ;ifelse-value(gis:property-value ? "ingreso" != nobody)[gis:property-value ? "ingreso"][random-float 1]
+;       ;print Income-index
+;        set  monto item 22 row_ageb 
+;       set Obstruccion_dren item 23 row_ageb 
+;       set Peticion_Delegacional_D item 24 row_ageb ;gis:property-value ? "pet_del_dr"
+;       set peticion_usuarios  item 25 row_ageb 
+;       set poblacion item 26 row_ageb 
+;       set flooding item 27 row_ageb 
+;       set presion_hidraulica item 28 row_ageb 
+;       set hundimiento item 29 row_ageb 
+;       set group_kmean item 32 row_ageb 
+;       set precipitation item 33 row_ageb 
+;       set garbage ifelse-value (Income-index != nobody)[poblacion * (1 - Income-index)][poblacion * (1 - random-float 1)]
+;       set aquifer item 33 row_ageb ;gis:property-value (gis:find-one-feature zonas_aquif_map "CVEGEO" CVEGEO) "ACUIF"
+;       set Capacidad_Ab 1
+;       set Falla_d 1
+;       set presion_de_medios 1;gis:property-value ? "pres_med"
+;;;        
+;        set scarcity_annual 0
+;        set mean_days_withNo_water 6 / 7
+;        set days_water_in 0
+;        set sensitivity_F 1
+;        set sensitivity_S 1
+;        set vulnerability_S 1
+;        set vulnerability_F 1
+;        
+;      ]
+;      set j j + 1    
+;    ]
+;  ]
+
+  
   foreach gis:feature-list-of Agebs_map_full; "ID_ZONA" "0"
+  
   [ ? ->
     let centroid gis:location-of gis:centroid-of ?
-    
     if not empty? centroid[
-      
-      
       ;if not empty? centroid[
       create-agebs 1 [
         set xcor item 0 centroid              ;define coodeantes of ageb at the center of the polygone
@@ -624,7 +713,8 @@ end
         set Capacidad_Ab 1
         set Capacidad_d ifelse-value(gis:property-value ? "capacidad" != nobody)[gis:property-value ? "capacidad"][0]
         set Falla_d 1
-        set precipitation gis:property-value ? "PRECIP"
+        set precipitation ifelse-value (gis:property-value ? "PRECIP" != nobody)[gis:property-value ? "PRECIP"][1]
+        
         set water_quality gis:property-value ? "cal_agua"
         set scarcity gis:property-value ? "escasez"
         set FALTA_ab gis:property-value ? "Falta_in"
@@ -645,14 +735,13 @@ end
         set poblacion gis:property-value ? "poblacion"
         set Income-index ifelse-value(gis:property-value ? "ingreso" != nobody)[gis:property-value ? "ingreso"][random-float 1]
         set health ifelse-value(gis:property-value ? "health" != nobody)[gis:property-value ?  "health"][random-float 0]
-        set flooding gis:property-value ?  "ponding"
+        set flooding ifelse-value(gis:property-value ? "ponding" != nobody)[gis:property-value ?  "ponding"][0]
         set garbage ifelse-value (Income-index != nobody)[poblacion * (1 - Income-index)][poblacion * (1 - random-float 1)]
         set Obstruccion_dren gis:property-value ? "obstruc"
         
         set Monto gis:property-value ? "monto"
         
         set desperdicio_agua gis:property-value ? "desp_agua"       ;;Por fugas, falta de conciencia del uso del agua
-        
         set peticion_usuarios gis:property-value ? "pet_usr_d"  ;index densidad de infra por cuanca * falta de conexiones por ageb.
         set urban_growth gis:property-value ? "crec_urb"
         set zona_aquifera gis:property-value (gis:find-one-feature zonas_aquif_map "CVEGEO" CVEGEO) "ID_ZONA"
@@ -1222,8 +1311,8 @@ end
   set infra_abast_max 1
   set infra_dranage_max 1
   set flooding_max 1
-  set fallas_Ab_max 1
-  set fallas_d_max 1
+  set falla_Ab_max 1
+  set falla_d_max 1
   set precipitation_max 1
   set Abastecimiento_max 1
   set health_max 1
@@ -1247,6 +1336,57 @@ end
   set densidad_pop_max 1
  ;names and CVEGEO of municipalities inside DF
   set scarcity_scale [1 3 7 20]
+end
+
+;#############################################################################################################################################
+to set_maximum [estado]   ;; update the maximum or minimum of values use by the model to calculate range of the value functions this time relative to the domain of the agent who needs the inforamtion to take decition
+  set Antiguedad-infra_Ab_max 80 * 365
+  set Antiguedad-infra_D_max 80 * 365
+  print [desperdicio_agua] of agebs with [CV_estado = estado]
+  set desperdicio_agua_max 100;max [desperdicio_agua] of agebs with [CV_estado = estado];;max level of perception of deviation
+  print estado
+  set days_wno_water_max 30
+  set Gasto_hidraulico_max max [Gasto_hidraulico] of agebs with [CV_estado = estado]
+  set presion_hidraulica_max max [presion_hidraulica] of agebs  with [CV_estado = estado]
+  set desviacion_agua_max max [desviacion_agua] of agebs with [CV_estado = estado]
+  set Capacidad_Ab_max max [Capacidad_Ab] of agebs with [CV_estado = estado]
+  set Capacidad_d_max max [Capacidad_d] of agebs with [CV_estado = estado]
+  set garbage_max max [garbage] of agebs  with [CV_estado = estado]
+  set Obstruccion_dren_max max[Obstruccion_dren] of agebs  with [CV_estado = estado]
+  set hundimiento_max max [hundimiento] of agebs with [CV_estado = estado]
+  set water_quality_max 1
+  set max_water_in_mc max [days_water_in] of agebs with [CV_estado = estado]
+  set infra_abast_max max [houses_with_abastecimiento] of agebs  with [CV_estado = estado]
+  set infra_dranage_max max [houses_with_dranage] of agebs with [CV_estado = estado]
+  set flooding_max max [flooding] of agebs with [CV_estado = estado];;max level of flooding (encharcamientos) recored over the last 10 years
+  set precipitation_max max [precipitation] of agebs  with [CV_estado = estado]
+  set falla_ab_max max [Falla_ab] of agebs with [CV_estado = estado]
+  set falla_d_max max [Falla_d] of agebs with [CV_estado = estado]
+  set Abastecimiento_max max [Abastecimiento] of agebs  with [CV_estado = estado]
+  set health_max max [health] of agebs with [CV_estado = estado]
+  set monto_max max [monto] of agebs with [CV_estado = estado]
+  set scarcity_max max [scarcity] of agebs with [CV_estado = estado]
+  set Presion_social_max max [Presion_social] of agebs  with [CV_estado = estado]
+  set Presion_social_annual_max max [Presion_social_annual] of agebs with [CV_estado = estado]
+  set falta_d_max 1
+  set falta_Ab_max 1
+  set d_Compra_agua_max max [d_Compra_agua] of agebs with [CV_estado = estado]
+  set d_Captacion_agua_max max [d_Captacion_agua] of agebs with [CV_estado = estado]
+  set d_Movilizaciones_max max [d_Movilizaciones] of agebs with [CV_estado = estado]
+  set d_Modificacion_vivienda_max max [d_Modificacion_vivienda] of agebs  with [CV_estado = estado]
+  set d_Accion_colectiva_max max [d_Accion_colectiva] of agebs with [CV_estado = estado]
+  set d_water_extraction_max max [d_water_extraction] of agebs with [CV_estado = estado]
+  set d_mantenimiento_D_max max [d_mantenimiento_D] of agebs with [CV_estado = estado]
+  set d_mantenimiento_max max [d_mantenimiento] of agebs with [CV_estado = estado]
+  set d_new_max max [d_new] of agebs with [CV_estado = estado]
+  set d_water_distribution_max max [d_water_distribution] of agebs with [CV_estado = estado]
+  set d_water_importacion_max max [d_water_importacion] of agebs with [CV_estado = estado]
+  set Sensitivity_F_Max  max [sensitivity_F] of agebs with [CV_estado = estado]    ;max level of changes made to houses
+  set Sensitivity_S_Max  max [sensitivity_S] of agebs with [CV_estado = estado]   ;max level of changes made to houses
+  set Vulnerability_S_max max [vulnerability_S] of agebs with [CV_estado = estado]
+  set Vulnerability_F_max max [vulnerability_F] of agebs with [CV_estado = estado]
+  set densidad_pop_max max [densidad_pop] of agebs with [CV_estado = estado]
   set max-elevation max [altitude] of agebs           ;;to visualize elevation
   set min-elevation min [altitude] of agebs           ;;to visualize elevation 
+
 end
