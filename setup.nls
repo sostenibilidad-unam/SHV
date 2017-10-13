@@ -186,7 +186,7 @@ Agebs-own[
   CV_estado                    ;Estate
   CV_municipio                 ;municipality
   Localidad                    ; to represent location
-  AGEB_key                        ; to represent ageb using CVEGEO
+  AGEB_key                     ; to represent ageb using CVEGEO
   ID                           ;;ID from shape file
   group_kmean                  ;; define to witch group an ageb belongs to, based on sosio-economic charactersitics
   zona_aquifera                ;;zone of the aquifer
@@ -278,6 +278,13 @@ Agebs-own[
   d_mantenimiento_D
   d_new_D
   value_function_Age_Ab
+  value_function_Age_d
+  value_function_scarcity
+  value_function_floods
+  value_function_floods_Wextraction 
+  value_function_capasity
+  value_function_falta_Ab
+  value_function_falta_d
   ;Vulnerability indicators
   sensitivity_F
   Sensitivity_S                   ;indicators of how sensitive, relative to level of adaptations (house modifications)
@@ -1364,7 +1371,7 @@ to set_maximum [estado]   ;; update the maximum or minimum of values use by the 
   set max_water_in_mc max [days_water_in] of agebs with [CV_estado = estado]
   set infra_abast_max max [houses_with_abastecimiento] of agebs  with [CV_estado = estado]
   set infra_dranage_max max [houses_with_dranage] of agebs with [CV_estado = estado]
-  set flooding_max max [flooding] of agebs with [CV_estado = estado];;max level of flooding (encharcamientos) recored over the last 10 years
+  set flooding_max 30;0.5 * max [flooding] of agebs with [CV_estado = estado];;max level of flooding (encharcamientos) recored over the last 10 years
   set precipitation_max max [precipitation] of agebs  with [CV_estado = estado]
   set falla_ab_max max [Falla_ab] of agebs with [CV_estado = estado]
   set falla_d_max max [Falla_d] of agebs with [CV_estado = estado]

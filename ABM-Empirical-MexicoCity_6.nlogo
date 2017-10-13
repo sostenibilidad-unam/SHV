@@ -15,7 +15,7 @@ to GO
  if weeks = 1 and months = 1[
  ;  flood_risk
    flood_risk_capacitysewer
-    health_risk
+
     ; flooding_glm
     water_extraction2 "09"            ;the action by the Water authority on where to increase the extraction of water
     if escala = "cuenca"[
@@ -25,6 +25,7 @@ to GO
   ]
   ;
  if weeks = 4 [
+    health_risk
      WaterOperator-decisions "09"            ;;decisions by WaterOperator
    if escala = "cuenca"[
      WaterOperator-decisions "15"            ;;decisions by infra operator WaterOperator (estado de Mexico)
@@ -416,7 +417,6 @@ to WaterOperator-decisions [estado]
  ;we call each alternative to update the value of the criteria acording to the state of the ageb
  ;we set the value functions and define the distant metric based on compromisez programing function with exponent =2
   ;update maximum values of criteria for the municipalities influenced by WaterOperator
- update_maximum estado
   ask  agebs with [CV_estado = estado][
     ;;Tranform from natural scale to standarized scale given action 1 (Reparation of pozos)
     ;#################################################################################################################################################
@@ -858,137 +858,148 @@ end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
-
-  if escala = "cuenca"[
-    gis:set-world-envelope-ds gis:envelope-of Agebs_map_full;mascara ;ageb13;mascara;Limites_delegacionales
-    update_maximum_full
-  ]
-
-  if escala = "ciudad"[
-    gis:set-world-envelope-ds gis:envelope-of mascara ;ageb13;mascara;Limites_delegacionales
-    update_maximum "09"
-  ]
-
-
-    ask agebs [
-      set size factor_scale * 1
-      set shape "circle"
-;############################################################################################
-      if Visualization = "Accion Colectiva" and ticks > 1[
-        set color scale-color sky d_Accion_colectiva 0 d_Accion_colectiva_max
-      ] ;accion colectiva
-;############################################################################################
-      if Visualization = "Peticion ciudadana" and ticks > 1 [
-        set size Presion_social_annual  * factor_scale
-        set color  scale-color red Presion_social_annual 0 Presion_social_annual_max
-      ] ;;social pressure
-;############################################################################################
-       if Visualization = "Capacidad_D" and ticks > 1 [
-        set size 10 * Capacidad_D
-        set color  scale-color red Capacidad_D 0 1
-      ] ;;social pressure
-;############################################################################################
-      if visualization = "Compra de Agua" and ticks > 1 [
-        set color scale-color sky d_Compra_agua 0 d_Compra_agua_max
-      ]
-;############################################################################################
-      if visualization = "Captacion de Agua" and ticks > 1 [set color scale-color blue d_Captacion_agua 0 d_Captacion_agua_max]
-
-;############################################################################################
-      if visualization = "Modificacion de la vivienda"and ticks > 1 [set color scale-color magenta Sensitivity_S 0 Sensitivity_S_max]
-
-;############################################################################################
-      if visualization = "Extraction Agua WaterOperator" and ticks > 1 [set color scale-color magenta d_water_extraction 0 d_water_extraction_max]
-
-;############################################################################################
-      if visualization = "Areas prioritarias Mantenimiento" and ticks > 1 [
-        set size factor_scale * 10 * d_mantenimiento
-
-        set color scale-color magenta d_mantenimiento 0 ifelse-value (d_mantenimiento_max = 0)[0][d_mantenimiento_max]
-        ]
-
-;############################################################################################
-      if visualization = "Areas prioritarias Nueva Infraestructura" and ticks > 1 [
-        set color scale-color green d_new 0 d_new_max]
-
-;############################################################################################
-      if visualization = "Distribucion de Agua SACMEX" and ticks > 1 [
-        set size d_water_distribution * 100 * factor_scale
-        set color scale-color sky d_water_distribution 0 d_water_distribution_max
-      ]
-
-;############################################################################################
-      if visualization = "K_groups" and ticks > 1 [set color  15 +  10 * group_kmean] ; visualize K-mean clusterization
-;############################################################################################
-      if visualization = "Income-index" and ticks > 1 [
-        set color  10 * income-index
-      ] ; visualize Income index
-;############################################################################################
-      if visualization = "Salud" and ticks > 1 [
-        set color scale-color green health 0 health_max
-      ] ;;visualized incidence of gastrointestinal diseases in MX 2004-2014
-;############################################################################################
-      if visualization = "Encharcamientos" and ticks > 1 [
-        set size flooding * 0.4
-        set color  scale-color sky flooding flooding_max 0
-      ] ;;visualized WaterOperator flooding dataset MX 2004-2014
- ;############################################################################################
-      if visualization = "Escasez" and ticks > 1 [
-        ;set shape "drop"
-        set size 0.4 * days_wno_water
-        set color scale-color red days_wno_water days_wno_water_max 0
-      ]
-;############################################################################################
-      if visualization =  "% houses with drainage" and ticks > 1 [
-        set size houses_with_dranage * factor_scale
-        set color  scale-color sky houses_with_dranage 0 1
-      ] ;;visualized WaterOperator flooding dataset MX 2004-2014
-;############################################################################################
-      if visualization = "% houses with supply" and ticks > 1 [
-        set size houses_with_abastecimiento * factor_scale
-        set color  scale-color sky houses_with_abastecimiento 0 1
-      ] ;;visualized WaterOperator flooding dataset MX 2004-2014
-;############################################################################################
-
-      if visualization = "Edad Infraestructura Ab." and ticks > 1 [
-        set shape "square"
-        set color  scale-color turquoise Antiguedad-infra_Ab  0 Antiguedad-infra_Ab_max
-      ]
-;############################################################################################
-
-      if visualization = "Edad Infraestructura D" and ticks > 1 [
-        set shape "square"
-        set color  scale-color magenta Antiguedad-infra_d 0 Antiguedad-infra_d_max
-      ]
-;############################################################################################
-
-      if visualization = "P. Falla" and ticks > 1 [
-        set size 5 * p_falla_AB
-        set color  scale-color green p_falla_AB 0 1
-      ]
- ;############################################################################################
-      if visualization = "Zonas Aquifero" and ticks > 1 [
+  ask agebs [
+    set size factor_scale * 1
+    set shape "circle"
+    ;############################################################################################
+    if Visualization = "Accion Colectiva" and ticks > 1[
+      set color scale-color sky d_Accion_colectiva 0 d_Accion_colectiva_max
+    ] ;accion colectiva
+      ;############################################################################################
+    if Visualization = "Peticion ciudadana" and ticks > 1 [
+      set size Presion_social_annual  * factor_scale
+      set color  scale-color red Presion_social_annual 0 Presion_social_annual_max
+    ] ;;social pressure
+      ;############################################################################################
+    if Visualization = "Capacidad_D" and ticks > 1 [
+      set size 10 * Capacidad_D
+      set color  scale-color red Capacidad_D 0 1
+    ] ;;social pressure
+      ;############################################################################################
+    if visualization = "Compra de Agua" and ticks > 1 [
+      set color scale-color sky d_Compra_agua 0 d_Compra_agua_max
+    ]
+    ;############################################################################################
+    if visualization = "Captacion de Agua" and ticks > 1 [set color scale-color blue d_Captacion_agua 0 d_Captacion_agua_max]
+    ;############################################################################################
+    if visualization = "Modificacion de la vivienda"and ticks > 1 [set color scale-color magenta Sensitivity_S 0 Sensitivity_S_max]
+    ;############################################################################################
+    if visualization = "Extraction Agua WaterOperator" and ticks > 1 [set color scale-color magenta d_water_extraction 0 d_water_extraction_max]
+    ;############################################################################################
+    if visualization = "Areas prioritarias Mantenimiento" and ticks > 1 [
+      set size factor_scale * 10 * d_mantenimiento
+      set color scale-color magenta d_mantenimiento 0 ifelse-value (d_mantenimiento_max = 0)[0][d_mantenimiento_max]
+    ]
+    ;############################################################################################
+    if visualization = "Areas prioritarias Nueva Infraestructura" and ticks > 1 [
+      set color scale-color green d_new 0 d_new_max]
+    ;############################################################################################
+    if visualization = "Distribucion de Agua SACMEX" and ticks > 1 [
+      set size d_water_distribution * 100 * factor_scale
+      set color scale-color sky d_water_distribution 0 d_water_distribution_max
+    ]
+    ;############################################################################################
+    if visualization = "K_groups" and ticks > 1 [set color  15 +  10 * group_kmean] ; visualize K-mean clusterization
+    ;############################################################################################
+    if visualization = "Income-index" and ticks > 1 [
+      set color  10 * income-index
+    ] ; visualize Income index
+      ;############################################################################################
+    if visualization = "Salud" and ticks > 1 [
+      set size health * 1 * factor_scale
+      set color scale-color green health 0 health_max
+    ] ;;visualized incidence of gastrointestinal diseases in MX 2004-2014
+      ;############################################################################################
+    if visualization = "Encharcamientos" and ticks > 1 [
+      set size flooding * 0.4
+      set color  scale-color sky flooding flooding_max 0
+    ] ;;visualized WaterOperator flooding dataset MX 2004-2014
+      ;############################################################################################
+    if visualization = "Escasez" and ticks > 1 [
+      ;set shape "drop"
+      set size 0.4 * days_wno_water
+      set color scale-color red days_wno_water days_wno_water_max 0
+    ]
+    ;############################################################################################
+    if visualization =  "% houses with drainage" and ticks > 1 [
+      set size houses_with_dranage * factor_scale
+      set color  scale-color sky houses_with_dranage 0 1
+    ] ;;visualized WaterOperator flooding dataset MX 2004-2014
+      ;############################################################################################
+    if visualization = "% houses with supply" and ticks > 1 [
+      set size houses_with_abastecimiento * factor_scale
+      set color  scale-color sky houses_with_abastecimiento 0 1
+    ] ;;visualized WaterOperator flooding dataset MX 2004-2014
+      ;############################################################################################
+    if visualization = "Edad Infraestructura Ab." and ticks > 1 [
+      set shape "square"
+      set color  scale-color turquoise Antiguedad-infra_Ab  0 Antiguedad-infra_Ab_max
+    ]
+    ;############################################################################################
+    if visualization = "Edad Infraestructura D" and ticks > 1 [
+      set shape "square"
+      set color  scale-color magenta Antiguedad-infra_d 0 Antiguedad-infra_d_max
+    ]
+    ;############################################################################################
+    if visualization = "P. Falla" and ticks > 1 [
+      set size 5 * p_falla_AB
+      set color  scale-color green p_falla_AB 0 1
+    ]
+    ;############################################################################################
+    if visualization = "Zonas Aquifero" and ticks > 1 [
       set size 2
       set color  zona_aquifera
     ]
- ;############################################################################################
-     if visualization = "hundimiento" and ticks > 1 [
+    ;############################################################################################
+    if visualization = "hundimiento" and ticks > 1 [
       set size 2
       set color  scale-color magenta hundimiento 0 hundimiento_max
     ]
-
- ;############################################################################################
-     if visualization =     "Value_function_edad_Ab" and ticks > 1 [
+    ;############################################################################################
+    if visualization = "Value_function_edad_Ab" and ticks > 1 [
       set size 2
       set color  scale-color magenta value_function_Age_Ab 0 1
     ]
+    ;############################################################################################
+    if visualization = "value_function_Age_d" and ticks > 1 [
+      set size 2
+      set color  scale-color magenta value_function_Age_d 0 1
+    ]
+    ;############################################################################################
+    if visualization = "value_function_scarcity" and ticks > 1 [
+      set size 2
+      set color  scale-color magenta value_function_scarcity 0 1
+    ]
+    ;############################################################################################
+    if visualization = "value_function_floods" and ticks > 1 [
+      set size 2
+      set color  scale-color magenta value_function_floods 0 1
+    ]
+    ;############################################################################################
+    if visualization = "value_function_capasity" and ticks > 1 [
+      set size 2
+      set color  scale-color magenta value_function_capasity 0 1
+    ]
+    ;############################################################################################
+    if visualization = "value_function_falta_Ab" and ticks > 1 [
+      set size 2
+      set color  scale-color magenta value_function_falta_Ab 0 1
+    ]
+    ;############################################################################################
+    if visualization = "value_function_falta_d" and ticks > 1 [
+      set size 2
+      set color  scale-color magenta value_function_falta_d 0 1
+    ]
+    ;############################################################################################
+    if visualization = " value_function_precipitation" and ticks > 1 [
+      set size 2
+      set color  scale-color magenta  value_function_precipitation    0 1
+    ]
 
 
-]
+  ]
 end
-
-
-;#############################################################################################################################################
+;###########################################################################################################################################
 to flooding_glm
   let p1 -0.6110486
   let p2 0.0398420
@@ -1236,14 +1247,15 @@ end
 
 ;#############################################################################################################################################
 to health_risk
+  ;calculate a new number of incidence based on the low land model
   ask agebs [
     let intercept 0.374
     let ro 0.451
     let beta_f 1.294
     let seg_sq 1
-   ; let vec_helt [health] of agebs with [wi > 0]  ;incidencia
-   ; let vec_weight wij para todo j!=i   ;matrix data csv  sum = vec_weight
-;    set new_incidences intercept + map vec_helt * vec_weight ro + beta_f * flooding + random-normal 0 seg_sq
+    let vec_helt [health] of contiguous_agebs  ;incidencia
+    let vec_weight neighboor_weights ;matrix data csv  sum = vec_weight
+    set new_incidences intercept + (sum (map [[a b] -> (a * b)] vec_helt  vec_weight)) * ro + beta_f * flooding + random-normal 0 seg_sq
   ]
   ask agebs [
     set health new_incidences
@@ -1396,8 +1408,8 @@ CHOOSER
 172
 Visualization
 Visualization
-"Accion Colectiva" "Peticion ciudadana" "Captacion de Agua" "Compra de Agua" "Modificacion de la vivienda" "Areas prioritarias Mantenimiento" "Areas prioritarias Nueva Infraestructura" "Distribucion de Agua SACMEX" "GoogleEarth" "K_groups" "Salud" "Escasez" "Encharcamientos" "% houses with supply" "% houses with drainage" "P. Falla Ab" "P. Falla D" "Capacidad_D" "Zonas Aquifero" "Edad Infraestructura Ab." "Edad Infraestructura D" "Income-index" "hundimiento" "Value_function_edad_Ab"
-10
+"Accion Colectiva" "Peticion ciudadana" "Captacion de Agua" "Compra de Agua" "Modificacion de la vivienda" "Areas prioritarias Mantenimiento" "Areas prioritarias Nueva Infraestructura" "Distribucion de Agua SACMEX" "GoogleEarth" "K_groups" "Salud" "Escasez" "Encharcamientos" "% houses with supply" "% houses with drainage" "P. Falla Ab" "P. Falla D" "Capacidad_D" "Zonas Aquifero" "Edad Infraestructura Ab." "Edad Infraestructura D" "Income-index" "hundimiento" "Value_function_edad_Ab" "value_function_Age_d" "value_function_scarcity" "value_function_floods" "value_function_falta_d" "value_function_falta_Ab" "value_function_capasity" "value_function_precipitation"
+26
 
 BUTTON
 1222
@@ -1657,7 +1669,7 @@ factor_scale
 factor_scale
 0.000000000000000001
 4
-2.961
+0.404
 0.001
 1
 NIL
