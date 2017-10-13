@@ -138,7 +138,7 @@ globals [
   MMWaterOperator_D_limit
   MMWaterOperator_weighted_D
   ;;tables
-  
+  contiguous_matrix
   ;read_data_flooding
   flood_rain           ;table with probabilities of flooding based on frequqncies and rainfall
   flood_capacity_riskOldCity
@@ -311,6 +311,9 @@ Agebs-own[
   scarcity_annual        ;report number of days without water in a year
   scarcity_index
   flooding_index
+  new_incidences    ;NEW INCIDENCE AFTER CALCULATING FLOODING
+  contiguous_agebs  ;
+  neighboor_weights  ;weight of each neighbor acording to contiguity matrix W (Baeza etal in review)
 ]
 
 rain_Stations-own[name p_rain shp_gamma rate_gamma Rain_t]
@@ -363,16 +366,17 @@ to SETUP
 ;#############################################################################################################################################
   load_infra
 ;#############################################################################################################################################
-  ;read_data_flooding
+  ;read_data_flooding and health
   set flood_rain csv:from-file "data/bayesianofrequencia_encharcamientos.csv"
   set flood_capacity_riskOldCity csv:from-file "data/ABMtable_Flood_risk_capacity_oldCity.csv"
   set flood_capacity_riskNewCity csv:from-file "data/ABMtable_Flood_risk_capacity_newCityB.csv"
-;#############################################################################################################################################
+  set contiguous_matrix csv:from-file "data/W_matrix_low.csv"
+  ;#############################################################################################################################################
 ;  water_production_importation                                                             ;;calculate total water available in a day
  set_Intialvalues_globals
   set_maximum "09"
   set_maximum "15"
-  
+  set_matrix_contj
   ;profiler:stop          ;; stop profiling
   ;print profiler:report  ;; view the results
   ;profiler:reset         ;; clear the data
@@ -753,6 +757,8 @@ end
         set sensitivity_S 1
         set vulnerability_S 1
         set vulnerability_F 1
+        set neighboor_weights []
+        set contiguous_agebs turtle-set nobody
       ]
     ]
   ]
@@ -1389,4 +1395,22 @@ to set_maximum [estado]   ;; update the maximum or minimum of values use by the 
   set max-elevation max [altitude] of agebs           ;;to visualize elevation
   set min-elevation min [altitude] of agebs           ;;to visualize elevation 
 
+end
+
+to set_matrix_contj
+  foreach but-first item 0 contiguous_matrix
+  [ag_id ->
+    let j 1
+    (foreach (but-first item 0 contiguous_matrix) (but-first item j contiguous_matrix)
+      [ [ag_vec w_vec] ->
+        let l 0
+        if w_vec > 0[
+          ask agebs with [ID = ag_id][
+            set contiguous_agebs (turtle-set contiguous_agebs agebs with [ID = ag_vec])
+            set neighboor_weights lput w_vec neighboor_weights
+          ]
+        ]
+    ])
+    set j j + 1
+  ] 
 end
