@@ -277,6 +277,7 @@ Agebs-own[
   ;WaterOperator drenaje
   d_mantenimiento_D
   d_new_D
+  ;standirize scaores of criteria (values from value functions)
   value_function_Age_Ab
   value_function_Age_d
   value_function_scarcity
@@ -285,6 +286,7 @@ Agebs-own[
   value_function_capasity
   value_function_falta_Ab
   value_function_falta_d
+  value_function_precipitation
   ;Vulnerability indicators
   sensitivity_F
   Sensitivity_S                   ;indicators of how sensitive, relative to level of adaptations (house modifications)
