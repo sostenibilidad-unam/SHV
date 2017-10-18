@@ -215,56 +215,56 @@ to update_criteria_and_valueFunctions_residentes
         if a = "Crecimiento urbano"[
           set criteria_values replace-item i criteria_values [urban_growth] of myself
           set criteria_max replace-item i criteria_max urban_growth_max  ;change with update quantity for speed
-          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i criteria_max)  [0.056 0.1 0.15 0.42 1])
+          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5]  ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
 
         ]
         ;###########################################################
         if a = "Contaminacion de agua"[
           set criteria_values replace-item i criteria_values [water_quality] of myself
           set criteria_max replace-item i criteria_max water_quality_max  ;change with update quantity for speed
-          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i criteria_max)  [0.056 0.1 0.15 0.42 1])
+          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max) [0.2 0.4 0.6 0.8 1])
         ]
         ;###########################################################
         if a = "Obstruccion de alcantarillado"[
           set criteria_values replace-item i criteria_values [Obstruccion_dren] of myself
           set criteria_max replace-item i criteria_max Obstruccion_dren_max  ;change with update quantity for speed
-          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i criteria_max)  [0.056 0.1 0.15 0.42 1])
+          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
         ]
         ;###########################################################
         if a = "Salud"[
           set criteria_values replace-item i criteria_values [health] of myself
           set criteria_max replace-item i criteria_max health_max;change with update quantity for speed
-          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.1 0.3 0.4 0.9] ["" "" "" ""] (item i criteria_max)  [0.056 0.1 0.15 0.42 1])
+          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max) [0.2 0.4 0.6 0.8 1])
         ]
         ;###########################################################
         if a = "Escasez de agua"[
             set criteria_values replace-item i criteria_values [days_wno_water] of myself
             set criteria_max replace-item i criteria_max days_wno_water_max
-            set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) map [ii -> (1 / days_wno_water_max)  * ii ] scarcity_scale ["" "" "" ""] (item i criteria_max)  [0.056 0.1 0.15 0.42 1])
+            set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
 
         ]
         ;###########################################################
         if a = "Inundaciones"[
           set criteria_values replace-item i criteria_values [flooding] of myself
           set criteria_max replace-item i criteria_max flooding_max
-          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i criteria_max)  [0.056 0.1 0.15 0.42 1])
+          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values)  [0.0625 0.125 0.25 0.5]  ["" "" "" ""] (item i criteria_max)   [0.2 0.4 0.6 0.8 1])
           if name_action = "Captacion de agua" or name_action = "Compra de agua" or name_action = "Movilizaciones"[
-            set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i criteria_max)  [0 0 0 0 0])
+            set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5]  ["" "" "" ""] (item i criteria_max)  [0 0 0 0 0])
           ]
         ]
         ;###########################################################
         if a = "agua insuficiente" [
           set criteria_values replace-item i criteria_values [houses_with_abastecimiento] of myself ;#escasez
           set criteria_max replace-item i criteria_max  infra_abast_max ;change with update quantity for speed
-          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.9 0.94 0.97 0.99] ["" "" "" ""] (item i criteria_max)  [1 0.5 0.25 0.125 0.0625])
+          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937]  ["" "" "" ""] (item i criteria_max)  [1 0.8 0.6 0.4 0.2])
         ]
         ;###########################################################
         if a = "Desviacion de agua" [
           set criteria_values replace-item i criteria_values [desviacion_agua] of myself ;#escasez
           set criteria_max replace-item i criteria_max  desviacion_agua_max ;change with update quantity for speed
-          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.9 0.94 0.97 0.99] ["" "" "" ""] (item i criteria_max)   [0.056 0.1 0.15 0.42 1])
+          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5]  ["" "" "" ""] (item i criteria_max)   [0.2 0.4 0.6 0.8 1])
           if name_action = "Modificacion vivienda"[
-            set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.9 0.94 0.97 0.99] ["" "" "" ""] (item i criteria_max)  [0 0 0 0 0])
+            set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values)[0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0 0 0 0 0])
           ]
         ]
         ;###########################################################
@@ -272,65 +272,65 @@ to update_criteria_and_valueFunctions_residentes
           if name_action = "Accion colectiva" [
             set criteria_values replace-item i criteria_values [falta_ab + falta_d] of myself
             set criteria_max replace-item i criteria_max  (falta_ab_max + falta_d_max) ;change with update quantity for speed
-            set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.8 0.9 0.95 0.99] ["" "" "" ""] (item i criteria_max)  [0.05 0.1 0.5 0.8 1])
+            set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values)[0.0625 0.125 0.25 0.5]  ["" "" "" ""] (item i criteria_max)   [0.2 0.4 0.6 0.8 1])
           ]
 
           if name_action = "Modificacion vivienda"[
             set criteria_values replace-item i criteria_values [falta_d] of myself
             set criteria_max replace-item i criteria_max  infra_dranage_max ;change with update quantity for speed
-            set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.9 0.94 0.97 0.99] ["" "" "" ""] (item i criteria_max)  [0.05 0.1 0.5 0.8 1])
+            set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
           ]
           if name_action = "Captacion de agua" or name_action = "Compra de agua" or name_action = "Movilizaciones"[
             set criteria_values replace-item i criteria_values [falta_ab] of myself
             set criteria_max replace-item i criteria_max  falta_ab_max ;change with update quantity for speed
-            set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.9 0.94 0.97 0.99] ["" "" "" ""] (item i criteria_max)  [0.05 0.1 0.5 0.8 1])
+            set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max) [0.2 0.4 0.6 0.8 1])
           ]
         ]
         ;###########################################################
         if a = "Infraestructura insuficiente" [
           if name_action = "Accion colectiva" [
             set criteria_values replace-item i criteria_values [(falta_Ab + falta_d) / 2] of myself
-            set criteria_max replace-item i criteria_max  ((falta_Ab_max + falta_d_max) / 2) ;change with update quantity for speed
-            set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.8 0.9 0.95 0.99] ["" "" "" ""] (item i criteria_max)  [1 0.5 0.25 0.125 0.0625])
+            set criteria_max replace-item i criteria_max 1 ;change with update quantity for speed
+            set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937] ["" "" "" ""] (item i criteria_max) [1 0.8 0.6 0.4 0.2])
           ]
           if name_action = "Modificacion vivienda"[
             set criteria_values replace-item i criteria_values [houses_with_dranage] of myself
             set criteria_max replace-item i criteria_max  infra_dranage_max ;change with update quantity for speed
-            set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.9 0.94 0.97 0.99] ["" "" "" ""] (item i criteria_max)  [1 0.5 0.25 0.125 0.0625])
+            set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937] ["" "" "" ""] (item i criteria_max) [1 0.8 0.6 0.4 0.2])
           ]
           if name_action = "Compra de agua" [
             set criteria_values replace-item i criteria_values [houses_with_abastecimiento] of myself
             set criteria_max replace-item i criteria_max  infra_abast_max ;change with update quantity for speed
-            set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.9 0.94 0.97 0.99] ["" "" "" ""] (item i criteria_max)  [1 0.99 0.95 0.5 0.0625])
+            set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937] ["" "" "" ""] (item i criteria_max) [1 0.8 0.6 0.4 0.2])
           ]
           if name_action = "Captacion de agua" or name_action = "Movilizaciones"[
             set criteria_values replace-item i criteria_values [houses_with_abastecimiento] of myself
             set criteria_max replace-item i criteria_max  infra_abast_max ;change with update quantity for speed
-            set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.9 0.94 0.97 0.99] ["" "" "" ""] (item i criteria_max)  [1 0.5 0.25 0.125 0.0625])
+            set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937]["" "" "" ""] (item i criteria_max) [1 0.8 0.6 0.4 0.2])
           ]
         ]
         ;###########################################################
         if a = "Desperdicio de agua" [
           set criteria_values replace-item i criteria_values [desperdicio_agua] of myself
           set criteria_max replace-item i criteria_max desperdicio_agua_max  ;change with update quantity for speed
-          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.1 0.3 0.7 0.9] ["" "" "" ""] (item i criteria_max)  [0.0625 0.125 0.25 0.5 1])
+          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max) [0.2 0.4 0.6 0.8 1])
         ]
         ;###########################################################
         if a = "Eficacia del servicio" [
           if name_action = "Accion colectiva" [
             set criteria_values replace-item i criteria_values [days_wno_water] of myself
             set criteria_max replace-item i criteria_max  (days_wno_water_max) ;change with update quantity for speed
-            set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.9 0.94 0.97 0.99] ["" "" "" ""] (item i criteria_max)  [0.056 0.1 0.15 0.42 1])
+            set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max) [0.2 0.4 0.6 0.8 1])
           ]
           if name_action = "Modificacion vivienda"[
             set criteria_values replace-item i criteria_values [houses_with_dranage] of myself
             set criteria_max replace-item i criteria_max  infra_dranage_max ;change with update quantity for speed
-            set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.9 0.94 0.97 0.99] ["" "" "" ""] (item i criteria_max)  [1 0.5 0.25 0.125 0.0625])
+            set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937]  ["" "" "" ""] (item i criteria_max) [1 0.8 0.6 0.4 0.2])
           ]
           if name_action = "Captacion de agua" or (name_action = "Compra de agua" or name_action = "Movilizaciones")[
             set criteria_values replace-item i criteria_values [falta_ab] of myself
             set criteria_max replace-item i criteria_max  falta_ab_max ;change with update quantity for speed
-            set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.9 0.94 0.97 0.99]["" "" "" ""] (item i criteria_max)  [1 0.5 0.25 0.125 0.0625])
+            set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5]["" "" "" ""] (item i criteria_max) [0.2 0.4 0.6 0.8 1])
           ]
         ]
         ;###########################################################

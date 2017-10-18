@@ -1,7 +1,6 @@
+;define-global-variables
 globals [
-  
   timestep                     ;;time step for postgres history
-                               ;;Importacion de agua
   Tot_water_Imported_Cutzamala ;;total water that enter to MC every day by importation from Cutzamala. for now a constant in the future connected as a network
   Tot_water_Imported_Lerma     ;;total water that enter to MC every day by importation from Lerma system. for now a constant int he future connected as a network
   water_produced               ;;Water produced by the city wells
@@ -84,9 +83,9 @@ globals [
   ;#####################################################################################
   ;;Vulnerability
   ;#####################################################################################
-  Sensitivity_F_Max      ;max level of changes made to houses to reduce damage by flooding
+  Y_F_Max      ;max level of changes made to houses to reduce damage by flooding
   Vulnerability_F_max
-  Sensitivity_S_Max      ;max level of changes made to houses to reduce scarcity
+  Y_S_Max      ;max level of changes made to houses to reduce scarcity
   Vulnerability_S_max
   ;#####################################################################################
   ;;Indicators
@@ -145,7 +144,7 @@ globals [
   flood_capacity_riskNewCity
 ]  ; /globals
 
-
+;define-type-of-agents
 breed [Agebs Ageb]
 breed [Delegaciones Delegacion]
 ;infrastructure
@@ -164,11 +163,8 @@ breed [Alternatives_WaterOperator_D alternative_WaterOperator_D]
 breed [Alternatives_OCVAM alternative_OCVAM]
 breed [Alternatives_DELEGATIONS alternative_DELEGATION]
 
-
-
-
 ;#############################################################################################################################################
-;define patch and agents' attributes
+;define-agents-attributes
 ;#############################################################################################################################################
 
 patches-own[
@@ -220,7 +216,7 @@ Agebs-own[
   uso_suelo
   urban_growth                   ;; Population growth
   Income-index                 ;; Actual income
-  Presion_social               ;;social pressure index per ageb (e.g. %pop. involved in the protests?)
+  protest_here              ;;social pressure index per ageb (e.g. %pop. involved in the protests?)
   Presion_social_annual               ;;social pressure index per ageb (e.g. %pop. involved in the protests?)
   Presion_social_Index          ;;number of protest per year
   peticion_usuarios
@@ -288,9 +284,11 @@ Agebs-own[
   value_function_falta_d
   value_function_precipitation
   ;Vulnerability indicators
-  sensitivity_F
-  Sensitivity_S                   ;indicators of how sensitive, relative to level of adaptations (house modifications)
-  Exposure_S                      ;indicators of level of scarcity
+  Y_F
+  Y_S                        ;indicators of how sensitive, relative to level of adaptations (house modifications)
+  Sensitivity_S              ;sensitivity index of neighborhood to scarcity
+  Sensitivity_F             ;sensitivity index of neighborhood to flooding
+  Exposure_S                ;indicators of level of scarcity
   Exposure_V                     ;indicators of level of flooding
   AC                            ;adaptive capasity
   Vulnerability_F
@@ -366,33 +364,37 @@ to SETUP
   clear-all
   ;profiler:start
   set timestep 0
-  load-gis
-    
-;#################################################################################################################################
-  define_agebs
-;###########################################################################################################################################################  
-  define_alternativesCriteria 
-;#############################################################################################################################################
-  load_infra
-;#############################################################################################################################################
-  ;read_data_flooding and health
+
+;4)#################################################################################################################################
+  load-GIS-data
+;5)#################################################################################################################################
+  define_neighborhoods
+;6)###########################################################################################################################################################  
+  define_ActionsCriteria 
+;7)#############################################################################################################################################
+  define-infrastructuresystems
+;8)#############################################################################################################################################
+  ;read-statistical-data
   set flood_rain csv:from-file "data/bayesianofrequencia_encharcamientos.csv"
   set flood_capacity_riskOldCity csv:from-file "data/ABMtable_Flood_risk_capacity_oldCity.csv"
   set flood_capacity_riskNewCity csv:from-file "data/ABMtable_Flood_risk_capacity_newCityB.csv"
   set contiguous_matrix csv:from-file "data/W_matrix_low.csv"
-  ;#############################################################################################################################################
-;  water_production_importation                                                             ;;calculate total water available in a day
- set_Intialvalues_globals
+;9)#############################################################################################################################################
+  set-initial-values-globals
+
+;10)#############################################################################################################################################
   set_maximum "09"
   set_maximum "15"
-  set_matrix_contj
+;11)#############################################################################################################################################
+  set-matrix-contj
+
   ;profiler:stop          ;; stop profiling
   ;print profiler:report  ;; view the results
   ;profiler:reset         ;; clear the data
   reset-ticks
 end
 
-to load_infra
+to define-infrastructuresystems
   ;define infrastructure as agents
 
   ;#################################################################################################################################################  
@@ -415,8 +417,7 @@ to load_infra
         set shape "drop"
       ]
     ]
-  ]
-  
+  ]  
  ;#################################################################################################################################################  
  ;Wells
  ;#################################################################################################################################################  
@@ -576,7 +577,7 @@ to load_infra
   set count_pozos_initial count pozos with [aquifer = "2"]
 end
 
-to load-gis
+to load-GIS-data
   set Agebs_map_full_csv_list csv:from-file "data/ageb_abm_full_centroid_acuif.csv"
   set Agebs_map_full_csv matrix:from-row-list  Agebs_map_full_csv_list
   
@@ -617,8 +618,8 @@ to load-gis
   bitmap:copy-to-pcolors City_image false
 
 end
-  to define_agebs
-  ;  define_agebs_full ;;REFERS TO THE FULL AREA OF STUDY. THAT IS THE ENTIRE WATERSHED OF MEXICO CITY VALEY  (need to complete information for other areas)
+  to define_neighborhoods
+  ;  define_neighborhoods_full ;;REFERS TO THE FULL AREA OF STUDY. THAT IS THE ENTIRE WATERSHED OF MEXICO CITY VALEY  (need to complete information for other areas)
   
 ;  let j 0
 ;    
@@ -683,8 +684,8 @@ end
 ;        set scarcity_annual 0
 ;        set mean_days_withNo_water 6 / 7
 ;        set days_water_in 0
-;        set sensitivity_F 1
-;        set sensitivity_S 1
+;        set Y_F 1
+;        set Y_S 1
 ;        set vulnerability_S 1
 ;        set vulnerability_F 1
 ;        
@@ -762,8 +763,8 @@ end
         set scarcity_annual 0
         set mean_days_withNo_water 6 / 7
         set days_water_in 0
-        set sensitivity_F 1
-        set sensitivity_S 1
+        set Y_F 0
+        set Y_S 1
         set vulnerability_S 1
         set vulnerability_F 1
         set neighboor_weights []
@@ -825,7 +826,7 @@ end
     set mean_days_withNo_water 0.116];"Venustiano Carranza"
 end
 ;####################################################################################################### 
-   to define_alternativesCriteria
+   to define_ActionsCriteria
   ;This procedure defines each alternative as a object, with atributes defined by:
   ;1)ID: identification of the mental model network where weights are elicited
   ;2)name_action: the name of the alternative of the MCDA
@@ -1309,7 +1310,7 @@ end
   ]
 end
 
- to set_Intialvalues_globals
+ to set-initial-values-globals
   set weeks 0                                          
   set months 1
   set years 1
@@ -1346,8 +1347,8 @@ end
   set d_water_distribution_max 1
   set d_water_importacion_max 1
   set d_water_extraction_max 1
-  set Sensitivity_F_Max 1
-  set Sensitivity_S_Max 1
+  set Y_F_Max 1
+  set Y_S_Max 1
   set densidad_pop_max 1
  ;names and CVEGEO of municipalities inside DF
   set scarcity_scale [1 3 7 20]
@@ -1381,8 +1382,7 @@ to set_maximum [estado]   ;; update the maximum or minimum of values use by the 
   set health_max max [health] of agebs with [CV_estado = estado]
   set monto_max max [monto] of agebs with [CV_estado = estado]
   set scarcity_max max [scarcity] of agebs with [CV_estado = estado]
-  set Presion_social_max max [Presion_social] of agebs  with [CV_estado = estado]
-  set Presion_social_annual_max max [Presion_social_annual] of agebs with [CV_estado = estado]
+  set Presion_social_annual_max 54
   set falta_d_max 1
   set falta_Ab_max 1
   set d_Compra_agua_max max [d_Compra_agua] of agebs with [CV_estado = estado]
@@ -1396,8 +1396,8 @@ to set_maximum [estado]   ;; update the maximum or minimum of values use by the 
   set d_new_max max [d_new] of agebs with [CV_estado = estado]
   set d_water_distribution_max max [d_water_distribution] of agebs with [CV_estado = estado]
   set d_water_importacion_max max [d_water_importacion] of agebs with [CV_estado = estado]
-  set Sensitivity_F_Max  max [sensitivity_F] of agebs with [CV_estado = estado]    ;max level of changes made to houses
-  set Sensitivity_S_Max  max [sensitivity_S] of agebs with [CV_estado = estado]   ;max level of changes made to houses
+  set Y_F_Max  max [Y_F] of agebs with [CV_estado = estado]    ;max level of changes made to houses
+  set Y_S_Max  max [Y_S] of agebs with [CV_estado = estado]   ;max level of changes made to houses
   set Vulnerability_S_max max [vulnerability_S] of agebs with [CV_estado = estado]
   set Vulnerability_F_max max [vulnerability_F] of agebs with [CV_estado = estado]
   set densidad_pop_max max [densidad_pop] of agebs with [CV_estado = estado]
@@ -1406,7 +1406,7 @@ to set_maximum [estado]   ;; update the maximum or minimum of values use by the 
 
 end
 
-to set_matrix_contj
+to set-matrix-contj
   foreach but-first item 0 contiguous_matrix
   [ag_id ->
     let j 1
