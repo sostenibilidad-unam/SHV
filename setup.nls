@@ -1396,8 +1396,8 @@ to set_maximum [estado]   ;; update the maximum or minimum of values use by the 
   set d_new_max max [d_new] of agebs with [CV_estado = estado]
   set d_water_distribution_max max [d_water_distribution] of agebs with [CV_estado = estado]
   set d_water_importacion_max max [d_water_importacion] of agebs with [CV_estado = estado]
-  set Y_F_Max  max [Y_F] of agebs with [CV_estado = estado]    ;max level of changes made to houses
-  set Y_S_Max  max [Y_S] of agebs with [CV_estado = estado]   ;max level of changes made to houses
+  set Y_F_Max max [Y_F] of agebs with [CV_estado = estado]    ;max level of changes made to houses
+  set Y_S_Max max [Y_S] of agebs with [CV_estado = estado]   ;max level of changes made to houses
   set Vulnerability_S_max max [vulnerability_S] of agebs with [CV_estado = estado]
   set Vulnerability_F_max max [vulnerability_F] of agebs with [CV_estado = estado]
   set densidad_pop_max max [densidad_pop] of agebs with [CV_estado = estado]

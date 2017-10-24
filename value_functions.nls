@@ -226,7 +226,7 @@ to update_criteria_and_valueFunctions_residentes
         ]
         ;###########################################################
         if a = "Obstruccion de alcantarillado"[
-          set criteria_values replace-item i criteria_values [Obstruccion_dren] of myself
+          set criteria_values replace-item i criteria_values [garbage] of myself  ;future use Obstruccion_dren. Now it is still a dummy
           set criteria_max replace-item i criteria_max Obstruccion_dren_max  ;change with update quantity for speed
           set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
         ]
@@ -241,7 +241,6 @@ to update_criteria_and_valueFunctions_residentes
             set criteria_values replace-item i criteria_values [days_wno_water] of myself
             set criteria_max replace-item i criteria_max days_wno_water_max
             set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
-
         ]
         ;###########################################################
         if a = "Inundaciones"[
@@ -254,8 +253,8 @@ to update_criteria_and_valueFunctions_residentes
         ]
         ;###########################################################
         if a = "agua insuficiente" [
-          set criteria_values replace-item i criteria_values [houses_with_abastecimiento] of myself ;#escasez
-          set criteria_max replace-item i criteria_max  infra_abast_max ;change with update quantity for speed
+          set criteria_values replace-item i criteria_values [days_wno_water] of myself ;#escasez
+          set criteria_max replace-item i criteria_max  days_wno_water_max ;change with update quantity for speed
           set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937]  ["" "" "" ""] (item i criteria_max)  [1 0.8 0.6 0.4 0.2])
         ]
         ;###########################################################
