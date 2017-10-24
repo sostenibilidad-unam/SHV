@@ -8,15 +8,14 @@ to GO
   ;profiler:start
 ;if ticks = 2 [export-map]
 
-;  counter_days                   ;counter to define when alternative_namesoccur
   counter_weeks
-
   water_production_importation    ;;calculate total water available in a day
- if weeks = 1 and months = 1[
- ;  flood_risk
-   flood_risk_capacitysewer
-
+  if weeks = 1 and months = 1[
+    ;flood_risk
+    flood_risk_capacitysewer
     ; flooding_glm
+
+;#############################################################################################################################################
     water_extraction2 "09"            ;the action by the Water authority on where to increase the extraction of water
     if escala = "cuenca"[
       water_extraction2 "15"            ;;decisions by WaterOperator in  estado de Mexico
@@ -55,7 +54,7 @@ to GO
     set investment_here_D_mant 0
     set investment_here_AB_new 0
     set investment_here_D_new 0
-
+    set protest_here 0
     water_by_pipe  ;define if an ageb will receive water by pipe. It depends on mean_days_withNo_water and the probability of failure,
     p_falla_infra ;
     take_action_residents
@@ -240,7 +239,8 @@ end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 to house-modification
-  set Sensitivity_F Sensitivity_F + 1
+  set Y_F Y_F + 1
+  set Sensitivity_F 1 - (Y_F / (Y_F + hsc_f))
 end
 ;#############################################################################################################################################
 to make_rain
@@ -251,7 +251,8 @@ ask Rain_Stations[
 end
 ;#############################################################################################################################################
 to rain-waterCapture
-  set Sensitivity_S Sensitivity_S + 1
+  set Y_S Y_S + 1
+  set Sensitivity_S 1 - (Y_S / (Y_S + hsc_s))
 end
 ;#############################################################################################################################################
 to water-Purchase
@@ -292,7 +293,6 @@ to update_maximum_full  ;; update the maximum or minimum of values use by the mo
   set health_max max [health] of agebs
   set monto_max max [monto] of agebs
   set scarcity_max max [scarcity] of agebs
-  set Presion_social_max max [Presion_social] of agebs
   set Presion_social_annual_max max [Presion_social_annual] of agebs
   set falta_d_max 1
   set falta_Ab_max 1
@@ -307,8 +307,8 @@ to update_maximum_full  ;; update the maximum or minimum of values use by the mo
   set d_new_max max [d_new] of agebs
   set d_water_distribution_max max [d_water_distribution] of agebs
   set d_water_importacion_max max [d_water_importacion] of agebs
-  set Sensitivity_F_Max  max [sensitivity_F] of agebs    ;max level of changes made to houses
-  set Sensitivity_S_Max  max [sensitivity_S] of agebs    ;max level of changes made to houses
+  set Y_F_Max  max [Y_F] of agebs    ;max level of changes made to houses
+  set Y_S_Max  max [Y_S] of agebs    ;max level of changes made to houses
   set Vulnerability_S_max max [vulnerability_S] of agebs
   set Vulnerability_F_max max [vulnerability_F] of agebs
   set densidad_pop_max max [densidad_pop] of agebs
@@ -475,6 +475,7 @@ to repair-Infra_Ab [estado]
 ;        print (list d_mantenimiento who ID Antiguedad-infra_Ab days_wno_water)
         if Budget < recursos_para_mantenimiento[                                       ;agebs that were selected for maitenance do not reduce its age
           set Antiguedad-infra_Ab Antiguedad-infra_Ab - Eficiencia_Mantenimiento * Antiguedad-infra_Ab
+          ask pozos_agebs [set age_pozo age_pozo + Eficiencia_Mantenimiento * age_pozo]
           set Budget Budget + 1
           set investment_here_AB 1
           set investment_here_accumulated_AB investment_here_accumulated_AB + 1
@@ -490,6 +491,7 @@ to repair-Infra_Ab [estado]
 
         if Budget < recursos_para_mantenimiento[                                       ;agebs that were selected for maitenance do not reduce its age
           set Antiguedad-infra_Ab Antiguedad-infra_Ab - Eficiencia_Mantenimiento * Antiguedad-infra_Ab
+          ask pozos_agebs [set age_pozo age_pozo + Eficiencia_Mantenimiento * age_pozo]
           set Budget Budget + 1
           set investment_here_AB 1
           set investment_here_accumulated_AB investment_here_accumulated_AB + 1
@@ -511,6 +513,7 @@ to New-Infra_Ab [estado]
       ask ? [
         if Budget < recursos_nuevaInfrastructura and houses_with_abastecimiento < 0.99 [
           set houses_with_abastecimiento ifelse-value (houses_with_abastecimiento < 1)[houses_with_abastecimiento + Eficiencia_NuevaInfra * (1 - houses_with_abastecimiento)][1]
+          ask pozos_agebs with [age_pozo > 40 * 54][set age_pozo 1]
           set falta_Ab 1 - houses_with_abastecimiento
           set Budget Budget + 1
           set investment_here_AB 1
@@ -527,6 +530,7 @@ to New-Infra_Ab [estado]
       ask ? [
         if Budget < recursos_nuevaInfrastructura and houses_with_abastecimiento < 0.99 [
           set houses_with_abastecimiento ifelse-value (houses_with_abastecimiento < 1)[houses_with_abastecimiento + Eficiencia_NuevaInfra * (1 - houses_with_abastecimiento)][1]
+          ask pozos_agebs with [age_pozo > 40 * 54][set age_pozo 1]
           set falta_Ab 1 - houses_with_abastecimiento
 
           set Budget Budget + 1
@@ -537,8 +541,7 @@ to New-Infra_Ab [estado]
         ]
       ]
     ]
-
-      ]
+  ]
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -571,7 +574,7 @@ to repair-Infra_D [estado]
           set investment_here_accumulated_D investment_here_accumulated_D + 1
           set investment_here_D_mant 1
           set investment_here_accumulated_D_mant investment_here_accumulated_D_mant + 1
-]
+        ]
       ]
     ]
   ]
@@ -711,23 +714,24 @@ end
 ;#############################################################################################################################################
 to water_distribution [estado recursos] ;distribution of water from government by truck
 let available_trucks recursos
-    foreach sort-on [(1 - d_water_distribution)]  agebs with [CV_estado = estado][
-    ? ->
-    ask ? [
-        if-else available_trucks > 0 and weekly_water_available > 0 [
-          set water_distributed_trucks 1
-          set available_trucks available_trucks - 1
-          set days_water_in days_water_in + 7 * truck_capasity
-          set weekly_water_available weekly_water_available - 7 * truck_capasity
-          if available_trucks < 0 [set available_trucks 0]
-        ]
-        [
-          set water_distributed_trucks 0
-        ]
-        water_in_a_week ;define if agebs receive water or not after the mean_days_withNo_water, and the decision of the manager to sent water by other means (trucks)
-
+    foreach sort-on [(1 - d_water_distribution)]  agebs with [CV_estado = estado and NOWater_week_pois > 0][
+    ageb_to_distribute ->
+    ask ageb_to_distribute [
+      if-else available_trucks > 0 and weekly_water_available > 0 [
+        set water_distributed_trucks 1
+        set available_trucks available_trucks - 1
+        set days_water_in 7
+        set weekly_water_available weekly_water_available - NOWater_week_pois * truck_capasity
+        set water_distributed_trucks NOWater_week_pois * truck_capasity
+        if available_trucks < 0 [set available_trucks 0]
       ]
+      [
+        set water_distributed_trucks 0
+      ]
+      water_in_a_week ;define if agebs receive water or not after the mean_days_withNo_water, and the decision of the manager to sent water by other means (trucks)
+
     ]
+  ]
 end
 ;##############################################################################################################
 to water_by_pipe
@@ -741,22 +745,22 @@ end
 ;##############################################################################################################
 to water_in_a_week  ;this procedure check if water was distributed to an ageb. This is true if water came from pipes, trucks or buying water
   if-else water_distributed_trucks = 1 [
-    set water_in 7
+    set water_in water_distributed_trucks + water_distributed_pipes
     set days_wno_water 0
   ]
   [
-    set water_in days_water_in
+    set water_in water_distributed_pipes
     set days_wno_water days_wno_water + NOWater_week_pois
     set scarcity_annual scarcity_annual + NOWater_week_pois
   ]
-  if days_wno_water > 100 [set days_wno_water 0]
-  ;
+;  if days_wno_water > 100 [set days_wno_water 0]
 end
 ;#############################################################################################################################################
 to condition_infra_change
   set Antiguedad-infra_Ab Antiguedad-infra_Ab + 7
   set Antiguedad-infra_D Antiguedad-infra_D + 7
   set Capacidad_D Capacidad_D - Capacidad_D * decay_capacity
+  ask pozos_agebs [set age_pozo age_pozo + 7]
 end
 ;##############################################################################################################
 to water_production_importation
@@ -766,6 +770,7 @@ to water_production_importation
 end
 ;#############################################################################################################################################
 to protest  ;if the distant to ideal for protest is greater than
+  set protest_here  1
   set Presion_social_annual Presion_social_annual + 1
   if months = 1 and weeks = 1 [
     set Presion_social_annual 0
@@ -867,8 +872,8 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
     ] ;accion colectiva
       ;############################################################################################
     if Visualization = "Peticion ciudadana" and ticks > 1 [
-      set size Presion_social_annual  * factor_scale
-      set color  scale-color red Presion_social_annual 0 Presion_social_annual_max
+      set size protest_here * factor_scale
+      set color  15 * protest_here
     ] ;;social pressure
       ;############################################################################################
     if Visualization = "Capacidad_D" and ticks > 1 [
@@ -882,7 +887,7 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
     ;############################################################################################
     if visualization = "Captacion de Agua" and ticks > 1 [set color scale-color blue d_Captacion_agua 0 d_Captacion_agua_max]
     ;############################################################################################
-    if visualization = "Modificacion de la vivienda"and ticks > 1 [set color scale-color magenta Sensitivity_S 0 Sensitivity_S_max]
+    if visualization = "Modificacion de la vivienda"and ticks > 1 [set color scale-color magenta Y_S 0 Y_S_max]
     ;############################################################################################
     if visualization = "Extraction Agua WaterOperator" and ticks > 1 [set color scale-color magenta d_water_extraction 0 d_water_extraction_max]
     ;############################################################################################
@@ -1229,8 +1234,8 @@ end
 ;##############################################################################################################
 ;##############################################################################################################
 to Vulnerability_indicator
-  set vulnerability_F (flooding * (2 - Sensitivity_F / Sensitivity_F_max))  / ( 1 + 100 * Income-index)
-  set vulnerability_S (scarcity * (2 - Sensitivity_S / Sensitivity_S_max))  / ( 1 + 100 * Income-index)
+  set vulnerability_F (flooding * Sensitivity_F)  / ( 1 + Income-index)
+  set vulnerability_S (scarcity * Sensitivity_S)  / ( 1 + Income-index)
 end
 ;##############################################################################################################
 ;##############################################################################################################
@@ -1286,7 +1291,6 @@ to update_maximum [estado]  ;; update the maximum or minimum of values use by th
   set health_max max [health] of agebs with [CV_estado = estado]
   set monto_max max [monto] of agebs with [CV_estado = estado]
   set scarcity_max max [scarcity] of agebs with [CV_estado = estado]
-  set Presion_social_max max [Presion_social] of agebs  with [CV_estado = estado]
   set Presion_social_annual_max max [Presion_social_annual] of agebs with [CV_estado = estado]
   set falta_d_max 1
   set falta_Ab_max 1
@@ -1301,8 +1305,8 @@ to update_maximum [estado]  ;; update the maximum or minimum of values use by th
   set d_new_max max [d_new] of agebs with [CV_estado = estado]
   set d_water_distribution_max max [d_water_distribution] of agebs with [CV_estado = estado]
   set d_water_importacion_max max [d_water_importacion] of agebs with [CV_estado = estado]
-  set Sensitivity_F_Max  max [sensitivity_F] of agebs with [CV_estado = estado]    ;max level of changes made to houses
-  set Sensitivity_S_Max  max [sensitivity_S] of agebs with [CV_estado = estado]   ;max level of changes made to houses
+  set Y_F_Max  max [Y_F] of agebs with [CV_estado = estado]    ;max level of changes made to houses
+  set Y_S_Max  max [Y_S] of agebs with [CV_estado = estado]   ;max level of changes made to houses
   set Vulnerability_S_max max [vulnerability_S] of agebs with [CV_estado = estado]
   set Vulnerability_F_max max [vulnerability_F] of agebs with [CV_estado = estado]
   set densidad_pop_max max [densidad_pop] of agebs with [CV_estado = estado]
@@ -1409,7 +1413,7 @@ CHOOSER
 Visualization
 Visualization
 "Accion Colectiva" "Peticion ciudadana" "Captacion de Agua" "Compra de Agua" "Modificacion de la vivienda" "Areas prioritarias Mantenimiento" "Areas prioritarias Nueva Infraestructura" "Distribucion de Agua SACMEX" "GoogleEarth" "K_groups" "Salud" "Escasez" "Encharcamientos" "% houses with supply" "% houses with drainage" "P. Falla Ab" "P. Falla D" "Capacidad_D" "Zonas Aquifero" "Edad Infraestructura Ab." "Edad Infraestructura D" "Income-index" "hundimiento" "Value_function_edad_Ab" "value_function_Age_d" "value_function_scarcity" "value_function_floods" "value_function_falta_d" "value_function_falta_Ab" "value_function_capasity" "value_function_precipitation"
-26
+1
 
 BUTTON
 1222
@@ -1448,8 +1452,8 @@ NIL
 SLIDER
 27
 421
-227
-454
+235
+456
 Requerimiento_deAgua
 Requerimiento_deAgua
 0.007
@@ -1461,10 +1465,10 @@ Requerimiento_deAgua
 HORIZONTAL
 
 SLIDER
-35
-79
-235
-112
+36
+102
+236
+135
 recursos_para_mantenimiento
 recursos_para_mantenimiento
 1
@@ -1535,10 +1539,10 @@ escala
 0
 
 SWITCH
-255
-515
-428
-548
+29
+705
+202
+738
 export-to-postgres
 export-to-postgres
 1
@@ -1561,10 +1565,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-35
-119
-236
-152
+36
+142
+237
+175
 recursos_nuevaInfrastructura
 recursos_nuevaInfrastructura
 0
@@ -1576,10 +1580,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-34
-156
-236
-189
+35
+179
+237
+212
 Recursos_para_distribucion
 Recursos_para_distribucion
 0
@@ -1669,17 +1673,17 @@ factor_scale
 factor_scale
 0.000000000000000001
 4
-0.404
+3.817
 0.001
 1
 NIL
 HORIZONTAL
 
 SWITCH
-255
-482
-402
-515
+29
+672
+204
+707
 ANP
 ANP
 0
@@ -1819,15 +1823,45 @@ PENS
 "Estado" 1.0 0 -7500403 true "" "plot mean [capacidad_D] of agebs with [CV_estado = \"15\"]"
 
 SLIDER
-34
-194
-235
-227
+35
+216
+236
+249
 recursos_extraccion
 recursos_extraccion
 0
 2400
 27.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+27
+588
+231
+621
+hsc_s
+hsc_s
+0
+100
+10.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+27
+624
+229
+657
+hsc_f
+hsc_f
+0
+100
+50.0
 1
 1
 NIL
