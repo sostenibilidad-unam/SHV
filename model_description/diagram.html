@@ -20,36 +20,39 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/semantic.min.js"
 	    integrity="sha256-Bhi6GMQ/72uYZcJXCJ2LToOIcN3+Cx47AZnq/Bw1f7A="
 	    crossorigin="anonymous"></script>
-	    
+
 
 <script>
 function svgElementClicked(text){
       console.log(text);
       var s = document.getElementById("desc");
-      s.innerHTML = text;
+      s.innerHTML = '<embed src="'+text+'.pdf" width="100%" height="800" alt="pdf" pluginspage="http://www.adobe.com/products/acrobat/readstep2.html">'
 }
- 
+
     </script>
 
   </head>
 
 <body style="margin:1em">
-<div id="desc">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis vestibulum elit risus, congue tempor augue venenatis in. Nam aliquet sem ut eros molestie, eget aliquet ipsum dignissim. Sed sem sapien, luctus hendrerit enim volutpat, fringilla faucibus metus. Etiam vel leo vitae purus feugiat fermentum id in nibh. Morbi facilisis nunc dignissim justo mollis suscipit. Sed rutrum lorem pharetra diam interdum, a iaculis ante varius. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Nulla mattis pellentesque augue, in porttitor sem fringilla ac. Proin consectetur quis massa non semper. Cras dapibus bibendum leo vel elementum. Vestibulum ac turpis risus. Vivamus ipsum erat, blandit venenatis quam nec, ornare bibendum arcu. Cras semper orci sit amet posuere molestie. Curabitur fermentum hendrerit sem at feugiat.
 
-Phasellus consectetur dignissim laoreet. Quisque euismod convallis commodo. Etiam blandit nibh id felis venenatis rhoncus. Vivamus mi nibh, convallis a sodales ac, tempor sed diam. Donec vehicula vitae arcu in elementum. Nunc euismod euismod sapien non fringilla. Phasellus eu magna lacinia, euismod odio sit amet, rutrum mi. Nunc iaculis velit id elit ultrices ultricies.
-
-Maecenas varius efficitur gravida. Nunc viverra, orci sit amet vestibulum sodales, erat ex feugiat ligula, in dictum mi dolor quis dui. Cras diam nunc, luctus et massa euismod, sollicitudin facilisis felis. Vestibulum fermentum quis magna eu elementum. Ut vulputate et felis quis fringilla. Suspendisse interdum dictum interdum. Pellentesque id leo in mauris aliquam facilisis non vitae massa. Pellentesque a lectus placerat, facilisis nulla ut, lobortis diam. Morbi vel tempor risus.
-
-Vivamus aliquet id arcu non tincidunt. Pellentesque lorem neque, sagittis sit amet auctor ut, scelerisque sed eros. Vivamus sit amet imperdiet metus. Donec nibh dolor, venenatis quis tristique eget, blandit vitae mauris. Nulla eget dictum enim, non tristique nisi. Nullam ut scelerisque orci, id iaculis eros. Vestibulum varius aliquet elit, ac mattis nisl posuere in. Donec consectetur tortor nec elit varius mollis. Quisque id volutpat mi. Proin vulputate lectus urna, ut semper felis tincidunt non. Aliquam leo enim, gravida nec gravida a, condimentum sit amet lectus. Nulla nibh ante, efficitur eget porttitor sit amet, luctus luctus urna.
-
-In semper gravida orci vel tempus. Ut iaculis, arcu non pulvinar laoreet, felis massa hendrerit diam, a efficitur nulla leo id mi. Curabitur laoreet varius augue eu euismod. Integer nibh nulla, lacinia eu vulputate vitae, luctus id nulla. Duis vel massa a est varius molestie in vel nunc. Vivamus sed consectetur massa. Quisque rhoncus elementum metus, at mattis elit sodales eget. Phasellus congue sem quis lacinia aliquam. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Suspendisse venenatis, tortor a tristique sollicitudin, justo massa molestie elit, ac laoreet turpis metus id mi. Nullam sed nibh eu lorem congue varius non sit amet massa. Morbi at mauris id enim tristique tincidunt. Maecenas interdum nisl urna, et cursus lorem iaculis sollicitudin. Sed mollis nisi nunc, eget aliquam mauris suscipit nec. Curabitur interdum risus dui, a rhoncus purus egestas a.</div>
-<object type="image/svg+xml" data="aguas.svg" width="20%"/>
+  <div class="ui two column stackable grid">
+    <div class="six wide column">
+      <div class="ui segment">
+        <div id="desc">
+          <embed src="calculate-distances-to-ideal-points.pdf" width="100%" height="700" alt="pdf" pluginspage="http://www.adobe.com/products/acrobat/readstep2.html">
 
 
-   
-    
+        </div>
+      </div>
+    </div>
+    <div class="ten wide column">
+      <div class="ui segment"><object type="image/svg+xml" data="aguas.svg" width="100%" /></div>
+    </div>
 
-    
+  </div>
+
+
+
   </body>
 
 </html>

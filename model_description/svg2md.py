@@ -1,7 +1,7 @@
 import xml.etree.ElementTree as etree
 from slugify import slugify
 
-tree = etree.parse("diagrams2.svg")
+tree = etree.parse("diagrams5.svg")
 root = tree.getroot()
 root.set('id', "svgroot")
 root.set('width', "60%")
