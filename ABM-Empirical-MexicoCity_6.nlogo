@@ -1453,7 +1453,7 @@ SLIDER
 27
 421
 235
-456
+454
 Requerimiento_deAgua
 Requerimiento_deAgua
 0.007
@@ -1683,7 +1683,7 @@ SWITCH
 29
 672
 204
-707
+705
 ANP
 ANP
 0
@@ -2237,8 +2237,8 @@ NetLogo 6.0.1
     <setup>setup</setup>
     <go>go</go>
     <final>export-map</final>
-    <timeLimit steps="100"/>
-    <metric>count turtles</metric>
+    <timeLimit steps="2016"/>
+    <metric>mean [age_d] of agebs</metric>
     <enumeratedValueSet variable="Visualization">
       <value value="&quot;Escasez&quot;"/>
     </enumeratedValueSet>
