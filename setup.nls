@@ -577,7 +577,7 @@ to define-infrastructuresystems
   set count_pozos_initial count pozos with [aquifer = "2"]
 end
 
-to load-GIS-data
+to load-GIS-data  ;read GIS layers and save it as netlogo global variables
   set Agebs_map_full_csv_list csv:from-file "data/ageb_abm_full_centroid_acuif.csv"
   set Agebs_map_full_csv matrix:from-row-list  Agebs_map_full_csv_list
   
@@ -1130,7 +1130,8 @@ end
   let MMWaterOperator_S csv:from-file  "data/DF101215_GOV_AP modificado PNAS.weighted.csv" ;DF101215_GOV_AP modificado.weighted
   let MMWaterOperator_limit csv:from-file  "data/DF101215_GOV_AP modificado PNAS.limit.csv"
   
-  set alternative_names(list item 1 item 2 MMWaterOperator_limit   ;define the alternatives
+  set alternative_names (list item 1 item 2 MMWaterOperator_limit   ;define the alternatives
+    
     item 1 item 3 MMWaterOperator_limit
     item 1 item 4 MMWaterOperator_limit
     item 1 item 5 MMWaterOperator_limit
@@ -1161,9 +1162,9 @@ end
       set ID "DF101215_GOV"
       set name_action ?
       set label name_action
-      set criteria_values (list 0 0 0 0 0 0 0 0 0 0 0 0)
-      set criteria_max (list 0 0 0 0 0 0 0 0 0 0 0 0)
-      set rescaled_criteria_values (list 0 0 0 0 0 0 0 0 0 0 0 0)
+      set criteria_values (list 0 0 0 0 0 0 0 0 0 0 0 0 0)
+      set criteria_max (list 0 0 0 0 0 0 0 0 0 0 0 0 0)
+      set rescaled_criteria_values (list 0 0 0 0 0 0 0 0 0 0 0 0 0)
       let w_sum sum (list item 2 item 7 MMWaterOperator_limit
         item 2 item 8 MMWaterOperator_limit
         item 2 item 9 MMWaterOperator_limit
@@ -1176,6 +1177,7 @@ end
         item 2 item 16 MMWaterOperator_limit
         item 2 item 17 MMWaterOperator_limit
         item 2 item 18 MMWaterOperator_limit
+        item 2 item 19 MMWaterOperator_limit
       )
       
       set criteria_weights (
@@ -1191,6 +1193,7 @@ end
         (item 2 item 16 MMWaterOperator_limit / w_sum)
         (item 2 item 17 MMWaterOperator_limit / w_sum)
         (item 2 item 18 MMWaterOperator_limit / w_sum)
+        (item 2 item 19 MMWaterOperator_limit / w_sum)
       )
       
       set criteria_names (list item 1 item 7 MMWaterOperator_limit
@@ -1205,7 +1208,9 @@ end
         item 1 item 16 MMWaterOperator_limit
         item 1 item 17 MMWaterOperator_limit
         item 1 item 18 MMWaterOperator_limit
+        item 1 item 19 MMWaterOperator_limit
       )
+      print item 1 item 19 MMWaterOperator_limit
       if-else ANP = TRUE[
         set alternative_weights item (jj + 2) item (jj + 2) MMWaterOperator_limit /(item 5 item 5 MMWaterOperator_limit + item 4 item 4 MMWaterOperator_limit + item 3 item 3 MMWaterOperator_limit + item 6 item 6 MMWaterOperator_limit + item 2 item 2 MMWaterOperator_limit)
       ][
@@ -1358,9 +1363,7 @@ end
 to set_maximum [estado]   ;; update the maximum or minimum of values use by the model to calculate range of the value functions this time relative to the domain of the agent who needs the inforamtion to take decition
   set Antiguedad-infra_Ab_max 80 * 365
   set Antiguedad-infra_D_max 80 * 365
-  print [desperdicio_agua] of agebs with [CV_estado = estado]
   set desperdicio_agua_max 100;max [desperdicio_agua] of agebs with [CV_estado = estado];;max level of perception of deviation
-  print estado
   set days_wno_water_max 30
   set Gasto_hidraulico_max max [Gasto_hidraulico] of agebs with [CV_estado = estado]
   set presion_hidraulica_max max [presion_hidraulica] of agebs  with [CV_estado = estado]
