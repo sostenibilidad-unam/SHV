@@ -16,3 +16,6 @@ venv
 .project
 .pydevproject
 .settings
+*.DS_Store
+.ABM-Empirical-MexicoCity_6.tmp.nlogo
+._*
