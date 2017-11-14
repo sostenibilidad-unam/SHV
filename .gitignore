@@ -21,6 +21,6 @@ venv
 ._*
 bakup
 value_function_images
-\~*
+~*
 \#*
 *.pyc
