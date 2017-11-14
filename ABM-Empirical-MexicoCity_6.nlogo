@@ -1,4 +1,4 @@
-extensions [GIS bitmap profiler csv matrix]
+extensions [GIS bitmap profiler csv matrix R]
 __includes["setup.nls" "value_functions.nls"]
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -108,10 +108,13 @@ to show_AGEBS
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
-to residents-decisions  ;calculation of distance metric using compromize programing. Need to update value of the atributes in the landscape and its standarize value
+ ;calculate-distances-to-ideal-points;
+to residents-decisions  ;calculation of distance metric using the distance metric. The code updates the value of the atributes in the landscape and its standarize value
   if group_kmean = 1 or group_kmean = 3[ ;#residents type Xochimilco
     ask Alternatives_Xo [
+      ;normalize-criteria-values;
       update_criteria_and_valueFunctions_residentes
+      ;/normalize-criteria-values;
       let ww filter [ii -> ii > cut-off_priorities] criteria_weights                       ;; filter for the criterias that are most influential (> 0.1) in the decision
       let vv []
       (foreach criteria_weights rescaled_criteria_values [
@@ -207,10 +210,10 @@ to residents-decisions  ;calculation of distance metric using compromize program
     ]
   ]
 end
-
+;/calculate-distances-to-ideal-points;
 ;#############################################################################################################################################
 ;#############################################################################################################################################
-;take-action1
+;take-action1;
 ;resident decides what action to take. The action with the large metric is defined
 to take_action_residents
   if d_Modificacion_vivienda > max (list d_Movilizaciones d_Accion_colectiva d_Captacion_agua d_Compra_agua)
@@ -276,7 +279,7 @@ to protest  ;if the distant to ideal for protest is greater than
     set Presion_social_annual 0
   ]
 end
-;/take-action1
+;/take-action1;
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 to update_maximum_full  ;; update the maximum or minimum of values use by the model to calculate range of the value functions
@@ -431,10 +434,10 @@ to WaterOperator-decisions [estado]
  ;water operator potable water system decision-making process
 
     ask alternatives_WaterOperator_AB [
-;normalize-criteria-values
+;normalize-criteria-values;
       update_criteria_and_valueFunctions_WaterOperator;
-;/normalize-criteria-values
-;calculate-distances-to-ideal-points1
+;/normalize-criteria-values;
+;calculate-distances-to-ideal-points1;
       let ddd (ideal_distance alternative_weights rescaled_criteria_values criteria_weights 1)  ;function in value_function.nls
 
 ;#Alternative Mantenimiento Infrastructura
@@ -472,15 +475,15 @@ to WaterOperator-decisions [estado]
       ]
     ]
   ]
-;/calculate-distances-to-ideal-points1
+;/calculate-distances-to-ideal-points1;
 
 ;create new connections to the dranage and supply system by assuming it occur 1 time a year ;need to add changes in the capasity of the infrastructure due to new investments
 
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
-;site-selection
-;take-action1
+;site-selection;
+;take-action1;
 to repair-Infra_Ab [estado]
   let Budget 0
   ifelse (actions_per_agebs = "single-action")[
@@ -639,18 +642,6 @@ to New-Infra_D [estado]
     ]
 end
 ;#############################################################################################################################################
-;to water_extraccion
-;  let i 0
-;
-;  foreach zonas_aquiferas [
-;    ? ->
-;    set from_d_to_bombeo replace-item i from_d_to_bombeo ifelse-value (any? agebs with [zona_aquifera = ?]) [(sum [(1 - p_failure_AB) * d_water_extraction] of agebs with [zona_aquifera = ?])]["NA"]
-;    set i i + 1
-;  ]
-;
-;end
-
-;#############################################################################################################################################
 to water_extraction2 [estado]
   let Budget 0
   ifelse (actions_per_agebs = "single-action")[
@@ -741,19 +732,19 @@ let available_trucks recursos
     ]
   ]
 end
-;/take-action1
-;/site-selection
+;/take-action1;
+;/site-selection;
 ;#############################################################################################################################################
-;subsidence
+;subsidence;
 to change_subsidence_rate
   let count_pozos count pozos with [aquifer = "2"]
   ask agebs with [aquifer = "2"][
     set hundimiento hundimiento *  (count_pozos / count_pozos_initial)
   ]
 end
-;/subsidence
+;/subsidence;
 ;##############################################################################################################
-;water-supply-simulation
+;water-supply-simulation;
 to water_by_pipe
 ;having water by pipe depends on mean_days_withNo_water (p having water based on info collected by ALE,about days with water), infrastructure and ifra failure distribution of water by trucks
   set NOWater_week_pois random-poisson (mean_days_withNo_water + alt * (altitude - alt_mean_Delegation) + a_failure * (ifelse-value (p_falla_AB > random-float 1) [1][0]))
@@ -775,7 +766,7 @@ to water_in_a_week  ;this procedure check if water was distributed to an ageb. T
   ]
 ;  if days_wno_water > 100 [set days_wno_water 0]
 end
-;/water-supply-simulation
+;/water-supply-simulation;
 ;#############################################################################################################################################
 to condition_infra_change
   set Antiguedad-infra_Ab Antiguedad-infra_Ab + 7
@@ -1100,7 +1091,8 @@ end
 
 ;##############################################################################################################
 ;##############################################################################################################
-;flooding-simulation
+;flooding-simulation;
+;simulation of annual flood events per census block using contingency tables and bayes rule
 to flood_risk  ;replace by fault
   ask Agebs [
     set flooding 0
@@ -1155,7 +1147,7 @@ end
 
 ;##############################################################################################################
 ;##############################################################################################################
-
+;this model uses contingency tables using capasity and age
 to flood_risk_capacitysewer  ;replace by fault
   ask Agebs with [Antiguedad-infra_D > 60 * 365][
     set flooding 0
@@ -1237,6 +1229,7 @@ to flood_risk_capacitysewer  ;replace by fault
 
 end
 ;###########################################################################################################################################
+;a simple glm with a poisson family and linear predictor to estimate the number of flood events per year per census block
 to flooding_glm
   let p1 -0.6110486
   let p2 0.0398420
@@ -1247,7 +1240,7 @@ to flooding_glm
    set Flooding random-poisson (p1 + p2 * (Antiguedad-infra_D / 365) + p3 * Capacidad_D + p4 * gasto_hidraulico + p5 * hundimiento)
  ]
 end
-;flooding-simulation
+;/flooding-simulation;
 ;##############################################################################################################
 ;##############################################################################################################
 ;##############################################################################################################
@@ -1269,8 +1262,9 @@ end
 
 
 ;#############################################################################################################################################
+;gastrointestinal-disease-simulation;
 to health_risk
-  ;calculate a new number of incidence based on the low land model
+  ;calculate a new number of incidence based on a spatial regreesion for the lowlands
   ask agebs [
     let intercept 0.374
     let ro 0.451
@@ -1284,6 +1278,7 @@ to health_risk
     set health new_incidences
   ]
 end
+;/gastrointestinal-disease-simulation;
 ;#############################################################################################################################################
 to update_maximum [estado]  ;; update the maximum or minimum of values use by the model to calculate range of the value functions this time relative to the domain of the agent who needs the inforamtion to take decition
   set Antiguedad-infra_Ab_max max [Antiguedad-infra_Ab] of agebs with [CV_estado = estado]
