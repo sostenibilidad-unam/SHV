@@ -30,7 +30,7 @@ to GO
      WaterOperator-decisions "15"            ;;decisions by infra operator WaterOperator (estado de Mexico)
    ]
  ]
-;;alternative_namesWaterOperator
+;;actions WaterOperator
 ;  if days = 1 [
   if weeks = 1 [
     repair-Infra_Ab "09"
@@ -210,6 +210,7 @@ end
 
 ;#############################################################################################################################################
 ;#############################################################################################################################################
+;take-action1
 ;resident decides what action to take. The action with the large metric is defined
 to take_action_residents
   if d_Modificacion_vivienda > max (list d_Movilizaciones d_Accion_colectiva d_Captacion_agua d_Compra_agua)
@@ -267,6 +268,15 @@ end
 ;#############################################################################################################################################
 to collective-action
 end
+;#############################################################################################################################################
+to protest  ;if the distant to ideal for protest is greater than
+  set protest_here  1
+  set Presion_social_annual Presion_social_annual + 1
+  if months = 1 and weeks = 1 [
+    set Presion_social_annual 0
+  ]
+end
+;/take-action1
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 to update_maximum_full  ;; update the maximum or minimum of values use by the model to calculate range of the value functions
@@ -413,19 +423,21 @@ end
 
 to WaterOperator-decisions [estado]
  ;;; Define value functions
- ;;here government clasifies each ageb based on distan from ideal point to rank them and thus priotirized interventions
- ;we call each alternative to update the value of the criteria acording to the state of the ageb
+ ;;here water operators evalaute each census block by calculating the distance from an ideal point
+ ;we call each action to normalize the value of the CB's attributes associated to a criteria
  ;we set the value functions and define the distant metric based on compromisez programing function with exponent =2
-  ;update maximum values of criteria for the municipalities influenced by WaterOperator
   ask  agebs with [CV_estado = estado][
-    ;;Tranform from natural scale to standarized scale given action 1 (Reparation of pozos)
     ;#################################################################################################################################################
+ ;water operator potable water system decision-making process
+
     ask alternatives_WaterOperator_AB [
+;normalize-criteria-values
       update_criteria_and_valueFunctions_WaterOperator;
+;/normalize-criteria-values
+;calculate-distances-to-ideal-points1
+      let ddd (ideal_distance alternative_weights rescaled_criteria_values criteria_weights 1)  ;function in value_function.nls
 
-      let ddd (ideal_distance alternative_weights rescaled_criteria_values criteria_weights 1)
-
-      ;#Alternative Mantenimiento Infrastructura
+;#Alternative Mantenimiento Infrastructura
       if name_action = "Mantenimiento"[
         ask myself[set d_mantenimiento ddd]
       ]
@@ -433,21 +445,22 @@ to WaterOperator-decisions [estado]
       if name_action = "Nueva_infraestructura"[
         ask myself[set d_new ddd]
       ]
-      ;#Alternativa 3 Distribution of water
+      ;#action Distribution of water
       if name_action = "Distribucion_agua"[
         ask myself[set d_water_distribution ddd]
       ]
-      ;#Alternativa 4 Importacion agua
+      ;#action Importacion agua
       if name_action = "Importacion_agua"[
         ask myself [set d_water_importacion ddd]
       ]
-      ;#Alternativa 5 Extraccion agua
+      ;#action Extraccion agua
       if name_action = "Extraccion_agua"[
         ask myself[set d_water_extraction ddd]
+
       ]
     ]
 
-  ;#alternative_namesof drenage
+;water operator sewer system decision-making process
     ask Alternatives_WaterOperator_D [
       update_criteria_and_valueFunctions_WaterOperator   ;
       let ddd (ideal_distance alternative_weights rescaled_criteria_values criteria_weights 1)
@@ -459,13 +472,15 @@ to WaterOperator-decisions [estado]
       ]
     ]
   ]
-
+;/calculate-distances-to-ideal-points1
 
 ;create new connections to the dranage and supply system by assuming it occur 1 time a year ;need to add changes in the capasity of the infrastructure due to new investments
 
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
+;site-selection
+;take-action1
 to repair-Infra_Ab [estado]
   let Budget 0
   ifelse (actions_per_agebs = "single-action")[
@@ -676,13 +691,6 @@ to water_extraction2 [estado]
       ]
     ]
 end
-;#############################################################################################################################################
-to change_subsidence_rate
-  let count_pozos count pozos with [aquifer = "2"]
-  ask agebs with [aquifer = "2"][
-    set hundimiento hundimiento *  (count_pozos / count_pozos_initial)
-  ]
-end
 
 ;#############################################################################################################################################
 to water_distribution [estado recursos] ;distribution of water from government by truck
@@ -705,7 +713,19 @@ let available_trucks recursos
     ]
   ]
 end
+;/take-action1
+;/site-selection
+;#############################################################################################################################################
+;subsidence
+to change_subsidence_rate
+  let count_pozos count pozos with [aquifer = "2"]
+  ask agebs with [aquifer = "2"][
+    set hundimiento hundimiento *  (count_pozos / count_pozos_initial)
+  ]
+end
+;/subsidence
 ;##############################################################################################################
+;water-supply-simulation
 to water_by_pipe
 ;having water by pipe depends on mean_days_withNo_water (p having water based on info collected by ALE,about days with water), infrastructure and ifra failure distribution of water by trucks
   set NOWater_week_pois random-poisson (mean_days_withNo_water + alt * (altitude - alt_mean_Delegation) + a_failure * (ifelse-value (p_falla_AB > random-float 1) [1][0]))
@@ -728,6 +748,7 @@ to water_in_a_week  ;this procedure check if water was distributed to an ageb. T
   ]
 ;  if days_wno_water > 100 [set days_wno_water 0]
 end
+;/water-supply-simulation
 ;#############################################################################################################################################
 to condition_infra_change
   set Antiguedad-infra_Ab Antiguedad-infra_Ab + 7
@@ -741,14 +762,7 @@ to water_production_importation
   set water_imported 7 * (Tot_water_Imported_Cutzamala + Tot_water_Imported_Lerma)
   set weekly_water_available water_produced + water_imported
 end
-;#############################################################################################################################################
-to protest  ;if the distant to ideal for protest is greater than
-  set protest_here  1
-  set Presion_social_annual Presion_social_annual + 1
-  if months = 1 and weeks = 1 [
-    set Presion_social_annual 0
-  ]
-end
+
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 to export_view  ;;export snapshots of the landscape
@@ -977,17 +991,7 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
 
   ]
 end
-;###########################################################################################################################################
-to flooding_glm
-  let p1 -0.6110486
-  let p2 0.0398420
-  let p3 -0.9402870
-  let p4 0.0082776
-  let p5  1.0044008
- ask agebs [
-   set Flooding random-poisson (p1 + p2 * (Antiguedad-infra_D / 365) + p3 * Capacidad_D + p4 * gasto_hidraulico + p5 * hundimiento)
- ]
-end
+
 ;#############################################################################################################################################
 
 ;to define_alternativesCriteria
@@ -1069,6 +1073,7 @@ end
 
 ;##############################################################################################################
 ;##############################################################################################################
+;flooding-simulation
 to flood_risk  ;replace by fault
   ask Agebs [
     set flooding 0
@@ -1123,6 +1128,7 @@ end
 
 ;##############################################################################################################
 ;##############################################################################################################
+
 to flood_risk_capacitysewer  ;replace by fault
   ask Agebs with [Antiguedad-infra_D > 60 * 365][
     set flooding 0
@@ -1203,6 +1209,18 @@ to flood_risk_capacitysewer  ;replace by fault
 
 
 end
+;###########################################################################################################################################
+to flooding_glm
+  let p1 -0.6110486
+  let p2 0.0398420
+  let p3 -0.9402870
+  let p4 0.0082776
+  let p5  1.0044008
+ ask agebs [
+   set Flooding random-poisson (p1 + p2 * (Antiguedad-infra_D / 365) + p3 * Capacidad_D + p4 * gasto_hidraulico + p5 * hundimiento)
+ ]
+end
+;flooding-simulation
 ;##############################################################################################################
 ;##############################################################################################################
 ;##############################################################################################################

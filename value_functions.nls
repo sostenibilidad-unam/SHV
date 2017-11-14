@@ -1,5 +1,6 @@
 ;#############################################################################################################################################
 ;#############################################################################################################################################
+;normalize-criteria-values
 to-report Value-Function [criteria_value xcuts criteria_categories criterium_max ycuts]    ;This function reports a standarized value for the relationship between value of criteria and motivation to act
   ;criteria_value the value of a biophysical variable in its natural scale
   ;xcuts a list of values with the proportion of the biofisical variable that reflects on the cut-offs to define the limits of the range in the linguistic scale
@@ -362,8 +363,10 @@ to update_criteria_and_valueFunctions_residentes
       ]
       )
 end
+;/normalize-criteria-values
 ;#############################################################################################################################################
 ;#############################################################################################################################################
+;calculate-distances-to-ideal-points
 to-report ideal_distance[alternative_weight rescaled_values criteria-weights exponent]
   ;this function calcualte a distance to ideal point using compromized programing metric
   ;arguments:
@@ -373,3 +376,4 @@ to-report ideal_distance[alternative_weight rescaled_values criteria-weights exp
   set dist (( alternative_weight * sum (map [[a b] -> (a ^ exponent) * (b ^ exponent)] criteria-weights rescaled_values)) ^ (1 / exponent))
      report dist
 end
+;/calculate-distances-to-ideal-points
