@@ -233,33 +233,19 @@ to update_criteria_and_valueFunctions_residentes
         ]
         ;###########################################################
         if a = "Salud"[
-          if-else effect_sensitivity = True [
-          set criteria_values replace-item i criteria_values [Sensitivity_F * health] of myself
-          ]
-          [set criteria_values replace-item i criteria_values [health] of myself
-          ]
+          set criteria_values replace-item i criteria_values [health] of myself
           set criteria_max replace-item i criteria_max health_max;change with update quantity for speed
           set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max) [0.2 0.4 0.6 0.8 1])
         ]
         ;###########################################################
         if a = "Escasez de agua"[
-          if-else effect_sensitivity = True [
-            set criteria_values replace-item i criteria_values [Sensitivity_S * days_wno_water] of myself
-          ]
-          [
-             set criteria_values replace-item i criteria_values [days_wno_water] of myself
-          ]
-          set criteria_max replace-item i criteria_max days_wno_water_max
+            set criteria_values replace-item i criteria_values [days_wno_water] of myself
+            set criteria_max replace-item i criteria_max days_wno_water_max
             set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
         ]
         ;###########################################################
         if a = "Inundaciones"[
-          if-else effect_sensitivity = True [
-            set criteria_values replace-item i criteria_values [Sensitivity_F * flooding] of myself
-          ]
-          [
-            set criteria_values replace-item i criteria_values [flooding] of myself
-          ]
+          set criteria_values replace-item i criteria_values [flooding] of myself
           set criteria_max replace-item i criteria_max flooding_max
           set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values)  [0.0625 0.125 0.25 0.5]  ["" "" "" ""] (item i criteria_max)   [0.2 0.4 0.6 0.8 1])
           if name_action = "Captacion de agua" or name_action = "Compra de agua" or name_action = "Movilizaciones"[
@@ -268,13 +254,7 @@ to update_criteria_and_valueFunctions_residentes
         ]
         ;###########################################################
         if a = "agua insuficiente" [
-          if-else effect_sensitivity = True [
-            set criteria_values replace-item i criteria_values [Sensitivity_S * days_wno_water] of myself
-          ] ;#escasez
-          [
-            set criteria_values replace-item i criteria_values [Sensitivity_S * days_wno_water] of myself
-          ]
-          
+          set criteria_values replace-item i criteria_values [days_wno_water] of myself ;#escasez
           set criteria_max replace-item i criteria_max  days_wno_water_max ;change with update quantity for speed
           set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937]  ["" "" "" ""] (item i criteria_max)  [1 0.8 0.6 0.4 0.2])
         ]
@@ -338,12 +318,8 @@ to update_criteria_and_valueFunctions_residentes
         ;###########################################################
         if a = "Eficacia del servicio" [
           if name_action = "Accion colectiva" [
-            if-else effect_sensitivity = True [
-              set criteria_values replace-item i criteria_values [Sensitivity_S * days_wno_water] of myself
-            ][
-              set criteria_values replace-item i criteria_values [days_wno_water] of myself
-            ]
-              set criteria_max replace-item i criteria_max  (days_wno_water_max) ;change with update quantity for speed
+            set criteria_values replace-item i criteria_values [days_wno_water] of myself
+            set criteria_max replace-item i criteria_max  (days_wno_water_max) ;change with update quantity for speed
             set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max) [0.2 0.4 0.6 0.8 1])
           ]
           if name_action = "Modificacion vivienda"[
