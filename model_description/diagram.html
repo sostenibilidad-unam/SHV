@@ -27,15 +27,34 @@
                   $('#tabBar .item').tab();
                   //$('.demo.menu .item').tab({history:false});
             });
+            window.onload=function() {
+            	// Get the Object by ID
+            	var a = document.getElementById("diagram-object");
+            	// Get the SVG document inside the Object tag
+            	svgDoc = a.contentDocument;
 
+
+            };
+            var svgDoc = null;
+            var current_selection = "general-description";
             function svgElementClicked(text){
-                  console.log(text);
+
                   var desc_div = document.getElementById("desc");
                   desc_div.innerHTML = '<embed src="'+text+'.pdf" width="100%" height="100%" alt="pdf" pluginspage="http://www.adobe.com/products/acrobat/readstep2.html">'
                   var code_div = document.getElementById("code");
-                  code_div.innerHTML = '<object type="text/html" data="ABM-Empirical-MexicoCity_6.html#'+text+'" width="100%" height="100%"></object>';
+                  code_div.innerHTML = '<object type="text/html" data="'+text+'.html" width="100%" height="100%"></object>';
 
+                  code_div.innerHTML = '<object type="text/html" data="'+text+'.html" width="100%" height="100%"></object>';
 
+                  if (current_selection != text){
+                    a = document.getElementById("diagram-object");
+                  	// Get the SVG document inside the Object tag
+                  	svgDoc = a.contentDocument;
+                    var elid = ""+current_selection+"-txt"
+                    svgDoc.getElementById(elid).style.fontWeight = 'normal';
+                  }
+
+                  current_selection = text;
 
             }
 
@@ -53,14 +72,17 @@
              }
 
             #diagram {
-              position: relative;
-              top: 10%;
               float: left;
-              border: 1px;
+              border: 10px;
               width: 60%;
-              height:inherit;
+              height:100%;
             }
             #desc{
+              float: left;
+              width: 100%;
+              height:inherit;
+            }
+            #codeTab{
               float: left;
               width: 100%;
               height:inherit;
@@ -75,14 +97,26 @@
               width: 40%;
               height:inherit;
             }
+            #title{
+              width: 100%;
+            }
+
         </style>
     </head>
 
     <body>
       <div id="container">
-        	<div id="diagram">
-              <object type="image/svg+xml" data="aguas.svg"></object>
-        	</div>
+
+              <div class="ui segment" id="title">
+                <h1><a href="http://patung.mine.nu/~fidel/model_description/diagram.html"><center>Agent Based Model MEGADAPT</center></a></h1>
+              </div>
+              <div class="ui segment" id="diagram">
+                  <br/>
+                  <br/>
+                  <object id="diagram-object" type="image/svg+xml" data="aguas2.svg"></object>
+
+              </div>
+
           <div id="docs">
               <div id="tabBar" class="ui top attached tabular menu">
                   <a class="active item" data-tab="description">Description</a>
@@ -91,10 +125,11 @@
               <div class="ui bottom attached active tab segment" data-tab="description" id="desc">
                   <embed src="general-model-description.pdf" width="100%" height="100%" alt="pdf" pluginspage="http://www.adobe.com/products/acrobat/readstep2.html">
               </div>
-              <div class="ui bottom attached tab segment" data-tab="code" id="code">
+              <div class="ui bottom attached tab segment" data-tab="code" id="codeTab">
 
-                  <object type="text/html" data="ABM-Empirical-MexicoCity_6.html" width="100%" height="100%"></object>';
-
+                  <div class="ui segment" id="code">
+                        <object type="text/html" data="ABM-Empirical-MexicoCity_6.html" width="100%" height="100%"></object>';
+                  </div>
               </div>
           </div>
       </div>
