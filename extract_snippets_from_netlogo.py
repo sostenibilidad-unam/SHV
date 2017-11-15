@@ -1,5 +1,7 @@
 import json
 import io
+#para usar este script se necesitan dos archivos html, para hacerlos hay que exportar desde netlogo 
+#y luego se editan en atom por ejemplo para agregar los saltos de linea despues de cada <br/ > 
 slugs = []
 with open('./model_description/slugs.json') as json_data:
     slugs = json.load(json_data)
