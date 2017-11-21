@@ -1,4 +1,4 @@
-extensions [GIS bitmap profiler csv matrix R]
+extensions [GIS bitmap profiler csv matrix]
 __includes["setup.nls" "value_functions.nls"]
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -145,7 +145,7 @@ to residents-decisions  ;calculation of distance metric using the distance metri
     ]
   ]
   ;###############################################################################################################################
-  if group_kmean = 2 or group_kmean = 0[ ;#Residents type Iztapalapa
+  if group_kmean = 0[ ;#Residents type Iztapalapa
     ask Alternatives_Iz [
       update_criteria_and_valueFunctions_residentes
       let ww filter [ii -> ii > cut-off_priorities] criteria_weights                 ;; filter for the criterias that are most influential in the desition
@@ -177,6 +177,39 @@ to residents-decisions  ;calculation of distance metric using the distance metri
       ]
     ]
   ]
+  if group_kmean = 1[ ;#Residents type Iztapalapa b
+    ask Alternatives_Iz [
+      update_criteria_and_valueFunctions_residentes
+      let ww filter [ii -> ii > cut-off_priorities] criteria_weights                 ;; filter for the criterias that are most influential in the desition
+      let vv []
+      (foreach criteria_weights rescaled_criteria_values [ [a b] ->
+        if a > cut-off_priorities [
+          set vv lput b vv
+        ]
+      ])
+      set ww map[? -> ? / sum ww] ww
+
+      let  ddd (ideal_distance alternative_weights vv ww 1)
+      if name_action = "Movilizaciones"[
+        ask myself [
+          set d_Movilizaciones ddd]
+      ]
+      if name_action = "Modificacion vivienda"  and months = 1[
+      ask myself [set d_Modificacion_vivienda ddd]
+      ]
+
+      if name_action = "Captacion de agua" and months = 6 [
+        ask myself [set d_Captacion_agua ddd]
+      ]
+      if name_action = "Accion colectiva"  and months = 1[
+        ask myself [set d_Accion_colectiva ddd]
+      ]
+      if name_action = "Compra de agua"[
+        ask myself [set d_Compra_agua ddd]
+      ]
+    ]
+  ]
+
   ;###############################################################################################################################
   if group_kmean = 4 [ ;#Residents type Magdalena Contreras
     ask Alternatives_MC [
@@ -1426,7 +1459,7 @@ CHOOSER
 Visualization
 Visualization
 "Accion Colectiva" "Peticion ciudadana" "Captacion de Agua" "Compra de Agua" "Modificacion de la vivienda" "Areas prioritarias Mantenimiento" "Areas prioritarias Nueva Infraestructura" "Distribucion de Agua SACMEX" "GoogleEarth" "K_groups" "Salud" "Escasez" "Encharcamientos" "% houses with supply" "% houses with drainage" "P. Falla Ab" "P. Falla D" "Capacidad_D" "Zonas Aquifero" "Edad Infraestructura Ab." "Edad Infraestructura D" "Income-index" "hundimiento" "Value_function_edad_Ab" "value_function_Age_d" "value_function_scarcity" "value_function_floods" "value_function_falta_d" "value_function_falta_Ab" "value_function_capasity" "value_function_precipitation"
-1
+9
 
 BUTTON
 1222
@@ -1646,7 +1679,7 @@ factor_subsidencia
 factor_subsidencia
 0
 0.01
-0.0016
+0.0028
 0.0001
 1
 NIL
@@ -1686,7 +1719,7 @@ factor_scale
 factor_scale
 0.000000000000000001
 4
-3.817
+1.921
 0.001
 1
 NIL
