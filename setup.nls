@@ -155,6 +155,7 @@ breed [drenaje_profundo tramo]
 breed [sewage_nodes sewage_node]
 directed-link-breed [D_pipes D_pipe]
 breed [Alternatives_IZ alternative_IZ]
+breed [Alternatives_IZb alternative_IZb]
 breed [Alternatives_Xo alternative_Xo]
 breed [Alternatives_MC alternative_MC]
 breed [Alternatives_MCb alternative_MCb]
@@ -344,18 +345,13 @@ Pozos-own[
   zone
 ]
 
-Alternatives_IZ-own[ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights]
-
-Alternatives_Xo-own[ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights]
-
-Alternatives_MC-own[ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights]
-
-Alternatives_MCb-own[ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights]
-
+Alternatives_IZ-own[ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights W_matrix ageb_pt]
+Alternatives_IZb-own[ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights W_matrix ageb_pt]
+Alternatives_Xo-own[ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights W_matrix ageb_pt]
+Alternatives_MC-own[ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights W_matrix ageb_pt]
+Alternatives_MCb-own[ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights W_matrix ageb_pt]
 alternatives_WaterOperator_AB-own[ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights domain]  ;value obtained for the action when calcualting the limiting matrix in super decition
-
 Alternatives_WaterOperator_D-own[ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights domain]  ;value obtained for the action when calcualting the limiting matrix in super decition
-
 Alternatives_OCVAM-own[ID CLUSTER name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale v_scale_F alternative_weights]   ;value obtained for the action when calcualting the limiting matrix in super decition
 
 ;############################################################################################################################################################################################
@@ -714,7 +710,7 @@ end
         set shape "circle"
         set size 0.5
         set hidden? false
-        set group_kmean gis:property-value ? "KMEANS5"
+        set group_kmean ifelse-value (gis:property-value ? "KMEANS5" = nobody)[0][gis:property-value ? "KMEANS5"]
         set Abastecimiento gis:property-value ?  "abastecimi"; poblacion * Requerimiento_deAgua
         set Antiguedad-infra_Ab 365 * gis:property-value ? "antiguedad"
         set Antiguedad-infra_D 365 * gis:property-value ? "antiguedad"
@@ -835,7 +831,7 @@ end
   
   let MMIz csv:from-file  "data/I080316_OTR.weighted.csv"
   let MMIz_limit csv:from-file  "data/I080316_OTR.limit.csv"
-  
+  ;Kmeangroup=0
   ;read alternative's names from limit matrix
   let alternative_names (list item 1 item 2 MMIz_limit
     item 1 item 3 MMIz_limit
@@ -849,9 +845,31 @@ end
     ? ->
     create-Alternatives_IZ 1[
       
+      ;insert weighted_matrix
+      set W_matrix  []
+      let MMIz_limit_new []
+      let VMMIz_limit []
+      let cc 2
+      let cri 2
+      while [cri < 16][   ;tranfor the data from.csv to a matrix to manipulte using matrix extention
+        set cc 2
+        while [cc < 16][
+      set VMMIz_limit lput (item cc item cri MMIz) VMMIz_limit
+          set cc cc + 1
+        ]
+        set cri cri + 1
+        set MMIz_limit_new lput VMMIz_limit MMIz_limit_new
+        set VMMIz_limit []
+      ]
+      set W_matrix MMIz_limit_new
+   
+      
+      
+      
       set ID "IO80316"
       set name_action ?
       set label name_action
+      set ageb_pt 4085
       set criteria_values (list 0 0 0 0 0 0 0 0 0)
       set criteria_max (list 0 0 0 0 0 0 0 0 0)
       set rescaled_criteria_values (list 0 0 0 0 0 0 0 0 0)
@@ -907,10 +925,106 @@ end
   ask Alternatives_IZ with [name_action = "Modificacion vivienda"] [set v_scale_S [0 1 1 1 1]]
   
   ;#############################################################################################
-  ;Xochimilco
+ ;Iztapalapa B
+  let MMIz_b csv:from-file  "data/I072816_OTR.weighted.csv"
+  let MMIz_b_limit csv:from-file  "data/I072816_OTR.limit.csv"
+  ;Kmeangroup=1
+  ;read alternative's names from limit matrix
+  set alternative_names (list item 1 item 2 MMIz_b_limit
+    item 1 item 3 MMIz_b_limit
+    item 1 item 4 MMIz_b_limit
+    item 1 item 5 MMIz_b_limit
+    item 1 item 6 MMIz_b_limit)
+  set jj 0 
+  
+  ;read criteria names and weights to set agent's attributes
+  foreach alternative_names[
+    ? ->
+    create-Alternatives_IZb 1[
+      
+      ;insert weighted_matrix
+      set W_matrix  []
+      let MMIz_b_limit_new []
+      let VMMIz_b_limit []
+      let cc 2
+      let cri 2
+      while [cri < 17][   ;tranfor the data from.csv to a matrix to manipulte using matrix extention
+        set cc 2
+        while [cc < 17][
+      set VMMIz_b_limit lput (item cc item cri MMIz_b) VMMIz_b_limit
+          set cc cc + 1
+        ]
+        set cri cri + 1
+        set MMIz_b_limit_new lput VMMIz_b_limit MMIz_b_limit_new
+        set VMMIz_b_limit []
+      ]
+      set W_matrix MMIz_b_limit_new
+   
+  
+      
+      set ID "I072816"
+      set name_action ?
+      set label name_action
+      set criteria_values (list 0 0 0 0 0 0 0 0 0)
+      set criteria_max (list 0 0 0 0 0 0 0 0 0)
+      set rescaled_criteria_values (list 0 0 0 0 0 0 0 0 0)
+      let w_sum sum (list
+        item 6 item 7 MMIz_b_limit
+        item 6 item 8 MMIz_b_limit
+        item 6 item 9 MMIz_b_limit
+        item 6 item 10 MMIz_b_limit
+        item 6 item 11 MMIz_b_limit
+        item 6 item 12 MMIz_b_limit
+        item 6 item 13 MMIz_b_limit
+        item 6 item 14 MMIz_b_limit
+        item 6 item 15 MMIz_b_limit)
+      ;read criteria weight
+      set criteria_weights (list (item 6 item 7 MMIz_b_limit / w_sum)
+        (item 6 item 8 MMIz_b_limit / w_sum)
+        (item 6 item 9 MMIz_b_limit / w_sum)
+        (item 6 item 10 MMIz_b_limit / w_sum)
+        (item 6 item 11 MMIz_b_limit / w_sum)
+        (item 6 item 12 MMIz_b_limit / w_sum)
+        (item 6 item 13 MMIz_b_limit / w_sum)
+        (item 6 item 14 MMIz_b_limit / w_sum)
+        (item 6 item 15 MMIz_b_limit / w_sum))
+      ;read critera names
+      set criteria_names (
+        list item 1 item 7 MMIz_b_limit
+        item 1 item 8 MMIz_b_limit
+        item 1 item 9 MMIz_b_limit
+        item 1 item 10 MMIz_b_limit
+        item 1 item 11 MMIz_b_limit
+        item 1 item 12 MMIz_b_limit
+        item 1 item 13 MMIz_b_limit
+        item 1 item 14 MMIz_b_limit
+        item 1 item 15 MMIz_b_limit)
+      
+      ;read and normalize alternative's weights to compute ratings for distance to the ideal point
+      if-else ANP = TRUE[
+        set alternative_weights item (jj + 2) item (jj + 2) MMIz_b_limit / (item 5 item 5 MMIz_b_limit + item 4 item 4 MMIz_b_limit + item 3 item 3 MMIz_b_limit + item 6 item 6 MMIz_b_limit + item 2 item 2 MMIz_b_limit)
+      ]
+      [
+        set alternative_weights 1
+      ]
+      
+    ]
+    
+    set jj jj + 1
+  ]
+  ; define scale for step value function
+  ask Alternatives_IZb with [name_action = "Compra de agua"] [set v_scale_S [0 0 0 0 0]]
+  ask Alternatives_IZb with [name_action = "Movilizaciones"] [set v_scale_S [0.05 0.05 0.05 1 1]]
+  ask Alternatives_IZb with [name_action = "Accion colectiva"] [set v_scale_S [0 1 1 1 1]]
+  ask Alternatives_IZb with [name_action = "Captacion de agua"] [set v_scale_S [0 0 0 0 0]]
+  ask Alternatives_IZb with [name_action = "Modificacion vivienda"] [set v_scale_S [0 1 1 1 1]]
+  
+  ;#############################################################################################
+  ;Xochimilco a
+
   let MMXo_L csv:from-file  "data/X062916_OTR_a.limit.csv"
   let MMXo_W csv:from-file  "data/X062916_OTR_a.weighted.csv"
-  
+
   set jj 0
   
   set alternative_names(list item 1 item 2 MMXo_L   ;obtain the name of the alternatives performed
@@ -922,7 +1036,30 @@ end
   foreach alternative_names[
     ? ->
     create-Alternatives_Xo 1[
-      set ID "XO62916_a"
+      
+      
+      ;insert weighted_matrix
+      set W_matrix  []
+      let MMXo_limit_new []
+      let VMMXo_limit []
+      let cc 2
+      let cri 2
+      while [cri < 17][   ;tranfor the data from.csv to a matrix to manipulte using matrix extention
+        set cc 2
+        while [cc < 17][
+      set VMMXo_limit lput (item cc item cri MMXo_W) VMMXo_limit
+          set cc cc + 1
+        ]
+        set cri cri + 1
+        set MMXo_limit_new lput VMMXo_limit MMXo_limit_new
+        set VMMXo_limit []
+      ]
+      set W_matrix MMXo_limit_new
+   
+      
+      
+      
+      set ID "XO62916_a (Tiziliclipa)"
       set name_action ?
       set label name_action
       set criteria_values (list 0 0 0 0 0 0 0 0 0)
@@ -979,11 +1116,11 @@ end
   
   
   ;#########################################################################
-  
+;Magdalena contreras
   let MMMC csv:from-file  "data/MC080416_OTR_a.weighted.csv"
   let MMMC_limit csv:from-file  "data/MC080416_OTR_a.limit.csv"
-  
-  
+    ;Kmeangroup=4
+  print MMMC_limit
   
   set alternative_names(list item 1 item 2 MMMC_limit
     item 1 item 3 MMMC_limit
@@ -994,6 +1131,31 @@ end
   foreach alternative_names[
     ? ->
     create-Alternatives_MC 1[
+      
+      
+       ;insert weighted_matrix
+      set W_matrix  []
+      let MMMC_limit_new []
+      let VMMMC_limit []
+      let cc 2
+      let cri 2
+      while [cri < 13][   ;tranfor the data from.csv to a matrix to manipulte using matrix extention
+        set cc 2
+        while [cc < 13][
+      set VMMMC_limit lput (item cc item cri MMMC) VMMMC_limit
+          set cc cc + 1
+        ]
+        set cri cri + 1
+        set MMMC_limit_new lput VMMMC_limit MMMC_limit_new
+        set VMMMC_limit []
+      ]
+      set W_matrix MMMC_limit_new
+      print W_matrix
+      
+      
+      
+      
+      
       set ID "MC080416"
       set name_action ?
       set label name_action
@@ -1358,9 +1520,7 @@ end
 to set_maximum [estado]   ;; update the maximum or minimum of values use by the model to calculate range of the value functions this time relative to the domain of the agent who needs the inforamtion to take decition
   set Antiguedad-infra_Ab_max 80 * 365
   set Antiguedad-infra_D_max 80 * 365
-  print [desperdicio_agua] of agebs with [CV_estado = estado]
   set desperdicio_agua_max 100;max [desperdicio_agua] of agebs with [CV_estado = estado];;max level of perception of deviation
-  print estado
   set days_wno_water_max 30
   set Gasto_hidraulico_max max [Gasto_hidraulico] of agebs with [CV_estado = estado]
   set presion_hidraulica_max max [presion_hidraulica] of agebs  with [CV_estado = estado]

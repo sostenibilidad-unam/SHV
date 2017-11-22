@@ -63,6 +63,7 @@ to GO
 ;    if days = 1 [
     if weeks = 4 [
       residents-decisions
+      set days_wno_water 0
     ]
   ]
 
@@ -80,7 +81,9 @@ to GO
 ;##########################################################
   Landscape_visualization          ;;visualization of social and physical processes
                                    ;Supermatrix to change weights and re-calculate priorities
- ; if (years mod 10) = 0[supermatrix]
+;##########################################################
+;
+ ; print supermatrix_residents [matrix:from-row-list W_matrix] of Alternatives_IZb with [name_action = "Movilizaciones"] 0 1 12
 
  ;profiler:stop          ;; stop profiling
  ;print profiler:report
@@ -110,7 +113,16 @@ end
 ;#############################################################################################################################################
  ;calculate-distances-to-ideal-points;
 to residents-decisions  ;calculation of distance metric using the distance metric. The code updates the value of the atributes in the landscape and its standarize value
-  if group_kmean = 1 or group_kmean = 3[ ;#residents type Xochimilco
+  ;ask Alternatives_Xo  [print  supermatrix_residents W_matrix 2 4 12 [days_wno_water] of myself]
+  if months = 12 [
+    print days_wno_water
+    ;ask Alternatives_Izb [print  supermatrix_residents W_matrix 2 4 12 [days_wno_water] of myself]           ;re-evaluate the criteria weights based on the level of scarcity
+    ;ask Alternatives_Xo  [print  supermatrix_residents W_matrix 2 4 12 [days_wno_water] of myself]
+    ask Alternatives_MC  [print  supermatrix_residents W_matrix 3 2 9 [days_wno_water] of myself]
+  ]
+
+
+  if group_kmean = 2 or group_kmean = 3[ ;#residents type Xochimilco
     ask Alternatives_Xo [
       ;normalize-criteria-values;
       update_criteria_and_valueFunctions_residentes
@@ -177,8 +189,12 @@ to residents-decisions  ;calculation of distance metric using the distance metri
       ]
     ]
   ]
+ ;###############################################################################################################################
   if group_kmean = 1[ ;#Residents type Iztapalapa b
-    ask Alternatives_Iz [
+
+
+    ask Alternatives_Izb [
+
       update_criteria_and_valueFunctions_residentes
       let ww filter [ii -> ii > cut-off_priorities] criteria_weights                 ;; filter for the criterias that are most influential in the desition
       let vv []
@@ -749,12 +765,11 @@ let available_trucks recursos
     foreach sort-on [(1 - d_water_distribution)]  agebs with [CV_estado = estado and NOWater_week_pois > 0][
     ageb_to_distribute ->
     ask ageb_to_distribute [
-      if-else available_trucks > 0 and weekly_water_available > 0 [
+      if-else available_trucks > 0 [
         set water_distributed_trucks 1
         set available_trucks available_trucks - 1
         set days_water_in 7
         set weekly_water_available weekly_water_available - NOWater_week_pois * truck_capasity
-        set water_distributed_trucks NOWater_week_pois * truck_capasity
         if available_trucks < 0 [set available_trucks 0]
       ]
       [
@@ -781,6 +796,7 @@ end
 to water_by_pipe
 ;having water by pipe depends on mean_days_withNo_water (p having water based on info collected by ALE,about days with water), infrastructure and ifra failure distribution of water by trucks
   set NOWater_week_pois random-poisson (mean_days_withNo_water + alt * (altitude - alt_mean_Delegation) + a_failure * (ifelse-value (p_falla_AB > random-float 1) [1][0]))
+
   if NOWater_week_pois > 7[set NOWater_week_pois  7]
   set days_water_in 7 - NOWater_week_pois
   set water_distributed_pipes  days_water_in * Requerimiento_deAgua * poblacion * houses_with_abastecimiento
@@ -797,7 +813,7 @@ to water_in_a_week  ;this procedure check if water was distributed to an ageb. T
     set days_wno_water days_wno_water + NOWater_week_pois
     set scarcity_annual scarcity_annual + NOWater_week_pois
   ]
-;  if days_wno_water > 100 [set days_wno_water 0]
+
 end
 ;/water-supply-simulation;
 ;#############################################################################################################################################
@@ -1050,15 +1066,29 @@ end
 ;end
 ;##############################################################################################################
 ;##############################################################################################################
-to supermatrix; procedure to change the weights from the alternative_namesto the criteria
+to-report supermatrix_residents [matrix_weighed index1 index2 col value_scarcity]; procedure to change the weights from the alternative_namesto the criteria
+  let M_matrix_weighed matrix:from-row-list matrix_weighed
+  set super_matrix_parameter (1 - value_scarcity / 30)
+  let dim item 0 matrix:dimensions M_matrix_weighed
+  let v1 matrix:get M_matrix_weighed index1 col
+  let v2 matrix:get M_matrix_weighed index2 col
+  matrix:set M_matrix_weighed index1 col (v1 + v2) * super_matrix_parameter     ;super_matrix_parameter controls between two weights from alternative_names(maintenance and new-infra) to criteria. together sum up to 1.
+  matrix:set M_matrix_weighed index2 col (v1 + v2) * (1 - super_matrix_parameter)
+  print matrix:pretty-print-text M_matrix_weighed
+  let new_lim  (matrix:times M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed)
+  print matrix:pretty-print-text new_lim
 
-;  matrix:set MMSACMEX_weighted_D 0 14 super_matrix_parameter     ;super_matrix_parameter controls between two weights from alternative_names(maintenance and new-infra) to criteria. together sum up to 1.
-;  matrix:set MMSACMEX_weighted_D 1 14 (1 - super_matrix_parameter)
+  let a_m sublist (matrix:get-column new_lim 1) 0 5
+  let a_m_sum sum sublist (matrix:get-column new_lim 1) 0 5
+  let a_weights_new  map [i -> i / a_m_sum] a_m
 
-;
-;  let MMSACMEX_limit_D_new  (matrix:times MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D MMSACMEX_weighted_D)
+  let mm  sublist (matrix:get-column new_lim 1) 5 dim
+  let mm_sum sum sublist (matrix:get-column new_lim 1) 5 dim
+  let c_weights_new map [i -> i / mm_sum] mm
 
-;  let w_sum sum (list matrix:get MMSACMEX_limit_D_new 2 2
+report list a_weights_new c_weights_new
+  ;  let w_sum  map [i -> i / mm ] matrix:get-column new_lim col-j
+;  let w_sum sum (list matrix:get new_lim 2 2
 ;    matrix:get MMSACMEX_limit_D_new 3 2
 ;    matrix:get MMSACMEX_limit_D_new 4 2
 ;    matrix:get MMSACMEX_limit_D_new 5 2
@@ -1073,52 +1103,52 @@ to supermatrix; procedure to change the weights from the alternative_namesto the
 ;    matrix:get MMSACMEX_limit_D_new 14 2
 ;    matrix:get MMSACMEX_limit_D_new 15 2
 
-  matrix:set MMWaterOperator_weighted_D 0 14 super_matrix_parameter     ;super_matrix_parameter controls between two weights from alternative_names(maintenance and new-infra) to criteria. together sum up to 1.
-  matrix:set MMWaterOperator_weighted_D 1 14 (1 - super_matrix_parameter)
-
-
-  let MMWaterOperator_limit_D_new  (matrix:times MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D)
-
-  let w_sum sum (list matrix:get MMWaterOperator_limit_D_new 2 2
-    matrix:get MMWaterOperator_limit_D_new 3 2
-    matrix:get MMWaterOperator_limit_D_new 4 2
-    matrix:get MMWaterOperator_limit_D_new 5 2
-    matrix:get MMWaterOperator_limit_D_new 6 2
-    matrix:get MMWaterOperator_limit_D_new 7 2
-    matrix:get MMWaterOperator_limit_D_new 8 2
-    matrix:get MMWaterOperator_limit_D_new 9 2
-    matrix:get MMWaterOperator_limit_D_new 10 2
-    matrix:get MMWaterOperator_limit_D_new 11 2
-    matrix:get MMWaterOperator_limit_D_new 12 2
-    matrix:get MMWaterOperator_limit_D_new 13 2
-    matrix:get MMWaterOperator_limit_D_new 14 2
-    matrix:get MMWaterOperator_limit_D_new 15 2
-;>>>>>>> c74c88e51d1a64b89da88a3d28c9bf0ff2d08703
-    )
-  let jj 0
-  foreach (list Alternatives_WaterOperator_D) [
-? ->
-    ask ?[
-      set criteria_weights (list (matrix:get MMWaterOperator_limit_D_new 2 2 / w_sum)
-        (matrix:get MMWaterOperator_limit_D_new 3 2 / w_sum)
-        (matrix:get MMWaterOperator_limit_D_new 4 2 / w_sum)
-        (matrix:get MMWaterOperator_limit_D_new 5 2 / w_sum)
-        (matrix:get MMWaterOperator_limit_D_new 6 2 / w_sum)
-        (matrix:get MMWaterOperator_limit_D_new 7 2 / w_sum)
-        (matrix:get MMWaterOperator_limit_D_new 8 2 / w_sum)
-        (matrix:get MMWaterOperator_limit_D_new 9 2 / w_sum)
-        (matrix:get MMWaterOperator_limit_D_new 10 2 / w_sum)
-        (matrix:get MMWaterOperator_limit_D_new 11 2 / w_sum)
-        (matrix:get MMWaterOperator_limit_D_new 12 2 / w_sum)
-        (matrix:get MMWaterOperator_limit_D_new 13 2 / w_sum)
-        (matrix:get MMWaterOperator_limit_D_new 14 2 / w_sum)
-        (matrix:get MMWaterOperator_limit_D_new 15 2 / w_sum))
-
-      set alternative_weights matrix:get MMWaterOperator_limit_D_new jj jj / (matrix:get MMWaterOperator_limit_D_new 0 0 + matrix:get MMWaterOperator_limit_D_new 1 1)
-
-      set jj jj + 1
-    ]
-  ]
+;  matrix:set MMWaterOperator_weighted_D 0 14 super_matrix_parameter     ;super_matrix_parameter controls between two weights from alternative_names(maintenance and new-infra) to criteria. together sum up to 1.
+;  matrix:set MMWaterOperator_weighted_D 1 14 (1 - super_matrix_parameter)
+;
+;
+;  let MMWaterOperator_limit_D_new  (matrix:times MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D)
+;
+;  let w_sum sum (list matrix:get MMWaterOperator_limit_D_new 2 2
+;    matrix:get MMWaterOperator_limit_D_new 3 2
+;    matrix:get MMWaterOperator_limit_D_new 4 2
+;    matrix:get MMWaterOperator_limit_D_new 5 2
+;    matrix:get MMWaterOperator_limit_D_new 6 2
+;    matrix:get MMWaterOperator_limit_D_new 7 2
+;    matrix:get MMWaterOperator_limit_D_new 8 2
+;    matrix:get MMWaterOperator_limit_D_new 9 2
+;    matrix:get MMWaterOperator_limit_D_new 10 2
+;    matrix:get MMWaterOperator_limit_D_new 11 2
+;    matrix:get MMWaterOperator_limit_D_new 12 2
+;    matrix:get MMWaterOperator_limit_D_new 13 2
+;    matrix:get MMWaterOperator_limit_D_new 14 2
+;    matrix:get MMWaterOperator_limit_D_new 15 2
+;;>>>>>>> c74c88e51d1a64b89da88a3d28c9bf0ff2d08703
+;    )
+;  let jj 0
+;  foreach (list Alternatives_WaterOperator_D) [
+;? ->
+;    ask ?[
+;      set criteria_weights (list (matrix:get MMWaterOperator_limit_D_new 2 2 / w_sum)
+;        (matrix:get MMWaterOperator_limit_D_new 3 2 / w_sum)
+;        (matrix:get MMWaterOperator_limit_D_new 4 2 / w_sum)
+;        (matrix:get MMWaterOperator_limit_D_new 5 2 / w_sum)
+;        (matrix:get MMWaterOperator_limit_D_new 6 2 / w_sum)
+;        (matrix:get MMWaterOperator_limit_D_new 7 2 / w_sum)
+;        (matrix:get MMWaterOperator_limit_D_new 8 2 / w_sum)
+;        (matrix:get MMWaterOperator_limit_D_new 9 2 / w_sum)
+;        (matrix:get MMWaterOperator_limit_D_new 10 2 / w_sum)
+;        (matrix:get MMWaterOperator_limit_D_new 11 2 / w_sum)
+;        (matrix:get MMWaterOperator_limit_D_new 12 2 / w_sum)
+;        (matrix:get MMWaterOperator_limit_D_new 13 2 / w_sum)
+;        (matrix:get MMWaterOperator_limit_D_new 14 2 / w_sum)
+;        (matrix:get MMWaterOperator_limit_D_new 15 2 / w_sum))
+;
+;      set alternative_weights matrix:get MMWaterOperator_limit_D_new jj jj / (matrix:get MMWaterOperator_limit_D_new 0 0 + matrix:get MMWaterOperator_limit_D_new 1 1)
+;
+;      set jj jj + 1
+;    ]
+;  ]
 
 end
 
@@ -1459,7 +1489,7 @@ CHOOSER
 Visualization
 Visualization
 "Accion Colectiva" "Peticion ciudadana" "Captacion de Agua" "Compra de Agua" "Modificacion de la vivienda" "Areas prioritarias Mantenimiento" "Areas prioritarias Nueva Infraestructura" "Distribucion de Agua SACMEX" "GoogleEarth" "K_groups" "Salud" "Escasez" "Encharcamientos" "% houses with supply" "% houses with drainage" "P. Falla Ab" "P. Falla D" "Capacidad_D" "Zonas Aquifero" "Edad Infraestructura Ab." "Edad Infraestructura D" "Income-index" "hundimiento" "Value_function_edad_Ab" "value_function_Age_d" "value_function_scarcity" "value_function_floods" "value_function_falta_d" "value_function_falta_Ab" "value_function_capasity" "value_function_precipitation"
-9
+11
 
 BUTTON
 1222
@@ -1634,7 +1664,7 @@ Recursos_para_distribucion
 Recursos_para_distribucion
 0
 2400
-1910.0
+911.0
 1
 1
 NIL
@@ -1719,7 +1749,7 @@ factor_scale
 factor_scale
 0.000000000000000001
 4
-1.921
+2.566
 0.001
 1
 NIL
@@ -1745,7 +1775,7 @@ super_matrix_parameter
 super_matrix_parameter
 0
 1
-0.0
+1.0
 0.1
 1
 NIL
@@ -1877,7 +1907,7 @@ recursos_extraccion
 recursos_extraccion
 0
 2400
-27.0
+28.0
 1
 1
 NIL
