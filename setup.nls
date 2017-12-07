@@ -52,11 +52,13 @@ globals [
   Abastecimiento_max            ;;
   Capacidad_Ab_max                 ;;
   Capacidad_d_max
+  poblacion_max
   Peticion_Delegacional_max
   Peticion_Delegacional_D_max
   Presion_social_max
   Presion_social_annual_max
   Presion_de_medios_max
+  
   water_quality_max
   health_max
   monto_max
@@ -105,6 +107,7 @@ globals [
   ageb13                                                       ;data set of ageb taht includes the floodings events
   Limites_delegacionales                                             ;limits of borrows
   Limites_cuenca                                                     ;limits of the watershed
+  LHland                                                             ;low and highland division of waters based on runoff
   mascara                                                            ;mask of the area of the work showing in the plot
   city_image                                                         ;a google image with the terrain
   pozos_WaterOperator                                                       ;weels for the water supply (piece of infratructure)
@@ -159,6 +162,7 @@ breed [Alternatives_IZb alternative_IZb]
 breed [Alternatives_Xo alternative_Xo]
 breed [Alternatives_MC alternative_MC]
 breed [Alternatives_MCb alternative_MCb]
+breed [Alternatives_MCc alternative_MCc]
 breed [alternatives_WaterOperator_AB alternative_WaterOperator]
 breed [Alternatives_WaterOperator_D alternative_WaterOperator_D]
 breed [Alternatives_OCVAM alternative_OCVAM]
@@ -201,9 +205,9 @@ Agebs-own[
   Cost_perHab                  ;;cost per habitante that would be invested if infra is repared
   falla_ab                        ;;Fallas de infraestructura hidraulica ocasionadas por conexiones clandestinas, obstruccion por basura y procesos biofisicos
   falla_d
-  falta_Ab                        ;;falta de conexiones de
-  falta_d                      ;;falta de drenage
-  Mantenimiento?               ;; what is the probability this patch is under maitnance
+  falta_Ab                     ;;Lack of connection to water potable system
+  falta_d                      ;;Lack of connection to sewer system
+ ; Mantenimiento?               ;; what is the probability this patch is under maitnance
   P_failure_AB                 ;;probabilidad de falla infra abastecimiento por edad
   P_failure_D                 ;;probabilidad de falla infra drenaje por edad
   p_failure_hund               ;;probabilidad de falla debido a hundimientos
@@ -320,6 +324,7 @@ Agebs-own[
   scarcity_index
   flooding_index
   new_incidences    ;NEW INCIDENCE AFTER CALCULATING FLOODING
+  low_high-land     ;index to differentiate areas with natural runoff (highlands) and infrastructure runoff (lowland) 
   contiguous_agebs  ;
   neighboor_weights  ;weight of each neighbor acording to contiguity matrix W (Baeza etal in review)
 ]
@@ -345,11 +350,12 @@ Pozos-own[
   zone
 ]
 
-Alternatives_IZ-own[ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights W_matrix ageb_pt]
-Alternatives_IZb-own[ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights W_matrix ageb_pt]
-Alternatives_Xo-own[ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights W_matrix ageb_pt]
-Alternatives_MC-own[ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights W_matrix ageb_pt]
-Alternatives_MCb-own[ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights W_matrix ageb_pt]
+Alternatives_IZ-own[location ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights W_matrix ageb_pt]
+Alternatives_IZb-own[location ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights W_matrix ageb_pt]
+Alternatives_Xo-own[location ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights W_matrix ageb_pt]
+Alternatives_MC-own[location ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights W_matrix ageb_pt]
+Alternatives_MCb-own[location ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights W_matrix ageb_pt]
+Alternatives_MCc-own[location ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights W_matrix ageb_pt]
 alternatives_WaterOperator_AB-own[ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights domain]  ;value obtained for the action when calcualting the limiting matrix in super decition
 Alternatives_WaterOperator_D-own[ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights domain]  ;value obtained for the action when calcualting the limiting matrix in super decition
 Alternatives_OCVAM-own[ID CLUSTER name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale v_scale_F alternative_weights]   ;value obtained for the action when calcualting the limiting matrix in super decition
@@ -589,6 +595,7 @@ to load-GIS-data
   set Limites_delegacionales gis:load-dataset  "data/limites_deleg_DF_2013.shp"
   set zonas_aquif_map gis:load-dataset  "data/AGEB_Zona_Project.shp"
   set Agebs_map_full gis:load-dataset "data/ageb_abm_full.shp"                                                                 
+  set LHland   gis:load-dataset "data/low_hig_v1.shp" 
   set mascara gis:load-dataset "data/Mask.shp"                  ;Mask of study area                                                                                                                         ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
    ;set agebs_map14 gis:load-dataset "data/ageb14.shp";                                                      ;AGEB shape file
   ;set ageb13 gis:load-dataset "data/DF_ageb_N_escalante_Project_withEncharcamientos.shp"
@@ -716,7 +723,9 @@ end
         set Antiguedad-infra_D 365 * gis:property-value ? "antiguedad"
         set altitude gis:property-value ? "elevacion"
         set aquifer gis:property-value (gis:find-one-feature zonas_aquif_map "CVEGEO" CVEGEO) "ACUIF"
-        
+        set low_high-land gis:property-value (gis:find-one-feature LHland "AGEB_ID" (word ID)) "LOW_HIG"
+        ;print gis:property-value (gis:find-one-feature LHland "AGEB_ID" (word ID)) "LOW_HIG"
+        ;print low_high-land
         ; set group_kmean gis:property-value (gis:find-one-feature ageb13 "CVEGEO" CVEGEO) "KMEANS5"
         ; set precipitation gis:property-value (gis:find-one-feature ageb13 "CVEGEO" CVEGEO) "PRECIP"        
         
@@ -829,7 +838,7 @@ end
   ;3)w: a set of weight that connect each criteria
   ;4) alternative_weightss: a set of weights for each action when HNP is used (supermatrix)
   
-  let MMIz csv:from-file  "data/I080316_OTR.weighted.csv"
+  let MMIz csv:from-file  "data/I080316_OTR.weighted.csv"  
   let MMIz_limit csv:from-file  "data/I080316_OTR.limit.csv"
   ;Kmeangroup=0
   ;read alternative's names from limit matrix
@@ -854,7 +863,7 @@ end
       while [cri < 16][   ;tranfor the data from.csv to a matrix to manipulte using matrix extention
         set cc 2
         while [cc < 16][
-      set VMMIz_limit lput (item cc item cri MMIz) VMMIz_limit
+          set VMMIz_limit lput (item cc item cri MMIz) VMMIz_limit
           set cc cc + 1
         ]
         set cri cri + 1
@@ -867,6 +876,7 @@ end
       
       
       set ID "IO80316"
+      set location list 19.322143 -99.038609 ;miravalle arriba
       set name_action ?
       set label name_action
       set ageb_pt 4085
@@ -926,7 +936,7 @@ end
   
   ;#############################################################################################
  ;Iztapalapa B
-  let MMIz_b csv:from-file  "data/I072816_OTR.weighted.csv"
+  let MMIz_b csv:from-file  "data/I072816_OTR.weighted.csv"   
   let MMIz_b_limit csv:from-file  "data/I072816_OTR.limit.csv"
   ;Kmeangroup=1
   ;read alternative's names from limit matrix
@@ -963,6 +973,7 @@ end
   
       
       set ID "I072816"
+      set location list 19.324931 -99.041920  ;desarrollo urbano Quetzalcoatl
       set name_action ?
       set label name_action
       set criteria_values (list 0 0 0 0 0 0 0 0 0)
@@ -1060,6 +1071,7 @@ end
       
       
       set ID "XO62916_a (Tiziliclipa)"
+      set location list 19.227280 -99.088687
       set name_action ?
       set label name_action
       set criteria_values (list 0 0 0 0 0 0 0 0 0)
@@ -1132,8 +1144,8 @@ end
     ? ->
     create-Alternatives_MC 1[
       
-      
-       ;insert weighted_matrix
+      set location list 19.310102 -99.228422
+      ;insert weighted_matrix
       set W_matrix  []
       let MMMC_limit_new []
       let VMMMC_limit []
@@ -1219,6 +1231,35 @@ end
   foreach alternative_names[
     ? ->
     create-Alternatives_MCb 1 [
+      
+      
+      set location list 19.310102 -99.228422
+      
+      
+      
+         ;insert weighted_matrix
+      set W_matrix  []
+      let MMMCb_limit_new []
+      let VMMMCb_limit []
+      let cc 2
+      let cri 2
+      while [cri < 17][   ;tranfor the data from.csv to a matrix to manipulate it using matrix extention
+        set cc 2
+        while [cc < 17][
+      set VMMMCb_limit lput (item cc item cri MMMCb) VMMMCb_limit
+          set cc cc + 1
+        ]
+        set cri cri + 1
+        set MMMCb_limit_new lput VMMMCb_limit MMMCb_limit_new
+        set VMMMCb_limit []
+      ]
+      set W_matrix MMMCb_limit_new
+   
+      
+      
+      
+      
+      
       set ID "MC080416b"
       set name_action ?
       set label name_action
@@ -1283,6 +1324,145 @@ end
   ask Alternatives_MCb with [name_action = "Accion colectiva"] [set v_scale_F [0 0 0 0 0]]
   ask Alternatives_MCb with [name_action = "Captacion de agua"] [set v_scale_F [0 0 0 0 0]]
   ask Alternatives_MCb with [name_action = "Modificacion vivienda"] [set v_scale_F [0 1 1 1 1]]
+  ;################################################
+  
+  
+  ;add el octal (arriba0
+  ;set location list 19.300691 -99.261214
+  
+ ; let MMMCc csv:from-file  "data/MC030315_OTR_ElOcotal.weighted.csv"  no weighted
+  let MMMCc_limit csv:from-file  "data/MC030315_OTR_ElOcotal.limit.csv"
+  
+  set alternative_names(list item 1 item 2 MMMCb_limit
+    item 1 item 3 MMMCc_limit
+    item 1 item 4 MMMCc_limit
+    item 1 item 5 MMMCc_limit
+    item 1 item 6 MMMCc_limit
+    item 1 item 7 MMMCc_limit
+    item 1 item 8 MMMCc_limit
+    item 1 item 9 MMMCc_limit)
+  set jj 0
+  foreach alternative_names[
+    ? ->
+    create-Alternatives_MCc 1 [
+      
+      print "hola"
+      
+      
+      
+      
+         ;insert weighted_matrix
+      ;set W_matrix  []
+     ; let MMMCc_limit_new []
+     ; let VMMMCc_limit []
+     ;; let cc 2
+     ; let cri 2
+     ; while [cri < 17][   ;tranfor the data from.csv to a matrix to manipulate it using matrix extention
+      ;  set cc 2
+      ;  while [cc < 17][
+     ; set VMMMCc_limit lput (item cc item cri MMMCc) VMMMCc_limit
+      ;    set cc cc + 1
+      ;  ]
+       ; set cri cri + 1
+       ; set MMMCc_limit_new lput VMMMCc_limit MMMCc_limit_new
+       ; set VMMMCc_limit []
+     ; ]
+      ;set W_matrix MMMCc_limit_new
+   
+      
+      
+      
+      
+      
+      set ID "MC030315"
+      set location list 19.300691 -99.261214
+      set name_action ?
+      set label name_action
+      
+      set criteria_values (list 0 0 0 0 0 0 0 0 0 0 0 0 0)
+      set criteria_max (list 0 0 0 0 0 0 0 0 0 0 0 0 0)
+      set rescaled_criteria_values (list 0 0 0 0 0 0 0 0 0 0 0 0 0)
+      let w_sum sum (list item 16 item 10 MMMCc_limit
+        item 16 item 11 MMMCc_limit
+        item 16 item 12 MMMCc_limit
+        item 16 item 13 MMMCc_limit
+        item 16 item 14 MMMCc_limit
+        item 16 item 15 MMMCc_limit
+        item 16 item 17 MMMCc_limit
+        item 16 item 18 MMMCc_limit
+        item 16 item 19 MMMCc_limit
+        item 16 item 20 MMMCc_limit
+        item 16 item 21 MMMCc_limit
+        item 16 item 22 MMMCc_limit
+        item 16 item 23 MMMCc_limit)
+      
+      set criteria_weights (list (item 16 item 10 MMMCc_limit / w_sum)
+        (item 16 item 11 MMMCc_limit / w_sum)
+        (item 16 item 12 MMMCc_limit / w_sum)
+        (item 16 item 13 MMMCc_limit / w_sum)
+        (item 16 item 14 MMMCc_limit / w_sum)
+        (item 16 item 15 MMMCc_limit / w_sum)
+        (item 16 item 17 MMMCc_limit / w_sum)
+        (item 16 item 18 MMMCc_limit / w_sum)
+        (item 16 item 19 MMMCc_limit / w_sum)
+        (item 16 item 20 MMMCc_limit / w_sum)
+        (item 16 item 21 MMMCc_limit / w_sum)
+        (item 16 item 22 MMMCc_limit / w_sum)
+        (item 16 item 23 MMMCc_limit / w_sum))
+      
+      
+      
+      set criteria_names (list item 1 item 10 MMMCc_limit
+        item 1 item 11 MMMCc_limit
+        item 1 item 12 MMMCc_limit
+        item 1 item 13 MMMCc_limit
+        item 1 item 14 MMMCc_limit
+        item 1 item 15 MMMCc_limit
+        item 1 item 17 MMMCc_limit
+        item 1 item 18 MMMCc_limit
+        item 1 item 19 MMMCc_limit
+        item 1 item 20 MMMCc_limit
+        item 1 item 21 MMMCc_limit
+        item 1 item 22 MMMCc_limit
+        item 1 item 23 MMMCc_limit)
+      
+      
+      
+      let aw_sum sum (list item 16 item 2 MMMCc_limit
+        item 16 item 3 MMMCc_limit
+        item 16 item 4 MMMCc_limit
+        item 16 item 5 MMMCc_limit
+        item 16 item 6 MMMCc_limit
+        item 16 item 7 MMMCc_limit
+        item 16 item 8 MMMCc_limit
+        item 16 item 9 MMMCc_limit)
+      
+      if-else ANP = TRUE[
+        set alternative_weights (item 16 item (jj + 2) MMMCc_limit) / aw_sum
+      ][
+        set alternative_weights 1
+      ]
+    ]
+    set jj jj + 1
+    
+  ]
+  
+  ask Alternatives_MCb with [name_action = "Compra de agua"] [set v_scale_S [0.05 0.1 1 1 1]]
+  ask Alternatives_MCb with [name_action = "Movilizaciones"] [set v_scale_S [0.05 0.05 0.05 0.4 1]]
+  ask Alternatives_MCb with [name_action = "Accion colectiva"] [set v_scale_S [0.05 0.1 1 1 1]]
+  ask Alternatives_MCb with [name_action = "Captacion de agua"] [set v_scale_S [0.05 0.1 1 1 1]]
+  ask Alternatives_MCb with [name_action = "Modificacion vivienda"] [set v_scale_S [0 0 0 0 0]]
+  
+  
+  ask Alternatives_MCb with [name_action = "Compra de agua"] [set v_scale_F [0 0 0 0 0]]
+  ask Alternatives_MCb with [name_action = "Movilizaciones"] [set v_scale_F [0 0 0 0 0]]
+  ask Alternatives_MCb with [name_action = "Accion colectiva"] [set v_scale_F [0 0 0 0 0]]
+  ask Alternatives_MCb with [name_action = "Captacion de agua"] [set v_scale_F [0 0 0 0 0]]
+  ask Alternatives_MCb with [name_action = "Modificacion vivienda"] [set v_scale_F [0 1 1 1 1]]
+  ;################################################
+ 
+  
+  
   
   
   
@@ -1530,6 +1710,7 @@ to set_maximum [estado]   ;; update the maximum or minimum of values use by the 
   set garbage_max max [garbage] of agebs  with [CV_estado = estado]
   set Obstruccion_dren_max max[Obstruccion_dren] of agebs  with [CV_estado = estado]
   set hundimiento_max max [hundimiento] of agebs with [CV_estado = estado]
+  set poblacion_max max [poblacion] of agebs with [CV_estado = estado]
   set water_quality_max 1
   set max_water_in_mc max [days_water_in] of agebs with [CV_estado = estado]
   set infra_abast_max max [houses_with_abastecimiento] of agebs  with [CV_estado = estado]

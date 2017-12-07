@@ -1,0 +1,608 @@
+set top_net [getTopNet $net]
+set SAVED_WITH_VERSION {3.0.0 made on Fri, 07 Oct 2016 13:36:28 -0500.  VCRevInfo 2572.  Installed on Windows}
+setDefaultCompareMode $net switch_to_verbal
+set x 479
+set y 669
+set desc {description}
+set name {Acciones}
+set color gainsboro
+set iconUU {}
+set iconFont "myDefaultFontCluster"
+set winFont "-*-times-medium-r-normal-*-30-*-*-*-*-*"
+set width 606
+set height 243
+set clusterName {Acciones}
+set clusterCompareWord {}
+makeCluster $net $x $y $name $desc
+clusterChangeColor $net $name $color
+setClusterIconUU $net $name $iconUU
+setClusterIconFont $net $name $iconFont
+setClusterTitleFont $net $name $winFont
+setClusterWinSize $net $name $width $height
+setClusterCompareWord $net $name $clusterCompareWord
+deIconizeCluster $net $name
+set name {Captacion de agua}
+set desc {description}
+set x 0
+set y 0
+set color {#F0F8FF}
+set iconUU {}
+set font {myDefaultFontNode}
+makeNode $net $clusterName $name $desc $x $y
+setNodeIconUU $net $name $iconUU
+setNodeColor $net $name $color
+setNodeFont $net $name $font
+set name {Compra de agua}
+set desc {Para riego}
+set x 0
+set y 37
+set color {#F0F8FF}
+set iconUU {}
+set font {myDefaultFontNode}
+makeNode $net $clusterName $name $desc $x $y
+setNodeIconUU $net $name $iconUU
+setNodeColor $net $name $color
+setNodeFont $net $name $font
+set name {Modificacion vivienda}
+set desc {description}
+set x 0
+set y 74
+set color {#F0F8FF}
+set iconUU {}
+set font {myDefaultFontNode}
+makeNode $net $clusterName $name $desc $x $y
+setNodeIconUU $net $name $iconUU
+setNodeColor $net $name $color
+setNodeFont $net $name $font
+set name {Reforestación}
+set desc {Reforestación en la zona cerril}
+set x 0
+set y 111
+set color {#F0F8FF}
+set iconUU {}
+set font {myDefaultFontNode}
+makeNode $net $clusterName $name $desc $x $y
+setNodeIconUU $net $name $iconUU
+setNodeColor $net $name $color
+setNodeFont $net $name $font
+set x 312
+set y 356
+set desc {description}
+set name {Biofísico}
+set color gainsboro
+set iconUU {}
+set iconFont "myDefaultFontCluster"
+set winFont "-*-times-medium-r-normal-*-30-*-*-*-*-*"
+set width 309
+set height 155
+set clusterName {Biofísico}
+set clusterCompareWord {}
+makeCluster $net $x $y $name $desc
+clusterChangeColor $net $name $color
+setClusterIconUU $net $name $iconUU
+setClusterIconFont $net $name $iconFont
+setClusterTitleFont $net $name $winFont
+setClusterWinSize $net $name $width $height
+setClusterCompareWord $net $name $clusterCompareWord
+deIconizeCluster $net $name
+set name {Deforestacion}
+set desc {De zona cerril}
+set x 0
+set y 0
+set color {#F0F8FF}
+set iconUU {}
+set font {myDefaultFontNode}
+makeNode $net $clusterName $name $desc $x $y
+setNodeIconUU $net $name $iconUU
+setNodeColor $net $name $color
+setNodeFont $net $name $font
+set x 868
+set y 627
+set desc {description}
+set name {Contribuciones}
+set color gainsboro
+set iconUU {}
+set iconFont "myDefaultFontCluster"
+set winFont "-*-times-medium-r-normal-*-30-*-*-*-*-*"
+set width 415
+set height 158
+set clusterName {Contribuciones}
+set clusterCompareWord {}
+makeCluster $net $x $y $name $desc
+clusterChangeColor $net $name $color
+setClusterIconUU $net $name $iconUU
+setClusterIconFont $net $name $iconFont
+setClusterTitleFont $net $name $winFont
+setClusterWinSize $net $name $width $height
+setClusterCompareWord $net $name $clusterCompareWord
+deIconizeCluster $net $name
+set name {Cortan árboles}
+set desc {}
+set x 0
+set y 0
+set color {#F0F8FF}
+set iconUU {}
+set font {myDefaultFontNode}
+makeNode $net $clusterName $name $desc $x $y
+setNodeIconUU $net $name $iconUU
+setNodeColor $net $name $color
+setNodeFont $net $name $font
+set name {Descar Aguas Negras Clandes}
+set desc {Descarga de aguas negras clandestinas}
+set x 0
+set y 35
+set color {#F0F8FF}
+set iconUU {}
+set font {myDefaultFontNode}
+makeNode $net $clusterName $name $desc $x $y
+setNodeIconUU $net $name $iconUU
+setNodeColor $net $name $color
+setNodeFont $net $name $font
+set name {Venta_terreno}
+set desc {Por los mismos vecinos}
+set x 0
+set y 70
+set color {#F0F8FF}
+set iconUU {}
+set font {myDefaultFontNode}
+makeNode $net $clusterName $name $desc $x $y
+setNodeIconUU $net $name $iconUU
+setNodeColor $net $name $color
+setNodeFont $net $name $font
+set x 1235
+set y 163
+set desc {Problemas infraestructurales}
+set name {Infraestructura}
+set color gainsboro
+set iconUU {}
+set iconFont "myDefaultFontCluster"
+set winFont "-*-times-medium-r-normal-*-30-*-*-*-*-*"
+set width 455
+set height 287
+set clusterName {Infraestructura}
+set clusterCompareWord {}
+makeCluster $net $x $y $name $desc
+clusterChangeColor $net $name $color
+setClusterIconUU $net $name $iconUU
+setClusterIconFont $net $name $iconFont
+setClusterTitleFont $net $name $winFont
+setClusterWinSize $net $name $width $height
+setClusterCompareWord $net $name $clusterCompareWord
+deIconizeCluster $net $name
+set name {Calidad de Agua}
+set desc {Falta de agua limpia en hogares}
+set x 0
+set y 70
+set color {#F0F8FF}
+set iconUU {}
+set font {myDefaultFontNode}
+makeNode $net $clusterName $name $desc $x $y
+setNodeIconUU $net $name $iconUU
+setNodeColor $net $name $color
+setNodeFont $net $name $font
+set name {Desviacion de agua}
+set desc {Distribución de agua a otros lugares}
+set x 0
+set y 0
+set color {#F0F8FF}
+set iconUU {}
+set font {myDefaultFontNode}
+makeNode $net $clusterName $name $desc $x $y
+setNodeIconUU $net $name $iconUU
+setNodeColor $net $name $color
+setNodeFont $net $name $font
+set name {Falta de infraestructura}
+set desc {Falta drenaje en zona cerril y zona chinampera}
+set x 0
+set y 35
+set color {#F0F8FF}
+set iconUU {}
+set font {myDefaultFontNode}
+makeNode $net $clusterName $name $desc $x $y
+setNodeIconUU $net $name $iconUU
+setNodeColor $net $name $color
+setNodeFont $net $name $font
+set name {Obstruccion de alcantarillado}
+set desc {Desbordamiento de alcantarillas  de Milpa Alta}
+set x 0
+set y 105
+set color {#F0F8FF}
+set iconUU {}
+set font {myDefaultFontNode}
+makeNode $net $clusterName $name $desc $x $y
+setNodeIconUU $net $name $iconUU
+setNodeColor $net $name $color
+setNodeFont $net $name $font
+set name {Planta tratadora Ubic_insu}
+set desc {Mal ubicada e insuficiente}
+set x 0
+set y 140
+set color {#F0F8FF}
+set iconUU {}
+set font {myDefaultFontNode}
+makeNode $net $clusterName $name $desc $x $y
+setNodeIconUU $net $name $iconUU
+setNodeColor $net $name $color
+setNodeFont $net $name $font
+set x -13
+set y 42
+set desc {description}
+set name {Meta}
+set color gainsboro
+set iconUU {}
+set iconFont "myDefaultFontCluster"
+set winFont "-*-times-medium-r-normal-*-30-*-*-*-*-*"
+set width 289
+set height 57
+set clusterName {Meta}
+set clusterCompareWord {}
+makeCluster $net $x $y $name $desc
+clusterChangeColor $net $name $color
+setClusterIconUU $net $name $iconUU
+setClusterIconFont $net $name $iconFont
+setClusterTitleFont $net $name $winFont
+setClusterWinSize $net $name $width $height
+setClusterCompareWord $net $name $clusterCompareWord
+deIconizeCluster $net $name
+set name {Meta}
+set desc {description}
+set x 0
+set y 0
+set color {#F0F8FF}
+set iconUU {}
+set font {myDefaultFontNode}
+makeNode $net $clusterName $name $desc $x $y
+setNodeIconUU $net $name $iconUU
+setNodeColor $net $name $color
+setNodeFont $net $name $font
+set x 324
+set y 10
+set desc {description}
+set name {Problemas}
+set color gainsboro
+set iconUU {}
+set iconFont "myDefaultFontCluster"
+set winFont "-*-times-medium-r-normal-*-30-*-*-*-*-*"
+set width 886
+set height 51
+set clusterName {Problemas}
+set clusterCompareWord {}
+makeCluster $net $x $y $name $desc
+clusterChangeColor $net $name $color
+setClusterIconUU $net $name $iconUU
+setClusterIconFont $net $name $iconFont
+setClusterTitleFont $net $name $winFont
+setClusterWinSize $net $name $width $height
+setClusterCompareWord $net $name $clusterCompareWord
+deIconizeCluster $net $name
+set name {Contaminacion de agua}
+set desc {}
+set x 0
+set y 0
+set color {#F0F8FF}
+set iconUU {}
+set font {myDefaultFontNode}
+makeNode $net $clusterName $name $desc $x $y
+setNodeIconUU $net $name $iconUU
+setNodeColor $net $name $color
+setNodeFont $net $name $font
+set name {Crecimiento urbano}
+set desc {}
+set x 0
+set y 35
+set color {#F0F8FF}
+set iconUU {}
+set font {myDefaultFontNode}
+makeNode $net $clusterName $name $desc $x $y
+setNodeIconUU $net $name $iconUU
+setNodeColor $net $name $color
+setNodeFont $net $name $font
+set name {Escasez de agua}
+set desc {En hogares y para cultivos}
+set x 0
+set y 70
+set color {#F0F8FF}
+set iconUU {}
+set font {myDefaultFontNode}
+makeNode $net $clusterName $name $desc $x $y
+setNodeIconUU $net $name $iconUU
+setNodeColor $net $name $color
+setNodeFont $net $name $font
+set x -48
+set y 380
+set desc {description}
+set name {Socio-institucional}
+set color gainsboro
+set iconUU {}
+set iconFont "myDefaultFontCluster"
+set winFont "-*-times-medium-r-normal-*-30-*-*-*-*-*"
+set width 348
+set height 191
+set clusterName {Socio-institucional}
+set clusterCompareWord {}
+makeCluster $net $x $y $name $desc
+clusterChangeColor $net $name $color
+setClusterIconUU $net $name $iconUU
+setClusterIconFont $net $name $iconFont
+setClusterTitleFont $net $name $winFont
+setClusterWinSize $net $name $width $height
+setClusterCompareWord $net $name $clusterCompareWord
+deIconizeCluster $net $name
+set name {Corrupcion}
+set desc {Corrupción en la distribución de apoyos en el campo}
+set x 0
+set y 0
+set color {#F0F8FF}
+set iconUU {}
+set font {myDefaultFontNode}
+makeNode $net $clusterName $name $desc $x $y
+setNodeIconUU $net $name $iconUU
+setNodeColor $net $name $color
+setNodeFont $net $name $font
+set name {Falta de recursos}
+set desc {description}
+set x 0
+set y 35
+set color {#F0F8FF}
+set iconUU {}
+set font {myDefaultFontNode}
+makeNode $net $clusterName $name $desc $x $y
+setNodeIconUU $net $name $iconUU
+setNodeColor $net $name $color
+setNodeFont $net $name $font
+set name {Falta de renta campo}
+set desc {Rentabilidad del campo}
+set x 0
+set y 70
+set color {#F0F8FF}
+set iconUU {}
+set font {myDefaultFontNode}
+makeNode $net $clusterName $name $desc $x $y
+setNodeIconUU $net $name $iconUU
+setNodeColor $net $name $color
+setNodeFont $net $name $font
+set x 781
+set y 190
+set desc {description}
+set name {Uso de suelo/tierra}
+set color gainsboro
+set iconUU {}
+set iconFont "myDefaultFontCluster"
+set winFont "-*-times-medium-r-normal-*-30-*-*-*-*-*"
+set width 377
+set height 157
+set clusterName {Uso de suelo/tierra}
+set clusterCompareWord {}
+makeCluster $net $x $y $name $desc
+clusterChangeColor $net $name $color
+setClusterIconUU $net $name $iconUU
+setClusterIconFont $net $name $iconFont
+setClusterTitleFont $net $name $winFont
+setClusterWinSize $net $name $width $height
+setClusterCompareWord $net $name $clusterCompareWord
+deIconizeCluster $net $name
+set name {Asentamientos irregulares}
+set desc {Asentamientos irregulares}
+set x 0
+set y 0
+set color {#F0F8FF}
+set iconUU {}
+set font {myDefaultFontNode}
+makeNode $net $clusterName $name $desc $x $y
+setNodeIconUU $net $name $iconUU
+setNodeColor $net $name $color
+setNodeFont $net $name $font
+set init {Biofísico}
+set final {Acciones}
+connectClusters $net $init $final
+set init {Infraestructura}
+set final {Acciones}
+connectClusters $net $init $final
+set init {Uso de suelo/tierra}
+set final {Acciones}
+connectClusters $net $init $final
+set init {Problemas}
+set final {Biofísico}
+connectClusters $net $init $final
+set init {Biofísico}
+set final {Contribuciones}
+connectClusters $net $init $final
+set init {Infraestructura}
+set final {Contribuciones}
+connectClusters $net $init $final
+set init {Problemas}
+set final {Infraestructura}
+connectClusters $net $init $final
+set init {Meta}
+set final {Problemas}
+connectClusters $net $init $final
+set init {Problemas}
+set final {Socio-institucional}
+connectClusters $net $init $final
+set init {Problemas}
+set final {Uso de suelo/tierra}
+connectClusters $net $init $final
+setNodeCompareWord  $net {Calidad de Agua} {Acciones} {important}
+setNodeCompareWord  $net {Contaminacion de agua} {Infraestructura} {important}
+setNodeCompareWord  $net {Crecimiento urbano} {Socio-institucional} {important}
+setNodeCompareWord  $net {Deforestacion} {Contribuciones} {important}
+setNodeCompareWord  $net {Escasez de agua} {Infraestructura} {important}
+setNodeCompareWord  $net {Meta} {Problemas} {important}
+setNetCompareWord $net {important}
+setNetClusterColor $net {gainsboro}
+setNetNodeColor $net {#F0F8FF}
+setNetClusterWinFont $net {myDefaultFontCluster}
+setNetClusterIconFont $net {myDefaultFontCluster}
+setNetNodeFont $net {myDefaultFontNode}
+setFormulaType $net 0
+#Working on net 0
+catch {limitPowerOptions $net 2 0}
+c-network readAllCompares -network $net -source {
+8
+Acciones
+4
+Captacion de agua
+Compra de agua
+Modificacion vivienda
+Reforestación
+Biofísico
+1
+Deforestacion
+Contribuciones
+3
+Cortan árboles
+Descar Aguas Negras Clandes
+Venta_terreno
+Infraestructura
+5
+Desviacion de agua
+Falta de infraestructura
+Calidad de Agua
+Obstruccion de alcantarillado
+Planta tratadora Ubic_insu
+Meta
+1
+Meta
+Problemas
+3
+Contaminacion de agua
+Crecimiento urbano
+Escasez de agua
+Socio-institucional
+3
+Corrupcion
+Falta de recursos
+Falta de renta campo
+Uso de suelo/tierra
+1
+Asentamientos irregulares
+
+8 0,0 1,1 3,2 7,3 5,4 2,5 4,6 6,7 
+ 0.000000  1.000000  1.000000  1.000000  0.000000  0.000000  0.000000  0.000000 
+ 0.000000  0.000000  0.000000  0.000000  1.000000  0.000000  0.000000  0.000000 
+ 0.000000  0.000000  0.000000  0.000000  1.000000  0.000000  0.000000  0.000000 
+ 0.000000  0.000000  0.000000  0.000000  1.000000  0.000000  0.000000  0.000000 
+ 0.000000  0.000000  0.000000  0.000000  0.000000  0.000000  1.000000  0.000000 
+ 0.000000  1.000000  1.000000  0.000000  0.000000  0.000000  0.000000  0.000000 
+ 0.000000  0.000000  0.000000  0.000000  0.000000  0.000000  0.000000  0.000000 
+ 0.000000  0.000000  0.000000  0.000000  1.000000  0.000000  0.000000  0.000000 
+0
+0 
+
+1
+2 0,0 2,1 
+ 0.000000 
+
+2
+0 
+
+3
+2 2,0 0,1 
+ 0.000000 
+
+4
+1 5,0 
+
+5
+4 1,0 7,1 3,2 6,3 
+ 0.000000  0.000000  0.000000 
+ 0.000000  0.000000 
+ 0.000000 
+
+6
+0 
+
+7
+1 0,0 
+
+1,0,0
+1 3,0 
+
+1,0,2
+2 0,0 2,1 
+ 5.111111 
+
+3,0,0
+0 
+
+3,1,0
+0 
+
+3,2,0
+2 1,0 0,1 
+ 0.197368 
+
+3,3,0
+0 
+
+3,4,0
+0 
+
+3,0,2
+0 
+
+3,1,2
+1 1,0 
+
+3,2,2
+0 
+
+3,3,2
+0 
+
+3,4,2
+0 
+
+4,0,5
+3 2,0 0,1 1,2 
+ 0.308219  0.200893 
+ 0.195652 
+
+5,0,1
+0 
+
+5,1,1
+1 0,0 
+
+5,2,1
+1 0,0 
+
+5,0,3
+3 3,0 1,1 4,2 
+ 7.155556  0.255682 
+ 0.119681 
+
+5,1,3
+0 
+
+5,2,3
+2 0,0 4,1 
+ 7.022222 
+
+5,0,6
+0 
+
+5,1,6
+3 0,0 1,1 2,2 
+ 1.022222  0.241935 
+ 1.066667 
+
+5,2,6
+0 
+
+5,0,7
+1 0,0 
+
+5,1,7
+1 0,0 
+
+5,2,7
+1 0,0 
+
+7,0,0
+1 2,0 
+
+}
+
+set FORMAT 1
+recreateNetInsideFrameOnly $net

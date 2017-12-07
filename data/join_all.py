@@ -1,7 +1,7 @@
 import os
 import processing
 
-path = "/Users/fidel/Dropbox (LNCS)/Layers/Final"
+path = "/Users/abaezaca/Dropbox (ASU)/Layers (1)/final"
 
 #base_layer = QgsVectorLayer(os.path.join(path,"agebs_input.shp"))
 

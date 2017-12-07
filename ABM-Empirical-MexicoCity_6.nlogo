@@ -13,6 +13,8 @@ to GO
   if weeks = 1 and months = 1[
     ;flood_risk
     flood_risk_capacitysewer
+    health_risk
+
     ; flooding_glm
 
 ;#############################################################################################################################################
@@ -24,7 +26,6 @@ to GO
   ]
   ;
  if weeks = 4 [
-    health_risk
      WaterOperator-decisions "09"            ;;decisions by WaterOperator
    if escala = "cuenca"[
      WaterOperator-decisions "15"            ;;decisions by infra operator WaterOperator (estado de Mexico)
@@ -115,14 +116,49 @@ end
 to residents-decisions  ;calculation of distance metric using the distance metric. The code updates the value of the atributes in the landscape and its standarize value
   ;ask Alternatives_Xo  [print  supermatrix_residents W_matrix 2 4 12 [days_wno_water] of myself]
   if months = 12 [
-    print days_wno_water
+ ;   print days_wno_water
     ;ask Alternatives_Izb [print  supermatrix_residents W_matrix 2 4 12 [days_wno_water] of myself]           ;re-evaluate the criteria weights based on the level of scarcity
     ;ask Alternatives_Xo  [print  supermatrix_residents W_matrix 2 4 12 [days_wno_water] of myself]
-    ask Alternatives_MC  [print  supermatrix_residents W_matrix 3 2 9 [days_wno_water] of myself]
+    ;ask Alternatives_MC  [print  supermatrix_residents W_matrix 3 2 9 [days_wno_water] of myself]
+  ]
+;#############################################################################################################################################
+
+  if group_kmean = 0[ ;#Residents type Iztapalapa
+    ask Alternatives_MCc [
+      update_criteria_and_valueFunctions_residentes
+      let ww filter [ii -> ii > cut-off_priorities] criteria_weights                 ;; filter for the criterias that are most influential in the desition
+      let vv []
+      (foreach criteria_weights rescaled_criteria_values [ [a b] ->
+        if a > cut-off_priorities [
+          set vv lput b vv
+        ]
+      ])
+      set ww map[? -> ? / sum ww] ww
+
+      let  ddd (ideal_distance alternative_weights vv ww 1)
+      if name_action = "Movilizaciones"[
+        ask myself [
+          set d_Movilizaciones ddd]
+      ]
+      if name_action = "Modificacion vivienda"  and months = 1[
+      ask myself [set d_Modificacion_vivienda ddd]
+      ]
+
+      if name_action = "Captacion de agua" and months = 6 [
+        ask myself [set d_Captacion_agua ddd]
+      ]
+      if name_action = "Accion colectiva"  and months = 1[
+        ask myself [set d_Accion_colectiva ddd]
+      ]
+      if name_action = "Compra de agua"[
+        ask myself [set d_Compra_agua ddd]
+      ]
+    ]
   ]
 
+;###############################################################################################################################
 
-  if group_kmean = 2 or group_kmean = 3[ ;#residents type Xochimilco
+  if group_kmean = 2 [ ;#residents type Xochimilco
     ask Alternatives_Xo [
       ;normalize-criteria-values;
       update_criteria_and_valueFunctions_residentes
@@ -265,21 +301,21 @@ end
 ;take-action1;
 ;resident decides what action to take. The action with the large metric is defined
 to take_action_residents
-  if d_Modificacion_vivienda > max (list d_Movilizaciones d_Accion_colectiva d_Captacion_agua d_Compra_agua)
+  if d_Modificacion_vivienda > max (list d_Movilizaciones  d_Captacion_agua)
   [
 
     house-modification
   ]
 
-  if d_Movilizaciones >  max (list d_Modificacion_vivienda d_Accion_colectiva d_Captacion_agua) ;random-float 1;
+  if d_Movilizaciones >  max (list d_Modificacion_vivienda  d_Captacion_agua) ;random-float 1;
   [
     protest
 
   ]
-  if d_Accion_colectiva > max (list d_Modificacion_vivienda d_Movilizaciones d_Captacion_agua)
-  [
-  ]
-  if d_Captacion_agua > max (list d_Modificacion_vivienda d_Movilizaciones d_Accion_colectiva)
+  ;if d_Accion_colectiva > max (list d_Modificacion_vivienda d_Movilizaciones d_Captacion_agua)
+  ;[
+  ;]
+  if d_Captacion_agua > max (list d_Modificacion_vivienda d_Movilizaciones )
   [
     rain-waterCapture
   ]
@@ -966,7 +1002,7 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
       ;############################################################################################
     if visualization = "Salud" and ticks > 1 [
       set size health * 1 * factor_scale
-      set color scale-color green health 0 health_max
+      set color scale-color green (1 + health) 0 health_max
     ] ;;visualized incidence of gastrointestinal diseases in MX 2004-2014
       ;############################################################################################
     if visualization = "Encharcamientos" and ticks > 1 [
@@ -1015,7 +1051,7 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
       set color  scale-color magenta hundimiento 0 hundimiento_max
     ]
     ;############################################################################################
-    if visualization = "Value_function_edad_Ab" and ticks > 1 [
+    if visualization = "value_function_edad_Ab" and ticks > 1 [
       set size 2
       set color  scale-color magenta value_function_Age_Ab 0 1
     ]
@@ -1050,11 +1086,15 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
       set color  scale-color magenta value_function_falta_d 0 1
     ]
     ;############################################################################################
-    if visualization = " value_function_precipitation" and ticks > 1 [
+    if visualization = "value_function_precipitation" and ticks > 1 [
       set size 2
       set color  scale-color magenta  value_function_precipitation    0 1
     ]
-
+;############################################################################################
+    if visualization = "low_vs_high_land" and ticks > 1 [
+      set size 2
+      set color 54 * low_high-land
+    ]
 
   ]
 end
@@ -1074,9 +1114,9 @@ to-report supermatrix_residents [matrix_weighed index1 index2 col value_scarcity
   let v2 matrix:get M_matrix_weighed index2 col
   matrix:set M_matrix_weighed index1 col (v1 + v2) * super_matrix_parameter     ;super_matrix_parameter controls between two weights from alternative_names(maintenance and new-infra) to criteria. together sum up to 1.
   matrix:set M_matrix_weighed index2 col (v1 + v2) * (1 - super_matrix_parameter)
-  print matrix:pretty-print-text M_matrix_weighed
+ ; print matrix:pretty-print-text M_matrix_weighed
   let new_lim  (matrix:times M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed)
-  print matrix:pretty-print-text new_lim
+ ; print matrix:pretty-print-text new_lim
 
   let a_m sublist (matrix:get-column new_lim 1) 0 5
   let a_m_sum sum sublist (matrix:get-column new_lim 1) 0 5
@@ -1328,7 +1368,7 @@ end
 ;gastrointestinal-disease-simulation;
 to health_risk
   ;calculate a new number of incidence based on a spatial regreesion for the lowlands
-  ask agebs [
+  ask agebs  with [low_high-land = 0][
     let intercept 0.374
     let ro 0.451
     let beta_f 1.294
@@ -1337,8 +1377,11 @@ to health_risk
     let vec_weight neighboor_weights ;matrix data csv  sum = vec_weight
     set new_incidences intercept + (sum (map [[a b] -> (a * b)] vec_helt  vec_weight)) * ro + beta_f * flooding + random-normal 0 seg_sq
   ]
+  ask agebs  with [low_high-land = 1][
+    set new_incidences health
+  ]
   ask agebs [
-    set health new_incidences
+    set health ifelse-value (new_incidences >= 0)[new_incidences][0]
   ]
 end
 ;/gastrointestinal-disease-simulation;
@@ -1488,8 +1531,8 @@ CHOOSER
 172
 Visualization
 Visualization
-"Accion Colectiva" "Peticion ciudadana" "Captacion de Agua" "Compra de Agua" "Modificacion de la vivienda" "Areas prioritarias Mantenimiento" "Areas prioritarias Nueva Infraestructura" "Distribucion de Agua SACMEX" "GoogleEarth" "K_groups" "Salud" "Escasez" "Encharcamientos" "% houses with supply" "% houses with drainage" "P. Falla Ab" "P. Falla D" "Capacidad_D" "Zonas Aquifero" "Edad Infraestructura Ab." "Edad Infraestructura D" "Income-index" "hundimiento" "Value_function_edad_Ab" "value_function_Age_d" "value_function_scarcity" "value_function_floods" "value_function_falta_d" "value_function_falta_Ab" "value_function_capasity" "value_function_precipitation"
-11
+"Accion Colectiva" "Peticion ciudadana" "Captacion de Agua" "Compra de Agua" "Modificacion de la vivienda" "Areas prioritarias Mantenimiento" "Areas prioritarias Nueva Infraestructura" "Distribucion de Agua SACMEX" "GoogleEarth" "K_groups" "Salud" "Escasez" "Encharcamientos" "% houses with supply" "% houses with drainage" "P. Falla Ab" "P. Falla D" "Capacidad_D" "Zonas Aquifero" "Edad Infraestructura Ab." "Edad Infraestructura D" "Income-index" "hundimiento" "value_function_edad_Ab" "value_function_Age_d" "value_function_scarcity" "value_function_floods" "value_function_falta_d" "value_function_falta_Ab" "value_function_capasity" "value_function_precipitation" "low_vs_high_land"
+9
 
 BUTTON
 1222
@@ -1749,7 +1792,7 @@ factor_scale
 factor_scale
 0.000000000000000001
 4
-2.566
+2.519
 0.001
 1
 NIL
@@ -1807,7 +1850,7 @@ alt
 alt
 0
 3
-0.23
+0.24
 0.01
 1
 NIL
@@ -1937,7 +1980,7 @@ hsc_f
 hsc_f
 0
 100
-50.0
+25.0
 1
 1
 NIL
