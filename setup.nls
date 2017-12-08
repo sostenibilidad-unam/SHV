@@ -145,6 +145,8 @@ globals [
   flood_rain           ;table with probabilities of flooding based on frequqncies and rainfall
   flood_capacity_riskOldCity
   flood_capacity_riskNewCity
+  ;read_data_waterscarcity
+  average_day_nowater_perweek
 ]  ; /globals
 
 ;define-type-of-agents
@@ -380,6 +382,7 @@ to SETUP
   set flood_rain csv:from-file "data/bayesianofrequencia_encharcamientos.csv"
   set flood_capacity_riskOldCity csv:from-file "data/ABMtable_Flood_risk_capacity_oldCity.csv"
   set flood_capacity_riskNewCity csv:from-file "data/ABMtable_Flood_risk_capacity_newCityB.csv"
+  set average_day_nowater_perweek csv:from-file "data/Prueba_Poisson_3.csv"
   set contiguous_matrix csv:from-file "data/W_matrix_low.csv"
 ;9)#############################################################################################################################################
   set-initial-values-globals
@@ -393,7 +396,10 @@ to SETUP
   ;profiler:stop          ;; stop profiling
   ;print profiler:report  ;; view the results
   ;profiler:reset         ;; clear the data
+;12)#############################################################################################################################################
+define_initial-contitions_PipedwaterDistribution
   reset-ticks
+
 end
 
 to define-infrastructuresystems
@@ -778,57 +784,7 @@ end
     ]
   ]
 
-  ;to define areas with irregular water supply by pipes (e.g. mean_days_withNo_water)[days per week]
-  ;crear csv table and read the values from it
-  ask agebs with [CV_municipio = "002"][
-    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "002"]
-    set mean_days_withNo_water 0.21
-  ];"Azcapotzalco"
-  ask agebs with [CV_municipio = "003"][
-    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "003"]
-    set mean_days_withNo_water 0.39];"Coyoacan"
-  ask agebs with [CV_municipio = "004"][
-    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "004"]
-    set mean_days_withNo_water 0.66];"Cuajimalpa"
-  ask agebs with [CV_municipio = "005"][
-    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "005"]
-    set mean_days_withNo_water 0.21];"Gustavo A. Madero"
-  ask agebs with [CV_municipio = "006"][
-    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "006"]
-    set mean_days_withNo_water 0.119];"Iztacalco"
-  ask agebs with [CV_municipio = "007"][
-    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "007"]
-    set mean_days_withNo_water 1.67];"Iztapalapa"
-  ask agebs with [CV_municipio = "008"][
-    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "008"]
-    set mean_days_withNo_water 0.57];"La Magdalena Contreras"
-  ask agebs with [CV_municipio = "009"][
-    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "009"]
-    set mean_days_withNo_water 2.149];"Milpa Alta"
-  ask agebs with [CV_municipio = "010"][
-    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "010"]
-    set mean_days_withNo_water 0.28];"Álvaro Obregón"
-  ask agebs with [CV_municipio = "011"][
-    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "011"]
-    set mean_days_withNo_water 1.01];"Tláhuac"
-  ask agebs with [CV_municipio = "012"][
-    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "012"]
-    set mean_days_withNo_water 1.43];"Tlalpan"
-  ask agebs with [CV_municipio = "013"][
-    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "013"]
-    set mean_days_withNo_water 1.13];"Xochimilco"
-  ask agebs with [CV_municipio = "014"][
-    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "014"]
-    set mean_days_withNo_water 0.098];"Benito Juárez"
-  ask agebs with [CV_municipio = "015"][
-    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "015"]
-    set mean_days_withNo_water 0.082];"Cuauhtémoc"
-  ask agebs with [CV_municipio = "016"][
-    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "016"]
-    set mean_days_withNo_water 0.048];"Miguel Hidalgo"
-  ask agebs with [CV_municipio = "017"][
-    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "017"]
-    set mean_days_withNo_water 0.116];"Venustiano Carranza"
+
 end
 ;####################################################################################################### 
    to define_ActionsCriteria
@@ -1763,4 +1719,58 @@ to set-matrix-contj
     ])
     set j j + 1
   ] 
+end
+
+to define_initial-contitions_PipedwaterDistribution
+  ;to define areas with irregular water supply by pipes (e.g. mean_days_withNo_water)[days per week]
+  ;crear csv table and read the values from it
+  ask agebs with [CV_municipio = "002"][
+    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "002"]
+    set mean_days_withNo_water item 3 item 2 average_day_nowater_perweek];"Azcapotzalco"
+  ask agebs with [CV_municipio = "003"][
+    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "003"]
+    set mean_days_withNo_water item 3 item 4 average_day_nowater_perweek];"Coyoacan"
+  ask agebs with [CV_municipio = "004"][
+    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "004"]
+    set mean_days_withNo_water item 3 item 5 average_day_nowater_perweek];"Cuajimalpa"
+  ask agebs with [CV_municipio = "005"][
+    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "005"]
+    set mean_days_withNo_water item 3 item 7 average_day_nowater_perweek];"Gustavo A. Madero"
+  ask agebs with [CV_municipio = "006"][
+    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "006"]
+    set mean_days_withNo_water item 3 item 8 average_day_nowater_perweek];"Iztacalco"
+  ask agebs with [CV_municipio = "007"][
+    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "007"]
+    set mean_days_withNo_water item 3 item 9 average_day_nowater_perweek];"Iztapalapa"
+  ask agebs with [CV_municipio = "008"][
+    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "008"]
+    set mean_days_withNo_water item 3 item 10 average_day_nowater_perweek];"La Magdalena Contreras"
+  ask agebs with [CV_municipio = "009"][
+    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "009"]
+    set mean_days_withNo_water item 3 item 11 average_day_nowater_perweek];"Milpa Alta"
+  ask agebs with [CV_municipio = "010"][
+    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "010"]
+    set mean_days_withNo_water item 3 item 1 average_day_nowater_perweek];"Álvaro Obregón"
+  ask agebs with [CV_municipio = "011"][
+    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "011"]
+    set mean_days_withNo_water item 3 item 13 average_day_nowater_perweek];"Tláhuac"
+  ask agebs with [CV_municipio = "012"][
+    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "012"]
+    set mean_days_withNo_water item 3 item 14 average_day_nowater_perweek];"Tlalpan"
+  ask agebs with [CV_municipio = "013"][
+    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "013"]
+    set mean_days_withNo_water item 3 item 16 average_day_nowater_perweek];"Xochimilco"
+  ask agebs with [CV_municipio = "014"][
+    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "014"]
+    set mean_days_withNo_water item 3 item 3 average_day_nowater_perweek];"Benito Juárez"
+  ask agebs with [CV_municipio = "015"][
+    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "015"]
+    set mean_days_withNo_water item 3 item 6 average_day_nowater_perweek];"Cuauhtémoc"
+  ask agebs with [CV_municipio = "016"][
+    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "016"]
+    set mean_days_withNo_water item 3 item 12 average_day_nowater_perweek];"Miguel Hidalgo"
+  ask agebs with [CV_municipio = "017"][
+    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "017"]
+    set mean_days_withNo_water item 3 item 15 average_day_nowater_perweek];"Venustiano Carranza"
+  
 end
