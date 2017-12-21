@@ -16,7 +16,7 @@ globals [
   background_fugas             ;; % water lost every day by fugas
   max-elevation                ;;max altitude
   min-elevation                ;;max altitude
-  
+  limits_world                 ;;four corners of the netlogo world 
   ;;############################################################################################################################################
   SM   ;standarized measure from the value function
   dist ;the reported value of distance from the ideal point function
@@ -614,7 +614,7 @@ to load-GIS-data
   
   if escala = "cuenca"[
     gis:set-world-envelope-ds gis:envelope-of Agebs_map_full ;mascara ;ageb13;mascara;Limites_delegacionales
-   
+   set limits_world (gis:envelope-of Agebs_map_full)
 ;    let xx_min  min (matrix:get-column Agebs_map_full_csv 0) 
 ;    let xx_max  max (matrix:get-column Agebs_map_full_csv 0) 
 ;    let yy_min  min (matrix:get-column Agebs_map_full_csv 1) 
@@ -625,7 +625,7 @@ to load-GIS-data
 
   set city_image  bitmap:import "data/image_googleEarth_cuencaMexicoB.jpg";"data/DF_googleB.jpg"                                                   ; google earth image
   bitmap:copy-to-pcolors City_image false
-
+print limits_world
 end
   to define_neighborhoods
   ;  define_neighborhoods_full ;;REFERS TO THE FULL AREA OF STUDY. THAT IS THE ENTIRE WATERSHED OF MEXICO CITY VALEY  (need to complete information for other areas)
@@ -833,8 +833,22 @@ end
       
       set ID "IO80316"
       set location list 19.322143 -99.038609 ;miravalle arriba
-      set name_action ?
-      set label name_action
+      if jj = 0[
+        let xmin item 0 limits_world
+        let xmax item 1 limits_world
+        let ymin item 2 limits_world
+        let ymax item 3 limits_world
+        let x item 1 location 
+        let y item 0 location 
+        print (x - xmin) / (xmax - xmin) * world-width + min-pxcor 
+        print (y - xmin) / (xmax - xmin) * world-width + min-pycor 
+        set xcor (x - xmin) / (xmax - xmin) * world-width + min-pxcor 
+        set ycor (y - ymin) / (ymax - ymin) * world-width + min-pycor
+        set name_action ?
+        set shape "house"
+        set size 10 
+      ]
+      ;set label name_action
       set ageb_pt 4085
       set criteria_values (list 0 0 0 0 0 0 0 0 0)
       set criteria_max (list 0 0 0 0 0 0 0 0 0)
@@ -930,8 +944,20 @@ end
       
       set ID "I072816"
       set location list 19.324931 -99.041920  ;desarrollo urbano Quetzalcoatl
+      if jj = 0[
+        let xmin item 0 limits_world
+        let xmax item 1 limits_world
+        let ymin item 2 limits_world
+        let ymax item 3 limits_world
+        let x item 1 location 
+        let y item 0 location 
+        set xcor (x - xmin) / (xmax - xmin) * world-width + min-pxcor 
+        set ycor (y - ymin) / (ymax - ymin) * world-width + min-pycor
+        set name_action ?
+        set shape "house"
+        set size 10 
+      ]
       set name_action ?
-      set label name_action
       set criteria_values (list 0 0 0 0 0 0 0 0 0)
       set criteria_max (list 0 0 0 0 0 0 0 0 0)
       set rescaled_criteria_values (list 0 0 0 0 0 0 0 0 0)
@@ -1028,8 +1054,20 @@ end
       
       set ID "XO62916_a (Tiziliclipa)"
       set location list 19.227280 -99.088687
+      if jj = 0[
+        let xmin item 0 limits_world
+        let xmax item 1 limits_world
+        let ymin item 2 limits_world
+        let ymax item 3 limits_world
+        let x item 1 location 
+        let y item 0 location 
+        set xcor (x - xmin) / (xmax - xmin) * world-width + min-pxcor 
+        set ycor (y - ymin) / (ymax - ymin) * world-width + min-pycor
+        set name_action ?
+        set shape "house"
+        set size 10 
+      ]
       set name_action ?
-      set label name_action
       set criteria_values (list 0 0 0 0 0 0 0 0 0)
       set criteria_max (list 0 0 0 0 0 0 0 0 0)
       set rescaled_criteria_values (list 0 0 0 0 0 0 0 0 0)
@@ -1088,7 +1126,6 @@ end
   let MMMC csv:from-file  "data/MC080416_OTR_a.weighted.csv"
   let MMMC_limit csv:from-file  "data/MC080416_OTR_a.limit.csv"
     ;Kmeangroup=4
-  print MMMC_limit
   
   set alternative_names(list item 1 item 2 MMMC_limit
     item 1 item 3 MMMC_limit
@@ -1118,15 +1155,27 @@ end
         set VMMMC_limit []
       ]
       set W_matrix MMMC_limit_new
-      print W_matrix
+   
       
       
       
       
       
       set ID "MC080416"
+      if jj = 0[
+        let xmin item 0 limits_world
+        let xmax item 1 limits_world
+        let ymin item 2 limits_world
+        let ymax item 3 limits_world
+        let x item 1 location 
+        let y item 0 location 
+        set xcor (x - xmin) / (xmax - xmin) * world-width + min-pxcor 
+        set ycor (y - ymin) / (ymax - ymin) * world-width + min-pycor
+        set name_action ?
+        set shape "house"
+        set size 10 
+      ]
       set name_action ?
-      set label name_action
       set criteria_values (list 0 0 0 0 0 0)
       set criteria_max (list 0 0 0 0 0 0)
       set rescaled_criteria_values (list 0 0 0 0 0 0)
@@ -1189,7 +1238,6 @@ end
     create-Alternatives_MCb 1 [
       
       
-      set location list 19.310102 -99.228422
       
       
       
@@ -1217,9 +1265,22 @@ end
       
       
       set ID "MC080416b"
+      set location list 19.310102 -99.228422
+      if jj = 0[
+        let xmin item 0 limits_world
+        let xmax item 1 limits_world
+        let ymin item 2 limits_world
+        let ymax item 3 limits_world
+        let x item 1 location 
+        let y item 0 location 
+        set xcor (x - xmin) / (xmax - xmin) * world-width + min-pxcor 
+        set ycor (y - ymin) / (ymax - ymin) * world-width + min-pycor
+        set name_action ?
+        set shape "house"
+        set size 10 
+      ]
       set name_action ?
-      set label name_action
-      
+
       set criteria_values (list 0 0 0 0 0 0 0 0 0 0)
       set criteria_max (list 0 0 0 0 0 0 0 0 0 0)
       set rescaled_criteria_values (list 0 0 0 0 0 0 0 0 0 0)
@@ -1289,7 +1350,7 @@ end
  ; let MMMCc csv:from-file  "data/MC030315_OTR_ElOcotal.weighted.csv"  no weighted
   let MMMCc_limit csv:from-file  "data/MC030315_OTR_ElOcotal.limit.csv"
   
-  set alternative_names(list item 1 item 2 MMMCb_limit
+  set alternative_names(list item 1 item 2 MMMCc_limit
     item 1 item 3 MMMCc_limit
     item 1 item 4 MMMCc_limit
     item 1 item 5 MMMCc_limit
@@ -1301,9 +1362,6 @@ end
   foreach alternative_names[
     ? ->
     create-Alternatives_MCc 1 [
-      
-      print "hola"
-      
       
       
       
@@ -1332,9 +1390,20 @@ end
       
       set ID "MC030315"
       set location list 19.300691 -99.261214
-      set name_action ?
-      set label name_action
-      
+      if jj = 0[
+        let xmin item 0 limits_world
+        let xmax item 1 limits_world
+        let ymin item 2 limits_world
+        let ymax item 3 limits_world
+        let x item 1 location 
+        let y item 0 location 
+        set xcor (x - xmin) / (xmax - xmin) * world-width + min-pxcor 
+        set ycor (y - ymin) / (ymax - ymin) * world-width + min-pycor
+        set name_action ?
+        set shape "house"
+        set size 10 
+      ]
+      set name_action ?    
       set criteria_values (list 0 0 0 0 0 0 0 0 0 0 0 0 0)
       set criteria_max (list 0 0 0 0 0 0 0 0 0 0 0 0 0)
       set rescaled_criteria_values (list 0 0 0 0 0 0 0 0 0 0 0 0 0)
@@ -1403,18 +1472,18 @@ end
     
   ]
   
-  ask Alternatives_MCb with [name_action = "Compra de agua"] [set v_scale_S [0.05 0.1 1 1 1]]
-  ask Alternatives_MCb with [name_action = "Movilizaciones"] [set v_scale_S [0.05 0.05 0.05 0.4 1]]
-  ask Alternatives_MCb with [name_action = "Accion colectiva"] [set v_scale_S [0.05 0.1 1 1 1]]
-  ask Alternatives_MCb with [name_action = "Captacion de agua"] [set v_scale_S [0.05 0.1 1 1 1]]
-  ask Alternatives_MCb with [name_action = "Modificacion vivienda"] [set v_scale_S [0 0 0 0 0]]
+  ask Alternatives_MCc with [name_action = "Compra de agua"] [set v_scale_S [0.05 0.1 1 1 1]]
+  ask Alternatives_MCc with [name_action = "Movilizaciones"] [set v_scale_S [0.05 0.05 0.05 0.4 1]]
+  ask Alternatives_MCc with [name_action = "Accion colectiva"] [set v_scale_S [0.05 0.1 1 1 1]]
+  ask Alternatives_MCc with [name_action = "Captacion de agua"] [set v_scale_S [0.05 0.1 1 1 1]]
+  ask Alternatives_MCc with [name_action = "Modificacion vivienda"] [set v_scale_S [0 0 0 0 0]]
   
   
-  ask Alternatives_MCb with [name_action = "Compra de agua"] [set v_scale_F [0 0 0 0 0]]
-  ask Alternatives_MCb with [name_action = "Movilizaciones"] [set v_scale_F [0 0 0 0 0]]
-  ask Alternatives_MCb with [name_action = "Accion colectiva"] [set v_scale_F [0 0 0 0 0]]
-  ask Alternatives_MCb with [name_action = "Captacion de agua"] [set v_scale_F [0 0 0 0 0]]
-  ask Alternatives_MCb with [name_action = "Modificacion vivienda"] [set v_scale_F [0 1 1 1 1]]
+  ask Alternatives_MCc with [name_action = "Compra de agua"] [set v_scale_F [0 0 0 0 0]]
+  ask Alternatives_MCc with [name_action = "Movilizaciones"] [set v_scale_F [0 0 0 0 0]]
+  ask Alternatives_MCc with [name_action = "Accion colectiva"] [set v_scale_F [0 0 0 0 0]]
+  ask Alternatives_MCc with [name_action = "Captacion de agua"] [set v_scale_F [0 0 0 0 0]]
+  ask Alternatives_MCc with [name_action = "Modificacion vivienda"] [set v_scale_F [0 1 1 1 1]]
   ;################################################
  
   

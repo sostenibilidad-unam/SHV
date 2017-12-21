@@ -71,6 +71,7 @@ to GO
   ;##########################################################
 ;distribute water to Mexico City using resources by WaterOperator
   water_distribution "09" Recursos_para_distribucion
+;distribute water to other states using resources by WaterOperator
   if escala = "cuenca"[
     water_distribution "15" Recursos_para_distribucion ;distribute water to Mexico City using resources by WaterOperator
   ]
@@ -81,7 +82,7 @@ to GO
   ]
 ;##########################################################
   Landscape_visualization          ;;visualization of social and physical processes
-                                   ;Supermatrix to change weights and re-calculate priorities
+
 ;##########################################################
 ;
  ; print supermatrix_residents [matrix:from-row-list W_matrix] of Alternatives_IZb with [name_action = "Movilizaciones"] 0 1 12
@@ -114,7 +115,7 @@ end
 ;#############################################################################################################################################
  ;calculate-distances-to-ideal-points;
 to residents-decisions  ;calculation of distance metric using the distance metric. The code updates the value of the atributes in the landscape and its standarize value
-  ;ask Alternatives_Xo  [print  supermatrix_residents W_matrix 2 4 12 [days_wno_water] of myself]
+  ;test to -recalculate weighted supermatrix_residents using
   if months = 12 [
  ;   print days_wno_water
     ;ask Alternatives_Izb [print  supermatrix_residents W_matrix 2 4 12 [days_wno_water] of myself]           ;re-evaluate the criteria weights based on the level of scarcity
@@ -512,8 +513,8 @@ end
 to WaterOperator-decisions [estado]
  ;;; Define value functions
  ;;here water operators evalaute each census block by calculating the distance from an ideal point
- ;we call each action to normalize the value of the CB's attributes associated to a criteria
- ;we set the value functions and define the distant metric based on compromisez programing function with exponent =2
+ ;the procedure calls each action to update the normalized value of the CB's attributes associated to the criteria set
+ ;we set the value functions and define the distant metric based on compromized programing function with exponent = 2  (see value function.nls)
   ask  agebs with [CV_estado = estado][
     ;#################################################################################################################################################
  ;water operator potable water system decision-making process
@@ -1532,7 +1533,7 @@ CHOOSER
 Visualization
 Visualization
 "Accion Colectiva" "Peticion ciudadana" "Captacion de Agua" "Compra de Agua" "Modificacion de la vivienda" "Areas prioritarias Mantenimiento" "Areas prioritarias Nueva Infraestructura" "Distribucion de Agua SACMEX" "GoogleEarth" "K_groups" "Salud" "Escasez" "Encharcamientos" "% houses with supply" "% houses with drainage" "P. Falla Ab" "P. Falla D" "Capacidad_D" "Zonas Aquifero" "Edad Infraestructura Ab." "Edad Infraestructura D" "Income-index" "hundimiento" "value_function_edad_Ab" "value_function_Age_d" "value_function_scarcity" "value_function_floods" "value_function_falta_d" "value_function_falta_Ab" "value_function_capasity" "value_function_precipitation" "low_vs_high_land"
-9
+26
 
 BUTTON
 1222
@@ -1569,10 +1570,10 @@ NIL
 1
 
 SLIDER
-27
-421
-235
-454
+34
+424
+242
+457
 Requerimiento_deAgua
 Requerimiento_deAgua
 0.007
@@ -1592,7 +1593,7 @@ recursos_para_mantenimiento
 recursos_para_mantenimiento
 1
 2400
-727.0
+779.0
 1
 1
 NIL
@@ -1677,7 +1678,7 @@ Eficiencia_Mantenimiento
 Eficiencia_Mantenimiento
 0
 0.05
-0.015
+0.01
 0.005
 1
 NIL
@@ -1692,7 +1693,7 @@ recursos_nuevaInfrastructura
 recursos_nuevaInfrastructura
 0
 2400
-929.0
+460.0
 1
 1
 NIL
@@ -1707,7 +1708,7 @@ Recursos_para_distribucion
 Recursos_para_distribucion
 0
 2400
-911.0
+1306.0
 1
 1
 NIL
@@ -1722,7 +1723,7 @@ cut-off_priorities
 cut-off_priorities
 0
 1
-0.0
+0.89
 0.01
 1
 NIL
@@ -1792,7 +1793,7 @@ factor_scale
 factor_scale
 0.000000000000000001
 4
-2.519
+3.383
 0.001
 1
 NIL
@@ -1843,24 +1844,24 @@ NIL
 
 SLIDER
 30
-512
+502
 231
-545
+535
 alt
 alt
 0
 3
-0.24
+0.84
 0.01
 1
 NIL
 HORIZONTAL
 
 SLIDER
-28
-547
-231
-580
+29
+537
+232
+570
 a_failure
 a_failure
 0
@@ -1872,10 +1873,10 @@ NIL
 HORIZONTAL
 
 PLOT
-1220
-543
-1469
-693
+1397
+468
+1620
+613
 Frequencia de Encharcamientos
 NIL
 NIL
@@ -1890,10 +1891,10 @@ PENS
 "default" 1.0 1 -16777216 true "" "histogram [flooding] of agebs"
 
 PLOT
-1220
-387
-1467
-537
+1397
+319
+1617
+464
 Agua disponible
 NIL
 NIL
@@ -1923,10 +1924,10 @@ NIL
 HORIZONTAL
 
 PLOT
-1222
-233
-1468
-383
+1394
+177
+1619
+320
 Capacidad Systema de Drenaje
 NIL
 NIL
@@ -1957,10 +1958,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-27
-588
-231
-621
+28
+578
+232
+611
 hsc_s
 hsc_s
 0

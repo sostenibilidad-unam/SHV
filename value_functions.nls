@@ -7,12 +7,25 @@ to-report Value-Function [criteria_value xcuts criteria_categories criterium_max
   ;criteria_categories list of strings that define the lisguistic scale associated with a biobisical variable
   ;criterium_max the ideal or anti ideal point of the criteria defined based on the linguistic scale (e.g. intolerable ~= anti-ideal)
   ;ycuts a list of standard values to map the natural scales
-    if criteria_value > (item 3 xcuts) * criterium_max [set SM (item 4 ycuts)]
-    if criteria_value > (item 2 xcuts) * criterium_max and criteria_value <= (item 3 xcuts) * criterium_max [set SM (item 3 ycuts)]
-    if criteria_value > (item 1 xcuts) * criterium_max and criteria_value <= (item 2 xcuts) * criterium_max [set SM (item 2 ycuts)]
-    if criteria_value > (item 0 xcuts) * criterium_max and criteria_value <= (item 1 xcuts) * criterium_max [set SM (item 1 ycuts)]
-    if criteria_value <= (item 0 xcuts) * criterium_max [set SM (item 0 ycuts)]
-    Report SM  ;return a list of
+;  let r 1  
+;  let so criterium_max / ((1 + r) ^ 5)
+;  let xcuts_wfp map [a -> ((1 + r) ^ a) * so](list 1 2 3 4)
+;  ;print (list (lput criterium_max xcuts_wfp) (list 1 2 3 4 5))
+;  set xcuts_wfp lput so xcuts_wfp
+;  if criteria_value > (item 3 xcuts_wfp) [set SM (item 4 ycuts)]
+;  if criteria_value > (item 2 xcuts_wfp) and criteria_value <= (item 3 xcuts_wfp) [set SM (item 3 ycuts)]
+;  if criteria_value > (item 1 xcuts_wfp) and criteria_value <= (item 2 xcuts_wfp) [set SM (item 2 ycuts)]
+;  if criteria_value > (item 0 xcuts_wfp) and criteria_value <= (item 1 xcuts_wfp) [set SM (item 1 ycuts)]
+;  if criteria_value <= (item 0 xcuts_wfp) [set SM (item 0 ycuts)]
+;  
+;  
+  
+  if criteria_value > (item 3 xcuts) * criterium_max [set SM (item 4 ycuts)]
+  if criteria_value > (item 2 xcuts) * criterium_max and criteria_value <= (item 3 xcuts) * criterium_max [set SM (item 3 ycuts)]
+  if criteria_value > (item 1 xcuts) * criterium_max and criteria_value <= (item 2 xcuts) * criterium_max [set SM (item 2 ycuts)]
+  if criteria_value > (item 0 xcuts) * criterium_max and criteria_value <= (item 1 xcuts) * criterium_max [set SM (item 1 ycuts)]
+  if criteria_value <= (item 0 xcuts) * criterium_max [set SM (item 0 ycuts)]
+  Report SM  ;return a list of
 end
 
 
@@ -20,29 +33,31 @@ to update_criteria_and_valueFunctions_WaterOperator    ;;update the biphisical v
   let i 0 ; i is the index of each criteria
   (foreach criteria_names
     [? ->
-    ;###########################################################
-    if ? = "Antiguedad"[
-      if breed = alternatives_WaterOperator_AB[
-        set criteria_values replace-item i criteria_values ([Antiguedad-infra_Ab] of myself)
-        set criteria_max replace-item i criteria_max Antiguedad-infra_Ab_max
-        set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
+      ;###########################################################
+      if ? = "Antiguedad"[
+        if breed = alternatives_WaterOperator_AB[
+          set criteria_values replace-item i criteria_values ([Antiguedad-infra_Ab] of myself)
+          set criteria_max replace-item i criteria_max Antiguedad-infra_Ab_max
+          ;set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
+          set rescaled_criteria_values replace-item i rescaled_criteria_values VF1 120 ((item i criteria_values)  / 54)
+          
           ask myself [set value_function_Age_Ab [item i rescaled_criteria_values] of myself]
-        ;pri  print [value_function_Age_Ab] of myself
+ 
         ]
-      if breed = alternatives_WaterOperator_d[
-        set criteria_values replace-item i criteria_values ([Antiguedad-infra_d] of myself)
-        set criteria_max replace-item i criteria_max Antiguedad-infra_d_max
-        set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
+        if breed = alternatives_WaterOperator_d[
+          set criteria_values replace-item i criteria_values ([Antiguedad-infra_d] of myself)
+          set criteria_max replace-item i criteria_max Antiguedad-infra_d_max
+          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
           ask myself [set value_function_Age_d [item i rescaled_criteria_values] of myself]
+        ]
       ]
-    ]
-    ;###########################################################
-     if ? = "Capacidad"[
-       if breed = alternatives_WaterOperator_AB[
-         set criteria_values replace-item i criteria_values [Capacidad_Ab] of myself
-         set criteria_max replace-item i criteria_max  Capacidad_Ab_max ;change with update quantity for speed
-         set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937] ["" "" "" ""] (item i criteria_max)  [1 0.8 0.6 0.4 0.2])
-         
+      ;###########################################################
+      if ? = "Capacidad"[
+        if breed = alternatives_WaterOperator_AB[
+          set criteria_values replace-item i criteria_values [Capacidad_Ab] of myself
+          set criteria_max replace-item i criteria_max  Capacidad_Ab_max ;change with update quantity for speed
+          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937] ["" "" "" ""] (item i criteria_max)  [1 0.8 0.6 0.4 0.2])
+          
         ]
        if breed = alternatives_WaterOperator_D [
          set criteria_values replace-item i criteria_values [Capacidad_D] of myself
@@ -56,21 +71,23 @@ to update_criteria_and_valueFunctions_WaterOperator    ;;update the biphisical v
       if breed = alternatives_WaterOperator_AB[
         set criteria_values replace-item i criteria_values [Falla_Ab] of myself
         set criteria_max replace-item i criteria_max Falla_Ab_max
-        set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
+        set rescaled_criteria_values replace-item i rescaled_criteria_values [Falla_Ab] of myself;(Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
       ]
       if breed = Alternatives_WaterOperator_D[
         set criteria_values replace-item i criteria_values [Falla_d] of myself
         set criteria_max replace-item i criteria_max Falla_d_max
-        set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
+        set rescaled_criteria_values replace-item i rescaled_criteria_values [Falla_d] of myself;(Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
       ]
     ]
     ;###########################################################
-    if ? = "Falta"[
-      if breed = alternatives_WaterOperator_AB[
-        set criteria_values  replace-item i criteria_values [falta_Ab] of myself
-        set criteria_max replace-item i criteria_max falta_Ab_max
-        set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
-       ask myself [set value_function_falta_ab [item i rescaled_criteria_values] of myself] 
+      if ? = "Falta"[
+        if breed = alternatives_WaterOperator_AB[
+          set criteria_values  replace-item i criteria_values [falta_Ab] of myself
+          set criteria_max replace-item i criteria_max falta_Ab_max
+          ;set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
+          set rescaled_criteria_values replace-item i rescaled_criteria_values (VF2 (100 * (item i criteria_values)))
+          
+          ask myself [set value_function_falta_ab [item i rescaled_criteria_values] of myself] 
         ]
         if breed = alternatives_WaterOperator_d[
           set criteria_values  replace-item i criteria_values [falta_d] of myself
@@ -78,7 +95,7 @@ to update_criteria_and_valueFunctions_WaterOperator    ;;update the biphisical v
           set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
           ask myself [set value_function_falta_d [item i rescaled_criteria_values] of myself] 
         ]
-    ]
+      ]
     ;###########################################################
     if ? = "Presion_hidraulica"[
       set criteria_values replace-item i criteria_values [Presion_hidraulica] of myself
@@ -130,8 +147,8 @@ to update_criteria_and_valueFunctions_WaterOperator    ;;update the biphisical v
       set criteria_values replace-item i criteria_values [Flooding] of myself
       set criteria_max replace-item i criteria_max Flooding_max;109.28  ;change with update quantity for speed
         
-      if-else name_action = "Extraccion_agua"[
-        set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937] ["" "" "" ""] (item i criteria_max)  [1 0.8 0.6 0.4 0.2])
+        if-else name_action = "Extraccion_agua"[
+          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937] ["" "" "" ""] (item i criteria_max)  [1 0.8 0.6 0.4 0.2])
           ask myself [set value_function_floods_Wextraction [item i rescaled_criteria_values] of myself]
         ]
       [
@@ -383,3 +400,74 @@ to-report ideal_distance[alternative_weight rescaled_values criteria-weights exp
      report dist
 end
 ;/calculate-distances-to-ideal-points;
+
+
+;#############################################################################################################################################
+;#############################################################################################################################################
+;Implementation of different value functions 
+
+to-report VF1[min_x attribute]  ;value function criterium: edad infrastructure
+  ;min_x: value of attribute x at which y = 0
+  ;attribute: value of attribute x in the census block
+  let alpha_vf 80
+  let y_vf exp ( - ((0 - min_x) / alpha_vf) ^ 2)
+  let yy_vf exp ( - ((120 - min_x) / alpha_vf) ^ 2)
+  let svf 1 - ((exp ( - ((attribute - min_x) / alpha_vf) ^ 2) - y_vf) / (yy_vf - y_vf))
+ 
+  report svf
+end  
+
+;#########################################################
+to-report VF2 [attribute];value function criterium health
+  let p1 15.848931
+  let yy_vf 1 - exp ((0 - 10) / p1)
+  let y_vf 1 - exp ((100 - 10) / p1)
+  let svf ((1 - exp ((attribute - 10) / p1)) - y_vf) / (yy_vf - y_vf)
+ 
+  report svf
+end 
+;#########################################################
+to-report VF3 [attribute] ;value function criterium: capasity
+  let p1 0.032638
+  let y_vf exp (p1 * 0)
+  let yy_vf exp (p1 * 100)
+  let svf (exp (- p1 * attribute) - y_vf) / (yy_vf - y_vf)
+ 
+  report svf
+end 
+;#########################################################
+to-report VF4 [attribute] ;value function criterium: social pressure
+  let p1 20
+  let p2 54
+  let y_vf (exp (- ((0 - p2) / p1) ^ 2))
+  let yy_vf (exp (- ((54 - p2) / p1) ^ 2))
+  let svf ((exp (- ((attribute - p2) / p1) ^ 2))  - y_vf) / (yy_vf - y_vf)
+  report svf
+end 
+;#########################################################
+to-report VF5 [attribute] ;value function criterium: scarcity
+  let p1 0.006370766
+
+  let y_vf exp (-(336 * p1))
+  let yy_vf exp (-(0 * p1))
+  let svf (exp (-(attribute * p1))  - y_vf) / (yy_vf - y_vf)
+ 
+  report svf
+end 
+;#########################################################
+to-report VF6 [attribute] ;value function criterium: ponding
+  let p1 0.006370766
+  let x_min 0
+  let y_vf exp (-((attribute - 100) / p1))
+  let yy_vf exp (-((attribute - 0) / p1))
+  let svf (exp (-((attribute -x_min) / p1))  - y_vf) / (yy_vf - y_vf)
+ 
+  report svf
+end
+;#########################################################
+to-report VF7 [attribute] ;value function criterium: Flooding
+  let p1 1
+  let svf ifelse-value (attribute > p1)[0][1] 
+  report svf
+end
+;#########################################################
