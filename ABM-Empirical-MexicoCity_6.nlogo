@@ -68,6 +68,7 @@ to GO
     ]
   ]
 
+
   ;##########################################################
 ;distribute water to Mexico City using resources by WaterOperator
   water_distribution "09" Recursos_para_distribucion
@@ -372,7 +373,7 @@ to update_maximum_full  ;; update the maximum or minimum of values use by the mo
   set Antiguedad-infra_Ab_max max [Antiguedad-infra_Ab] of agebs
   set Antiguedad-infra_D_max max [Antiguedad-infra_D] of agebs
   set desperdicio_agua_max max [desperdicio_agua] of agebs;;max level of perception of deviation
-  set days_wno_water_max max[days_wno_water] of agebs
+  set days_wno_water_max max [days_wno_water] of agebs
   set Gasto_hidraulico_max max [Gasto_hidraulico] of agebs
   set presion_hidraulica_max max [presion_hidraulica] of agebs
   set desviacion_agua_max max [desviacion_agua] of agebs
@@ -843,7 +844,7 @@ end
 to water_in_a_week  ;this procedure check if water was distributed to an ageb. This is true if water came from pipes, trucks or buying water
   if-else water_distributed_trucks = 1 [
     set water_in water_distributed_trucks + water_distributed_pipes
-    set days_wno_water 0
+    ;set days_wno_water 0
   ]
   [
     set water_in water_distributed_pipes
@@ -1533,7 +1534,7 @@ CHOOSER
 Visualization
 Visualization
 "Accion Colectiva" "Peticion ciudadana" "Captacion de Agua" "Compra de Agua" "Modificacion de la vivienda" "Areas prioritarias Mantenimiento" "Areas prioritarias Nueva Infraestructura" "Distribucion de Agua SACMEX" "GoogleEarth" "K_groups" "Salud" "Escasez" "Encharcamientos" "% houses with supply" "% houses with drainage" "P. Falla Ab" "P. Falla D" "Capacidad_D" "Zonas Aquifero" "Edad Infraestructura Ab." "Edad Infraestructura D" "Income-index" "hundimiento" "value_function_edad_Ab" "value_function_Age_d" "value_function_scarcity" "value_function_floods" "value_function_falta_d" "value_function_falta_Ab" "value_function_capasity" "value_function_precipitation" "low_vs_high_land"
-26
+11
 
 BUTTON
 1222
@@ -1708,7 +1709,7 @@ Recursos_para_distribucion
 Recursos_para_distribucion
 0
 2400
-1306.0
+539.0
 1
 1
 NIL
