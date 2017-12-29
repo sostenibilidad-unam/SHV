@@ -25,12 +25,7 @@ to GO
     change_subsidence_rate
   ]
   ;
- if weeks = 4 [
-     WaterOperator-decisions "09"            ;;decisions by WaterOperator
-   if escala = "cuenca"[
-     WaterOperator-decisions "15"            ;;decisions by infra operator WaterOperator (estado de Mexico)
-   ]
- ]
+
 ;;actions WaterOperator
 ;  if days = 1 [
   if weeks = 1 [
@@ -45,9 +40,7 @@ to GO
      New-Infra_D "15"
    ]
  ]
-
-  ask agebs [
-    ;set counters of investment to 0 in each new cycle. (total are seved in another variable
+ ask agebs [
     set days_water_in 0
     set investment_here_AB 0
     set investment_here_D 0
@@ -62,21 +55,36 @@ to GO
     Vulnerability_indicator
     condition_infra_change
 ;    if days = 1 [
-    if weeks = 4 [
-      residents-decisions
-      set days_wno_water 0
-    ]
+
   ]
-
-
-  ;##########################################################
+;##########################################################
 ;distribute water to Mexico City using resources by WaterOperator
   water_distribution "09" Recursos_para_distribucion
 ;distribute water to other states using resources by WaterOperator
   if escala = "cuenca"[
     water_distribution "15" Recursos_para_distribucion ;distribute water to Mexico City using resources by WaterOperator
   ]
+
+  if weeks = 4 [
+     WaterOperator-decisions "09"            ;;decisions by WaterOperator
+   if escala = "cuenca"[
+     WaterOperator-decisions "15"            ;;decisions by infra operator WaterOperator (estado de Mexico)
+   ]
+    ;##########################################################
+    ;Set monthly counter of "days without water supply" to cero.
+    ;ask residents in census blocks to act in the lanscape
+    ask agebs[
+      residents-decisions
+      set days_wno_water 0
+    ]
+ ]
 ;##########################################################
+;Update variables; set counters of investments to 0 in each new cycle of decision.
+
+
+
+
+  ;##########################################################
 ;update indicators of flood and scaricty at the end of the simulation
   if months = 12 [
     ask agebs[indicators]
@@ -814,7 +822,6 @@ let available_trucks recursos
         set water_distributed_trucks 0
       ]
       water_in_a_week ;define if agebs receive water or not after the mean_days_withNo_water, and the decision of the manager to sent water by other means (trucks)
-
     ]
   ]
 end
@@ -1534,7 +1541,7 @@ CHOOSER
 Visualization
 Visualization
 "Accion Colectiva" "Peticion ciudadana" "Captacion de Agua" "Compra de Agua" "Modificacion de la vivienda" "Areas prioritarias Mantenimiento" "Areas prioritarias Nueva Infraestructura" "Distribucion de Agua SACMEX" "GoogleEarth" "K_groups" "Salud" "Escasez" "Encharcamientos" "% houses with supply" "% houses with drainage" "P. Falla Ab" "P. Falla D" "Capacidad_D" "Zonas Aquifero" "Edad Infraestructura Ab." "Edad Infraestructura D" "Income-index" "hundimiento" "value_function_edad_Ab" "value_function_Age_d" "value_function_scarcity" "value_function_floods" "value_function_falta_d" "value_function_falta_Ab" "value_function_capasity" "value_function_precipitation" "low_vs_high_land"
-11
+9
 
 BUTTON
 1222
@@ -1724,7 +1731,7 @@ cut-off_priorities
 cut-off_priorities
 0
 1
-0.89
+0.0
 0.01
 1
 NIL
