@@ -398,6 +398,10 @@ to SETUP
   ;profiler:reset         ;; clear the data
 ;12)#############################################################################################################################################
 define_initial-contitions_PipedwaterDistribution
+
+;13)#############################################################################################################################################
+ show_sewer
+
   reset-ticks
 
 end
@@ -1723,10 +1727,10 @@ end
 
 ;#############################################################################################################################################
 to set_maximum [estado]   ;; update the maximum or minimum of values use by the model to calculate range of the value functions this time relative to the domain of the agent who needs the inforamtion to take decition
-  set Antiguedad-infra_Ab_max 80 * 365
-  set Antiguedad-infra_D_max 80 * 365
+  set Antiguedad-infra_Ab_max 120 * 365
+  set Antiguedad-infra_D_max 120 * 365
   set desperdicio_agua_max 100;max [desperdicio_agua] of agebs with [CV_estado = estado];;max level of perception of deviation
-  set days_wno_water_max 30
+  set days_wno_water_max 28
   set Gasto_hidraulico_max max [Gasto_hidraulico] of agebs with [CV_estado = estado]
   set presion_hidraulica_max max [presion_hidraulica] of agebs  with [CV_estado = estado]
   set desviacion_agua_max max [desviacion_agua] of agebs with [CV_estado = estado]
@@ -1842,4 +1846,11 @@ to define_initial-contitions_PipedwaterDistribution
     set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "017"]
     set mean_days_withNo_water item 3 item 15 average_day_nowater_perweek];"Venustiano Carranza"
   
+end
+
+;#############################################################################################################################################
+;#############################################################################################################################################
+to show_sewer
+  ask sewage_nodes [ifelse hidden? = false [set hidden? true][set hidden? false]]
+  ask D_pipes [ifelse hidden? = false [set hidden? true][set hidden? false]]
 end
