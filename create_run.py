@@ -29,9 +29,15 @@ for extension in extensions:
 
 # create symlinks to model, argumentspace and run script
 this_dir = os.path.dirname(os.path.realpath(__file__))
-os.symlink(os.path.join(this_dir, "ABM-Empirical-MexicoCity.nlogo"),
-           os.path.join(args.workdir, "ABM-Empirical-MexicoCity.nlogo"))
-#os.symlink(os.path.join(this_dir, args.argumentspace.name), os.path.join(args.workdir, args.argumentspace.name))
+os.symlink(os.path.join(this_dir, "ABM-Empirical-MexicoCity_V6.nlogo"),
+           os.path.join(args.workdir, "ABM-Empirical-MexicoCity_V6.nlogo"))
+
+os.symlink(os.path.join(this_dir, "setup.nls"),
+os.path.join(args.workdir, "setup.nls"))
+
+os.symlink(os.path.join(this_dir,"value_functions.nls"),
+           os.path.join(args.workdir,"value_functions.nls"))
+
 os.symlink(os.path.join(this_dir, "run.sh"), os.path.join(args.workdir, "run.sh"))
 os.symlink(os.path.join(this_dir, "data"), os.path.join(args.workdir, "data"))
 
