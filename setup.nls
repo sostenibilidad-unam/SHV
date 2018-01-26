@@ -611,6 +611,7 @@ to load-GIS-data
   ;set ageb13 gis:load-dataset "data/DF_ageb_N_escalante_Project_withEncharcamientos.shp"
 
   ;define city or watersheed scale                                                                             
+  set limits_world (gis:envelope-of Agebs_map_full)
   if escala = "ciudad"[
     gis:set-world-envelope-ds gis:envelope-of mascara ;ageb13;mascara;Limites_delegacionales
   
@@ -618,7 +619,7 @@ to load-GIS-data
   
   if escala = "cuenca"[
     gis:set-world-envelope-ds gis:envelope-of Agebs_map_full ;mascara ;ageb13;mascara;Limites_delegacionales
-   set limits_world (gis:envelope-of Agebs_map_full)
+  
 ;    let xx_min  min (matrix:get-column Agebs_map_full_csv 0) 
 ;    let xx_max  max (matrix:get-column Agebs_map_full_csv 0) 
 ;    let yy_min  min (matrix:get-column Agebs_map_full_csv 1) 
@@ -629,7 +630,7 @@ to load-GIS-data
 
   set city_image  bitmap:import "data/image_googleEarth_cuencaMexicoB.jpg";"data/DF_googleB.jpg"                                                   ; google earth image
   bitmap:copy-to-pcolors City_image false
-print limits_world
+
 end
   to define_neighborhoods
   ;  define_neighborhoods_full ;;REFERS TO THE FULL AREA OF STUDY. THAT IS THE ENTIRE WATERSHED OF MEXICO CITY VALEY  (need to complete information for other areas)

@@ -1,11 +1,12 @@
-extensions [GIS bitmap profiler csv matrix]
+extensions [GIS bitmap profiler csv matrix R]
 __includes["setup.nls" "value_functions.nls"]
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 to GO
   tick
-  ;profiler:start
+;  reset-timer
+  ; profiler:start
 ;if ticks = 2 [export-map]
 
   counter_weeks
@@ -56,8 +57,6 @@ to GO
     take_action_residents
     Vulnerability_indicator
     condition_infra_change
-;    if days = 1 [
-
   ]
 ;##########################################################
 ;distribute water to Mexico City using resources by WaterOperator
@@ -93,9 +92,9 @@ to GO
   ; print supermatrix_residents [matrix:from-row-list W_matrix] of Alternatives_IZb with [name_action = "Movilizaciones"] 0 1 12
 
  ;profiler:stop          ;; stop profiling
-  ;print profiler:report
-  ;profiler:reset         ;; clear the data
-
+ ; print profiler:report
+ ; profiler:reset         ;; clear the data
+;show timer
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -573,16 +572,18 @@ end
 to repair-Infra_Ab [estado]
   let Budget 0
   ifelse (actions_per_agebs = "single-action")[
-    foreach sort-on [(1 - d_mantenimiento) + (1 - d_new)] agebs with [CV_estado = estado][    ;sort census blocks (+ (1 - densidad_pop / densidad_pop_max))
+    foreach sort-on [(1 - d_mantenimiento)] agebs with [CV_estado = estado][    ;sort census blocks (+ (1 - densidad_pop / densidad_pop_max))
       ? ->
       ask ? [
         if d_mantenimiento > d_new[
 
           if Budget < recursos_para_mantenimiento[                                       ;agebs that were selected for maitenance do not reduce its age
+
             set Antiguedad-infra_Ab Antiguedad-infra_Ab - Eficiencia_Mantenimiento * Antiguedad-infra_Ab
+
             ask pozos_agebs [set age_pozo age_pozo + Eficiencia_Mantenimiento * age_pozo]
             set Budget Budget + 1
-          set investment_here_AB 1
+            set investment_here_AB 1
             set investment_here_accumulated_AB investment_here_accumulated_AB + 1
             set investment_here_AB_mant 1
             set investment_here_accumulated_AB_mant investment_here_accumulated_AB_mant + 1
@@ -599,7 +600,7 @@ to repair-Infra_Ab [estado]
         if Budget < recursos_para_mantenimiento[                                       ;agebs that were selected for maitenance do not reduce its age
           set Antiguedad-infra_Ab Antiguedad-infra_Ab - Eficiencia_Mantenimiento * Antiguedad-infra_Ab
           ask pozos_agebs [set age_pozo age_pozo + Eficiencia_Mantenimiento * age_pozo]
-            set Budget Budget + 1
+          set Budget Budget + 1
           set investment_here_AB 1
           set investment_here_accumulated_AB investment_here_accumulated_AB + 1
           set investment_here_AB_mant 1
@@ -615,7 +616,7 @@ end
 to New-Infra_Ab [estado]
   let Budget 0
     ifelse (actions_per_agebs = "single-action")[
-    foreach sort-on [(1 - d_new) + (1 - d_mantenimiento)]  agebs with [CV_estado = estado and investment_here_AB_mant = 0][
+    foreach sort-on [(1 - d_new)]  agebs with [CV_estado = estado and investment_here_AB_mant = 0][
       ? ->
       ask ? [
         if Budget < recursos_nuevaInfrastructura and houses_with_abastecimiento < 0.99 [
@@ -655,23 +656,22 @@ end
 to repair-Infra_D [estado]
   let Budget 0
   ifelse (actions_per_agebs = "single-action")[
-    foreach sort-on [(1 - d_mantenimiento_D) + (1 - d_new_D) ] agebs with [CV_estado = estado][ ;+ (1 - densidad_pop / densidad_pop_max)
+    foreach sort-on [(1 - d_mantenimiento_D)] agebs with [CV_estado = estado][ ;+ (1 - densidad_pop / densidad_pop_max)
       ? ->
       ask ? [
         if d_mantenimiento_D > d_new_D [
         if Budget < recursos_para_mantenimiento [
-          set Antiguedad-infra_D Antiguedad-infra_D - Eficiencia_Mantenimiento * Antiguedad-infra_D
-          set Budget Budget + 1
-          set investment_here_D 1
-          set investment_here_accumulated_D investment_here_accumulated_D + 1
-          set investment_here_D_mant 1
-          set investment_here_accumulated_D_mant investment_here_accumulated_D_mant + 1
-
-        ]
+            set Antiguedad-infra_D Antiguedad-infra_D - Eficiencia_Mantenimiento * Antiguedad-infra_D
+            set Budget Budget + 1
+            set investment_here_D 1
+            set investment_here_accumulated_D investment_here_accumulated_D + 1
+            set investment_here_D_mant 1
+            set investment_here_accumulated_D_mant investment_here_accumulated_D_mant + 1
+          ]
         ]
       ]
     ]
-    ]
+  ]
   [
     foreach sort-on [(1 - d_mantenimiento_D) ] agebs with [CV_estado = estado][ ;+ (1 - densidad_pop / densidad_pop_max)
       ? ->
@@ -693,44 +693,43 @@ end
 to New-Infra_D [estado]
     let Budget 0
     ifelse (actions_per_agebs = "single-action")[
-      foreach sort-on [(1 - d_new_D) + (1 - d_mantenimiento_D)] agebs with [CV_estado = estado and investment_here_D_mant = 0][
+      foreach sort-on [(1 - d_new_D)] agebs with [CV_estado = estado and investment_here_D_mant = 0][
       ? ->
       ask ? [
-          if Budget < recursos_nuevaInfrastructura[
-            set houses_with_dranage ifelse-value (houses_with_dranage < 1)[houses_with_dranage + Eficiencia_NuevaInfra * (1 - houses_with_dranage)][1]
-            set falta_d 1 - houses_with_dranage
-            set Budget Budget + 1
-            set Capacidad_D Capacidad_D + Eficiencia_NuevaInfra
-            if Capacidad_D > 1 [set Capacidad_D 1]
-            set investment_here_D 1
-            set investment_here_accumulated_D investment_here_accumulated_D + 1
+        if Budget < recursos_nuevaInfrastructura[
+          set houses_with_dranage ifelse-value (houses_with_dranage < 1)[houses_with_dranage + Eficiencia_NuevaInfra * (1 - houses_with_dranage)][1]
+          set falta_d 1 - houses_with_dranage
+          set Budget Budget + 1
+          set Capacidad_D Capacidad_D + Eficiencia_NuevaInfra
+          if Capacidad_D > 1 [set Capacidad_D 1]
+          set investment_here_D 1
+          set investment_here_accumulated_D investment_here_accumulated_D + 1
 
-            set investment_here_D_new 1
-            set investment_here_accumulated_D_new investment_here_accumulated_D_new + 1
+          set investment_here_D_new 1
+          set investment_here_accumulated_D_new investment_here_accumulated_D_new + 1
 
-          ]
         ]
       ]
     ]
-    [
-      foreach sort-on [1 - d_new_D] agebs with [CV_estado = estado][
+  ]
+  [
+    foreach sort-on [(1 - d_new_D)] agebs with [CV_estado = estado][
       ? ->
       ask ? [
           if Budget < recursos_nuevaInfrastructura and houses_with_dranage  < 0.99 [
-            set houses_with_dranage ifelse-value (houses_with_dranage < 1)[houses_with_dranage + Eficiencia_NuevaInfra * (1 - houses_with_dranage)][1]
-            set falta_d 1 - houses_with_dranage
-            set Capacidad_D Capacidad_D + Eficiencia_NuevaInfra
-            if Capacidad_D > 1 [set Capacidad_D 1]
-            set Budget Budget + 1
-            set investment_here_D 1
-            set investment_here_accumulated_D investment_here_accumulated_D + 1
-            set investment_here_D_new 1
-            set investment_here_accumulated_D_new investment_here_accumulated_D_new + 1
-
-          ]
+          set houses_with_dranage ifelse-value (houses_with_dranage < 1)[houses_with_dranage + Eficiencia_NuevaInfra * (1 - houses_with_dranage)][1]
+          set falta_d 1 - houses_with_dranage
+          set Capacidad_D Capacidad_D + Eficiencia_NuevaInfra
+          if Capacidad_D > 1 [set Capacidad_D 1]
+          set Budget Budget + 1
+          set investment_here_D 1
+          set investment_here_accumulated_D investment_here_accumulated_D + 1
+          set investment_here_D_new 1
+          set investment_here_accumulated_D_new investment_here_accumulated_D_new + 1
         ]
       ]
     ]
+  ]
 end
 ;#############################################################################################################################################
 to water_extraction2 [estado]
@@ -828,7 +827,7 @@ end
 to change_subsidence_rate
   let count_pozos count pozos with [aquifer = "2"]
   ask agebs with [aquifer = "2"][
-    set hundimiento hundimiento *  (count_pozos / count_pozos_initial)
+    set hundimiento hundimiento *  (1 + (count_pozos / (count_pozos_initial + count_pozos)))
   ]
 end
 ;/subsidence;
@@ -1033,12 +1032,12 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
       ;############################################################################################
     if visualization = "Edad Infraestructura Ab." and ticks > 1 [
       set shape "square"
-      set color  scale-color turquoise Antiguedad-infra_Ab  0 Antiguedad-infra_Ab_max
+      set color  scale-color grey (Antiguedad-infra_Ab / 365)  30 100
     ]
     ;############################################################################################
     if visualization = "Edad Infraestructura D" and ticks > 1 [
       set shape "square"
-      set color  scale-color magenta Antiguedad-infra_d 0 Antiguedad-infra_d_max
+      set color  scale-color grey (Antiguedad-infra_d / 365) 30 100
     ]
     ;############################################################################################
     if visualization = "P. Falla" and ticks > 1 [
@@ -1118,12 +1117,12 @@ end
 ;##############################################################################################################
 to-report supermatrix_residents [matrix_weighed index1 index2 col value_scarcity]; procedure to change the weights from the alternative_namesto the criteria
   let M_matrix_weighed matrix:from-row-list matrix_weighed
-  set super_matrix_parameter (1 - value_scarcity / 30)
+  let new_matrix_parameter (1 - value_scarcity / 30)
   let dim item 0 matrix:dimensions M_matrix_weighed
   let v1 matrix:get M_matrix_weighed index1 col
   let v2 matrix:get M_matrix_weighed index2 col
-  matrix:set M_matrix_weighed index1 col (v1 + v2) * super_matrix_parameter     ;super_matrix_parameter controls between two weights from alternative_names(maintenance and new-infra) to criteria. together sum up to 1.
-  matrix:set M_matrix_weighed index2 col (v1 + v2) * (1 - super_matrix_parameter)
+  matrix:set M_matrix_weighed index1 col (v1 + v2) * new_matrix_parameter     ;new_matrix_parameter controls between two weights from alternative_names(maintenance and new-infra) to criteria. together sum up to 1.
+  matrix:set M_matrix_weighed index2 col (v1 + v2) * (1 - new_matrix_parameter)
  ; print matrix:pretty-print-text M_matrix_weighed
   let new_lim  (matrix:times M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed)
 
@@ -1152,8 +1151,8 @@ report list a_weights_new c_weights_new
 ;    matrix:get MMSACMEX_limit_D_new 14 2
 ;    matrix:get MMSACMEX_limit_D_new 15 2
 
-;  matrix:set MMWaterOperator_weighted_D 0 14 super_matrix_parameter     ;super_matrix_parameter controls between two weights from alternative_names(maintenance and new-infra) to criteria. together sum up to 1.
-;  matrix:set MMWaterOperator_weighted_D 1 14 (1 - super_matrix_parameter)
+;  matrix:set MMWaterOperator_weighted_D 0 14 new_matrix_parameter     ;new_matrix_parameter controls between two weights from alternative_names(maintenance and new-infra) to criteria. together sum up to 1.
+;  matrix:set MMWaterOperator_weighted_D 1 14 (1 - new_matrix_parameter)
 ;
 ;
 ;  let MMWaterOperator_limit_D_new  (matrix:times MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D)
@@ -1541,7 +1540,7 @@ CHOOSER
 Visualization
 Visualization
 "Accion Colectiva" "Peticion ciudadana" "Captacion de Agua" "Compra de Agua" "Modificacion de la vivienda" "Areas prioritarias Mantenimiento" "Areas prioritarias Nueva Infraestructura" "Distribucion de Agua SACMEX" "GoogleEarth" "K_groups" "Salud" "Escasez" "Encharcamientos" "% houses with supply" "% houses with drainage" "P. Falla Ab" "P. Falla D" "Capacidad_D" "Zonas Aquifero" "Edad Infraestructura Ab." "Edad Infraestructura D" "Income-index" "hundimiento" "CalidadAgua" "value_function_edad_Ab" "value_function_Age_d" "value_function_scarcity" "value_function_floods" "value_function_falta_d" "value_function_falta_Ab" "value_function_capasity" "value_function_precipitation" "low_vs_high_land"
-11
+20
 
 BUTTON
 1234
@@ -1561,9 +1560,9 @@ NIL
 1
 
 BUTTON
-1239
+1238
 90
-1394
+1397
 155
 NIL
 show_AGEBS
@@ -1578,10 +1577,10 @@ NIL
 1
 
 SLIDER
-34
-424
-242
-457
+35
+320
+240
+353
 Requerimiento_deAgua
 Requerimiento_deAgua
 0.007
@@ -1601,17 +1600,17 @@ recursos_para_mantenimiento
 recursos_para_mantenimiento
 1
 2400
-797.0
+533.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-31
-299
-237
-332
+35
+250
+238
+283
 Eficiencia_NuevaInfra
 Eficiencia_NuevaInfra
 0
@@ -1678,15 +1677,15 @@ export-to-postgres
 -1000
 
 SLIDER
-31
-335
-234
-368
+35
+285
+238
+318
 Eficiencia_Mantenimiento
 Eficiencia_Mantenimiento
 0
 0.05
-0.01
+0.03
 0.005
 1
 NIL
@@ -1716,17 +1715,17 @@ Recursos_para_distribucion
 Recursos_para_distribucion
 0
 2400
-667.0
+849.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-245
-406
-422
-439
+258
+402
+435
+435
 cut-off_priorities
 cut-off_priorities
 0
@@ -1738,10 +1737,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-29
-462
-230
-495
+35
+358
+236
+391
 lambda
 lambda
 0
@@ -1753,10 +1752,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-244
-334
-421
-367
+258
+330
+435
+363
 factor_subsidencia
 factor_subsidencia
 0
@@ -1793,45 +1792,30 @@ NIL
 HORIZONTAL
 
 SLIDER
-245
-369
-422
-402
+258
+365
+435
+398
 factor_scale
 factor_scale
 0.000000000000000001
 4
-0.756
+3.16
 0.001
 1
 NIL
 HORIZONTAL
 
 SWITCH
-29
-672
-204
-705
+35
+568
+210
+601
 ANP
 ANP
 0
 1
 -1000
-
-SLIDER
-245
-442
-422
-475
-super_matrix_parameter
-super_matrix_parameter
-0
-1
-1.0
-0.1
-1
-NIL
-HORIZONTAL
 
 BUTTON
 1402
@@ -1851,30 +1835,30 @@ NIL
 1
 
 SLIDER
-30
-502
-231
-535
+35
+398
+236
+431
 alt
 alt
 0
 3
-0.84
+2.12
 0.01
 1
 NIL
 HORIZONTAL
 
 SLIDER
-29
-537
-232
-570
+35
+433
+238
+466
 a_failure
 a_failure
 0
 1
-0.2
+1.0
 0.1
 1
 NIL
@@ -1917,10 +1901,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot weekly_water_available"
 
 SLIDER
-248
-302
-420
-335
+262
+298
+434
+331
 decay_capacity
 decay_capacity
 0
@@ -1959,17 +1943,17 @@ recursos_extraccion
 recursos_extraccion
 0
 2400
-28.0
+0.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-28
-578
-232
-611
+34
+474
+238
+507
 hsc_s
 hsc_s
 0
@@ -1981,10 +1965,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-29
-613
-233
-646
+35
+509
+239
+542
 hsc_f
 hsc_f
 0
@@ -2007,13 +1991,35 @@ Simulation_time
 Number
 
 MONITOR
-282
-670
-407
-715
+276
+797
+401
+842
 hundimiento maximo
 max [hundimiento] of agebs
 17
+1
+11
+
+MONITOR
+409
+798
+534
+843
+capasity
+list (max [Capacidad_d] of agebs) (min [Capacidad_d] of agebs)
+4
+1
+11
+
+MONITOR
+535
+798
+715
+843
+Age Water distribution system
+list round ((min [Antiguedad-infra_Ab] of agebs) / (12 * 4 * 7)) round ((max [Antiguedad-infra_Ab] of agebs) / (12 * 4 * 7))
+4
 1
 11
 
