@@ -9,7 +9,7 @@ The use of a python virtual environment is advised.
 
 To create one, run:
 
-   $ virtualenv venv
+	$ virtualenv venv
 
 Once created it should be activated, before use:
 
@@ -29,8 +29,11 @@ HT-Condor use the provided create_run.py script.
 The script **create_run.py** creates XML files for ranges of
 parameters. Within your active virtualenv run it like this:
 
-	python create_run.py --netlogo /path/to/NetLogo-6.0.2/ --workdir /path/to/batch_dir --threads 10
+	(venv) $ python create_run.py --netlogo /path/to/NetLogo-6.0.2/ --workdir /path/to/batch_dir --threads 10
 
+It will create XML files in /path/to/batch_dir, along with symbolic
+links to Netlogo and other supporting files. Jobs should be submitted
+from this directory.
 
 ## Path to Java
 
