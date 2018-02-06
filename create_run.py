@@ -16,7 +16,7 @@ if not os.path.isdir(args.workdir):
     os.makedirs(args.workdir)
 
 # create symlink to netlogo
-netlogo_jar = os.path.join( args.netlogo, "app/NetLogo.jar")
+netlogo_jar = os.path.join( args.netlogo, "app/netlogo-6.0.2.jar")
 assert os.path.exists(netlogo_jar)
 os.symlink(netlogo_jar, os.path.join(args.workdir, "NetLogo.jar"))
 
