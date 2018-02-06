@@ -1,7 +1,7 @@
 #!/bin/bash
 
 java -Xmx8024m -cp NetLogo.jar org.nlogo.headless.Main \
-     --model ABM-Empirical-MexicoCity.nlogo \
+     --model ABM-Empirical-MexicoCity_V6.nlogo \
      --experiment experiment1 \
      --setup-file $1 \
      --table $2 \
