@@ -1,0 +1,17 @@
+,,Alternatives,,,Biofísico,,,,,Infraestructura,,,Socio-institucional,,,,,,Riesgos_poblacion
+,,Mantenimiento,Nueva_infraestructura,Basura,Escurrimiento,Hundimientos,Precipitacion,Antiguedad,Capacidad,Falla,Falta,Peticion de Delegaciones,Peticiones de usuarios,Presion de medios,,,,Encharcamientos,Inundaciones
+Alternatives,Mantenimiento,0,0,0,0,0,0,0,0,0,0,0.526316,0.125348,0.836364,,,,0,0
+,Nueva_infraestructura,0,0,0,0,0,0,0,0,0,0,0.473684,0.874652,0.163636,,,,0,0
+Biofísico,Basura,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,0,0
+,Escurrimiento,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,0,0
+,Hundimientos,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,0,0
+,Precipitacion,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,0,0
+Infraestructura,Antiguedad,0.134462,0,0,0,0,0,0,0,0,0,0,0,0,,,,0,0
+,Capacidad,0,0.257712,0.898876,0,0.084562,0,0.166052,0,0,0,0,0,0,,,,0,0
+,Falla,0.581718,0,0.101124,0,0.420932,0,0.833948,0,0,0,0,0,0,,,,0,0
+,Falta,0,0.639313,0,0,0,0,0,0,0,0,0,0,0,,,,0,0
+Socio-institucional,Peticion de Delegaciones,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,0,0.296961
+,Peticiones de usuarios,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,0.875,0.163424
+,Presion de medios,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,0.125,0.539615
+Riesgos_poblacion,Encharcamientos,0,0,0,0,0.432173,0,0,0.745763,0.167286,0,0,0,0,,,,0,0
+,Inundaciones,0,0,0,0,0.062333,0,0,0.254237,0.832714,0,0,0,0,,,,0,0
