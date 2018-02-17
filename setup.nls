@@ -604,7 +604,9 @@ to load-GIS-data
   set PozosChalco_Project gis:load-dataset  "data/PozosChalco_Project.shp"
   set Limites_delegacionales gis:load-dataset  "data/limites_deleg_DF_2013.shp"
   set zonas_aquif_map gis:load-dataset  "data/AGEB_Zona_Project.shp"
-  set Agebs_map_full gis:load-dataset "data/ageb_abm_full.shp"                                                                 
+  set Agebs_map_full gis:load-dataset "data/ageb_abm_full.shp"
+  set Agebs_map gis:load-dataset "data/agebs_abm.shp"
+  
   set LHland   gis:load-dataset "data/low_hig_v1.shp" 
   set mascara gis:load-dataset "data/Mask.shp"                  ;Mask of study area                                                                                                                         ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
    ;set agebs_map14 gis:load-dataset "data/ageb14.shp";                                                      ;AGEB shape file
@@ -709,9 +711,9 @@ end
 ;  ]
 
   
-  foreach gis:feature-list-of Agebs_map_full; "ID_ZONA" "0"
+ ( foreach (gis:feature-list-of Agebs_map_full) (gis:feature-list-of Agebs_map); "ID_ZONA" "0"
   
-  [ ? ->
+    [ [? ?2] ->
     let centroid gis:location-of gis:centroid-of ?
     if not empty? centroid[
       ;if not empty? centroid[
@@ -730,9 +732,9 @@ end
         set hidden? false
         set group_kmean ifelse-value (gis:property-value ? "KMEANS5" = nobody)[0][gis:property-value ? "KMEANS5"]
         set Abastecimiento gis:property-value ?  "abastecimi"; poblacion * Requerimiento_deAgua
-        set Antiguedad-infra_Ab 365 * gis:property-value ? "antiguedad"
-        set Antiguedad-infra_D 365 * gis:property-value ? "antiguedad"
-        set altitude gis:property-value ? "elevacion"
+        set Antiguedad-infra_Ab 365 * gis:property-value ?2 "antiguedad"
+        set Antiguedad-infra_D 365 * gis:property-value ?2 "antiguedad"
+        set altitude gis:property-value ?2 "ELEVACION"
         set aquifer gis:property-value (gis:find-one-feature zonas_aquif_map "CVEGEO" CVEGEO) "ACUIF"
         set low_high-land gis:property-value (gis:find-one-feature LHland "AGEB_ID" (word ID)) "LOW_HIG"
         ;print gis:property-value (gis:find-one-feature LHland "AGEB_ID" (word ID)) "LOW_HIG"
@@ -741,20 +743,20 @@ end
         ; set precipitation gis:property-value (gis:find-one-feature ageb13 "CVEGEO" CVEGEO) "PRECIP"        
         
         set Capacidad_Ab 1
-        set Capacidad_d ifelse-value(gis:property-value ? "capacidad" != nobody)[gis:property-value ? "capacidad"][0]
-        set Falla_d 1
-        set precipitation ifelse-value (gis:property-value ? "PRECIP" != nobody)[gis:property-value ? "PRECIP"][1]
+        set Capacidad_d ifelse-value(gis:property-value ?2 "capac_d" != nobody)[(gis:property-value ?2 "capac_d") / 10000000][0]
+          set Falla_d 1
+        set precipitation ifelse-value (gis:property-value ?2 "PR_2009" != nobody)[gis:property-value ?2 "PR_2009"][1]
         
         set water_quality gis:property-value ? "cal_agua"
-        set scarcity gis:property-value ? "escasez"
+        set scarcity gis:property-value ?2 "ESCASEZ"
         set FALTA_ab gis:property-value ? "Falta_in"
         set houses_with_abastecimiento 1 - FALTA_ab
         set FALLA_ab gis:property-value ? "falla_in"
         set falta_d gis:property-value ? "falta_dren"
-        
+        set Presion_social_annual 1
         set presion_hidraulica gis:property-value ? "pres_hid"
-        set hundimiento gis:property-value ? "CM"
-        set presion_de_medios 1;gis:property-value ? "pres_med"
+        set hundimiento gis:property-value ?2 "subsidenci"
+        set presion_de_medios gis:property-value ?2 "PRES_MED"
         set desviacion_agua gis:property-value ? "desv_agua" ;; 1 si hay pozo en ageb o en agebs colindantes; 0 si no.
         
         set houses_with_dranage 1 - falta_d
@@ -763,10 +765,10 @@ end
         set abastecimiento_b gis:property-value ? "abastecimi"
         
         set poblacion gis:property-value ? "poblacion"
-        set Income-index ifelse-value(gis:property-value ? "ingreso" != nobody)[gis:property-value ? "ingreso"][random-float 1]
-        set health ifelse-value(gis:property-value ? "health" != nobody)[gis:property-value ?  "health"][random-float 0]
-        set flooding ifelse-value(gis:property-value ? "ponding" != nobody)[gis:property-value ?  "ponding"][0]
-        set garbage ifelse-value (Income-index != nobody)[poblacion * (1 - Income-index)][poblacion * (1 - random-float 1)]
+        set Income-index ifelse-value(gis:property-value ?2 "ingreso" != nobody)[gis:property-value ?2 "ingreso"][random-float 1]
+        set health ifelse-value(gis:property-value ?2 "ENF_14" != nobody)[gis:property-value ?2  "ENF_14"][random-float 0]
+        set flooding ifelse-value(gis:property-value ?2 "PONDING" != nobody)[gis:property-value ?2  "PONDING"][0]
+        set garbage (gis:property-value ?2 "BASURA") / 10000
         set Obstruccion_dren gis:property-value ? "obstruc"
         
         set Monto gis:property-value ? "monto"
@@ -787,9 +789,92 @@ end
         set contiguous_agebs turtle-set nobody
       ]
     ]
-  ]
+  ])
 
 
+  
+ 
+    
+;  foreach gis:feature-list-of Agebs_map; "ID_ZONA" "0"
+;  
+;  [ ? ->
+;    let centroid gis:location-of gis:centroid-of ?
+;    if not empty? centroid[
+;      ;if not empty? centroid[
+;      create-agebs 1 [
+;        set xcor item 0 centroid              ;define coodeantes of ageb at the center of the polygone
+;        set ycor item 1 centroid
+;        set ID gis:property-value ? "AGEB_ID"
+;        set CVEGEO gis:property-value ? "cvgeo"
+;        set CV_estado (substring CVEGEO 0 2)
+;        set CV_municipio (substring CVEGEO 2 5)
+;        set Localidad (substring CVEGEO 5 9)
+;        set AGEB_key (substring CVEGEO 9 13)
+;        set color grey
+;        set shape "circle"
+;        set size 0.5
+;        set hidden? false
+;        set group_kmean ifelse-value (gis:property-value ? "grupo" = nobody)[0][gis:property-value ? "grupo"]
+;       ; set Abastecimiento gis:property-value ?  "abastecimi"; poblacion * Requerimiento_deAgua
+;        set Antiguedad-infra_Ab 365 * gis:property-value ? "antiguedad"
+;        set Antiguedad-infra_D 365 * gis:property-value ? "antiguedad"
+;        set altitude gis:property-value ? "ELEVACION"
+;        set aquifer gis:property-value (gis:find-one-feature zonas_aquif_map "CVEGEO" CVEGEO) "acuif"
+;  ;      set low_high-land gis:property-value (gis:find-one-feature LHland "AGEB_ID" (word ID)) "LOW_HIG"
+;      
+;        ; set precipitation gis:property-value (gis:find-one-feature ageb13 "CVEGEO" CVEGEO) "PRECIP"        
+;        
+;        set Capacidad_Ab 1
+;        set Capacidad_d ifelse-value(gis:property-value ? "capac_d" != nobody)[gis:property-value ? "capac_d"][0]
+;        set Falla_d 1
+;        set precipitation ifelse-value (gis:property-value ? "PR_2009" != nobody)[gis:property-value ? "PR_2009"][1]
+;        
+;        set water_quality 1;gis:property-value ? "cal_agua"
+;        set scarcity gis:property-value ? "ESCASEZ"
+;        ;set FALTA_ab gis:property-value ? "Falta_in"
+;        ;set houses_with_abastecimiento 1 - FALTA_ab
+;        ;set FALLA_ab gis:property-value ? "falla_in"
+;        ;set falta_d gis:property-value ? "falta_dren"
+;        
+;        ;set presion_hidraulica gis:property-value ? "pres_hid"
+;        set hundimiento gis:property-value ? "subsidenci"
+;        set presion_de_medios gis:property-value ? "PRES_MED"
+;        set desviacion_agua gis:property-value ? "desv_agua" ;; 1 si hay pozo en ageb o en agebs colindantes; 0 si no.
+;        
+;        ;set houses_with_dranage 1 - falta_d
+;        set gasto_hidraulico gis:property-value ? "GASTO"
+;        ;set Peticion_Delegacional_D gis:property-value ? "pet_del_dr"
+;        ;set abastecimiento_b gis:property-value ? "abastecimi"
+;        
+;        ;set poblacion gis:property-value ? "poblacion"
+;        set Income-index ifelse-value(gis:property-value ? "ingreso" != nobody)[gis:property-value ? "ingreso"][random-float 1]
+;        set health ifelse-value(gis:property-value ? "ENF_14" != nobody)[gis:property-value ?  "ENF_14"][random-float 0]
+;        set flooding ifelse-value(gis:property-value ? "PONDING" != nobody)[gis:property-value ?  "PONDING"][0]
+;        set garbage (gis:property-value ? "BASURA") / 10000
+;        ;set Obstruccion_dren gis:property-value ? "obstruc"
+;        
+;;        set Monto gis:property-value ? "monto"
+;        
+; ;       set desperdicio_agua gis:property-value ? "desp_agua"       ;;Por fugas, falta de conciencia del uso del agua
+;  ;      set peticion_usuarios gis:property-value ? "pet_usr_d"  ;index densidad de infra por cuanca * falta de conexiones por ageb.
+;        set urban_growth gis:property-value ? "crec_urb"
+;       ; set zona_aquifera gis:property-value (gis:find-one-feature zonas_aquif_map "CVEGEO" CVEGEO) "ID_ZONA"
+;        
+;        set scarcity_annual 0
+;        set mean_days_withNo_water 6 / 7
+;        set days_water_in 0
+;        set Y_F 0
+;        set Y_S 1
+;        set vulnerability_S 1
+;        set vulnerability_F 1
+;        set neighboor_weights []
+;        set contiguous_agebs turtle-set nobody
+;      ]
+;    ]
+;  ]
+;
+
+  
 end
 ;####################################################################################################### 
    to define_ActionsCriteria
@@ -1590,34 +1675,35 @@ end
   
   
   
-  set MMWaterOperator_D csv:from-file  "data/SACMEX_Drenaje modificada febrero 2017.weighted.csv"
-  set MMWaterOperator_D_limit csv:from-file  "data/SACMEX_Drenaje modificada febrero 2017.limit.csv"
+  set MMWaterOperator_D csv:from-file  "data/SACMEX_Drenaje__weighted_SESMO.csv"
+  set MMWaterOperator_D_limit csv:from-file  "data/SACMEX_Drenaje_limit_SESMO.csv"
   set alternative_names(list item 1 item 2 MMWaterOperator_D   ;define the alternatives
     item 1 item 3 MMWaterOperator_D)
+  print alternative_names
   set jj 0
-  set MMWaterOperator_weighted_D []
+  let MMWaterOperator_limit_D []
   let MMWaterOperator_limit_D_new []
   let VWaterOperator_limit_D []
   set cc 2
   set cri 2
   
-  while [cri < 18][   ;tranfor the data from.csv to a matrix to manipulte using matrix extention
+  while [cri < 17][   ;tranfor the data from.csv to a matrix to manipulte using matrix extention
     set cc 2
-    while [cc < 18][
-      set VWaterOperator_limit_D lput (item cc item cri MMWaterOperator_D) VWaterOperator_limit_D
+    while [cc < 17][
+      set VWaterOperator_limit_D lput (item cc item cri MMWaterOperator_D_limit) VWaterOperator_limit_D
       set cc cc + 1
     ]
     set cri cri + 1
     set MMWaterOperator_limit_D_new lput VWaterOperator_limit_D MMWaterOperator_limit_D_new
     set VWaterOperator_limit_D []
   ]
-  set MMWaterOperator_weighted_D matrix:from-row-list MMWaterOperator_limit_D_new
+  set MMWaterOperator_limit_D matrix:from-row-list MMWaterOperator_limit_D_new
   
-  let MMWaterOperator_limit_D1_new matrix:eigenvectors MMWaterOperator_weighted_D
+  ;let MMWaterOperator_limit_D1_new matrix:eigenvectors MMWaterOperator_weighted_D
   
   ;let MMWaterOperator_limit_D2 matrix:real-eigenvalues MMWaterOperator_weighted_D
-  set MMWaterOperator_limit_D_new (matrix:times MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D)
-  
+  ;set MMWaterOperator_limit_D_new (matrix:times MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D)
+  print matrix:pretty-print-text MMWaterOperator_limit_D
   
   foreach alternative_names[
     ? ->
@@ -1625,39 +1711,38 @@ end
       set ID "no-defined Drenage"
       set name_action ?
       set label name_action
-      set criteria_values (list 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
-      set criteria_max (list 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
-      set rescaled_criteria_values (list 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
+      set criteria_values (list 0 0 0 0 0 0 0 0 0 0 0 0 0)
+      set criteria_max (list 0 0 0 0 0 0 0 0 0 0 0 0 0)
+      set rescaled_criteria_values (list 0 0 0 0 0 0 0 0 0 0 0 0 0)
       
-      let w_sum sum (list matrix:get MMWaterOperator_limit_D_new 2 2
-        matrix:get MMWaterOperator_limit_D_new 3 2
-        matrix:get MMWaterOperator_limit_D_new 4 2
-        matrix:get MMWaterOperator_limit_D_new 5 2
-        matrix:get MMWaterOperator_limit_D_new 6 2
-        matrix:get MMWaterOperator_limit_D_new 7 2
-        matrix:get MMWaterOperator_limit_D_new 8 2
-        matrix:get MMWaterOperator_limit_D_new 9 2
-        matrix:get MMWaterOperator_limit_D_new 10 2
-        matrix:get MMWaterOperator_limit_D_new 11 2
-        matrix:get MMWaterOperator_limit_D_new 12 2
-        matrix:get MMWaterOperator_limit_D_new 13 2
-        matrix:get MMWaterOperator_limit_D_new 14 2
-        matrix:get MMWaterOperator_limit_D_new 15 2
+      let w_sum sum (list matrix:get MMWaterOperator_limit_D 2 2
+        matrix:get MMWaterOperator_limit_D 3 2
+        matrix:get MMWaterOperator_limit_D 4 2
+        matrix:get MMWaterOperator_limit_D 5 2
+        matrix:get MMWaterOperator_limit_D 6 2
+        matrix:get MMWaterOperator_limit_D 7 2
+        matrix:get MMWaterOperator_limit_D 8 2
+        matrix:get MMWaterOperator_limit_D 9 2
+        matrix:get MMWaterOperator_limit_D 10 2
+        matrix:get MMWaterOperator_limit_D 11 2
+        matrix:get MMWaterOperator_limit_D 12 2
+        matrix:get MMWaterOperator_limit_D 13 2
+        matrix:get MMWaterOperator_limit_D 14 2
       )
-      set criteria_weights (list (matrix:get MMWaterOperator_limit_D_new 2 2 / w_sum)
-        (matrix:get MMWaterOperator_limit_D_new 3 2 / w_sum)
-        (matrix:get MMWaterOperator_limit_D_new 4 2 / w_sum)
-        (matrix:get MMWaterOperator_limit_D_new 5 2 / w_sum)
-        (matrix:get MMWaterOperator_limit_D_new 6 2 / w_sum)
-        (matrix:get MMWaterOperator_limit_D_new 7 2 / w_sum)
-        (matrix:get MMWaterOperator_limit_D_new 8 2 / w_sum)
-        (matrix:get MMWaterOperator_limit_D_new 9 2 / w_sum)
-        (matrix:get MMWaterOperator_limit_D_new 10 2 / w_sum)
-        (matrix:get MMWaterOperator_limit_D_new 11 2 / w_sum)
-        (matrix:get MMWaterOperator_limit_D_new 12 2 / w_sum)
-        (matrix:get MMWaterOperator_limit_D_new 13 2 / w_sum)
-        (matrix:get MMWaterOperator_limit_D_new 14 2 / w_sum)
-        (matrix:get MMWaterOperator_limit_D_new 15 2 / w_sum))
+      print w_sum
+      set criteria_weights (list precision (matrix:get MMWaterOperator_limit_D 2 2 / w_sum) 3
+        precision (matrix:get MMWaterOperator_limit_D 3 2 / w_sum) 3
+        precision (matrix:get MMWaterOperator_limit_D 4 2 / w_sum) 3
+        precision (matrix:get MMWaterOperator_limit_D 5 2 / w_sum) 3
+        precision (matrix:get MMWaterOperator_limit_D 6 2 / w_sum) 3
+        precision (matrix:get MMWaterOperator_limit_D 7 2 / w_sum) 3
+        precision (matrix:get MMWaterOperator_limit_D 8 2 / w_sum) 3
+        precision (matrix:get MMWaterOperator_limit_D 9 2 / w_sum) 3
+        precision (matrix:get MMWaterOperator_limit_D 10 2 / w_sum) 3
+        precision (matrix:get MMWaterOperator_limit_D 11 2 / w_sum) 3
+        precision (matrix:get MMWaterOperator_limit_D 12 2 / w_sum) 3
+        precision (matrix:get MMWaterOperator_limit_D 13 2 / w_sum) 3
+        precision (matrix:get MMWaterOperator_limit_D 14 2 / w_sum) 3)
       
       
       set criteria_names (list item 1 item 4 MMWaterOperator_D
@@ -1672,12 +1757,10 @@ end
         item 1 item 13 MMWaterOperator_D
         item 1 item 14 MMWaterOperator_D
         item 1 item 15 MMWaterOperator_D
-        item 1 item 16 MMWaterOperator_D
-        item 1 item 17 MMWaterOperator_D)
-      if-else ANP = TRUE[
-        set alternative_weights matrix:get MMWaterOperator_limit_D_new jj jj / (matrix:get MMWaterOperator_limit_D_new 0 0 + matrix:get MMWaterOperator_limit_D_new 1 1)
-      ][set alternative_weights 1]
-    ]
+        item 1 item 16 MMWaterOperator_D)
+      
+        set alternative_weights matrix:get MMWaterOperator_limit_D jj jj / (matrix:get MMWaterOperator_limit_D 0 0 + matrix:get MMWaterOperator_limit_D 1 1)
+     ]
     set jj jj + 1
   ]
 end

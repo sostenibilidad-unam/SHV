@@ -16,7 +16,7 @@ to GO
 ;calculate annual exposure to floods and GDI
   if weeks = 1 and months = 1[
     ;flood_risk
-    flood_risk_capacitysewer
+    ;flood_risk_capacitysewer
     flooding_InfPoiss
     ;health_risk
 
@@ -92,7 +92,6 @@ to GO
 
   ;##########################################################
   ;
-  ; print supermatrix_residents [matrix:from-row-list W_matrix] of Alternatives_IZb with [name_action = "Movilizaciones"] 0 1 12
 
  ;profiler:stop          ;; stop profiling
  ; print profiler:report
@@ -123,12 +122,11 @@ end
  ;calculate-distances-to-ideal-points;
 to residents-decisions  ;calculation of distance metric using the distance metric. The code updates the value of the atributes in the landscape and its standarize value
   ;test to -recalculate weighted supermatrix_residents using
-  if months = 12 [
- ;   print days_wno_water
+ ; if months = 12 [
     ;ask Alternatives_Izb [print  supermatrix_residents W_matrix 2 4 12 [days_wno_water] of myself]           ;re-evaluate the criteria weights based on the level of scarcity
     ;ask Alternatives_Xo  [print  supermatrix_residents W_matrix 2 4 12 [days_wno_water] of myself]
     ;ask Alternatives_MC  [print  supermatrix_residents W_matrix 3 2 9 [days_wno_water] of myself]
-  ]
+ ; ]
 ;#############################################################################################################################################
 
   if group_kmean = 0[ ;#Residents type Iztapalapa
@@ -553,7 +551,9 @@ to WaterOperator-decisions [estado]
 ;water operator sewer system decision-making process
    ask Alternatives_WaterOperator_D [
       update_criteria_and_valueFunctions_WaterOperator   ; This function creates the lists of standardized values needed for the function "ideal_distance"
-     ; print rescaled_criteria_values
+  ;    print rescaled_criteria_values
+     ; print criteria-weights
+   ;   print criteria_names
       let ddd (ideal_distance alternative_weights rescaled_criteria_values criteria_weights 1)
       if name_action = "Nueva_infraestructura"[
         ask myself[set d_new_D ddd]
@@ -1012,7 +1012,7 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
     ] ;;visualized incidence of gastrointestinal diseases in MX 2004-2014
       ;############################################################################################
     if visualization = "Encharcamientos" and ticks > 1 [
-      set size flooding * 0.4
+      set size flooding *  factor_scale
       set color  scale-color sky flooding flooding_max 0
     ] ;;visualized WaterOperator flooding dataset MX 2004-2014
       ;############################################################################################
@@ -1354,7 +1354,25 @@ to flooding_glm
  ]
 end
 to flooding_InfPoiss
-print r:get "rbinom(100,1,0.2)"
+  r:eval "require(maptools)"
+  r:eval "require(pscl)"
+  r:eval "studyArea_CVG<-readShapeSpatial('C:/Users/abaezaca/Dropbox (Personal)/Layers/final/agebs_abm')"
+  r:eval "studyArea_CVG@data$estado<-as.factor(substring(studyArea_CVG@data$cvgeo,1,2))"
+  r:eval "studyArea_CVG@data$municipio<-as.factor(substring(studyArea_CVG@data$cvgeo,3,5))"
+  r:eval "studyArea_CVG@data$AveR<-rowMeans(studyArea_CVG@data[,18:33])"
+  r:eval "studyArea_CVG@data$BASURA<-studyArea_CVG@data$BASURA/10000"
+  r:eval "dattt<-subset(studyArea_CVG@data,estado=='09')"
+  r:eval "glm_ponds_zip<-zeroinfl(PONDING~antiguedad+GASTO+subsidenci+BASURA+AveR, data=dattt)"
+  r:eval "p <- predict(glm_ponds_zip, type = 'zero')"
+  r:eval "lambda <- predict(glm_ponds_zip, type = 'count')"
+  let Ee r:get "ifelse(rbinom(n=length(p), size = 1, prob = p) > 0, 0, rpois(n=length(lambda), lambda = lambda))"
+ ; let IDNNN r:get "studyArea_CVG@data$AGEB_ID[which(studyArea_CVG@data$estado=='09')]"
+
+  (foreach sort-on [ID] agebs with [CV_estado = "09"] Ee
+    [[a b] ->
+      ask a [set Flooding b]
+  ])
+  set flooding_max max [flooding] of agebs
 end
 
 
@@ -1548,7 +1566,7 @@ CHOOSER
 Visualization
 Visualization
 "Accion Colectiva" "Peticion ciudadana" "Captacion de Agua" "Compra de Agua" "Modificacion de la vivienda" "Areas prioritarias Mantenimiento" "Areas prioritarias Nueva Infraestructura" "Distribucion de Agua SACMEX" "GoogleEarth" "K_groups" "Salud" "Escasez" "Encharcamientos" "% houses with supply" "% houses with drainage" "P. Falla Ab" "P. Falla D" "Capacidad_D" "Zonas Aquifero" "Edad Infraestructura Ab." "Edad Infraestructura D" "Income-index" "hundimiento" "CalidadAgua" "value_function_edad_Ab" "value_function_Age_d" "value_function_scarcity" "value_function_floods" "value_function_falta_d" "value_function_falta_Ab" "value_function_capasity" "value_function_precipitation" "low_vs_high_land"
-20
+12
 
 BUTTON
 1234
@@ -1753,7 +1771,7 @@ lambda
 lambda
 0
 0.001
-5.479452054794521E-5
+3.7037037037037035E-4
 1 / (100 * 54)
 1
 NIL
@@ -1808,7 +1826,7 @@ factor_scale
 factor_scale
 0.000000000000000001
 4
-3.16
+0.017
 0.001
 1
 NIL
@@ -2495,37 +2513,8 @@ NetLogo 6.0.1
       <value value="1912"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="Eficiencia_Mantenimiento">
-      <value value="0.02"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n_runs">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="alpha_failure">
-      <value value="0.1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="recursos_nuevaInfrastructura">
-      <value value="671"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="factor_scale">
-      <value value="0.752"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="decay_capacity">
-      <value value="5.0E-4"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="actions_per_agebs">
-      <value value="&quot;single-action&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="cut-off_priorities">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="factor_subsidencia">
-      <value value="0.001"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="super_matrix_parameter">
-      <value value="0.2"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="export-to-postgres">
-      <value value="false"/>
+      <value value="0.01"/>
+      <value value="0.04"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>
