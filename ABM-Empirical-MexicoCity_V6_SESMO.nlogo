@@ -1,464 +1,63 @@
 extensions [GIS bitmap profiler csv matrix R]
-__includes["setup.nls" "value_functions.nls"]
+__includes["setup_SESMO.nls" "value_functions_SESMO.nls"]
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 to GO
   tick
 ;  reset-timer
-  ; profiler:start
-;if ticks = 2 [export-map]
-
+ ;  profiler:start
   counter_weeks
-
-  water_production_importation    ;;calculate total water available in a day
 ;#############################################################################################################################################
 ;calculate annual exposure to floods and GDI
   if weeks = 1 and months = 1[
-    ;flood_risk
-    ;flood_risk_capacitysewer
     flooding_InfPoiss
-    ;health_risk
-
-    ; flooding_glm
+  ]
 ;#############################################################################################################################################
-    ;water_extraction2 "09"            ;the action by the Water authority on where to increase the extraction of water
-   ; if escala = "cuenca"[
-    ;  water_extraction2 "15"            ;;decisions by WaterOperator in  estado de Mexico
-   ; ]
-;    change_subsidence_rate
-  ]
-  ;
-
 ;;actions WaterOperator
-;  if days = 1 [
   if weeks = 1 [
-    ;repair-Infra_Ab "09"
+    WaterOperator-decisions "09"            ;;decisions by WaterOperator
     repair-Infra_D "09"
-    ;New-Infra_Ab "09"
-    New-Infra_D "09"
-    if escala = "cuenca"[
-     ; repair-Infra_Ab "15"
-      repair-Infra_D "15"
-      ;New-Infra_Ab "15"
-      New-Infra_D "15"
-    ]
   ]
-  ask agebs [
-    set days_water_in 0
-    set investment_here_AB 0
+  ask agebs with [CV_estado = "09"][
     set investment_here_D 0
-    set investment_here_AB_mant 0
     set investment_here_D_mant 0
-    set investment_here_AB_new 0
     set investment_here_D_new 0
-    set protest_here 0
-;    water_by_pipe  ;define if an ageb will receive water by pipe. It depends on mean_days_withNo_water and the probability of failure,
-;    p_falla_infra ;
-    if weeks = 1[
-      take_action_residents
-    ]
-    Vulnerability_indicator
     condition_infra_change
   ]
-;##########################################################
-;distribute water to Mexico City using resources by WaterOperator
-  ;water_distribution "09" Recursos_para_distribucion
-;distribute water to other states using resources by WaterOperator
-  ;if escala = "cuenca"[
-  ;  water_distribution "15" Recursos_para_distribucion ;distribute water to Mexico City using resources by WaterOperator
-  ;]
-
-  if weeks = 4 [
-     WaterOperator-decisions "09"            ;;decisions by WaterOperator
-   if escala = "cuenca"[
-     WaterOperator-decisions "15"            ;;decisions by infra operator WaterOperator (estado de Mexico)
-   ]
-    ;##########################################################
-    ;Set monthly counter of "days without water supply" to cero.
-    ;ask residents in census blocks to act in the lanscape
-    ask agebs[
-      residents-decisions
-      set days_wno_water 0
-    ]
- ]
   ;##########################################################
   ;update indicators of flood and scaricty at the end of the simulation
   if months = 12 [
-    ask agebs[indicators]
+    ask agebs with [CV_estado = "09"][indicators]
   ]
   ;##########################################################
-  Landscape_visualization          ;;visualization of social and physical processes
 
+  Landscape_visualization          ;;visualization of social and physical processes
   ;##########################################################
-  ;
 
  ;profiler:stop          ;; stop profiling
  ; print profiler:report
  ; profiler:reset         ;; clear the data
-;show timer
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 to show_limitesDelegaciones
   gis:set-drawing-color white
-  ;gis:draw desalojo_profundo 1
   gis:draw Limites_delegacionales 2
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 to show-actors-actions
-   inspect one-of alternatives_WaterOperator_AB
+   inspect one-of alternatives_WaterOperator_D
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 to show_AGEBS
   gis:set-drawing-color white
-  ;gis:draw desalojo_profundo 1
   gis:draw Agebs_map_full 0.01
 end
-;#############################################################################################################################################
-;#############################################################################################################################################
- ;calculate-distances-to-ideal-points;
-to residents-decisions  ;calculation of distance metric using the distance metric. The code updates the value of the atributes in the landscape and its standarize value
-  ;test to -recalculate weighted supermatrix_residents using
- ; if months = 12 [
-    ;ask Alternatives_Izb [print  supermatrix_residents W_matrix 2 4 12 [days_wno_water] of myself]           ;re-evaluate the criteria weights based on the level of scarcity
-    ;ask Alternatives_Xo  [print  supermatrix_residents W_matrix 2 4 12 [days_wno_water] of myself]
-    ;ask Alternatives_MC  [print  supermatrix_residents W_matrix 3 2 9 [days_wno_water] of myself]
- ; ]
-;#############################################################################################################################################
-
-  if group_kmean = 0[ ;#Residents type Iztapalapa
-    ask Alternatives_MCc [
-      update_criteria_and_valueFunctions_residentes
-      let ww filter [ii -> ii > cut-off_priorities] criteria_weights                 ;; filter for the criterias that are most influential in the desition
-      let vv []
-      (foreach criteria_weights rescaled_criteria_values [ [a b] ->
-        if a > cut-off_priorities [
-          set vv lput b vv
-        ]
-      ])
-      set ww map[? -> ? / sum ww] ww
-
-      let  ddd (ideal_distance alternative_weights vv ww 1)
-      if name_action = "Movilizaciones"[
-        ask myself [
-          set d_Movilizaciones ddd]
-      ]
-      if name_action = "Modificacion vivienda"  and months = 1[
-      ask myself [set d_Modificacion_vivienda ddd]
-      ]
-
-      if name_action = "Captacion de agua" and months = 6 [
-        ask myself [set d_Captacion_agua ddd]
-      ]
-      if name_action = "Accion colectiva"  and months = 1[
-        ask myself [set d_Accion_colectiva ddd]
-      ]
-      if name_action = "Compra de agua"[
-        ask myself [set d_Compra_agua ddd]
-      ]
-    ]
-  ]
-
-;###############################################################################################################################
-
-  if group_kmean = 2 [ ;#residents type Xochimilco
-    ask Alternatives_Xo [
-      ;normalize-criteria-values;
-      update_criteria_and_valueFunctions_residentes
-      ;/normalize-criteria-values;
-      let ww filter [ii -> ii > cut-off_priorities] criteria_weights                       ;; filter for the criterias that are most influential (> 0.1) in the decision
-      let vv []
-      (foreach criteria_weights rescaled_criteria_values [
-        [a b]->
-        if a > cut-off_priorities[
-          set vv lput b vv
-        ]
-      ])
-      set ww map[ii -> ii / sum ww] ww
-
-
-      let ddd (ideal_distance alternative_weights vv ww 1)
-      if name_action = "Movilizaciones"[
-        ask myself [set d_Movilizaciones ddd]
-      ]
-      if name_action = "Modificacion vivienda" and months = 1[
-        ask myself [set d_Modificacion_vivienda ddd]
-      ]
-      if name_action = "Captacion de agua" and months = 6 [
-        ask myself [set d_Captacion_agua ddd]
-      ]
-      if name_action = "Accion colectiva" and months = 1[
-        ask myself [set d_Accion_colectiva ddd]
-      ]
-      if name_action = "Compra de agua" [
-        ask myself [set d_Compra_agua ddd]
-      ]
-    ]
-  ]
-  ;###############################################################################################################################
-  if group_kmean = 0[ ;#Residents type Iztapalapa
-    ask Alternatives_Iz [
-      update_criteria_and_valueFunctions_residentes
-      let ww filter [ii -> ii > cut-off_priorities] criteria_weights                 ;; filter for the criterias that are most influential in the desition
-      let vv []
-      (foreach criteria_weights rescaled_criteria_values [ [a b] ->
-        if a > cut-off_priorities [
-          set vv lput b vv
-        ]
-      ])
-      set ww map[? -> ? / sum ww] ww
-
-      let  ddd (ideal_distance alternative_weights vv ww 1)
-      if name_action = "Movilizaciones"[
-        ask myself [
-          set d_Movilizaciones ddd]
-      ]
-      if name_action = "Modificacion vivienda"  and months = 1[
-      ask myself [set d_Modificacion_vivienda ddd]
-      ]
-
-      if name_action = "Captacion de agua" and months = 6 [
-        ask myself [set d_Captacion_agua ddd]
-      ]
-      if name_action = "Accion colectiva"  and months = 1[
-        ask myself [set d_Accion_colectiva ddd]
-      ]
-      if name_action = "Compra de agua"[
-        ask myself [set d_Compra_agua ddd]
-      ]
-    ]
-  ]
- ;###############################################################################################################################
-  if group_kmean = 1[ ;#Residents type Iztapalapa b
-
-
-    ask Alternatives_Izb [
-
-      update_criteria_and_valueFunctions_residentes
-      let ww filter [ii -> ii > cut-off_priorities] criteria_weights                 ;; filter for the criterias that are most influential in the desition
-      let vv []
-      (foreach criteria_weights rescaled_criteria_values [ [a b] ->
-        if a > cut-off_priorities [
-          set vv lput b vv
-        ]
-      ])
-      set ww map[? -> ? / sum ww] ww
-
-      let  ddd (ideal_distance alternative_weights vv ww 1)
-      if name_action = "Movilizaciones"[
-        ask myself [
-          set d_Movilizaciones ddd]
-      ]
-      if name_action = "Modificacion vivienda"  and months = 1[
-      ask myself [set d_Modificacion_vivienda ddd]
-      ]
-
-      if name_action = "Captacion de agua" and months = 6 [
-        ask myself [set d_Captacion_agua ddd]
-      ]
-      if name_action = "Accion colectiva"  and months = 1[
-        ask myself [set d_Accion_colectiva ddd]
-      ]
-      if name_action = "Compra de agua"[
-        ask myself [set d_Compra_agua ddd]
-      ]
-    ]
-  ]
-
-  ;###############################################################################################################################
-  if group_kmean = 4 [ ;#Residents type Magdalena Contreras
-    ask Alternatives_MC [
-      update_criteria_and_valueFunctions_residentes
-
-      let ww filter [? -> ? > cut-off_priorities] criteria_weights               ;; filter for the criterias that are most influential in the decision
-      let vv []
-      (foreach criteria_weights rescaled_criteria_values [[a b] ->
-        if a > cut-off_priorities[
-          set vv lput b vv
-        ]
-      ])
-      set ww map[? -> ? / sum ww] ww
-
-      let ddd (ideal_distance alternative_weights vv ww 1)
-      if name_action = "Movilizaciones"[
-        ask myself [set d_Movilizaciones ddd]
-      ]
-      if name_action = "Modificacion vivienda"  and months = 1[
-        ask myself [set d_Modificacion_vivienda ddd]
-      ]
-      if name_action = "Captacion de agua"  and months = 6 [
-        ask myself [set d_Captacion_agua ddd]
-      ]
-      if name_action = "Accion colectiva"  and months = 1[
-        ask myself [set d_Accion_colectiva ddd]
-      ]
-      if name_action = "Compra de agua" [
-        ask myself [set d_Compra_agua ddd]
-      ]
-    ]
-  ]
-end
-;/calculate-distances-to-ideal-points;
-;#############################################################################################################################################
-;#############################################################################################################################################
-;take-action1;
-;resident decides what action to take. The action with the large metric is defined
-to take_action_residents
-  if d_Modificacion_vivienda > max (list d_Movilizaciones  d_Captacion_agua)
-  [
-
-    house-modification
-  ]
-
-  if d_Movilizaciones >  max (list d_Modificacion_vivienda  d_Captacion_agua) ;random-float 1;
-  [
-    protest
-
-  ]
-  ;if d_Accion_colectiva > max (list d_Modificacion_vivienda d_Movilizaciones d_Captacion_agua)
-  ;[
-  ;]
-  if d_Captacion_agua > max (list d_Modificacion_vivienda d_Movilizaciones )
-  [
-    rain-waterCapture
-  ]
-  if d_Compra_agua > max (list d_Modificacion_vivienda d_Movilizaciones d_Accion_colectiva d_Captacion_agua)
-  [
-    water-Purchase
-  ]
-end
 
 ;#############################################################################################################################################
-;#############################################################################################################################################
-to house-modification
-  set Y_F Y_F + 1
-  set Sensitivity_F 1 - (Y_F / (Y_F + hsc_f))
-end
-;#############################################################################################################################################
-to make_rain
-ask Rain_Stations[
-  set Rain_t ifelse-value ((item (months - 1) p_rain) > random-float 1)[random-gamma (item (months - 1) shp_gamma) ((item (months - 1) rate_gamma))][0]
-  set size Rain_t
-]
-end
-;#############################################################################################################################################
-to rain-waterCapture
-  set Y_S Y_S + 1
-  set Sensitivity_S 1 - (Y_S / (Y_S + hsc_s))
-end
-;#############################################################################################################################################
-to water-Purchase
-  if-else (0.1 + income-index) / 2 > random-float 1[  ;in you have resources purchese water
-    ;set resources_water resources_water - 1 / 30
-    set water_in_buying 1
-  ]
-  [
-    set water_in_buying 0
-    ]
-end
-;#############################################################################################################################################
-to collective-action
-end
-;#############################################################################################################################################
-to protest  ;if the distant to ideal for protest is greater than
-  set protest_here  1
-  set Presion_social_annual Presion_social_annual + 1
-  if months = 1 and weeks = 1 [
-    set Presion_social_annual 0
-  ]
-end
-;/take-action1;
-;#############################################################################################################################################
-;#############################################################################################################################################
-to update_maximum_full  ;; update the maximum or minimum of values use by the model to calculate range of the value functions
-  set Antiguedad-infra_Ab_max max [Antiguedad-infra_Ab] of agebs
-  set Antiguedad-infra_D_max max [Antiguedad-infra_D] of agebs
-  set desperdicio_agua_max max [desperdicio_agua] of agebs;;max level of perception of deviation
-  set days_wno_water_max max [days_wno_water] of agebs
-  set Gasto_hidraulico_max max [Gasto_hidraulico] of agebs
-  set presion_hidraulica_max max [presion_hidraulica] of agebs
-  set desviacion_agua_max max [desviacion_agua] of agebs
-  set Capacidad_Ab_max max [Capacidad_Ab] of agebs
-  set Capacidad_d_max max [Capacidad_d] of agebs
-  set garbage_max max [garbage] of agebs
-  set Obstruccion_dren_max max[Obstruccion_dren] of agebs
-  set hundimiento_max max [hundimiento] of agebs
-  set water_quality_max 1
-  set max_water_in_mc max [days_water_in] of agebs
-  set infra_abast_max max [houses_with_abastecimiento] of agebs
-  set infra_dranage_max max [houses_with_dranage] of agebs
-  set flooding_max max [flooding] of agebs ;;max level of flooding (encharcamientos) recored over the last 10 years
-  set precipitation_max max [precipitation] of agebs
-  set falla_ab_max max [Falla_ab] of agebs
-  set Abastecimiento_max max [Abastecimiento] of agebs
-  set health_max max [health] of agebs
-  set monto_max max [monto] of agebs
-  set scarcity_max max [scarcity] of agebs
-  set Presion_social_annual_max max [Presion_social_annual] of agebs
-  set falta_d_max 1
-  set falta_Ab_max 1
-  set d_Compra_agua_max max [d_Compra_agua] of agebs
-  set d_Captacion_agua_max max [d_Captacion_agua] of agebs
-  set d_Movilizaciones_max max [d_Movilizaciones] of agebs
-  set d_Modificacion_vivienda_max max [d_Modificacion_vivienda] of agebs
-  set d_Accion_colectiva_max max [d_Accion_colectiva] of agebs
-  set d_water_extraction_max max [d_water_extraction] of agebs
-  set d_mantenimiento_max max [d_mantenimiento] of agebs
-  set d_mantenimiento_D_max max [d_mantenimiento_D] of agebs
-  set d_new_max max [d_new] of agebs
-  set d_water_distribution_max max [d_water_distribution] of agebs
-  set d_water_importacion_max max [d_water_importacion] of agebs
-  set Y_F_Max  max [Y_F] of agebs    ;max level of changes made to houses
-  set Y_S_Max  max [Y_S] of agebs    ;max level of changes made to houses
-  set Vulnerability_S_max max [vulnerability_S] of agebs
-  set Vulnerability_F_max max [vulnerability_F] of agebs
-  set densidad_pop_max max [densidad_pop] of agebs
-end
-;#############################################################################################################################################
-;#############################################################################################################################################
-to p_falla_infra    ;;update age and probability of failure and also is color if well is working
-     set P_failure_AB 1 - exp(Antiguedad-infra_Ab  * (- lambda))
-     set P_failure_D  1 - exp(Antiguedad-infra_D  * (- lambda))
-     set p_failure_hund  hundimiento * factor_subsidencia
-     set p_falla_AB (p_failure_hund + P_failure_AB) / 2  ; need to refine using available data
-     set p_falla_D (p_failure_hund + P_failure_D) / 2    ;idem
-     ;update extraction rate based on p_failure
-     ask pozos_agebs [set extraction_rate ifelse-value ([p_falla_AB] of myself > random-float 1)[1][0] * 87225]
-end
-;#############################################################################################################################################
-;#############################################################################################################################################
-to counter_days
-
-  if (months = 12 and days = 30)[
-    set years years + 1
-    set days 0
-    set months 1
-  ]
-  if days = 31 and (months = 1 or months = 3 or months = 5 or months = 7 or months = 9 or months = 11) [
-    set months months + 1
-    set days 0
-  ]
-  if days = 30 and (months = 4 or months = 6 or months = 8 or months = 10 or months = 12) [
-    set months months + 1
-    set days 0
-  ]
-  if days = 29 and months = 2 and (years mod 4) != 0 [
-    set months months + 1
-    set days 0
-  ]
-  if days = 28 and months = 2 and (years mod 4) = 0 [
-    set months months + 1
-    set days 0
-  ]
-
-  set days days + 1
-
-end
-
-
 to counter_weeks
 
   if (months = 12 and weeks = 4)[
@@ -466,10 +65,6 @@ to counter_weeks
     set weeks 0
     set months 1
   ]
-;  if days = 31 and (months = 1 or months = 3 or months = 5 or months = 7 or months = 9 or months = 11) [
- ;   set months months + 1
- ;   set days 0
-;  ]
   if weeks = 4 [
     set months months + 1
     set weeks 0
@@ -479,35 +74,6 @@ to counter_weeks
 
 end
 ;#############################################################################################################################################
-;#############################################################################################################################################
-;#############################################################################################################################################
- to define_delegaciones
- foreach gis:find-features Limites_delegacionales "CVE_ENT" "09"[ ? ->
-   let centroid gis:location-of gis:centroid-of ?
-
-   if not empty? centroid[
-     create-Delegaciones 1[
-       set xcor item 0 centroid              ;define coodeantes of ageb at the center of the polygone
-       set ycor item 1 centroid
-       set name_delegacion gis:property-value ? "NOM_MUN"
-       set Peticion_Delegaciones 1
-
-     ]
-   ]
- ]
- end
-;#############################################################################################################################################
-;#############################################################################################################################################
-
-
-
-;#############################################################################################################################################
-;#############################################################################################################################################
-
-
-
-;#################################################################################################################################################
-;#################################################################################################################################################
 
 to WaterOperator-decisions [estado]
  ;;; Define value functions
@@ -516,44 +82,9 @@ to WaterOperator-decisions [estado]
  ;we set the value functions and define the distant metric based on compromized programing function with exponent = 2  (see value function.nls)
   ask  agebs with [CV_estado = estado][
     ;#################################################################################################################################################
- ;water operator potable water system decision-making process
-
-;    ask alternatives_WaterOperator_AB [
-;;normalize-criteria-values;
-;      update_criteria_and_valueFunctions_WaterOperator;
-;       ;/normalize-criteria-values;
-;;calculate-distances-to-ideal-points1;
-;      let ddd (ideal_distance alternative_weights rescaled_criteria_values criteria_weights 1)  ;function in value_function.nls
-;
-;;#Alternative Mantenimiento Infrastructura
-;      if name_action = "Mantenimiento"[
-;        ask myself[set d_mantenimiento ddd]
-;      ]
-;      ;#Alternative: New Infrastructure
-;      if name_action = "Nueva_infraestructura"[
-;        ask myself[set d_new ddd]
-;      ]
-;      ;#action Distribution of water
-;      if name_action = "Distribucion_agua"[
-;        ask myself[set d_water_distribution ddd]
-;      ]
-;      ;#action Importacion agua
-;      if name_action = "Importacion_agua"[
-;        ask myself [set d_water_importacion ddd]
-;      ]
-;      ;#action Extraccion agua
-;      if name_action = "Extraccion_agua"[
-;        ask myself[set d_water_extraction ddd]
-;
-;      ]
-;    ]
-
-;water operator sewer system decision-making process
-   ask Alternatives_WaterOperator_D [
+    ;water operator sewer system decision-making process
+    ask Alternatives_WaterOperator_D [
       update_criteria_and_valueFunctions_WaterOperator   ; This function creates the lists of standardized values needed for the function "ideal_distance"
-  ;    print rescaled_criteria_values
-     ; print criteria-weights
-   ;   print criteria_names
       let ddd (ideal_distance alternative_weights rescaled_criteria_values criteria_weights 1)
       if name_action = "Nueva_infraestructura"[
         ask myself[set d_new_D ddd]
@@ -564,329 +95,65 @@ to WaterOperator-decisions [estado]
     ]
   ]
 ;/calculate-distances-to-ideal-points1;
-
-;create new connections to the dranage and supply system by assuming it occur 1 time a year ;need to add changes in the capasity of the infrastructure due to new investments
-
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 ;site-selection;
 ;take-action1;
-to repair-Infra_Ab [estado]
-  let Budget 0
-  ifelse (actions_per_agebs = "single-action")[
-    foreach sort-on [(1 - d_mantenimiento)] agebs with [CV_estado = estado][    ;sort census blocks (+ (1 - densidad_pop / densidad_pop_max))
-      ? ->
-      ask ? [
-        if d_mantenimiento > d_new[
-
-          if Budget < recursos_para_mantenimiento[                                       ;agebs that were selected for maitenance do not reduce its age
-
-            set Antiguedad-infra_Ab Antiguedad-infra_Ab - Eficiencia_Mantenimiento * Antiguedad-infra_Ab
-
-            ask pozos_agebs [set age_pozo age_pozo + Eficiencia_Mantenimiento * age_pozo]
-            set Budget Budget + 1
-            set investment_here_AB 1
-            set investment_here_accumulated_AB investment_here_accumulated_AB + 1
-            set investment_here_AB_mant 1
-            set investment_here_accumulated_AB_mant investment_here_accumulated_AB_mant + 1
-          ]
-        ]
-
-      ]
-    ]
-  ][
-    foreach sort-on [(1 - d_mantenimiento)] agebs with [CV_estado = estado][    ;sort census blocks (+ (1 - densidad_pop / densidad_pop_max))
-      ? ->
-      ask ? [
-
-        if Budget < recursos_para_mantenimiento[                                       ;agebs that were selected for maitenance do not reduce its age
-          set Antiguedad-infra_Ab Antiguedad-infra_Ab - Eficiencia_Mantenimiento * Antiguedad-infra_Ab
-          ask pozos_agebs [set age_pozo age_pozo + Eficiencia_Mantenimiento * age_pozo]
-          set Budget Budget + 1
-          set investment_here_AB 1
-          set investment_here_accumulated_AB investment_here_accumulated_AB + 1
-          set investment_here_AB_mant 1
-          set investment_here_accumulated_AB_mant investment_here_accumulated_AB_mant + 1
-        ]
-      ]
-    ]
-  ]
-end
-;#############################################################################################################################################
-;#############################################################################################################################################
-to New-Infra_Ab [estado]
-  let Budget 0
-    ifelse (actions_per_agebs = "single-action")[
-    foreach sort-on [(1 - d_new)]  agebs with [CV_estado = estado and investment_here_AB_mant = 0][
-      ? ->
-      ask ? [
-        if Budget < recursos_nuevaInfrastructura and houses_with_abastecimiento < 0.99 [
-          set houses_with_abastecimiento ifelse-value (houses_with_abastecimiento < 1)[houses_with_abastecimiento + Eficiencia_NuevaInfra * (1 - houses_with_abastecimiento)][1]
-          ask pozos_agebs with [age_pozo > 40 * 54][set age_pozo 1]
-          set falta_Ab 1 - houses_with_abastecimiento
-          set Budget Budget + 1
-          set investment_here_AB 1
-          set investment_here_accumulated_AB investment_here_accumulated_AB + 1
-          set investment_here_AB_new 1
-          set investment_here_accumulated_AB_new investment_here_accumulated_AB_new + 1
-        ]
-      ]
-    ]
-    ]
-    [
-      foreach sort-on [(1 - d_new)]  agebs with [CV_estado = estado][
-      ? ->
-      ask ? [
-        if Budget < recursos_nuevaInfrastructura and houses_with_abastecimiento < 0.99 [
-          set houses_with_abastecimiento ifelse-value (houses_with_abastecimiento < 1)[houses_with_abastecimiento + Eficiencia_NuevaInfra * (1 - houses_with_abastecimiento)][1]
-          ask pozos_agebs with [age_pozo > 40 * 54][set age_pozo 1]
-          set falta_Ab 1 - houses_with_abastecimiento
-
-          set Budget Budget + 1
-          set investment_here_AB 1
-          set investment_here_accumulated_AB investment_here_accumulated_AB + 1
-          set investment_here_AB_new 1
-          set investment_here_accumulated_AB_new investment_here_accumulated_AB_new + 1
-        ]
-      ]
-    ]
-  ]
-end
-;#############################################################################################################################################
-;#############################################################################################################################################
 to repair-Infra_D [estado]
-  let Budget 0
-  ifelse (actions_per_agebs = "single-action")[
-    foreach sort-on [(1 - d_mantenimiento_D)] agebs with [CV_estado = estado][ ;+ (1 - densidad_pop / densidad_pop_max)
-      ? ->
-      ask ? [
-        if d_mantenimiento_D > d_new_D [
-        if Budget < recursos_para_mantenimiento [
-            set Antiguedad-infra_D Antiguedad-infra_D - Eficiencia_Mantenimiento * Antiguedad-infra_D
-            set Budget Budget + 1
-            set investment_here_D 1
-            set investment_here_accumulated_D investment_here_accumulated_D + 1
-            set investment_here_D_mant 1
-            set investment_here_accumulated_D_mant investment_here_accumulated_D_mant + 1
-          ]
-        ]
-      ]
-    ]
-  ]
-  [
-    foreach sort-on [(1 - d_mantenimiento_D) ] agebs with [CV_estado = estado][ ;+ (1 - densidad_pop / densidad_pop_max)
-      ? ->
-      ask ? [
-        if Budget < recursos_para_mantenimiento [
-          set Antiguedad-infra_D Antiguedad-infra_D - Eficiencia_Mantenimiento * Antiguedad-infra_D
-          set Budget Budget + 1
-          set investment_here_D 1
-          set investment_here_accumulated_D investment_here_accumulated_D + 1
-          set investment_here_D_mant 1
-          set investment_here_accumulated_D_mant investment_here_accumulated_D_mant + 1
-        ]
-      ]
-    ]
-  ]
-end
-;#############################################################################################################################################
-;#############################################################################################################################################
-to New-Infra_D [estado]
-    let Budget 0
-    ifelse (actions_per_agebs = "single-action")[
-      foreach sort-on [(1 - d_new_D)] agebs with [CV_estado = estado and investment_here_D_mant = 0][
-      ? ->
-      ask ? [
-        if Budget < recursos_nuevaInfrastructura[
-          set houses_with_dranage ifelse-value (houses_with_dranage < 1)[houses_with_dranage + Eficiencia_NuevaInfra * (1 - houses_with_dranage)][1]
-          set falta_d 1 - houses_with_dranage
-          set Budget Budget + 1
-          set Capacidad_D Capacidad_D + Eficiencia_NuevaInfra
-          if Capacidad_D > 1 [set Capacidad_D 1]
-          set investment_here_D 1
-          set investment_here_accumulated_D investment_here_accumulated_D + 1
+  let Budget_M 0
+  let Budget_N 0
 
-          set investment_here_D_new 1
-          set investment_here_accumulated_D_new investment_here_accumulated_D_new + 1
 
-        ]
-      ]
+  while [Budget_N < recursos_nuevaInfrastructura] [
+    ask max-one-of (agebs with [d_mantenimiento_D < d_new_D and CV_estado = estado and investment_here_D_new = 0 and investment_here_D_mant = 0]) [d_new_D][
+      let old_Capacidad_D Capacidad_D
+      set Budget_N Budget_N + 1
+      set investment_here_D 1
+      set investment_here_accumulated_D investment_here_accumulated_D + 1
+      set investment_here_D_new 1
+      set investment_here_accumulated_D_new investment_here_accumulated_D_new + 1
+      set Capacidad_d Capacidad_d + Eficiencia_NuevaInfra
     ]
   ]
-  [
-    foreach sort-on [(1 - d_new_D)] agebs with [CV_estado = estado][
-      ? ->
-      ask ? [
-          if Budget < recursos_nuevaInfrastructura and houses_with_dranage  < 0.99 [
-          set houses_with_dranage ifelse-value (houses_with_dranage < 1)[houses_with_dranage + Eficiencia_NuevaInfra * (1 - houses_with_dranage)][1]
-          set falta_d 1 - houses_with_dranage
-          set Capacidad_D Capacidad_D + Eficiencia_NuevaInfra
-          if Capacidad_D > 1 [set Capacidad_D 1]
-          set Budget Budget + 1
-          set investment_here_D 1
-          set investment_here_accumulated_D investment_here_accumulated_D + 1
-          set investment_here_D_new 1
-          set investment_here_accumulated_D_new investment_here_accumulated_D_new + 1
-        ]
-      ]
-    ]
-  ]
-end
-;#############################################################################################################################################
-to water_extraction2 [estado]
-  let Budget 0
-  ifelse (actions_per_agebs = "single-action")[
-    foreach sort-on [(1 - d_water_extraction)]  agebs with [CV_estado = estado and investment_here_AB_mant = 0 and investment_here_AB_new = 0][
-      ageb_sorted ->
-      if Budget < recursos_extraccion [
-        set Budget Budget + 1
-        create-pozos 1
-        [ set xcor [xcor] of ageb_sorted
-          set ycor [ycor] of ageb_sorted
-          set CVEGEO [CVEGEO] of ageb_sorted
-          set CV_estado [CV_estado] of ageb_sorted
-          set CV_municipio [CV_municipio] of ageb_sorted
-          set Localidad [Localidad] of ageb_sorted
-          set AGEB_key [AGEB_key] of ageb_sorted
-          set shape "circle 2"
-          set size 2
-          set color red
-          set age_pozo 0
-          set extraction_rate 87225 ;m3/dia
-        ]
-      ]
 
-      ask ageb_sorted [
-        set investment_here_Waterextraction 1
-        set investment_here_accumulated_Waterextraction investment_here_accumulated_Waterextraction + 1
-        set pozos_agebs turtle-set pozos with [CVEGEO = [CVEGEO] of myself]   ;add new pozo to the list of pozos
-        ask pozos_agebs [
-          set zone [zona_aquifera] of myself
-          set aquifer [aquifer] of myself
-        ]
-      ]
-    ]
-    ]
-    [
-    foreach sort-on [(1 - d_water_extraction)]  agebs with [CV_estado = estado][
-      ageb_sorted ->
-      if Budget < recursos_extraccion [
-        set Budget Budget + 1
-        create-pozos 1
-        [ set xcor [xcor] of ageb_sorted
-          set ycor [ycor] of ageb_sorted
-          set CVEGEO [CVEGEO] of ageb_sorted
-          set CV_estado [CV_estado] of ageb_sorted
-          set CV_municipio [CV_municipio] of ageb_sorted
-          set Localidad [Localidad] of ageb_sorted
-          set AGEB_key [AGEB_key] of ageb_sorted
-          set shape "circle 2"
-          set size 2
-          set color red
-          set age_pozo 0
-          set extraction_rate 87225 ;m3/dia
-        ]
-      ]
-      ask ageb_sorted [
-        set investment_here_Waterextraction 1
-        set investment_here_accumulated_Waterextraction investment_here_accumulated_Waterextraction + 1
-        set pozos_agebs turtle-set pozos with [CVEGEO = [CVEGEO] of myself]
-        ask pozos_agebs [
-          set zone [zona_aquifera] of myself
-          set aquifer [aquifer] of myself
-        ]
-        ;add new pozo to the list of pozos
-      ]
-    ]
-  ]
-end
+    while [Budget_M < recursos_para_mantenimiento] [
 
-;#############################################################################################################################################
-to water_distribution [estado recursos] ;distribution of water from government by truck
-let available_trucks recursos
-    foreach sort-on [(1 - d_water_distribution)]  agebs with [CV_estado = estado and NOWater_week_pois > 0][
-    ageb_to_distribute ->
-    ask ageb_to_distribute [
-      if-else available_trucks > 0 [
-        set water_distributed_trucks 1
-        set available_trucks available_trucks - 1
-        set days_water_in 7
-        set weekly_water_available weekly_water_available - NOWater_week_pois * truck_capasity
-        if available_trucks < 0 [set available_trucks 0]
-      ]
-      [
-        set water_distributed_trucks 0
-      ]
-      water_in_a_week ;define if agebs receive water or not after the mean_days_withNo_water, and the decision of the manager to sent water by other means (trucks)
+    ask max-one-of (agebs with [investment_here_D_new =  0 and investment_here_D_mant = 0 and CV_estado = estado]) [d_mantenimiento_D][
+      let old_Antiguedad-infra_D Antiguedad-infra_D
+
+      set Budget_M Budget_M + 1
+      set investment_here_D_mant 1
+      set investment_here_D 1
+      set investment_here_accumulated_D investment_here_accumulated_D + 1
+      set investment_here_accumulated_D_mant investment_here_accumulated_D_mant + 1
+      set Antiguedad-infra_D Antiguedad-infra_D - Eficiencia_Mantenimiento
     ]
   ]
+
+
 end
 ;/take-action1;
 ;/site-selection;
 ;#############################################################################################################################################
 ;subsidence;
 to change_subsidence_rate
-  let count_pozos count pozos with [aquifer = "2"]
-  ask agebs with [aquifer = "2"][
-    set hundimiento hundimiento *  (1 + (count_pozos / (count_pozos_initial + count_pozos)))
-  ]
+    set hundimiento hundimiento + 0.1
 end
 ;/subsidence;
 ;##############################################################################################################
-;water-supply-simulation;
-to water_by_pipe
-;having water by pipe depends on mean_days_withNo_water (p having water based on info collected by ALE,about days with water), infrastructure and ifra failure distribution of water by trucks
-  set NOWater_week_pois random-poisson (mean_days_withNo_water + alt * (altitude - alt_mean_Delegation) + a_failure * (ifelse-value (p_falla_AB > random-float 1) [1][0]))
-
-  if NOWater_week_pois > 7[set NOWater_week_pois  7]
-  set days_water_in 7 - NOWater_week_pois
-  set water_distributed_pipes  days_water_in * Requerimiento_deAgua * poblacion * houses_with_abastecimiento
-  set weekly_water_available  weekly_water_available -  water_distributed_pipes
-end
-;##############################################################################################################
-to water_in_a_week  ;this procedure check if water was distributed to an ageb. This is true if water came from pipes, trucks or buying water
-  if-else water_distributed_trucks = 1 [
-    set water_in water_distributed_trucks + water_distributed_pipes
-    ;set days_wno_water 0
-  ]
-  [
-    set water_in water_distributed_pipes
-    set days_wno_water days_wno_water + NOWater_week_pois
-    set scarcity_annual scarcity_annual + NOWater_week_pois
-  ]
-
-end
-;/water-supply-simulation;
-;#############################################################################################################################################
 to condition_infra_change
-  set Antiguedad-infra_Ab Antiguedad-infra_Ab + 7
   set Antiguedad-infra_D Antiguedad-infra_D + 7
-  set Capacidad_D Capacidad_D - Capacidad_D * decay_capacity
-  ask pozos_agebs [set age_pozo age_pozo + 7]
+  set Capacidad_D Capacidad_D - decay_capacity
+  if Antiguedad-infra_D < 0 [set Antiguedad-infra_D 0]
+  if Capacidad_D < 0[set Capacidad_D 0]
 end
 ;##############################################################################################################
-to water_production_importation
-  set water_produced 7 * sum [extraction_rate] of pozos
-  set water_imported 7 * (Tot_water_Imported_Cutzamala + Tot_water_Imported_Lerma)
-  set weekly_water_available water_produced + water_imported
-end
-
-;#############################################################################################################################################
-;#############################################################################################################################################
-to export_view  ;;export snapshots of the landscape
-
-    let directory "data/images_model_ng/"
-    export-view  word directory word ticks "water_supply.png"
-
-end
-;#############################################################################################################################################
-;#############################################################################################################################################
 to export-map
   ;this procedure creates a txt file with a vector containing a particular atribute from the agebs
   ;let PATH "c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/CarpetasTrabajo/AndresBaeza/"
 
-    let fn (word n_runs "-" (word Recursos_para_distribucion "-" (word recursos_nuevaInfrastructura "-" (word recursos_para_mantenimiento "-" (word Eficiencia_Mantenimiento "-" (word Eficiencia_NuevaInfra ".txt"))))))
+    let fn (word n_runs "-" (word recursos_nuevaInfrastructura "-" (word recursos_para_mantenimiento "-" (word Eficiencia_Mantenimiento "-" (word Eficiencia_NuevaInfra ".txt")))))
     ;let fn "estado_key.txt"
     if file-exists? fn
     [ file-delete fn]
@@ -897,17 +164,9 @@ to export-map
       [
 
         file-write ID                                    ;;write the ID of each ageb using a numeric value (update acording to Marco's Identification)
-        file-write Antiguedad-infra_Ab                   ;;write the value of the atribute
         file-write Antiguedad-infra_D
-        file-write houses_with_dranage
-        file-write houses_with_abastecimiento
-        file-write Presion_social_Index                   ;;report social dissatisfaction for the entire period of simulation ( 40 years)
-        file-write scarcity_index
         file-write Flooding_index                              ;;number of floods
         file-write capacidad_D
-        file-write investment_here_accumulated_AB        ;;record the accumulated number of ANY alternative_namestaken in a census block
-        file-write investment_here_accumulated_AB_new    ;;record the accumulated number of alternative_namesto create NEW taken in a census block
-        file-write investment_here_accumulated_AB_mant   ;;record the accumulated number of alternative_namesto maintain  taken in a census block
         file-write investment_here_accumulated_D         ;;record the accumulated number of alternative_namestaken in a census block
         file-write investment_here_accumulated_D_new     ;;record the accumulated number of alternative_namestaken in a census block
         file-write investment_here_accumulated_D_mant    ;;record the accumulated number of alternative_namesto maintain taken in a census block
@@ -916,39 +175,6 @@ to export-map
     file-close                                        ;close the File
 end
 
-;to export-postgres
-;;this procedure exports an attribute from the agebs to a layer in postgis
-;
-; ;sql:configure "defaultconnection" [["brand" "PostgreSQL"]["host" "localhost"]["port" 5432] ["user" "postgres"]["password" "x"]["database" "new"]]
-;
-; foreach sort-on [ID] agebs[    ;sort agebs by ID from low to high
-;   ask ?
-;   [
-;     ;Antiguedad-infra
-;    ; sql:exec-update "UPDATE agebs_calles_geo SET infra=? WHERE ageb_id=?"  list Antiguedad-infra_Ab ID
-;     ;show ID
-;   ]
-; ]
-;
-;
-;end
-
-;to export-postgres-history
-;;this procedure exports an attribute from the agebs to a history table in postgres
-;  set timestep timestep + 1
-; ;sql:configure "defaultconnection" [["brand" "PostgreSQL"]["host" "localhost"]["port" 5432] ["user" "postgres"]["password" "x"]["database" "new"]]
-;
-; foreach sort-on [ID] agebs[    ;sort agebs by ID from low to high
-;   ask ?
-;   [
-;     ;Antiguedad-infra
-;    ; sql:exec-update "INSERT into infra_h values(?,?,?) "  (list ID Antiguedad-infra_Ab timestep)
-;     ;show ID
-;   ]
-; ]
-;
-;
-;end
 
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -959,97 +185,43 @@ end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
-  ask agebs [
+  set Antiguedad-infra_D_min min [Antiguedad-infra_D] of agebs with [CV_estado = "09"]
+
+  ask agebs with [CV_estado = "09"] [
     set size factor_scale * 1
     set shape "circle"
     ;############################################################################################
-    if Visualization = "Accion Colectiva" and ticks > 1[
-      set color scale-color sky d_Accion_colectiva 0 d_Accion_colectiva_max
-    ] ;accion colectiva
-      ;############################################################################################
-    if Visualization = "Peticion ciudadana" and ticks > 1 [
-      set size protest_here * factor_scale
-      set color  15 * protest_here
-    ] ;;social pressure
-      ;############################################################################################
     if Visualization = "Capacidad_D" and ticks > 1 [
       set size 10 * Capacidad_D
       set color  scale-color red Capacidad_D 0 1
     ] ;;social pressure
-      ;############################################################################################
-    if visualization = "Compra de Agua" and ticks > 1 [
-      set color scale-color sky d_Compra_agua 0 d_Compra_agua_max
+    ;############################################################################################
+    if visualization = "d_Mantenimiento" and ticks > 1 [
+      set size factor_scale * 10 * d_mantenimiento_D
+      set color scale-color magenta d_mantenimiento_D 0 1
     ]
     ;############################################################################################
-    if visualization = "Captacion de Agua" and ticks > 1 [set color scale-color blue d_Captacion_agua 0 d_Captacion_agua_max]
+    if visualization = "d_Nueva Infraestructura" and ticks > 1 [
+      set color scale-color green d_new_D 0 1]
     ;############################################################################################
-    if visualization = "Modificacion de la vivienda"and ticks > 1 [set color scale-color magenta Y_S 0 Y_S_max]
-    ;############################################################################################
-    if visualization = "Extraction Agua WaterOperator" and ticks > 1 [set color scale-color magenta d_water_extraction 0 d_water_extraction_max]
-    ;############################################################################################
-    if visualization = "Areas prioritarias Mantenimiento" and ticks > 1 [
-      set size factor_scale * 10 * d_mantenimiento
-      set color scale-color magenta d_mantenimiento 0 ifelse-value (d_mantenimiento_max = 0)[0][d_mantenimiento_max]
-    ]
-    ;############################################################################################
-    if visualization = "Areas prioritarias Nueva Infraestructura" and ticks > 1 [
-      set color scale-color green d_new 0 d_new_max]
-    ;############################################################################################
-    if visualization = "Distribucion de Agua SACMEX" and ticks > 1 [
-      set size d_water_distribution * 100 * factor_scale
-      set color scale-color sky d_water_distribution 0 d_water_distribution_max
-    ]
-    ;############################################################################################
-    if visualization = "K_groups" and ticks > 1 [set color  15 +  10 * group_kmean] ; visualize K-mean clusterization
     ;############################################################################################
     if visualization = "Income-index" and ticks > 1 [
       set color  10 * income-index
     ] ; visualize Income index
       ;############################################################################################
-    if visualization = "Salud" and ticks > 1 [
-      set size health * 1 * factor_scale
-      set color scale-color green (1 + health) 0 health_max
-    ] ;;visualized incidence of gastrointestinal diseases in MX 2004-2014
-      ;############################################################################################
     if visualization = "Encharcamientos" and ticks > 1 [
       set size flooding *  factor_scale
       set color  scale-color sky flooding flooding_max 0
     ] ;;visualized WaterOperator flooding dataset MX 2004-2014
-      ;############################################################################################
-    if visualization = "Escasez" and ticks > 1 [
-      ;set shape "drop"
-      set size 0.4 * days_wno_water
-      set color scale-color red days_wno_water days_wno_water_max 0
-    ]
     ;############################################################################################
     if visualization =  "% houses with drainage" and ticks > 1 [
       set size houses_with_dranage * factor_scale
       set color  scale-color sky houses_with_dranage 0 1
     ] ;;visualized WaterOperator flooding dataset MX 2004-2014
-      ;############################################################################################
-    if visualization = "% houses with supply" and ticks > 1 [
-      set size houses_with_abastecimiento * factor_scale
-      set color  scale-color sky houses_with_abastecimiento 0 1
-    ] ;;visualized WaterOperator flooding dataset MX 2004-2014
-      ;############################################################################################
-    if visualization = "Edad Infraestructura Ab." and ticks > 1 [
-      set shape "square"
-      set color  scale-color grey (Antiguedad-infra_Ab / 365)  30 100
-    ]
     ;############################################################################################
     if visualization = "Edad Infraestructura D" and ticks > 1 [
       set shape "square"
-      set color  scale-color grey (Antiguedad-infra_d / 365) 30 100
-    ]
-    ;############################################################################################
-    if visualization = "P. Falla" and ticks > 1 [
-      set size 5 * p_falla_AB
-      set color  scale-color green p_falla_AB 0 1
-    ]
-    ;############################################################################################
-    if visualization = "Zonas Aquifero" and ticks > 1 [
-      set size 2
-      set color  zona_aquifera
+      set color scale-color sky Antiguedad-infra_d Antiguedad-infra_D_min (200 * 336)
     ]
     ;############################################################################################
     if visualization = "hundimiento" and ticks > 1 [
@@ -1057,39 +229,19 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
       set color  scale-color magenta hundimiento 0 hundimiento_max
     ]
     ;############################################################################################
-    if visualization = "CalidadAgua" and ticks > 1 [
-      set size 2
-      set color  scale-color magenta water_quality 0 water_quality_max
-    ]
-    ;############################################################################################
-    if visualization = "value_function_edad_Ab" and ticks > 1 [
-      set size 2
-      set color  scale-color magenta value_function_Age_Ab 0 1
-    ]
-    ;############################################################################################
     if visualization = "value_function_Age_d" and ticks > 1 [
       set size 2
       set color  scale-color magenta value_function_Age_d 0 1
     ]
     ;############################################################################################
-    if visualization = "value_function_scarcity" and ticks > 1 [
+    if visualization = "value_function_ponding" and ticks > 1 [
       set size 2
-      set color  scale-color magenta value_function_scarcity 0 1
-    ]
-    ;############################################################################################
-    if visualization = "value_function_floods" and ticks > 1 [
-      set size 2
-      set color  scale-color magenta value_function_floods 0 1
+      set color  scale-color magenta value_function_ponding 0 1
     ]
     ;############################################################################################
     if visualization = "value_function_capasity" and ticks > 1 [
       set size 2
       set color  scale-color magenta value_function_capasity 0 1
-    ]
-    ;############################################################################################
-    if visualization = "value_function_falta_Ab" and ticks > 1 [
-      set size 2
-      set color  scale-color magenta value_function_falta_Ab 0 1
     ]
     ;############################################################################################
     if visualization = "value_function_falta_d" and ticks > 1 [
@@ -1101,12 +253,6 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
       set size 2
       set color  scale-color magenta  value_function_precipitation    0 1
     ]
-;############################################################################################
-    if visualization = "low_vs_high_land" and ticks > 1 [
-      set size 2
-      set color 54 * low_high-land
-    ]
-
   ]
 end
 
@@ -1125,7 +271,6 @@ to-report supermatrix_residents [matrix_weighed index1 index2 col value_scarcity
   let v2 matrix:get M_matrix_weighed index2 col
   matrix:set M_matrix_weighed index1 col (v1 + v2) * new_matrix_parameter     ;new_matrix_parameter controls between two weights from alternative_names(maintenance and new-infra) to criteria. together sum up to 1.
   matrix:set M_matrix_weighed index2 col (v1 + v2) * (1 - new_matrix_parameter)
- ; print matrix:pretty-print-text M_matrix_weighed
   let new_lim  (matrix:times M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed)
 
   let a_m sublist (matrix:get-column new_lim 1) 0 5
@@ -1205,160 +350,22 @@ end
 ;##############################################################################################################
 ;##############################################################################################################
 ;flooding-simulation;
-;simulation of annual flood events per census block using contingency tables and bayes rule
-to flood_risk  ;replace by fault
-  ask Agebs [
-    set flooding 0
-    let rng random-float 1
-    if precipitation > 0 and precipitation < 700 [
-      if ((item 1 item 1 flood_rain) >= rng)[ set flooding  random 10]
-      if ((item 1 item 1 flood_rain) > rng and (item 1 item 2 flood_rain) <= rng)[ set flooding  10 + random 10]
-      if ((item 1 item 2 flood_rain) > rng and (item 1 item 3 flood_rain) <= rng)[ set flooding  20 + random 10]
-      if ((item 1 item 3 flood_rain) > rng and (item 1 item 4 flood_rain) <= rng)[ set flooding  30 + random 10]
-      if ((item 1 item 4 flood_rain) > rng and (item 1 item 5 flood_rain) <= rng)[ set flooding  40 + random 60]
-      if ((item 1 item 5 flood_rain) > rng and (item 1 item 6 flood_rain) <= rng)[ set flooding  60 + random 15]
-    ]
-    if precipitation >= 700 and precipitation < 800 [
-      if ((item 2 item 1 flood_rain) >= rng)[ set flooding  random 10]
-      if ((item 2 item 1 flood_rain) > rng and (item 2 item 2 flood_rain) <= rng)[ set flooding  10 + random 10]
-      if ((item 2 item 2 flood_rain) > rng and (item 2 item 3 flood_rain) <= rng)[ set flooding  20 + random 10]
-      if ((item 2 item 3 flood_rain) > rng and (item 2 item 4 flood_rain) <= rng)[ set flooding  30 + random 10]
-      if ((item 2 item 4 flood_rain) > rng and (item 2 item 5 flood_rain) <= rng)[ set flooding  40 + random 60]
-      if ((item 2 item 5 flood_rain) > rng and (item 2 item 6 flood_rain) <= rng)[ set flooding  60 + random 15]
-
-    ]
-    if precipitation >= 800 and precipitation < 900 [
-      if ((item 3 item 1 flood_rain) >= rng)[ set flooding  random 10]
-      if ((item 3 item 1 flood_rain) > rng and (item 3 item 2 flood_rain) <= rng)[ set flooding  10 + random 10]
-      if ((item 3 item 2 flood_rain) > rng and (item 3 item 3 flood_rain) <= rng)[ set flooding  20 + random 10]
-      if ((item 3 item 3 flood_rain) > rng and (item 3 item 4 flood_rain) <= rng)[ set flooding  30 + random 10]
-      if ((item 3 item 4 flood_rain) > rng and (item 3 item 5 flood_rain) <= rng)[ set flooding  40 + random 60]
-      if ((item 3 item 5 flood_rain) > rng and (item 3 item 6 flood_rain) <= rng)[ set flooding  60 + random 15]
-
-    ]
-    if precipitation >= 900 and precipitation < 1000 [
-      if ((item 4 item 1 flood_rain) >= rng)[ set flooding  random 10]
-      if ((item 4 item 1 flood_rain) > rng and (item 4 item 2 flood_rain) <= rng)[ set flooding  10 + random 10]
-      if ((item 4 item 2 flood_rain) > rng and (item 4 item 3 flood_rain) <= rng)[ set flooding  20 + random 10]
-      if ((item 4 item 3 flood_rain) > rng and (item 4 item 4 flood_rain) <= rng)[ set flooding  30 + random 10]
-      if ((item 4 item 4 flood_rain) > rng and (item 4 item 5 flood_rain) <= rng)[ set flooding  40 + random 60]
-      if ((item 4 item 5 flood_rain) > rng and (item 4 item 6 flood_rain) <= rng)[ set flooding  60 + random 15]
-
-    ]
-    if precipitation >= 1000 and precipitation < 1200 [
-      if ((item 5 item 1 flood_rain) >= rng)[ set flooding  random 10]
-      if ((item 5 item 1 flood_rain) > rng and (item 5 item 2 flood_rain) <= rng)[ set flooding  10 + random 10]
-      if ((item 5 item 2 flood_rain) > rng and (item 5 item 3 flood_rain) <= rng)[ set flooding  20 + random 10]
-      if ((item 5 item 3 flood_rain) > rng and (item 5 item 4 flood_rain) <= rng)[ set flooding  30 + random 10]
-      if ((item 5 item 4 flood_rain) > rng and (item 5 item 5 flood_rain) <= rng)[ set flooding  40 + random 60]
-      if ((item 5 item 5 flood_rain) > rng and (item 5 item 6 flood_rain) <= rng)[ set flooding  60 + random 15]
-
-    ]
-  ]
-
-end
-
-;##############################################################################################################
-;##############################################################################################################
-;this model uses contingency tables using capasity and age
-to flood_risk_capacitysewer  ;replace by fault
-  ask Agebs with [Antiguedad-infra_D > 60 * 365][
-    set flooding 0
-    let rng random-float 1
-    if Capacidad_D > 0 and Capacidad_D < 0.2 [
-      if ((item 1 item 1 flood_capacity_riskOldCity) > rng)[ set flooding  00]
-      if ((item 1 item 1 flood_capacity_riskOldCity) <= rng)[ set flooding  random 10]
-      if ((item 1 item 2 flood_capacity_riskOldCity) <= rng)[ set flooding  10 + random 10]
-      if ((item 1 item 3 flood_capacity_riskOldCity) <= rng)[ set flooding  20 + random 20]
-      if ((item 1 item 4 flood_capacity_riskOldCity) <= rng)[ set flooding  40 + random 40]
-      if ((item 1 item 5 flood_capacity_riskOldCity) <= rng)[ set flooding  80 + random 20]
-    ]
-    if Capacidad_D >= 0.2 and Capacidad_D < 0.4 [
-      if ((item 2 item 1 flood_capacity_riskOldCity) > rng)[ set flooding  00]
-      if ((item 2 item 1 flood_capacity_riskOldCity) <= rng)[ set flooding  random 10]
-      if ((item 2 item 2 flood_capacity_riskOldCity) <= rng)[ set flooding  10 + random 10]
-      if ((item 2 item 3 flood_capacity_riskOldCity) <= rng)[ set flooding  20 + random 20]
-      if ((item 2 item 4 flood_capacity_riskOldCity) <= rng)[ set flooding  40 + random 40]
-      if ((item 2 item 5 flood_capacity_riskOldCity) <= rng)[ set flooding  80 + random 20]
-    ]
-    if Capacidad_D >= 0.4 and Capacidad_D < 0.6 [
-      if ((item 3 item 1 flood_capacity_riskOldCity) > rng)[ set flooding  00]
-      if ((item 3 item 1 flood_capacity_riskOldCity) <= rng)[ set flooding  random 10]
-      if ((item 3 item 2 flood_capacity_riskOldCity) <= rng)[ set flooding  10 + random 10]
-      if ((item 3 item 3 flood_capacity_riskOldCity) <= rng)[ set flooding  20 + random 20]
-      if ((item 3 item 4 flood_capacity_riskOldCity) <= rng)[ set flooding  40 + random 40]
-      if ((item 3 item 5 flood_capacity_riskOldCity) <= rng)[ set flooding  80 + random 20]
-    ]
-    if Capacidad_D >= 0.6 and Capacidad_D < 1 [
-      if ((item 4 item 1 flood_capacity_riskOldCity) > rng)[ set flooding  00]
-      if ((item 4 item 1 flood_capacity_riskOldCity) <= rng)[ set flooding  random 10]
-      if ((item 4 item 2 flood_capacity_riskOldCity) <= rng)[ set flooding  10 + random 10]
-      if ((item 4 item 3 flood_capacity_riskOldCity) <= rng)[ set flooding  20 + random 20]
-      if ((item 4 item 4 flood_capacity_riskOldCity) <= rng)[ set flooding  40 + random 40]
-      if ((item 4 item 5 flood_capacity_riskOldCity) <= rng)[ set flooding  80 + random 20]
-
-    ]
-  ]
-
- ask Agebs with [Antiguedad-infra_D <= 60 * 365][
-    set flooding 0
-    let rng random-float 1
-    if Capacidad_D > 0 and Capacidad_D < 0.2 [
-      if ((item 1 item 1 flood_capacity_riskNewCity) > rng)[ set flooding  00]
-      if ((item 1 item 1 flood_capacity_riskNewCity) <= rng)[ set flooding  random 10]
-      if ((item 1 item 2 flood_capacity_riskNewCity) <= rng)[ set flooding  10 + random 10]
-      if ((item 1 item 3 flood_capacity_riskNewCity) <= rng)[ set flooding  20 + random 20]
-      if ((item 1 item 4 flood_capacity_riskNewCity) <= rng)[ set flooding  40 + random 40]
-      if ((item 1 item 5 flood_capacity_riskNewCity) <= rng)[ set flooding  80 + random 20]
-    ]
-    if Capacidad_D >= 0.2 and Capacidad_D < 0.4 [
-      if ((item 2 item 1 flood_capacity_riskNewCity) > rng)[ set flooding  00]
-      if ((item 2 item 1 flood_capacity_riskNewCity) <= rng)[ set flooding  random 10]
-      if ((item 2 item 2 flood_capacity_riskNewCity) <= rng)[ set flooding  10 + random 10]
-      if ((item 2 item 3 flood_capacity_riskNewCity) <= rng)[ set flooding  20 + random 20]
-      if ((item 2 item 4 flood_capacity_riskNewCity) <= rng)[ set flooding  40 + random 40]
-      if ((item 2 item 5 flood_capacity_riskNewCity) <= rng)[ set flooding  80 + random 20]
-    ]
-    if Capacidad_D >= 0.4 and Capacidad_D < 0.6 [
-      if ((item 3 item 1 flood_capacity_riskNewCity) > rng)[ set flooding  00]
-      if ((item 3 item 1 flood_capacity_riskNewCity) <= rng)[ set flooding  random 10]
-      if ((item 3 item 2 flood_capacity_riskNewCity) <= rng)[ set flooding  10 + random 10]
-      if ((item 3 item 3 flood_capacity_riskNewCity) <= rng)[ set flooding  20 + random 20]
-      if ((item 3 item 4 flood_capacity_riskNewCity) <= rng)[ set flooding  40 + random 40]
-      if ((item 3 item 5 flood_capacity_riskNewCity) <= rng)[ set flooding  80 + random 20]
-    ]
-    if Capacidad_D >= 0.6 and Capacidad_D < 1 [
-      if ((item 4 item 1 flood_capacity_riskNewCity) > rng)[ set flooding  00]
-      if ((item 4 item 1 flood_capacity_riskNewCity) <= rng)[ set flooding  random 10]
-      if ((item 4 item 2 flood_capacity_riskNewCity) <= rng)[ set flooding  10 + random 10]
-      if ((item 4 item 3 flood_capacity_riskNewCity) <= rng)[ set flooding  20 + random 20]
-      if ((item 4 item 4 flood_capacity_riskNewCity) <= rng)[ set flooding  40 + random 40]
-      if ((item 4 item 5 flood_capacity_riskNewCity) <= rng)[ set flooding  80 + random 20]
-
-    ]
-  ]
-
-
-
-end
-;###########################################################################################################################################
-;a simple glm with a poisson family and linear predictor to estimate the number of flood events per year per census block
-to flooding_glm
-  let p1 -0.6110486
-  let p2 0.0398420
-  let p3 -0.9402870
-  let p4 0.0082776
-  let p5  1.0044008
- ask agebs [
-   set Flooding random-poisson (p1 + p2 * (Antiguedad-infra_D / 365) + p3 * Capacidad_D + p4 * gasto_hidraulico + p5 * hundimiento)
- ]
-end
+;simulation of annual flood events per census block using ZeroInflated Poisson model
 to flooding_InfPoiss
   r:eval "require(maptools)"
   r:eval "require(pscl)"
+  let NE []
+  foreach sort-on [ID] agebs with [CV_estado = "09"]
+  [a ->
+    set NE lput  [Antiguedad-infra_D / 336] of a NE
+  ]
+print NE
+  r:put "new_Edad" NE
+
   r:eval "studyArea_CVG<-readShapeSpatial('C:/Users/abaezaca/Dropbox (Personal)/Layers/final/agebs_abm')"
   r:eval "studyArea_CVG@data$estado<-as.factor(substring(studyArea_CVG@data$cvgeo,1,2))"
   r:eval "studyArea_CVG@data$municipio<-as.factor(substring(studyArea_CVG@data$cvgeo,3,5))"
+  r:eval "studyArea_CVG@data$antiguedad[which(studyArea_CVG@data$estado=='09')]<-new_Edad"
   r:eval "studyArea_CVG@data$AveR<-rowMeans(studyArea_CVG@data[,18:33])"
   r:eval "studyArea_CVG@data$BASURA<-studyArea_CVG@data$BASURA/10000"
   r:eval "dattt<-subset(studyArea_CVG@data,estado=='09')"
@@ -1379,94 +386,14 @@ end
 
 ;/flooding-simulation;
 ;##############################################################################################################
-;##############################################################################################################
-;##############################################################################################################
-to Vulnerability_indicator
-  set vulnerability_F (flooding * Sensitivity_F)  / ( 1 + Income-index)
-  set vulnerability_S (scarcity * Sensitivity_S)  / ( 1 + Income-index)
-end
+
 ;##############################################################################################################
 ;##############################################################################################################
 to indicators
-  if years > (10 - Simulation_time) [
-    set scarcity_index precision (scarcity_index + (1 / 10) * scarcity_annual) 2
+  if years > (30) [
     set flooding_index precision (flooding_index + (1 / 10) * flooding) 2
-    set Presion_social_Index Presion_social_Index + (1 / 10) * Presion_social_annual
-
-  ]
-  set scarcity_annual 0
-end
-
-
-;#############################################################################################################################################
-;gastrointestinal-disease-simulation;
-to health_risk
-  ;calculate a new number of incidence based on a spatial regreesion for the lowlands
-  ask agebs  with [low_high-land = 0][
-    let intercept 0.374
-    let ro 0.451
-    let beta_f 1.294
-    let seg_sq 1
-    let vec_helt [health] of contiguous_agebs  ;incidencia
-    let vec_weight neighboor_weights ;matrix data csv  sum = vec_weight
-    set new_incidences intercept + (sum (map [[a b] -> (a * b)] vec_helt  vec_weight)) * ro + beta_f * flooding + random-normal 0 seg_sq
-  ]
-  ask agebs  with [low_high-land = 1][
-    set new_incidences health
-  ]
-  ask agebs [
-    set health ifelse-value (new_incidences >= 0)[new_incidences][0]
   ]
 end
-;/gastrointestinal-disease-simulation;
-;#############################################################################################################################################
-to update_maximum [estado]  ;; update the maximum or minimum of values use by the model to calculate range of the value functions this time relative to the domain of the agent who needs the inforamtion to take decition
-  set Antiguedad-infra_Ab_max max [Antiguedad-infra_Ab] of agebs with [CV_estado = estado]
-  set Antiguedad-infra_D_max max [Antiguedad-infra_D] of agebs with [CV_estado = estado]
-  set desperdicio_agua_max max [desperdicio_agua] of agebs with [CV_estado = estado];;max level of perception of deviation
-  set days_wno_water_max max[days_wno_water] of agebs with [CV_estado = estado]
-  set Gasto_hidraulico_max max [Gasto_hidraulico] of agebs with [CV_estado = estado]
-  set presion_hidraulica_max max [presion_hidraulica] of agebs  with [CV_estado = estado]
-  set desviacion_agua_max max [desviacion_agua] of agebs with [CV_estado = estado]
-  set Capacidad_Ab_max max [Capacidad_Ab] of agebs with [CV_estado = estado]
-  set Capacidad_d_max max [Capacidad_d] of agebs with [CV_estado = estado]
-  set garbage_max max [garbage] of agebs  with [CV_estado = estado]
-  set Obstruccion_dren_max max[Obstruccion_dren] of agebs  with [CV_estado = estado]
-  set hundimiento_max max [hundimiento] of agebs with [CV_estado = estado]
-  set water_quality_max 1
-  set max_water_in_mc max [days_water_in] of agebs with [CV_estado = estado]
-  set infra_abast_max max [houses_with_abastecimiento] of agebs  with [CV_estado = estado]
-  set infra_dranage_max max [houses_with_dranage] of agebs with [CV_estado = estado]
-  set flooding_max max [flooding] of agebs with [CV_estado = estado];;max level of flooding (encharcamientos) recored over the last 10 years
-  set precipitation_max max [precipitation] of agebs  with [CV_estado = estado]
-  set falla_ab_max max [Falla_ab] of agebs with [CV_estado = estado]
-  set Abastecimiento_max max [Abastecimiento] of agebs  with [CV_estado = estado]
-  set health_max max [health] of agebs with [CV_estado = estado]
-  set monto_max max [monto] of agebs with [CV_estado = estado]
-  set scarcity_max max [scarcity] of agebs with [CV_estado = estado]
-  set Presion_social_annual_max max [Presion_social_annual] of agebs with [CV_estado = estado]
-  set falta_d_max 1
-  set falta_Ab_max 1
-  set d_Compra_agua_max max [d_Compra_agua] of agebs with [CV_estado = estado]
-  set d_Captacion_agua_max max [d_Captacion_agua] of agebs with [CV_estado = estado]
-  set d_Movilizaciones_max max [d_Movilizaciones] of agebs with [CV_estado = estado]
-  set d_Modificacion_vivienda_max max [d_Modificacion_vivienda] of agebs  with [CV_estado = estado]
-  set d_Accion_colectiva_max max [d_Accion_colectiva] of agebs with [CV_estado = estado]
-  set d_water_extraction_max max [d_water_extraction] of agebs with [CV_estado = estado]
-  set d_mantenimiento_D_max max [d_mantenimiento_D] of agebs with [CV_estado = estado]
-  set d_mantenimiento_max max [d_mantenimiento] of agebs with [CV_estado = estado]
-  set d_new_max max [d_new] of agebs with [CV_estado = estado]
-  set d_water_distribution_max max [d_water_distribution] of agebs with [CV_estado = estado]
-  set d_water_importacion_max max [d_water_importacion] of agebs with [CV_estado = estado]
-  set Y_F_Max  max [Y_F] of agebs with [CV_estado = estado]    ;max level of changes made to houses
-  set Y_S_Max  max [Y_S] of agebs with [CV_estado = estado]   ;max level of changes made to houses
-  set Vulnerability_S_max max [vulnerability_S] of agebs with [CV_estado = estado]
-  set Vulnerability_F_max max [vulnerability_F] of agebs with [CV_estado = estado]
-  set densidad_pop_max max [densidad_pop] of agebs with [CV_estado = estado]
-end
-
-
-
 ;code ends here
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -1565,8 +492,8 @@ CHOOSER
 172
 Visualization
 Visualization
-"Accion Colectiva" "Peticion ciudadana" "Captacion de Agua" "Compra de Agua" "Modificacion de la vivienda" "Areas prioritarias Mantenimiento" "Areas prioritarias Nueva Infraestructura" "Distribucion de Agua SACMEX" "GoogleEarth" "K_groups" "Salud" "Escasez" "Encharcamientos" "% houses with supply" "% houses with drainage" "P. Falla Ab" "P. Falla D" "Capacidad_D" "Zonas Aquifero" "Edad Infraestructura Ab." "Edad Infraestructura D" "Income-index" "hundimiento" "CalidadAgua" "value_function_edad_Ab" "value_function_Age_d" "value_function_scarcity" "value_function_floods" "value_function_falta_d" "value_function_falta_Ab" "value_function_capasity" "value_function_precipitation" "low_vs_high_land"
-12
+"Areas prioritarias Mantenimiento" "Areas prioritarias Nueva Infraestructura" "GoogleEarth" "Encharcamientos" "% houses with drainage" "P. Falla D" "Capacidad_D" "Edad Infraestructura D" "hundimiento" "value_function_Age_d" "value_function_ponding" "value_function_falta_d" "value_function_capasity" "value_function_precipitation"
+3
 
 BUTTON
 1234
@@ -1603,21 +530,6 @@ NIL
 1
 
 SLIDER
-35
-320
-240
-353
-Requerimiento_deAgua
-Requerimiento_deAgua
-0.007
-0.4
-0.091
-0.0001
-1
-[m3/persona]
-HORIZONTAL
-
-SLIDER
 36
 102
 236
@@ -1626,7 +538,7 @@ recursos_para_mantenimiento
 recursos_para_mantenimiento
 1
 2400
-533.0
+299.0
 1
 1
 NIL
@@ -1634,15 +546,15 @@ HORIZONTAL
 
 SLIDER
 35
-250
+173
 238
-283
+206
 Eficiencia_NuevaInfra
 Eficiencia_NuevaInfra
 0
-0.001
-5.0E-4
-0.0005
+0.5
+0.46
+0.01
 1
 NIL
 HORIZONTAL
@@ -1691,28 +603,17 @@ escala
 "cuenca" "ciudad"
 0
 
-SWITCH
-29
-705
-202
-738
-export-to-postgres
-export-to-postgres
-1
-1
--1000
-
 SLIDER
 35
-285
+208
 238
-318
+241
 Eficiencia_Mantenimiento
 Eficiencia_Mantenimiento
 0
-0.05
-0.03
-0.005
+20
+20.0
+1
 1
 NIL
 HORIZONTAL
@@ -1726,22 +627,7 @@ recursos_nuevaInfrastructura
 recursos_nuevaInfrastructura
 0
 2400
-460.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-35
-179
-237
-212
-Recursos_para_distribucion
-Recursos_para_distribucion
-0
-2400
-849.0
+164.0
 1
 1
 NIL
@@ -1764,9 +650,9 @@ HORIZONTAL
 
 SLIDER
 35
-358
+281
 236
-391
+314
 lambda
 lambda
 0
@@ -1786,21 +672,11 @@ factor_subsidencia
 factor_subsidencia
 0
 0.01
-0.0028
+0.004
 0.0001
 1
 NIL
 HORIZONTAL
-
-CHOOSER
-255
-225
-409
-270
-actions_per_agebs
-actions_per_agebs
-"single-action" "multiple-actions"
-0
 
 SLIDER
 275
@@ -1826,66 +702,8 @@ factor_scale
 factor_scale
 0.000000000000000001
 4
-0.017
+0.025
 0.001
-1
-NIL
-HORIZONTAL
-
-SWITCH
-35
-568
-210
-601
-ANP
-ANP
-0
-1
--1000
-
-BUTTON
-1402
-16
-1509
-86
-NIL
-show_sewer
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-SLIDER
-35
-398
-236
-431
-alt
-alt
-0
-3
-2.12
-0.01
-1
-NIL
-HORIZONTAL
-
-SLIDER
-35
-433
-238
-466
-a_failure
-a_failure
-0
-1
-1.0
-0.1
 1
 NIL
 HORIZONTAL
@@ -1906,14 +724,14 @@ true
 false
 "" ""
 PENS
-"default" 1.0 1 -16777216 true "" "histogram [flooding] of agebs"
+"default" 1.0 1 -16777216 true "" "histogram [flooding] of agebs with [CV_estado = \"09\"]"
 
 PLOT
 1209
 379
 1429
 524
-Agua disponible
+Age_infra
 NIL
 NIL
 0.0
@@ -1924,7 +742,7 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot weekly_water_available"
+"default" 1.0 0 -16777216 true "" "plot mean [Antiguedad-infra_D / 365] of agebs with [CV_estado = \"09\"]"
 
 SLIDER
 262
@@ -1934,9 +752,9 @@ SLIDER
 decay_capacity
 decay_capacity
 0
+0.2
+0.022
 0.001
-6.0E-4
-0.0001
 1
 NIL
 HORIZONTAL
@@ -1958,63 +776,6 @@ false
 "" ""
 PENS
 "CDMX" 1.0 0 -16777216 true "" "plot mean [capacidad_D] of agebs with [CV_estado = \"09\"]"
-"Estado" 1.0 0 -7500403 true "" "plot mean [capacidad_D] of agebs with [CV_estado = \"15\"]"
-
-SLIDER
-35
-216
-236
-249
-recursos_extraccion
-recursos_extraccion
-0
-2400
-0.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-34
-474
-238
-507
-hsc_s
-hsc_s
-0
-100
-10.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-35
-509
-239
-542
-hsc_f
-hsc_f
-0
-100
-25.0
-1
-1
-NIL
-HORIZONTAL
-
-INPUTBOX
-275
-509
-430
-569
-Simulation_time
-30.0
-1
-0
-Number
 
 MONITOR
 276
@@ -2038,16 +799,23 @@ list (max [Capacidad_d] of agebs) (min [Capacidad_d] of agebs)
 1
 11
 
-MONITOR
-535
-798
-715
-843
-Age Water distribution system
-list round ((min [Antiguedad-infra_Ab] of agebs) / (12 * 4 * 7)) round ((max [Antiguedad-infra_Ab] of agebs) / (12 * 4 * 7))
-4
-1
-11
+PLOT
+1208
+676
+1436
+826
+plot 1
+NIL
+NIL
+0.0
+10.0
+0.0
+120.0
+true
+false
+"" ""
+PENS
+"default" 1.0 1 -16777216 true "" "histogram [Antiguedad-infra_d / 365] of agebs with [CV_estado = \"09\"]"
 
 @#$#@#$#@
 ## WHAT IS IT?

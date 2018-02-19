@@ -1,0 +1,201 @@
+;normalize-criteria-values;
+to-report Value-Function [criteria_value xcuts criteria_categories criterium_max ycuts]    ;This function reports a standarized value for the relationship between value of criteria and motivation to act
+  ;criteria_value the value of a biophysical variable in its natural scale
+  ;xcuts a list of values with the proportion of the biofisical variable that reflects on the cut-offs to define the limits of the range in the linguistic scale
+  ;criteria_categories list of strings that define the lisguistic scale associated with a biobisical variable
+  ;criterium_max the ideal or anti ideal point of the criteria defined based on the linguistic scale (e.g. intolerable ~= anti-ideal)
+  ;ycuts a list of standard values to map the natural scales
+  if criteria_value > (item 3 xcuts) * criterium_max [set SM (item 4 ycuts)]
+  if criteria_value > (item 2 xcuts) * criterium_max and criteria_value <= (item 3 xcuts) * criterium_max [set SM (item 3 ycuts)]
+  if criteria_value > (item 1 xcuts) * criterium_max and criteria_value <= (item 2 xcuts) * criterium_max [set SM (item 2 ycuts)]
+  if criteria_value > (item 0 xcuts) * criterium_max and criteria_value <= (item 1 xcuts) * criterium_max [set SM (item 1 ycuts)]
+  if criteria_value <= (item 0 xcuts) * criterium_max [set SM (item 0 ycuts)]
+  Report SM  ;return a list of
+end
+
+;#############################################################################################################################################
+;normalize-criteria-values;
+to-report Value-Function_WF [criteria_value xcuts criteria_categories criterium_max ycuts]    ;This function reports a standarized value for the relationship between value of criteria and motivation to act
+  ;criteria_value the value of a biophysical variable in its natural scale
+  ;xcuts a list of values with the proportion of the biofisical variable that reflects on the cut-offs to define the limits of the range in the linguistic scale
+  ;criteria_categories list of strings that define the lisguistic scale associated with a biobisical variable
+  ;criterium_max the ideal or anti ideal point of the criteria defined based on the linguistic scale (e.g. intolerable ~= anti-ideal)
+  ;ycuts a list of standard values to map the natural scales
+  let r 1
+  let so criterium_max / ((1 + r) ^ 5)
+  let xcuts_wfp map [a -> ((1 + r) ^ a) * so](list 1 2 3 4)
+  set xcuts_wfp lput so xcuts_wfp
+  if criteria_value > (item 3 xcuts_wfp) [set SM (item 4 ycuts)]
+  if criteria_value > (item 2 xcuts_wfp) and criteria_value <= (item 3 xcuts_wfp) [set SM (item 3 ycuts)]
+  if criteria_value > (item 1 xcuts_wfp) and criteria_value <= (item 2 xcuts_wfp) [set SM (item 2 ycuts)]
+  if criteria_value > (item 0 xcuts_wfp) and criteria_value <= (item 1 xcuts_wfp) [set SM (item 1 ycuts)]
+  if criteria_value <= (item 0 xcuts_wfp) [set SM (item 0 ycuts)]
+;
+;
+
+   Report SM  ;return a list of
+end
+
+to update_criteria_and_valueFunctions_WaterOperator    ;;update the biphisical value of variables used as criterias and update the value function
+  let i 0 ; i is the index of each criteria
+  (foreach criteria_names
+    [? ->
+      ;###########################################################
+      if ? = "Antiguedad"[
+
+        let attribute (([Antiguedad-infra_d] of myself) / 336)
+        set criteria_values replace-item i criteria_values attribute
+        let min_x 120
+        let alpha_vf 80
+        let y_vf exp ( - ((0 - min_x) / alpha_vf) ^ 2)
+        let yy_vf exp ( - ((120 - min_x) / alpha_vf) ^ 2)
+        let svf 1 - ((exp ( - ((attribute - min_x) / alpha_vf) ^ 2) - y_vf) / (yy_vf - y_vf))
+        if attribute > 120 [set svf 0]
+        if attribute < 0 [set svf 1]
+        
+        set rescaled_criteria_values replace-item i rescaled_criteria_values svf
+          ask myself [set value_function_Age_d [item i rescaled_criteria_values] of myself]
+       ]
+      ;###########################################################
+      if ? = "Capacidad"[
+        let attribute [Capacidad_D] of myself
+        set criteria_values replace-item i criteria_values attribute
+        let p1 0.174916383				
+        let y_vf exp (p1 * 0)
+        let yy_vf exp (p1 * 15)
+        let svf (exp (- p1 * (attribute)) - y_vf) / (yy_vf - y_vf)
+        if attribute > 15  [set svf 1]
+        if attribute < 0  [set svf 0]
+        set rescaled_criteria_values replace-item i rescaled_criteria_values svf
+        ask myself [set value_function_capasity [item i rescaled_criteria_values] of myself]
+      ]
+      ;###########################################################
+      if ? = "Falta"[ ;###check that the function correspond to the scale of the variable measured. lack or
+        let attribute 100 * [houses_with_dranage] of myself
+        set criteria_values replace-item i criteria_values attribute
+        let p1 0.3457691				
+        let y_vf exp (p1 * 0)
+        let yy_vf exp (p1 * 100)
+        let svf (exp (p1 * (attribute)) - y_vf) / (yy_vf - y_vf)
+        set rescaled_criteria_values replace-item i rescaled_criteria_values svf
+      ]
+      ;###########################################################
+      if ? = "Falla" [
+        set criteria_values replace-item i criteria_values [Falla_d] of myself
+          ;set criteria_max replace-item i criteria_max Falla_d_max
+          set rescaled_criteria_values replace-item i rescaled_criteria_values [Falla_d] of myself;(Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
+       ]
+
+      ;###########################################################
+      if ? = "Inundaciones" and (months = 12 or ticks < 10) [  ;grandes inundaciones !!need to change variable for criteria
+        set criteria_values replace-item i criteria_values [Flooding] of myself
+        set criteria_max replace-item i criteria_max Flooding_max;109.28  ;change with update quantity for speed
+
+          set rescaled_criteria_values replace-item i rescaled_criteria_values ifelse-value ((item i criteria_values) > 60) [1] [0]
+      ]
+
+      ;###########################################################
+      if ? = "Hundimientos" and (months = 12 or ticks < 10) [
+        let attribute [hundimiento] of myself
+        set criteria_values replace-item i criteria_values attribute
+          let p1 26.06766112					
+          let y_vf 1 - exp ((35 - 10) / p1 )
+          let yy_vf 1 - exp ((0 - 10) / p1 )
+          let svf ((1 - exp ((attribute - 10) / p1 )) - y_vf) / (yy_vf - y_vf)
+        if attribute > 35 [set svf 0]  
+        set rescaled_criteria_values replace-item i rescaled_criteria_values svf
+      ]
+      ;###########################################################
+      if ? = "Encharcamientos" and (months = 12 or ticks < 10) [
+        let attribute [Flooding] of myself
+        set criteria_values replace-item i criteria_values attribute
+        set criteria_max replace-item i criteria_max Flooding_max  ;change with update quantity for speed
+
+        let p1 200
+        let x_min 0
+        let y_vf exp (-(((200 - x_min) / p1) ^ 2))
+        let yy_vf exp (-(((0 - x_min) / p1) ^ 2))
+        let svf (exp (-(((attribute - x_min) / p1) ^ 2))  - y_vf) / (yy_vf - y_vf)
+        
+        set rescaled_criteria_values replace-item i rescaled_criteria_values svf
+        ask myself [set value_function_ponding [item i rescaled_criteria_values] of myself]
+     ;   print list [Flooding] of myself svf  
+      ]
+
+
+      if ticks < 4 [ ;The procedure only updates variables that are changing with the actors actions. Thus those criteria that are not changing will only be updated at the beginning (t<10) of the simulation.
+
+        ;###########################################################
+        if ? = "Precipitacion"[
+          set criteria_values replace-item i criteria_values [precipitation] of myself
+          set criteria_max replace-item i criteria_max precipitation_max;change with update quantity for speed
+          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937] ["" "" "" ""] (item i criteria_max)  [1 0.8 0.6 0.4 0.2])
+          ask myself [set value_function_precipitation [item i rescaled_criteria_values] of myself]
+        ]
+        ;###########################################################
+        if ? = "Gasto_hidraulico"[
+          set criteria_values replace-item i criteria_values [Gasto_hidraulico] of myself
+          set criteria_max replace-item i criteria_max Gasto_hidraulico_max; 192.23 ;max value in layer Gasto_V1.shp
+          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
+        ]
+        ;###########################################################
+        if ? = "Basura"[
+          let attribute [garbage] of myself 
+          set criteria_values replace-item i criteria_values attribute         
+          let p1 2.6514
+          let p2 5000
+          let y_vf (exp (- ((0 - p1) / p2) ^ 2))
+          let yy_vf (exp (- ((2.6514 - p1) / p2) ^ 2))
+          let svf ((exp (- ((attribute - p1) / p2) ^ 2))  - y_vf) / (yy_vf - y_vf)
+          set rescaled_criteria_values replace-item i rescaled_criteria_values  svf
+        ]
+        ;###########################################################
+        if ? = "Monto"[
+          set criteria_values replace-item i criteria_values [Monto] of myself
+          set criteria_max replace-item i criteria_max Monto_max
+          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937] ["" "" "" ""] (item i criteria_max)  [1 0.8 0.6 0.4 0.2])
+        ]
+        
+        ;###########################################################
+        if ? = "Peticion de Delegaciones"[
+          set criteria_values replace-item i criteria_values 1
+          set criteria_max replace-item i criteria_max 1
+          set rescaled_criteria_values replace-item i rescaled_criteria_values (item i criteria_values); (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
+        ]
+        ;###########################################################
+        if ? = "Peticiones de usuarios"[
+          set criteria_values replace-item i criteria_values [peticion_usuarios] of myself
+          set rescaled_criteria_values replace-item i rescaled_criteria_values (item i criteria_values);(Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
+        ]
+        ;###########################################################
+        if ? = "Presion de medios"[
+          set criteria_values replace-item i criteria_values 1;[Presion_de_medios] of myself
+          set criteria_max replace-item i criteria_max 1 ;change with update quantity for speed
+          set rescaled_criteria_values replace-item i rescaled_criteria_values (item i criteria_values);(Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
+        ]
+        ;###########################################################
+      ]
+      set i i + 1
+    ]
+  )
+end
+
+;/normalize-criteria-values;
+;#############################################################################################################################################
+;#############################################################################################################################################
+;calculate-distances-to-ideal-points;
+to-report ideal_distance [alternative_weight rescaled_values criteria-weights exponent]
+  ;this function calcualte a distance to ideal point using compromized programing metric
+  ;arguments:
+
+     ;VF_list: a list of value functions
+     ;weight_list a list of weights from the alternatives criteria links (CA_links)
+     ;h_Cp to control the type of distance h_Cp=2 euclidian; h_Cp=1 manhattan
+  set dist (( alternative_weight * sum (map [[a b] -> (a ^ exponent) * ((1 - b) ^ exponent)] criteria-weights rescaled_values)) ^ (1 / exponent))
+     report dist
+end
+;/calculate-distances-to-ideal-points;
+
+
+;#############################################################################################################################################
+;#############################################################################################################################################
