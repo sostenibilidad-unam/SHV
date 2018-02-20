@@ -81,24 +81,9 @@ globals [
 
 ;define-type-of-agents
 breed [Agebs Ageb]
-breed [Delegaciones Delegacion]
+breed [Rain_stations station]
 ;infrastructure
-breed [Rain_Stations Rain_Station]
-breed [Pozos pozo]
-breed [Lumbreras Lumbrera]
-breed [drenaje_profundo tramo]
-breed [sewage_nodes sewage_node]
-directed-link-breed [D_pipes D_pipe]
-breed [Alternatives_IZ alternative_IZ]
-breed [Alternatives_IZb alternative_IZb]
-breed [Alternatives_Xo alternative_Xo]
-breed [Alternatives_MC alternative_MC]
-breed [Alternatives_MCb alternative_MCb]
-breed [Alternatives_MCc alternative_MCc]
-breed [alternatives_WaterOperator_AB alternative_WaterOperator]
 breed [Alternatives_WaterOperator_D alternative_WaterOperator_D]
-breed [Alternatives_OCVAM alternative_OCVAM]
-breed [Alternatives_DELEGATIONS alternative_DELEGATION]
 
 ;#############################################################################################################################################
 ;define-agents-attributes
@@ -112,7 +97,6 @@ patches-own[
   LU_type           ;;land use type [Regular, irregular] (not included yet)
 ]
 
-Delegaciones-own[name_delegacion Peticion_Delegaciones]
 
 Agebs-own[
   CVEGEO                       ;;key to define state, delegation/delegation
@@ -121,18 +105,9 @@ Agebs-own[
   Localidad                    ; to represent location
   AGEB_key                     ; to represent ageb using CVEGEO
   ID                           ;;ID from shape file
-  group_kmean                  ;; define to witch group an ageb belongs to, based on sosio-economic charactersitics
-  zona_aquifera                ;;zone of the aquifer
-  aquifer                      ;;Aquifer ID
-  pozos_agebs                  ;;set the pozos in ageb
-  rainfall_station_influ
-  name_delegation              ;;the name of the delegation the ageb belongs to
-  paches_set_agebs             ;;the set of patches that bellow to the ageb
   Monto                        ;; resources designated to each ageb (delegations?)
   Antiguedad-infra_D           ;;average Age of infra for water dranage
-  falla_ab                        ;;Fallas de infraestructura hidraulica ocasionadas por conexiones clandestinas, obstruccion por basura y procesos biofisicos
   falla_d
-  falta_Ab                     ;;Lack of connection to water potable system
   falta_d                      ;;Lack of connection to sewer system
  ; Mantenimiento?               ;; what is the probability this patch is under maitnance
   hundimiento
@@ -140,7 +115,6 @@ Agebs-own[
   Gasto_hidraulico             ;;water the enter the sewage system in each ageb
   poblacion                    ;; Population size ageb
   Income-index                 ;; Actual income
-  protest_here              ;;social pressure index per ageb (e.g. %pop. involved in the protests?)
   Presion_social_annual               ;;social pressure index per ageb (e.g. %pop. involved in the protests?)
   Presion_social_Index          ;;number of protest per year
   peticion_usuarios
@@ -158,19 +132,12 @@ Agebs-own[
   d_mantenimiento_D
   d_new_D
   ;standirize scaores of criteria (values from value functions)
-  value_function_Age_Ab
   value_function_Age_d
-  value_function_scarcity
   value_function_ponding
-  value_function_ponding_Wextraction 
   value_function_capasity
-  value_function_falta_Ab
   value_function_falta_d
   value_function_precipitation
   ;Vulnerability indicators
-  Exposure_S                ;indicators of level of scarcity
-  Exposure_V                     ;indicators of level of flooding
-  AC                            ;adaptive capasity
   investment_here_D             ;;record if an action was taken in a census block
   investment_here_accumulated_D ;;record the accumulated number of alternative_namestaken in a census block
   
@@ -186,24 +153,7 @@ Agebs-own[
 
 rain_Stations-own[name p_rain shp_gamma rate_gamma Rain_t]
 
-sewage_nodes-own[ID age from_node to_node Betweeness new-val]
 
-D_pipes-own [current-flow]
-
-Pozos-own[
-  Name
-  col_ID                      ;;location of well in neighborhood
-  CVEGEO       ;;location of well in AGEB
-  CV_estado                    ;Estate
-  CV_municipio                 ;municipality
-  Localidad                    ; to represent location
-  AGEB_key                        ; to represent ageb using CVEGEO
-  Production       ;;water production [ m3/day]
-  extraction_rate  ;;total extraction (defined by zones 1 to 32)
-  age_pozo         ;;age of well  p_failure        ;;probability of infrastructure failure here 1 if not infra here
-  aquifer
-  zone
-]
 Alternatives_WaterOperator_D-own[ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights domain]  ;value obtained for the action when calcualting the limiting matrix in super decition
 
 ;############################################################################################################################################################################################
@@ -283,7 +233,7 @@ end
           set poblacion gis:property-value ? "poblacion"
           set Income-index ifelse-value(gis:property-value ?2 "ingreso" != nobody)[gis:property-value ?2 "ingreso"][random-float 1]
           set flooding ifelse-value(gis:property-value ?2 "PONDING" != nobody)[gis:property-value ?2  "PONDING"][0]
-          set garbage (gis:property-value ?2 "BASURA") / 10000
+          set garbage (gis:property-value ?2 "BASURA")
           set Obstruccion_dren gis:property-value ? "obstruc"
           set Monto gis:property-value ? "monto"        
           set peticion_usuarios (gis:property-value ? "pet_usr_d") / 100  ;index densidad de infra por cuanca * falta de conexiones por ageb.

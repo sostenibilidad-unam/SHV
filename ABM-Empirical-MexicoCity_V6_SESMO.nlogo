@@ -25,7 +25,7 @@ to GO
     ]
     repair-Infra_D "09"
   ]
- ;   Landscape_visualization          ;;visualization of social and physical processes
+    Landscape_visualization          ;;visualization of social and physical processes
 
   ;##########################################################
 ;  print [flooding] of agebs with[CV_estado = "09"]
@@ -123,6 +123,7 @@ to repair-Infra_D [estado]
       set investment_here_accumulated_D investment_here_accumulated_D + 1
       set investment_here_accumulated_D_mant investment_here_accumulated_D_mant + 1
       set Antiguedad-infra_D Antiguedad-infra_D - Eficiencia_Mantenimiento
+      set garbage garbage - garbage * garbage_removal
     ]
   ]
 
@@ -368,20 +369,23 @@ end
 ;flooding-simulation;
 ;simulation of annual flood events per census block using ZeroInflated Poisson model
 to flooding_InfPoiss
-  r:eval "require(maptools)"
   r:eval "require(pscl)"
   let NE []
+  let BA []
   foreach sort-on [ID] agebs with [CV_estado = "09"]
   [a ->
     set NE lput  ([Antiguedad-infra_D] of a) NE
+    set BA lput (([garbage] of a)) BA
   ]
 ;print sort NE
   r:put "new_Edad" NE
-
-  r:eval "studyArea_CVG<-readShapeSpatial('C:/Users/abaezaca/Dropbox (Personal)/Layers/final/agebs_abm')"
+  r:put "new_garbage" BA
+;  r:eval "studyArea_CVG<-readShapeSpatial('C:/Users/abaezaca/Dropbox (Personal)/Layers/final/agebs_abm')"
+  r:eval "studyArea_CVG<-readShapeSpatial('~/data/agebs_abm')"
   r:eval "studyArea_CVG@data$estado<-as.factor(substring(studyArea_CVG@data$cvgeo,1,2))"
   r:eval "studyArea_CVG@data$municipio<-as.factor(substring(studyArea_CVG@data$cvgeo,3,5))"
   r:eval "studyArea_CVG@data$antiguedad[which(studyArea_CVG@data$estado=='09')]<-new_Edad" ;new age of infrastructure will update the regresion to update the level of flooding. Same can be done to the other variables
+  r:eval "studyArea_CVG@data$BASURA[which(studyArea_CVG@data$estado=='09')]<-new_garbage" ;new garbage will update the regresion to update the level of flooding. Same can be done to the other variables
   r:eval "studyArea_CVG@data$AveR<-rowMeans(studyArea_CVG@data[,18:33])"
   r:eval "studyArea_CVG@data$BASURA<-studyArea_CVG@data$BASURA/10000"
   r:eval "dattt<-subset(studyArea_CVG@data,estado=='09')"
@@ -552,9 +556,9 @@ SLIDER
 135
 recursos_para_mantenimiento
 recursos_para_mantenimiento
-1
+0
 2400
-300.0
+0.0
 1
 1
 NIL
@@ -569,7 +573,7 @@ Eficiencia_NuevaInfra
 Eficiencia_NuevaInfra
 0
 0.5
-0.18
+0.0
 0.01
 1
 NIL
@@ -628,7 +632,7 @@ Eficiencia_Mantenimiento
 Eficiencia_Mantenimiento
 0
 2
-0.8
+0.0
 0.1
 1
 NIL
@@ -643,7 +647,7 @@ recursos_nuevaInfrastructura
 recursos_nuevaInfrastructura
 0
 2400
-300.0
+0.0
 1
 1
 NIL
@@ -665,10 +669,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-34
-346
-238
-379
+33
+395
+237
+428
 n_runs
 n_runs
 0
@@ -801,7 +805,58 @@ true
 false
 "" ""
 PENS
-"default" 1.0 1 -16777216 true "" "histogram [Antiguedad-infra_d / 365] of agebs with [CV_estado = \"09\"]"
+"default" 1.0 1 -16777216 true "" "histogram [Antiguedad-infra_d] of agebs with [CV_estado = \"09\"]"
+
+SLIDER
+36
+348
+242
+383
+garbage_removal
+garbage_removal
+0
+0.2
+0.0
+0.01
+1
+NIL
+HORIZONTAL
+
+PLOT
+1448
+269
+1648
+419
+ponding
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot sum [flooding] of agebs with [CV_estado = \"09\"]"
+
+PLOT
+1473
+475
+1673
+625
+garbage
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot mean [garbage] of agebs with [CV_estado = \"09\"]"
 
 @#$#@#$#@
 ## WHAT IS IT?
