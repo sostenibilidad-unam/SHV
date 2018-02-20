@@ -35,6 +35,7 @@ globals [
   Presion_de_medios_max
   monto_max
   densidad_pop_max
+  Max_act
   ;#####################################################################################
   ;;Residents decision metrics max ;variables for plotting distance
   d_mantenimiento_max                     ;;distance from ideal point for decision to repare infrastructure
@@ -269,7 +270,7 @@ end
           set shape "circle"
           set size 0.5
           set hidden? false
-          set Antiguedad-infra_D (7 * 4 * 12) * (gis:property-value ?2 "antiguedad")
+          set Antiguedad-infra_D (gis:property-value ?2 "antiguedad")
           set Capacidad_d ifelse-value(gis:property-value ?2 "capac_d" != nobody)[(gis:property-value ?2 "capac_d") / 10000000][0]
           set Falla_d 1
           set precipitation ifelse-value (gis:property-value ?2 "PR_2009" != nobody)[gis:property-value ?2 "PR_2009"][1]       
@@ -399,7 +400,7 @@ end
   set d_mantenimiento_D_max 1
   set d_new_max 1
   set densidad_pop_max 1
- ;names and CVEGEO of municipalities inside DF
+  ;names and CVEGEO of municipalities inside DF
 end
 
 ;#############################################################################################################################################

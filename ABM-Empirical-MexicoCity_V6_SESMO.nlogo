@@ -12,32 +12,27 @@ to GO
 ;calculate annual exposure to floods and GDI
   if weeks = 1 and months = 1[
     flooding_InfPoiss
-  ]
-;#############################################################################################################################################
-;;actions WaterOperator
-  if weeks = 1 [
+    ask agebs with [CV_estado = "09"][
+      indicators
+      condition_infra_change
+    ]
     WaterOperator-decisions "09"            ;;decisions by WaterOperator
+
+    ask agebs with [CV_estado = "09"][
+      set investment_here_D 0
+      set investment_here_D_mant 0
+      set investment_here_D_new 0
+    ]
     repair-Infra_D "09"
   ]
-  ask agebs with [CV_estado = "09"][
-    set investment_here_D 0
-    set investment_here_D_mant 0
-    set investment_here_D_new 0
-    condition_infra_change
-  ]
-  ;##########################################################
-  ;update indicators of flood and scaricty at the end of the simulation
-  if months = 12 [
-    ask agebs with [CV_estado = "09"][indicators]
-  ]
-  ;##########################################################
+ ;   Landscape_visualization          ;;visualization of social and physical processes
 
-  Landscape_visualization          ;;visualization of social and physical processes
   ;##########################################################
-
+;  print [flooding] of agebs with[CV_estado = "09"]
+ ; print [Antiguedad-infra_d] of agebs with[CV_estado = "09"]
  ;profiler:stop          ;; stop profiling
  ; print profiler:report
- ; profiler:reset         ;; clear the data
+ ; profiler:reset         ;pri; clear the data
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -143,7 +138,7 @@ end
 ;/subsidence;
 ;##############################################################################################################
 to condition_infra_change
-  set Antiguedad-infra_D Antiguedad-infra_D + 7
+  set Antiguedad-infra_D Antiguedad-infra_D + 1
   set Capacidad_D Capacidad_D - decay_capacity
   if Antiguedad-infra_D < 0 [set Antiguedad-infra_D 0]
   if Capacidad_D < 0[set Capacidad_D 0]
@@ -186,23 +181,27 @@ end
 ;#############################################################################################################################################
 to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
   set Antiguedad-infra_D_min min [Antiguedad-infra_D] of agebs with [CV_estado = "09"]
-
+  set Antiguedad-infra_D_max max [Antiguedad-infra_D] of agebs with [CV_estado = "09"]
+  set d_mantenimiento_D_max max [d_mantenimiento_D] of agebs with [CV_estado = "09"]
+  set d_new_max max [d_new_d] of agebs with [CV_estado = "09"]
+  set Max_act max list max [investment_here_accumulated_D_new] of agebs with [CV_estado = "09"] max [investment_here_accumulated_D_mant] of agebs with [CV_estado = "09"]
   ask agebs with [CV_estado = "09"] [
     set size factor_scale * 1
     set shape "circle"
     ;############################################################################################
     if Visualization = "Capacidad_D" and ticks > 1 [
-      set size 10 * Capacidad_D
+      set size 5 * Capacidad_D
       set color  scale-color red Capacidad_D 0 1
     ] ;;social pressure
     ;############################################################################################
     if visualization = "d_Mantenimiento" and ticks > 1 [
-      set size factor_scale * 10 * d_mantenimiento_D
-      set color scale-color magenta d_mantenimiento_D 0 1
+      set size  10 * d_mantenimiento_D
+      set color scale-color magenta d_mantenimiento_D 0 d_mantenimiento_D_max
     ]
     ;############################################################################################
     if visualization = "d_Nueva Infraestructura" and ticks > 1 [
-      set color scale-color green d_new_D 0 1]
+      set size 10 * d_mantenimiento_D
+      set color scale-color green d_new_D 0 d_new_max]
     ;############################################################################################
     ;############################################################################################
     if visualization = "Income-index" and ticks > 1 [
@@ -210,8 +209,8 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
     ] ; visualize Income index
       ;############################################################################################
     if visualization = "Encharcamientos" and ticks > 1 [
-      set size flooding *  factor_scale
-      set color  scale-color sky flooding flooding_max 0
+      set size flooding * 0.02
+      set color  scale-color sky flooding 0 flooding_max
     ] ;;visualized WaterOperator flooding dataset MX 2004-2014
     ;############################################################################################
     if visualization =  "% houses with drainage" and ticks > 1 [
@@ -221,7 +220,8 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
     ;############################################################################################
     if visualization = "Edad Infraestructura D" and ticks > 1 [
       set shape "square"
-      set color scale-color sky Antiguedad-infra_d Antiguedad-infra_D_min (200 * 336)
+      set size Antiguedad-infra_d / 15
+      set color scale-color sky Antiguedad-infra_d Antiguedad-infra_D_min Antiguedad-infra_D_max
     ]
     ;############################################################################################
     if visualization = "hundimiento" and ticks > 1 [
@@ -253,7 +253,23 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
       set size 2
       set color  scale-color magenta  value_function_precipitation    0 1
     ]
+     ;############################################################################################
+    if visualization = "Action_New" and ticks > 1 [
+      set shape "square"
+      set color scale-color sky investment_here_accumulated_D_new 0 Max_act
+    ]
+    ;############################################################################################
+    if visualization = "Action_Mant" and ticks > 1 [
+      set shape "square"
+      set color scale-color magenta investment_here_accumulated_D_mant 0 Max_act
+    ]
+    ;############################################################################################
+
   ]
+
+
+
+
 end
 
 ;#############################################################################################################################################
@@ -263,9 +279,9 @@ end
 ;end
 ;##############################################################################################################
 ;##############################################################################################################
-to-report supermatrix_residents [matrix_weighed index1 index2 col value_scarcity]; procedure to change the weights from the alternative_namesto the criteria
+to-report change_supermatrix [matrix_weighed index1 index2 col value_floding]; procedure to change the weights from the alternative_namesto the criteria
   let M_matrix_weighed matrix:from-row-list matrix_weighed
-  let new_matrix_parameter (1 - value_scarcity / 30)
+  let new_matrix_parameter (1 - value_floding / flooding_max)
   let dim item 0 matrix:dimensions M_matrix_weighed
   let v1 matrix:get M_matrix_weighed index1 col
   let v2 matrix:get M_matrix_weighed index2 col
@@ -357,15 +373,15 @@ to flooding_InfPoiss
   let NE []
   foreach sort-on [ID] agebs with [CV_estado = "09"]
   [a ->
-    set NE lput  [Antiguedad-infra_D / 336] of a NE
+    set NE lput  ([Antiguedad-infra_D] of a) NE
   ]
-print NE
+;print sort NE
   r:put "new_Edad" NE
 
   r:eval "studyArea_CVG<-readShapeSpatial('C:/Users/abaezaca/Dropbox (Personal)/Layers/final/agebs_abm')"
   r:eval "studyArea_CVG@data$estado<-as.factor(substring(studyArea_CVG@data$cvgeo,1,2))"
   r:eval "studyArea_CVG@data$municipio<-as.factor(substring(studyArea_CVG@data$cvgeo,3,5))"
-  r:eval "studyArea_CVG@data$antiguedad[which(studyArea_CVG@data$estado=='09')]<-new_Edad"
+  r:eval "studyArea_CVG@data$antiguedad[which(studyArea_CVG@data$estado=='09')]<-new_Edad" ;new age of infrastructure will update the regresion to update the level of flooding. Same can be done to the other variables
   r:eval "studyArea_CVG@data$AveR<-rowMeans(studyArea_CVG@data[,18:33])"
   r:eval "studyArea_CVG@data$BASURA<-studyArea_CVG@data$BASURA/10000"
   r:eval "dattt<-subset(studyArea_CVG@data,estado=='09')"
@@ -488,11 +504,11 @@ NIL
 CHOOSER
 249
 127
-405
+454
 172
 Visualization
 Visualization
-"Areas prioritarias Mantenimiento" "Areas prioritarias Nueva Infraestructura" "GoogleEarth" "Encharcamientos" "% houses with drainage" "P. Falla D" "Capacidad_D" "Edad Infraestructura D" "hundimiento" "value_function_Age_d" "value_function_ponding" "value_function_falta_d" "value_function_capasity" "value_function_precipitation"
+"d_Mantenimiento" "d_Nueva Infraestructura" "GoogleEarth" "Encharcamientos" "% houses with drainage" "P. Falla D" "Capacidad_D" "Edad Infraestructura D" "hundimiento" "value_function_Age_d" "value_function_ponding" "value_function_falta_d" "value_function_capasity" "value_function_precipitation" "Action_New" "Action_Mant"
 3
 
 BUTTON
@@ -538,7 +554,7 @@ recursos_para_mantenimiento
 recursos_para_mantenimiento
 1
 2400
-299.0
+300.0
 1
 1
 NIL
@@ -553,7 +569,7 @@ Eficiencia_NuevaInfra
 Eficiencia_NuevaInfra
 0
 0.5
-0.46
+0.18
 0.01
 1
 NIL
@@ -611,9 +627,9 @@ SLIDER
 Eficiencia_Mantenimiento
 Eficiencia_Mantenimiento
 0
-20
-20.0
-1
+2
+0.8
+0.1
 1
 NIL
 HORIZONTAL
@@ -627,62 +643,32 @@ recursos_nuevaInfrastructura
 recursos_nuevaInfrastructura
 0
 2400
-164.0
+300.0
 1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-258
-402
-435
-435
-cut-off_priorities
-cut-off_priorities
-0
-1
-0.0
-0.01
 1
 NIL
 HORIZONTAL
 
 SLIDER
 35
-281
-236
-314
-lambda
-lambda
-0
-0.001
-3.7037037037037035E-4
-1 / (100 * 54)
-1
-NIL
-HORIZONTAL
-
-SLIDER
-258
-330
-435
-363
+275
+239
+308
 factor_subsidencia
 factor_subsidencia
 0
 0.01
-0.004
+0.0039
 0.0001
 1
 NIL
 HORIZONTAL
 
 SLIDER
-275
-570
-433
-603
+34
+346
+238
+379
 n_runs
 n_runs
 0
@@ -694,15 +680,15 @@ NIL
 HORIZONTAL
 
 SLIDER
-258
-365
-435
-398
+34
+311
+240
+344
 factor_scale
 factor_scale
 0.000000000000000001
 4
-0.025
+4.0
 0.001
 1
 NIL
@@ -742,18 +728,18 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot mean [Antiguedad-infra_D / 365] of agebs with [CV_estado = \"09\"]"
+"default" 1.0 0 -16777216 true "" "plot mean [Antiguedad-infra_D] of agebs with [CV_estado = \"09\"]"
 
 SLIDER
-262
-298
-434
-331
+35
+241
+239
+274
 decay_capacity
 decay_capacity
 0
 0.2
-0.022
+0.056
 0.001
 1
 NIL
@@ -778,21 +764,21 @@ PENS
 "CDMX" 1.0 0 -16777216 true "" "plot mean [capacidad_D] of agebs with [CV_estado = \"09\"]"
 
 MONITOR
-276
-797
-401
-842
-hundimiento maximo
-max [hundimiento] of agebs
+150
+402
+275
+447
+Edad Minima
+min [Antiguedad-infra_D] of agebs with [CV_estado = \"09\"]
 17
 1
 11
 
 MONITOR
-409
-798
-534
-843
+283
+403
+408
+448
 capasity
 list (max [Capacidad_d] of agebs) (min [Capacidad_d] of agebs)
 4
@@ -808,7 +794,7 @@ plot 1
 NIL
 NIL
 0.0
-10.0
+120.0
 0.0
 120.0
 true
@@ -1183,47 +1169,13 @@ NetLogo 6.0.1
 @#$#@#$#@
 @#$#@#$#@
 <experiments>
-  <experiment name="experiment1_V6" repetitions="1" runMetricsEveryStep="false">
+  <experiment name="Test_1_SESMO" repetitions="1" runMetricsEveryStep="false">
     <setup>setup</setup>
     <go>go</go>
     <final>export-map</final>
-    <timeLimit steps="30"/>
-    <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_estado = "09"]</metric>
+    <timeLimit steps="1920"/>
     <metric>mean [Antiguedad-infra_D] of agebs with [CV_estado = "09"]</metric>
-    <metric>mean [scarcity_index] of agebs with [CV_estado = "09"]</metric>
-    <metric>mean [Presion_social_year] of agebs with [CV_estado = "09"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_municipio = "002"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_municipio = "003"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_municipio = "004"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_municipio = "005"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_municipio = "006"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_municipio = "007"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_municipio = "008"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_municipio = "009"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_municipio = "010"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_municipio = "011"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_municipio = "012"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_municipio = "013"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_municipio = "014"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_municipio = "015"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_municipio = "016"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_municipio = "017"]</metric>
-    <metric>mean [scarcity_index] of agebs with [CV_municipio = "002"]</metric>
-    <metric>mean [scarcity_index] of agebs with [CV_municipio = "003"]</metric>
-    <metric>mean [scarcity_index] of agebs with [CV_municipio = "004"]</metric>
-    <metric>mean [scarcity_index] of agebs with [CV_municipio = "005"]</metric>
-    <metric>mean [scarcity_index] of agebs with [CV_municipio = "006"]</metric>
-    <metric>mean [scarcity_index] of agebs with [CV_municipio = "007"]</metric>
-    <metric>mean [scarcity_index] of agebs with [CV_municipio = "008"]</metric>
-    <metric>mean [scarcity_index] of agebs with [CV_municipio = "009"]</metric>
-    <metric>mean [scarcity_index] of agebs with [CV_municipio = "010"]</metric>
-    <metric>mean [scarcity_index] of agebs with [CV_municipio = "011"]</metric>
-    <metric>mean [scarcity_index] of agebs with [CV_municipio = "012"]</metric>
-    <metric>mean [scarcity_index] of agebs with [CV_municipio = "013"]</metric>
-    <metric>mean [scarcity_index] of agebs with [CV_municipio = "014"]</metric>
-    <metric>mean [scarcity_index] of agebs with [CV_municipio = "015"]</metric>
-    <metric>mean [scarcity_index] of agebs with [CV_municipio = "016"]</metric>
-    <metric>mean [scarcity_index] of agebs with [CV_municipio = "017"]</metric>
+    <metric>mean [flooding] of agebs with [CV_estado = "09"]</metric>
     <metric>mean [flooding_index] of agebs with [CV_municipio = "002"]</metric>
     <metric>mean [flooding_index] of agebs with [CV_municipio = "003"]</metric>
     <metric>mean [flooding_index] of agebs with [CV_municipio = "004"]</metric>
@@ -1240,49 +1192,20 @@ NetLogo 6.0.1
     <metric>mean [flooding_index] of agebs with [CV_municipio = "015"]</metric>
     <metric>mean [flooding_index] of agebs with [CV_municipio = "016"]</metric>
     <metric>mean [flooding_index] of agebs with [CV_municipio = "017"]</metric>
-    <metric>mean [Presion_social_Index] of agebs with [CV_municipio = "002"]</metric>
-    <metric>mean [Presion_social_Index] of agebs with [CV_municipio = "003"]</metric>
-    <metric>mean [Presion_social_Index] of agebs with [CV_municipio = "004"]</metric>
-    <metric>mean [Presion_social_Index] of agebs with [CV_municipio = "005"]</metric>
-    <metric>mean [Presion_social_Index] of agebs with [CV_municipio = "006"]</metric>
-    <metric>mean [Presion_social_Index] of agebs with [CV_municipio = "007"]</metric>
-    <metric>mean [Presion_social_Index] of agebs with [CV_municipio = "008"]</metric>
-    <metric>mean [Presion_social_Index] of agebs with [CV_municipio = "009"]</metric>
-    <metric>mean [Presion_social_Index] of agebs with [CV_municipio = "010"]</metric>
-    <metric>mean [Presion_social_Index] of agebs with [CV_municipio = "011"]</metric>
-    <metric>mean [Presion_social_Index] of agebs with [CV_municipio = "012"]</metric>
-    <metric>mean [Presion_social_Index] of agebs with [CV_municipio = "013"]</metric>
-    <metric>mean [Presion_social_Index] of agebs with [CV_municipio = "014"]</metric>
-    <metric>mean [Presion_social_Index] of agebs with [CV_municipio = "015"]</metric>
-    <metric>mean [Presion_social_Index] of agebs with [CV_municipio = "016"]</metric>
-    <metric>mean [Presion_social_Index] of agebs with [CV_municipio = "017"]</metric>
-    <enumeratedValueSet variable="Visualization">
-      <value value="&quot;Escasez&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="Eficiencia_NuevaInfra">
-      <value value="0.02"/>
-    </enumeratedValueSet>
     <enumeratedValueSet variable="recursos_para_mantenimiento">
-      <value value="922"/>
+      <value value="100"/>
+      <value value="300"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="alpha_alt">
-      <value value="0.25"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="Requerimiento_deAgua">
-      <value value="0.2492"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="escala">
-      <value value="&quot;cuenca&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="lambda">
-      <value value="5.479452054794521E-5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="Recursos_para_distribucion">
-      <value value="1912"/>
+    <enumeratedValueSet variable="recursos_nuevaInfrastructura">
+      <value value="100"/>
+      <value value="300"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="Eficiencia_Mantenimiento">
-      <value value="0.01"/>
-      <value value="0.04"/>
+      <value value="20"/>
+      <value value="40"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Eficiencia_NuevaInfra">
+      <value value="0.2"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>
