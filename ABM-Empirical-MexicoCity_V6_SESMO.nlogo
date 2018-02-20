@@ -370,6 +370,8 @@ end
 ;simulation of annual flood events per census block using ZeroInflated Poisson model
 to flooding_InfPoiss
   r:eval "require(pscl)"
+  r:eval "require(maptools)"
+
   let NE []
   let BA []
   foreach sort-on [ID] agebs with [CV_estado = "09"]
@@ -380,8 +382,8 @@ to flooding_InfPoiss
 ;print sort NE
   r:put "new_Edad" NE
   r:put "new_garbage" BA
-;  r:eval "studyArea_CVG<-readShapeSpatial('C:/Users/abaezaca/Dropbox (Personal)/Layers/final/agebs_abm')"
-  r:eval "studyArea_CVG<-readShapeSpatial('~/data/agebs_abm')"
+  r:eval "studyArea_CVG<-readShapeSpatial('C:/Users/abaezaca/Dropbox (Personal)/Layers/final/agebs_abm')"
+ ; r:eval "studyArea_CVG<-readShapeSpatial('~/data/agebs_abm')"
   r:eval "studyArea_CVG@data$estado<-as.factor(substring(studyArea_CVG@data$cvgeo,1,2))"
   r:eval "studyArea_CVG@data$municipio<-as.factor(substring(studyArea_CVG@data$cvgeo,3,5))"
   r:eval "studyArea_CVG@data$antiguedad[which(studyArea_CVG@data$estado=='09')]<-new_Edad" ;new age of infrastructure will update the regresion to update the level of flooding. Same can be done to the other variables
@@ -811,7 +813,7 @@ SLIDER
 36
 348
 242
-383
+381
 garbage_removal
 garbage_removal
 0
