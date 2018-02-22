@@ -161,8 +161,19 @@ Alternatives_WaterOperator_D-own[ID name_action criteria_names criteria_values c
 to SETUP
   clear-all
   ;profiler:start
-  set timestep 0
-
+  r:eval "require(pscl)"
+  r:eval "require(maptools)"
+  r:eval "studyArea_CVG<-readShapeSpatial('C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/data/agebs_abm')"
+ ; r:eval "studyArea_CVG<-readShapeSpatial('~/data/agebs_abm')"
+  r:eval "studyArea_CVG@data$estado<-as.factor(substring(studyArea_CVG@data$cvgeo,1,2))"
+  r:eval "studyArea_CVG@data$municipio<-as.factor(substring(studyArea_CVG@data$cvgeo,3,5))"
+  r:eval "studyArea_CVG@data$AveR<-rowMeans(studyArea_CVG@data[,18:33])"
+  r:eval "studyArea_CVG@data$BASURA<-studyArea_CVG@data$BASURA/10000"
+  r:eval "studyArea_CVG<-studyArea_CVG[studyArea_CVG@data$estado==levels(studyArea_CVG@data$estado)[1],]"
+  r:eval "glm_ponds_zip<-zeroinfl(PONDING~antiguedad+GASTO+subsidenci+BASURA+AveR, data=studyArea_CVG@data)"
+  r:eval "p <- predict(glm_ponds_zip, type = 'zero')"
+  r:eval "lambda <- predict(glm_ponds_zip, type = 'count')"
+ 
 ;4)#################################################################################################################################
   load-GIS-data
 ;5)#################################################################################################################################
@@ -233,7 +244,7 @@ end
           set poblacion gis:property-value ? "poblacion"
           set Income-index ifelse-value(gis:property-value ?2 "ingreso" != nobody)[gis:property-value ?2 "ingreso"][random-float 1]
           set flooding ifelse-value(gis:property-value ?2 "PONDING" != nobody)[gis:property-value ?2  "PONDING"][0]
-          set garbage (gis:property-value ?2 "BASURA")
+          set garbage (gis:property-value ?2 "BASURA") / 10000
           set Obstruccion_dren gis:property-value ? "obstruc"
           set Monto gis:property-value ? "monto"        
           set peticion_usuarios (gis:property-value ? "pet_usr_d") / 100  ;index densidad de infra por cuanca * falta de conexiones por ageb.

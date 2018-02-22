@@ -5,34 +5,33 @@ __includes["setup_SESMO.nls" "value_functions_SESMO.nls"]
 ;#############################################################################################################################################
 to GO
   tick
-;  reset-timer
- ;  profiler:start
-  counter_weeks
+  reset-timer
+   profiler:start
+
 ;#############################################################################################################################################
 ;calculate annual exposure to floods and GDI
-  if weeks = 1 and months = 1[
+
     flooding_InfPoiss
     ask agebs with [CV_estado = "09"][
       indicators
       condition_infra_change
-    ]
-    WaterOperator-decisions "09"            ;;decisions by WaterOperator
-
-    ask agebs with [CV_estado = "09"][
-      set investment_here_D 0
+    set investment_here_D 0
       set investment_here_D_mant 0
       set investment_here_D_new 0
-    ]
-    repair-Infra_D "09"
   ]
-    Landscape_visualization          ;;visualization of social and physical processes
+    WaterOperator-decisions "09"            ;;decisions by WaterOperator
+
+
+    repair-Infra_D "09"
+
+   Landscape_visualization          ;;visualization of social and physical processes
 
   ;##########################################################
 ;  print [flooding] of agebs with[CV_estado = "09"]
  ; print [Antiguedad-infra_d] of agebs with[CV_estado = "09"]
- ;profiler:stop          ;; stop profiling
- ; print profiler:report
- ; profiler:reset         ;pri; clear the data
+ profiler:stop          ;; stop profiling
+  print profiler:report
+  profiler:reset         ;pri; clear the data
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -96,38 +95,23 @@ end
 ;site-selection;
 ;take-action1;
 to repair-Infra_D [estado]
-  let Budget_M 0
-  let Budget_N 0
-
-
-  while [Budget_N < recursos_nuevaInfrastructura] [
-    ask max-one-of (agebs with [d_mantenimiento_D < d_new_D and CV_estado = estado and investment_here_D_new = 0 and investment_here_D_mant = 0]) [d_new_D][
+    ask max-n-of recursos_nuevaInfrastructura (agebs with [d_mantenimiento_D < d_new_D and CV_estado = estado and investment_here_D_new = 0 and investment_here_D_mant = 0]) [d_new_D][
       let old_Capacidad_D Capacidad_D
-      set Budget_N Budget_N + 1
       set investment_here_D 1
       set investment_here_accumulated_D investment_here_accumulated_D + 1
       set investment_here_D_new 1
       set investment_here_accumulated_D_new investment_here_accumulated_D_new + 1
       set Capacidad_d Capacidad_d + Eficiencia_NuevaInfra
     ]
-  ]
-
-    while [Budget_M < recursos_para_mantenimiento] [
-
-    ask max-one-of (agebs with [investment_here_D_new =  0 and investment_here_D_mant = 0 and CV_estado = estado]) [d_mantenimiento_D][
+    ask max-n-of recursos_para_mantenimiento (agebs with [investment_here_D_new =  0 and investment_here_D_mant = 0 and CV_estado = estado]) [d_mantenimiento_D][
       let old_Antiguedad-infra_D Antiguedad-infra_D
-
-      set Budget_M Budget_M + 1
       set investment_here_D_mant 1
       set investment_here_D 1
       set investment_here_accumulated_D investment_here_accumulated_D + 1
       set investment_here_accumulated_D_mant investment_here_accumulated_D_mant + 1
-      set Antiguedad-infra_D Antiguedad-infra_D - Eficiencia_Mantenimiento
+      set Antiguedad-infra_D Antiguedad-infra_D - Antiguedad-infra_D * Eficiencia_Mantenimiento
       set garbage garbage - garbage * garbage_removal
     ]
-  ]
-
-
 end
 ;/take-action1;
 ;/site-selection;
@@ -141,7 +125,6 @@ end
 to condition_infra_change
   set Antiguedad-infra_D Antiguedad-infra_D + 1
   set Capacidad_D Capacidad_D - decay_capacity
-  if Antiguedad-infra_D < 0 [set Antiguedad-infra_D 0]
   if Capacidad_D < 0[set Capacidad_D 0]
 end
 ;##############################################################################################################
@@ -158,7 +141,6 @@ to export-map
     ? ->
     ask ?
       [
-
         file-write ID                                    ;;write the ID of each ageb using a numeric value (update acording to Marco's Identification)
         file-write Antiguedad-infra_D
         file-write Flooding_index                              ;;number of floods
@@ -185,14 +167,16 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
   set Antiguedad-infra_D_max max [Antiguedad-infra_D] of agebs with [CV_estado = "09"]
   set d_mantenimiento_D_max max [d_mantenimiento_D] of agebs with [CV_estado = "09"]
   set d_new_max max [d_new_d] of agebs with [CV_estado = "09"]
-  set Max_act max list max [investment_here_accumulated_D_new] of agebs with [CV_estado = "09"] max [investment_here_accumulated_D_mant] of agebs with [CV_estado = "09"]
+  set Max_act max [investment_here_accumulated_D_new] of agebs with [CV_estado = "09"]
+  let max_mant max [investment_here_accumulated_D_mant] of agebs with [CV_estado = "09"]
+
   ask agebs with [CV_estado = "09"] [
-    set size factor_scale * 1
+    set size 1
     set shape "circle"
     ;############################################################################################
     if Visualization = "Capacidad_D" and ticks > 1 [
-      set size 5 * Capacidad_D
-      set color  scale-color red Capacidad_D 0 1
+      set size factor_scale * 0.1 * ifelse-value (Capacidad_D < 30)[Capacidad_D ][40]
+      set color  scale-color red Capacidad_D 0 3
     ] ;;social pressure
     ;############################################################################################
     if visualization = "d_Mantenimiento" and ticks > 1 [
@@ -210,7 +194,7 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
     ] ; visualize Income index
       ;############################################################################################
     if visualization = "Encharcamientos" and ticks > 1 [
-      set size flooding * 0.02
+      set size flooding * 0.01
       set color  scale-color sky flooding 0 flooding_max
     ] ;;visualized WaterOperator flooding dataset MX 2004-2014
     ;############################################################################################
@@ -221,7 +205,7 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
     ;############################################################################################
     if visualization = "Edad Infraestructura D" and ticks > 1 [
       set shape "square"
-      set size Antiguedad-infra_d / 15
+      set size Antiguedad-infra_d * 0.2
       set color scale-color sky Antiguedad-infra_d Antiguedad-infra_D_min Antiguedad-infra_D_max
     ]
     ;############################################################################################
@@ -257,12 +241,14 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
      ;############################################################################################
     if visualization = "Action_New" and ticks > 1 [
       set shape "square"
+      set size 1.5
       set color scale-color sky investment_here_accumulated_D_new 0 Max_act
     ]
     ;############################################################################################
     if visualization = "Action_Mant" and ticks > 1 [
       set shape "square"
-      set color scale-color magenta investment_here_accumulated_D_mant 0 Max_act
+      set size 1.5
+      set color scale-color magenta investment_here_accumulated_D_mant 0 max_mant
     ]
     ;############################################################################################
 
@@ -369,8 +355,6 @@ end
 ;flooding-simulation;
 ;simulation of annual flood events per census block using ZeroInflated Poisson model
 to flooding_InfPoiss
-  r:eval "require(pscl)"
-  r:eval "require(maptools)"
 
   let NE []
   let BA []
@@ -379,23 +363,16 @@ to flooding_InfPoiss
     set NE lput  ([Antiguedad-infra_D] of a) NE
     set BA lput (([garbage] of a)) BA
   ]
-;print sort NE
-  r:put "new_Edad" NE
-  r:put "new_garbage" BA
-  r:eval "studyArea_CVG<-readShapeSpatial('C:/Users/abaezaca/Dropbox (Personal)/Layers/final/agebs_abm')"
- ; r:eval "studyArea_CVG<-readShapeSpatial('~/data/agebs_abm')"
-  r:eval "studyArea_CVG@data$estado<-as.factor(substring(studyArea_CVG@data$cvgeo,1,2))"
-  r:eval "studyArea_CVG@data$municipio<-as.factor(substring(studyArea_CVG@data$cvgeo,3,5))"
-  r:eval "studyArea_CVG@data$antiguedad[which(studyArea_CVG@data$estado=='09')]<-new_Edad" ;new age of infrastructure will update the regresion to update the level of flooding. Same can be done to the other variables
-  r:eval "studyArea_CVG@data$BASURA[which(studyArea_CVG@data$estado=='09')]<-new_garbage" ;new garbage will update the regresion to update the level of flooding. Same can be done to the other variables
-  r:eval "studyArea_CVG@data$AveR<-rowMeans(studyArea_CVG@data[,18:33])"
-  r:eval "studyArea_CVG@data$BASURA<-studyArea_CVG@data$BASURA/10000"
-  r:eval "dattt<-subset(studyArea_CVG@data,estado=='09')"
-  r:eval "glm_ponds_zip<-zeroinfl(PONDING~antiguedad+GASTO+subsidenci+BASURA+AveR, data=dattt)"
-  r:eval "p <- predict(glm_ponds_zip, type = 'zero')"
-  r:eval "lambda <- predict(glm_ponds_zip, type = 'count')"
-  let Ee r:get "ifelse(rbinom(n=length(p), size = 1, prob = p) > 0, 0, rpois(n=length(lambda), lambda = lambda))"
- ; let IDNNN r:get "studyArea_CVG@data$AGEB_ID[which(studyArea_CVG@data$estado=='09')]"
+
+;    r:eval "glm_ponds_zip<-zeroinfl(PONDING~antiguedad+GASTO+subsidenci+BASURA+AveR, data=studyArea_CVG@data)"
+    r:put "new_Edad" NE
+    r:put "new_garbage" BA
+    r:eval "studyArea_CVG@data$antiguedad<-new_Edad" ;new age of infrastructure will update the regresion to update the level of flooding. Same can be done to the other variables
+    r:eval "studyArea_CVG@data$BASURA<-new_garbage" ;new garbage will update the regresion to update the level of flooding. Same can be done to the other variables
+    r:eval "p <- predict(glm_ponds_zip, newdata=studyArea_CVG@data, type = 'zero')"
+    r:eval "lambda <- predict(glm_ponds_zip, newdata=studyArea_CVG@data, type = 'count')"
+    let Ee r:get "ifelse(rbinom(n=length(p), size = 1, prob = p) > 0, 0, rpois(n=length(lambda), lambda = lambda))"
+
 
   (foreach sort-on [ID] agebs with [CV_estado = "09"] Ee
     [[a b] ->
@@ -412,7 +389,7 @@ end
 ;##############################################################################################################
 ;##############################################################################################################
 to indicators
-  if years > (30) [
+  if ticks > (30) [
     set flooding_index precision (flooding_index + (1 / 10) * flooding) 2
   ]
 end
@@ -515,7 +492,7 @@ CHOOSER
 Visualization
 Visualization
 "d_Mantenimiento" "d_Nueva Infraestructura" "GoogleEarth" "Encharcamientos" "% houses with drainage" "P. Falla D" "Capacidad_D" "Edad Infraestructura D" "hundimiento" "value_function_Age_d" "value_function_ponding" "value_function_falta_d" "value_function_capasity" "value_function_precipitation" "Action_New" "Action_Mant"
-3
+14
 
 BUTTON
 1234
@@ -560,7 +537,7 @@ recursos_para_mantenimiento
 recursos_para_mantenimiento
 0
 2400
-0.0
+400.0
 1
 1
 NIL
@@ -575,7 +552,7 @@ Eficiencia_NuevaInfra
 Eficiencia_NuevaInfra
 0
 0.5
-0.0
+0.1
 0.01
 1
 NIL
@@ -618,7 +595,7 @@ NIL
 CHOOSER
 252
 175
-410
+453
 220
 escala
 escala
@@ -633,9 +610,9 @@ SLIDER
 Eficiencia_Mantenimiento
 Eficiencia_Mantenimiento
 0
-2
-0.0
-0.1
+1
+0.5
+0.01
 1
 NIL
 HORIZONTAL
@@ -649,7 +626,7 @@ recursos_nuevaInfrastructura
 recursos_nuevaInfrastructura
 0
 2400
-0.0
+400.0
 1
 1
 NIL
@@ -770,10 +747,10 @@ PENS
 "CDMX" 1.0 0 -16777216 true "" "plot mean [capacidad_D] of agebs with [CV_estado = \"09\"]"
 
 MONITOR
-150
-402
-275
-447
+183
+450
+308
+495
 Edad Minima
 min [Antiguedad-infra_D] of agebs with [CV_estado = \"09\"]
 17
@@ -781,10 +758,10 @@ min [Antiguedad-infra_D] of agebs with [CV_estado = \"09\"]
 11
 
 MONITOR
-283
-403
-408
-448
+316
+451
+441
+496
 capasity
 list (max [Capacidad_d] of agebs) (min [Capacidad_d] of agebs)
 4
@@ -818,7 +795,7 @@ garbage_removal
 garbage_removal
 0
 0.2
-0.0
+0.05
 0.01
 1
 NIL
@@ -840,7 +817,7 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot sum [flooding] of agebs with [CV_estado = \"09\"]"
+"default" 1.0 0 -16777216 true "" "plot mean [flooding] of agebs with [CV_estado = \"09\"]"
 
 PLOT
 1473
@@ -1230,7 +1207,7 @@ NetLogo 6.0.1
     <setup>setup</setup>
     <go>go</go>
     <final>export-map</final>
-    <timeLimit steps="1920"/>
+    <timeLimit steps="40"/>
     <metric>mean [Antiguedad-infra_D] of agebs with [CV_estado = "09"]</metric>
     <metric>mean [flooding] of agebs with [CV_estado = "09"]</metric>
     <metric>mean [flooding_index] of agebs with [CV_municipio = "002"]</metric>
@@ -1250,19 +1227,22 @@ NetLogo 6.0.1
     <metric>mean [flooding_index] of agebs with [CV_municipio = "016"]</metric>
     <metric>mean [flooding_index] of agebs with [CV_municipio = "017"]</metric>
     <enumeratedValueSet variable="recursos_para_mantenimiento">
-      <value value="100"/>
-      <value value="300"/>
+      <value value="200"/>
+      <value value="400"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="recursos_nuevaInfrastructura">
-      <value value="100"/>
-      <value value="300"/>
+      <value value="200"/>
+      <value value="400"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="Eficiencia_Mantenimiento">
-      <value value="20"/>
-      <value value="40"/>
+      <value value="0.2"/>
+      <value value="0.5"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="Eficiencia_NuevaInfra">
-      <value value="0.2"/>
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="garbage_removal">
+      <value value="0.05"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>
