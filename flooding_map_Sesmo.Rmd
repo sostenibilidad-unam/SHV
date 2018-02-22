@@ -1,0 +1,177 @@
+---
+title: "Analyses for SESMO Paper"
+author: "Andres Baeza"
+date: "February 22, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##This document describe the statistical analisis and the results from simulating the Agent-based model.
+```{r}
+require(ggplot2)
+require(RColorBrewer)
+require(grid)
+require(maptools)
+require(sp) 
+require(rgdal) # requires sp, will use proj.4 if installed
+require(plyr)
+require(foreign)
+require(ggmap)
+require(gridExtra)
+library(pscl)
+```
+
+#zero-inflated model
+a combined regression iwth binomal probability to account for the inflated number of ceros, and a possion model for values greater than cero.
+```{r}
+studyArea_CVG<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/data/agebs_abm")
+studyArea_CVG@data$estado<-as.factor(substring(studyArea_CVG@data$cvgeo,1,2))
+studyArea_CVG@data$municipio<-as.factor(substring(studyArea_CVG@data$cvgeo,3,5))
+
+studyArea_CVG<-studyArea_CVG[studyArea_CVG@data$estado==levels(studyArea_CVG@data$estado)[1],]
+
+
+studyArea_CVG@data$AveR<-rowMeans(studyArea_CVG@data[,18:33])
+studyArea_CVG@data$BASURA<-studyArea_CVG@data$BASURA/10000
+studyArea_CVG@data$capac_d<-studyArea_CVG@data$capac_d/100000000
+
+
+#model
+glm_ponds_zip<-zeroinfl(PONDING~antiguedad+GASTO+subsidenci+BASURA+AveR, data=studyArea_CVG@data)
+summary(glm_ponds_zip)
+p <- predict(glm_ponds_zip, type = "zero")
+lambda <- predict(glm_ponds_zip, type = "count")
+
+#model in the future without actions
+studyArea_CVG@data$antiguedad=studyArea_CVG@data$antiguedad + 40
+p_s1 <- predict(glm_ponds_zip,newdata=studyArea_CVG@data, type = "zero")
+lambda_s1 <- predict(glm_ponds_zip,newdata=studyArea_CVG@data, type = "count")
+
+#model in the future without actions
+studyArea_CVG@data$BASURA=studyArea_CVG@data$BASURA -  studyArea_CVG@data$BASURA
+p_s2 <- predict(glm_ponds_zip,newdata=studyArea_CVG@data, type = "zero")
+lambda_s2 <- predict(glm_ponds_zip,newdata=studyArea_CVG@data, type = "count")
+
+#add prediction to map
+studyArea_CVG@data$predict_E<-ifelse(rbinom(n=length(p), size = 1, prob = p) > 0, 0, rpois(n=length(lambda), lambda = lambda))
+
+studyArea_CVG@data$predict_E_s1<-ifelse(rbinom(n=length(p_s1), size = 1, prob = p_s1) > 0, 0, rpois(n=length(lambda_s1), lambda = lambda_s1))
+
+studyArea_CVG@data$predict_E_s2<-ifelse(rbinom(n=length(p_s2), size = 1, prob = p_s2) > 0, 0, rpois(n=length(lambda_s2), lambda = lambda_s2))
+```
+
+
+```{r}
+
+studyArea_CVG@data<-transform(studyArea_CVG@data, z.M=cut(studyArea_CVG@data$predict_E, breaks=c(-1,15,50,100,200,800)))
+
+studyArea_CVG@data<-transform(studyArea_CVG@data, z.M_s1=cut(studyArea_CVG@data$predict_E_s1, breaks=c(-1,15,50,100,200,800)))
+
+studyArea_CVG@data<-transform(studyArea_CVG@data, z.M_s2=cut(studyArea_CVG@data$predict_E_s2, breaks=c(-1,15,50,100,200,800)))
+
+studyArea_CVG@data<-transform(studyArea_CVG@data, z.D=cut(studyArea_CVG@data$PONDING, breaks=c(-1,15,50,100,200,800)))
+
+colors1 <- colorRampPalette(c( "lightyellow","lightgreen","green","lightblue","blue"))(length(levels(studyArea_CVG@data$z.D)))
+color2<-rev(colorRamps::blue2yellow(6))
+colors4 <- colorRampPalette(c( "lightyellow","yellow","orange","red","darkred"))(length(levels(studyArea_CVG@data$z.D)))
+
+
+studyArea_CVG@data$id =rownames(studyArea_CVG@data)
+  studyArea_CVG.points = fortify(studyArea_CVG, region="id")
+  studyArea_CVG.df = join(studyArea_CVG.points, studyArea_CVG@data, by="id")
+
+  
+  
+ M_model<-ggplot(studyArea_CVG.df,
+  aes(long,lat,group=group,fill=z.M)) + 
+  geom_polygon() +
+  coord_equal(xlim = c(-99.4, -98.8),ylim = c(19.2, 19.6))+
+  scale_fill_manual(name="Model",values=setNames(color2, levels(studyArea_CVG@data$z.M)),guide="none")+ggtitle("Prediction using initial conditions")
+
+ M_model_s1<-ggplot(studyArea_CVG.df,
+  aes(long,lat,group=group,fill=z.M_s1)) + 
+  geom_polygon() +
+  coord_equal(xlim = c(-99.4, -98.8),ylim = c(19.2, 19.6))+
+  scale_fill_manual(name="Model_s1",values=setNames(color2, levels(studyArea_CVG@data$z.M_s1)),guide="none")+ggtitle("Null predictions (+40 years)") 
+
+ M_model_s2<-ggplot(studyArea_CVG.df,
+  aes(long,lat,group=group,fill=z.M_s2)) + 
+  geom_polygon()+
+  coord_equal(xlim = c(-99.4, -98.8),ylim = c(19.2, 19.6))+
+  scale_fill_manual(name="Model_s2",values=setNames(color2, levels(studyArea_CVG@data$z.M_s2)),guide="none")+ggtitle("null+Remove garbage %50")
+
+ 
+   M_data<-ggplot(studyArea_CVG.df,aes(long,lat,group=group,fill=z.D)) +
+  geom_polygon() +
+  coord_equal(xlim = c(-99.4, -98.8),ylim = c(19.2, 19.6))+
+  scale_fill_manual(name="Data",values=setNames(color2,levels(studyArea_CVG@data$z.D)),guide="none")+ggtitle("Ponding (mean events 2004-2014)")
+  
+  
+  names<-c("Azcapotzalco","Coyoacán","Cuajimalpa","Gustavo A. Madero","Iztacalco","Iztapalapa","Magdalena Contreras","Milpa Alta","Álvaro Obregón","Tláhuac","Tlalpan","Xochimilco","Benito Juárez","Cuauhtémoc","Miguel Hidalgo","Venustiano Carranza")
+ID=c("002","003","004","005","006","007","008","009","010","011","012","013","014","015","016","017")
+
+
+grid.arrange(M_data,M_model,M_model_s1,M_model_s2,ncol=2)          
+  
+```
+
+
+
+```{r,fig.width=18,fig.height=18}
+studyArea_CVG@data$Antiguedad_Final<-numeric(length(studyArea_CVG@data$AGEB_ID))
+studyArea_CVG@data$flood_final<-numeric(length(studyArea_CVG@data$AGEB_ID))
+studyArea_CVG@data$flood_final_B<-numeric(length(studyArea_CVG@data$AGEB_ID))
+studyArea_CVG@data$capasidad_final<-numeric(length(studyArea_CVG@data$AGEB_ID))
+studyArea_CVG@data$Acts<-numeric(length(studyArea_CVG@data$AGEB_ID))
+studyArea_CVG@data$Act_M<-numeric(length(studyArea_CVG@data$AGEB_ID))
+studyArea_CVG@data$Act_N<-numeric(length(studyArea_CVG@data$AGEB_ID))
+map_a<-scan(file = 'C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/1-200-400-0.2-0.1.txt')
+map_b<-scan(file = 'C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/1-400-400-0.2-0.1.txt')
+for (i in seq(1,length(map_a),7)){
+  studyArea_CVG@data$Antiguedad_Final[which(studyArea_CVG@data$AGEB_ID ==map_a[i])]<-map_a[i+1]
+studyArea_CVG@data$flood_final[which(studyArea_CVG@data$AGEB_ID ==map_a[i])]<-map_a[i+2]
+studyArea_CVG@data$flood_final_B[which(studyArea_CVG@data$AGEB_ID ==map_b[i])]<-map_b[i+2]
+studyArea_CVG@data$capasidad_final[which(studyArea_CVG@data$AGEB_ID ==map_a[i])]<-map_a[i+3]
+
+studyArea_CVG@data$Acts[which(studyArea_CVG@data$AGEB_ID ==map_a[i])]<-  round(map_a[i+4])
+
+studyArea_CVG@data$Act_M[which(studyArea_CVG@data$AGEB_ID ==map_a[i])]<-  round(map_a[i+5])
+
+studyArea_CVG@data$Act_M[which(studyArea_CVG@data$AGEB_ID ==map_a[i])]<-  round(map_a[i+6])
+
+}
+studyArea_CVG@data<-transform(studyArea_CVG@data, z.ABM=cut(studyArea_CVG@data$flood_final, breaks=c(-1,15,50,100,200,800)))
+
+studyArea_CVG@data<-transform(studyArea_CVG@data, z.ABM_b=cut(studyArea_CVG@data$flood_final_B, breaks=c(-1,15,50,100,200,800)))
+
+  studyArea_CVG.points = fortify(studyArea_CVG, region="id")
+  studyArea_CVG.df = join(studyArea_CVG.points, studyArea_CVG@data, by="id")
+
+
+ M_modelABM_s3<-ggplot(studyArea_CVG.df,
+  aes(long,lat,group=group,fill=z.ABM)) + 
+  geom_polygon() +
+  coord_equal(xlim = c(-99.4, -98.8),ylim = c(19.2, 19.6))+
+  scale_fill_manual(name="Model_ABM_s3",values=setNames(color2, levels(studyArea_CVG@data$z.ABM)),guide="none")+ggtitle("ABM s200New-400Mant-0.5-0.1")
+
+  M_modelABM_s4<-ggplot(studyArea_CVG.df,
+  aes(long,lat,group=group,fill=z.ABM_b)) + 
+  geom_polygon() +
+  coord_equal(xlim = c(-99.4, -98.8),ylim = c(19.2, 19.6))+
+  scale_fill_manual(name="Model_ABM_s3",values=setNames(color2, levels(studyArea_CVG@data$z.ABM_b)),guide="none")+ggtitle("ABM s400New-400Mant-0.5-0.1")
+  
+
+tiff(filename = "c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SESMO/models_and_data_map.tiff",width = 16,height = 16,res = 600,units = "cm")
+grid.arrange(M_data,M_model,M_model_s1,M_model_s2,M_modelABM_s3
+,ncol=2)          
+dev.off()
+
+grid.arrange(M_data,M_model,M_model_s1,M_model_s2,M_modelABM_s3,M_modelABM_s4
+,ncol=3)          
+
+
+
+```
