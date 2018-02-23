@@ -13,7 +13,7 @@ globals [
   
   ;;RANGE of Biophisical variables
   ;;Auxiliar variables that define range of value functions for all criteria
-  
+  fn
   Gasto_hidraulico_max
   Antiguedad-infra_D_max       ;;the area with the oldest infrastructure
   Antiguedad-infra_D_min
@@ -298,33 +298,66 @@ end
       set criteria_max (list 0 0 0 0 0 0 0 0 0 0 0 0 0)
       set rescaled_criteria_values (list 0 0 0 0 0 0 0 0 0 0 0 0 0)
       
-      let w_sum sum (list matrix:get MMWaterOperator_limit_D 2 2
-        matrix:get MMWaterOperator_limit_D 3 2
-        matrix:get MMWaterOperator_limit_D 4 2
-        matrix:get MMWaterOperator_limit_D 5 2
-        matrix:get MMWaterOperator_limit_D 6 2
-        matrix:get MMWaterOperator_limit_D 7 2
-        matrix:get MMWaterOperator_limit_D 8 2
-        matrix:get MMWaterOperator_limit_D 9 2
-        matrix:get MMWaterOperator_limit_D 10 2
-        matrix:get MMWaterOperator_limit_D 11 2
-        matrix:get MMWaterOperator_limit_D 12 2
-        matrix:get MMWaterOperator_limit_D 13 2
-        matrix:get MMWaterOperator_limit_D 14 2
-      )
-      set criteria_weights (list precision (matrix:get MMWaterOperator_limit_D 2 2 / w_sum) 3
-        precision (matrix:get MMWaterOperator_limit_D 3 2 / w_sum) 3
-        precision (matrix:get MMWaterOperator_limit_D 4 2 / w_sum) 3
-        precision (matrix:get MMWaterOperator_limit_D 5 2 / w_sum) 3
-        precision (matrix:get MMWaterOperator_limit_D 6 2 / w_sum) 3
-        precision (matrix:get MMWaterOperator_limit_D 7 2 / w_sum) 3
-        precision (matrix:get MMWaterOperator_limit_D 8 2 / w_sum) 3
-        precision (matrix:get MMWaterOperator_limit_D 9 2 / w_sum) 3
-        precision (matrix:get MMWaterOperator_limit_D 10 2 / w_sum) 3
-        precision (matrix:get MMWaterOperator_limit_D 11 2 / w_sum) 3
-        precision (matrix:get MMWaterOperator_limit_D 12 2 / w_sum) 3
-        precision (matrix:get MMWaterOperator_limit_D 13 2 / w_sum) 3
-        precision (matrix:get MMWaterOperator_limit_D 14 2 / w_sum) 3)
+;      let w_sum sum (list matrix:get MMWaterOperator_limit_D 2 2
+;        matrix:get MMWaterOperator_limit_D 3 2
+;        matrix:get MMWaterOperator_limit_D 4 2
+;        matrix:get MMWaterOperator_limit_D 5 2
+;        matrix:get MMWaterOperator_limit_D 6 2
+;        matrix:get MMWaterOperator_limit_D 7 2
+;        matrix:get MMWaterOperator_limit_D 8 2
+;        matrix:get MMWaterOperator_limit_D 9 2
+;        matrix:get MMWaterOperator_limit_D 10 2
+;        matrix:get MMWaterOperator_limit_D 11 2
+;        matrix:get MMWaterOperator_limit_D 12 2
+;        matrix:get MMWaterOperator_limit_D 13 2
+;        matrix:get MMWaterOperator_limit_D 14 2
+;      )
+;      set criteria_weights (list precision (matrix:get MMWaterOperator_limit_D 2 2 / w_sum) 3
+;        precision (matrix:get MMWaterOperator_limit_D 3 2 / w_sum) 3
+;        precision (matrix:get MMWaterOperator_limit_D 4 2 / w_sum) 3
+;        precision (matrix:get MMWaterOperator_limit_D 5 2 / w_sum) 3
+;        precision (matrix:get MMWaterOperator_limit_D 6 2 / w_sum) 3
+;        precision (matrix:get MMWaterOperator_limit_D 7 2 / w_sum) 3
+;        precision (matrix:get MMWaterOperator_limit_D 8 2 / w_sum) 3
+;        precision (matrix:get MMWaterOperator_limit_D 9 2 / w_sum) 3
+;        precision (matrix:get MMWaterOperator_limit_D 10 2 / w_sum) 3
+;        precision (matrix:get MMWaterOperator_limit_D 11 2 / w_sum) 3
+;        precision (matrix:get MMWaterOperator_limit_D 12 2 / w_sum) 3
+;        precision (matrix:get MMWaterOperator_limit_D 13 2 / w_sum) 3
+;        precision (matrix:get MMWaterOperator_limit_D 14 2 / w_sum) 3)
+      ifelse(MCDA = "Favors New Infrastructure")[
+        set criteria_weights [
+          0.01
+          0.06
+          0.00
+          0.09
+          0.06
+          0.03
+          0.07
+          0.07
+          0.04
+          0.12
+          0.15
+          0.15
+          0.16] ;set the vectores que favorece nueva infra estructura
+      ]
+      [
+        set criteria_weights [
+          0.01
+          0.06
+          0.00
+          0.08
+          0.06
+          0.03
+          0.08
+          0.06
+          0.06
+          0.08
+          0.17
+          0.09
+          0.22
+        ]
+      ]
       
       
       set criteria_names (list item 1 item 4 MMWaterOperator_D
@@ -341,8 +374,12 @@ end
         item 1 item 15 MMWaterOperator_D
         item 1 item 16 MMWaterOperator_D)
       
-        set alternative_weights matrix:get MMWaterOperator_limit_D jj jj / (matrix:get MMWaterOperator_limit_D 0 0 + matrix:get MMWaterOperator_limit_D 1 1)
-     ]
+        ;set alternative_weights matrix:get MMWaterOperator_limit_D jj jj / (matrix:get MMWaterOperator_limit_D 0 0 + matrix:get MMWaterOperator_limit_D 1 1)
+      ifelse name_action = "Mantenimiento"[
+        set alternative_weights ifelse-value (MCDA = "Favors New Infrastructure")[0.48][0.509] ][
+        set alternative_weights ifelse-value (MCDA = "Favors New Infrastructure")[0.52][0.49]
+      ] ;it favors new infrastructure
+    ]
     set jj jj + 1
   ]
 end

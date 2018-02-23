@@ -5,12 +5,12 @@ __includes["setup_SESMO.nls" "value_functions_SESMO.nls"]
 ;#############################################################################################################################################
 to GO
   tick
-  reset-timer
-   profiler:start
+;  reset-timer
+ ;  profiler:start
 
 ;#############################################################################################################################################
 ;calculate annual exposure to floods and GDI
-
+  if ticks = 20 and switch_MCDA = true [change_supermatrix]
     flooding_InfPoiss
     ask agebs with [CV_estado = "09"][
       indicators
@@ -29,9 +29,10 @@ to GO
   ;##########################################################
 ;  print [flooding] of agebs with[CV_estado = "09"]
  ; print [Antiguedad-infra_d] of agebs with[CV_estado = "09"]
- profiler:stop          ;; stop profiling
-  print profiler:report
-  profiler:reset         ;pri; clear the data
+; profiler:stop          ;; stop profiling
+ ; print profiler:report
+ ; profiler:reset         ;pri; clear the data
+  if ticks = 40 [stop]
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -95,6 +96,8 @@ end
 ;site-selection;
 ;take-action1;
 to repair-Infra_D [estado]
+
+  if item 0 [alternative_weights] of alternatives_WaterOperator_D with [name_action = "Nueva_infraestructura"] > item 0 [alternative_weights] of alternatives_WaterOperator_D with [name_action = "Mantenimiento"][ ;when favors new infra
     ask max-n-of recursos_nuevaInfrastructura (agebs with [d_mantenimiento_D < d_new_D and CV_estado = estado and investment_here_D_new = 0 and investment_here_D_mant = 0]) [d_new_D][
       let old_Capacidad_D Capacidad_D
       set investment_here_D 1
@@ -112,6 +115,33 @@ to repair-Infra_D [estado]
       set Antiguedad-infra_D Antiguedad-infra_D - Antiguedad-infra_D * Eficiencia_Mantenimiento
       set garbage garbage - garbage * garbage_removal
     ]
+  ]
+
+
+  if item 0 [alternative_weights] of alternatives_WaterOperator_D with [name_action = "Mantenimiento"] > item 0 [alternative_weights] of alternatives_WaterOperator_D with [name_action = "Nueva_infraestructura"][ ;when favors mantenance
+
+    ask max-n-of recursos_para_mantenimiento (agebs with [d_mantenimiento_D > d_new_D and investment_here_D_new =  0 and investment_here_D_mant = 0 and CV_estado = estado]) [d_mantenimiento_D][
+      let old_Antiguedad-infra_D Antiguedad-infra_D
+      set investment_here_D_mant 1
+      set investment_here_D 1
+      set investment_here_accumulated_D investment_here_accumulated_D + 1
+      set investment_here_accumulated_D_mant investment_here_accumulated_D_mant + 1
+      set Antiguedad-infra_D Antiguedad-infra_D - Antiguedad-infra_D * Eficiencia_Mantenimiento
+      set garbage garbage - garbage * garbage_removal
+    ]
+
+    ask max-n-of recursos_nuevaInfrastructura (agebs with [CV_estado = estado and investment_here_D_new = 0 and investment_here_D_mant = 0]) [d_new_D][
+      let old_Capacidad_D Capacidad_D
+      set investment_here_D 1
+      set investment_here_accumulated_D investment_here_accumulated_D + 1
+      set investment_here_D_new 1
+      set investment_here_accumulated_D_new investment_here_accumulated_D_new + 1
+      set Capacidad_d Capacidad_d + Eficiencia_NuevaInfra
+    ]
+
+
+  ]
+
 end
 ;/take-action1;
 ;/site-selection;
@@ -131,8 +161,13 @@ end
 to export-map
   ;this procedure creates a txt file with a vector containing a particular atribute from the agebs
   ;let PATH "c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/CarpetasTrabajo/AndresBaeza/"
+ifelse MCDA = "Favors New Infrastructure" [
+    set fn (word "FN" "-" (word recursos_nuevaInfrastructura "-" (word recursos_para_mantenimiento "-" (word Eficiencia_Mantenimiento "-" (word Eficiencia_NuevaInfra ".txt")))))
+  ]
+  [
+    set fn (word "FM" "-" (word recursos_nuevaInfrastructura "-" (word recursos_para_mantenimiento "-" (word Eficiencia_Mantenimiento "-" (word Eficiencia_NuevaInfra ".txt")))))
 
-    let fn (word n_runs "-" (word recursos_nuevaInfrastructura "-" (word recursos_para_mantenimiento "-" (word Eficiencia_Mantenimiento "-" (word Eficiencia_NuevaInfra ".txt")))))
+  ]
     ;let fn "estado_key.txt"
     if file-exists? fn
     [ file-delete fn]
@@ -266,87 +301,51 @@ end
 ;end
 ;##############################################################################################################
 ;##############################################################################################################
-to-report change_supermatrix [matrix_weighed index1 index2 col value_floding]; procedure to change the weights from the alternative_namesto the criteria
-  let M_matrix_weighed matrix:from-row-list matrix_weighed
-  let new_matrix_parameter (1 - value_floding / flooding_max)
-  let dim item 0 matrix:dimensions M_matrix_weighed
-  let v1 matrix:get M_matrix_weighed index1 col
-  let v2 matrix:get M_matrix_weighed index2 col
-  matrix:set M_matrix_weighed index1 col (v1 + v2) * new_matrix_parameter     ;new_matrix_parameter controls between two weights from alternative_names(maintenance and new-infra) to criteria. together sum up to 1.
-  matrix:set M_matrix_weighed index2 col (v1 + v2) * (1 - new_matrix_parameter)
-  let new_lim  (matrix:times M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed)
+to change_supermatrix; procedure to change the weights from the alternative_namesto the criteria
+  if-else (MCDA = "Favors Mantainance")[set MCDA "Favors New Infrastructure"][set MCDA "Favors Mantainance"]
 
-  let a_m sublist (matrix:get-column new_lim 1) 0 5
-  let a_m_sum sum sublist (matrix:get-column new_lim 1) 0 5
-  let a_weights_new  map [i -> i / a_m_sum] a_m
+  ask alternatives_WaterOperator_D [
+    if-else (MCDA = "Favors Mantainance")[
+      set criteria_weights [
+        0.01
+        0.06
+        0.00
+        0.08
+        0.06
+        0.03
+        0.08
+        0.06
+        0.06
+        0.08
+        0.17
+        0.09
+        0.22
+      ]
+    ][
+      set criteria_weights [
+        0.01
+        0.06
+        0.00
+        0.09
+        0.06
+        0.03
+        0.07
+        0.07
+        0.04
+        0.12
+        0.15
+        0.15
+        0.16
+      ]
+  ]
+    ifelse name_action = "Mantenimiento"[
+      set alternative_weights ifelse-value (MCDA = "Favors New Infrastructure")[0.48][0.509] ][
+      set alternative_weights ifelse-value (MCDA = "Favors New Infrastructure")[0.52][0.49]
+    ]
 
-  let mm  sublist (matrix:get-column new_lim 1) 5 dim
-  let mm_sum sum sublist (matrix:get-column new_lim 1) 5 dim
-  let c_weights_new map [i -> i / mm_sum] mm
 
-report list a_weights_new c_weights_new
-  ;  let w_sum  map [i -> i / mm ] matrix:get-column new_lim col-j
-;  let w_sum sum (list matrix:get new_lim 2 2
-;    matrix:get MMSACMEX_limit_D_new 3 2
-;    matrix:get MMSACMEX_limit_D_new 4 2
-;    matrix:get MMSACMEX_limit_D_new 5 2
-;    matrix:get MMSACMEX_limit_D_new 6 2
-;    matrix:get MMSACMEX_limit_D_new 7 2
-;    matrix:get MMSACMEX_limit_D_new 8 2
-;    matrix:get MMSACMEX_limit_D_new 9 2
-;    matrix:get MMSACMEX_limit_D_new 10 2
-;    matrix:get MMSACMEX_limit_D_new 11 2
-;    matrix:get MMSACMEX_limit_D_new 12 2
-;    matrix:get MMSACMEX_limit_D_new 13 2
-;    matrix:get MMSACMEX_limit_D_new 14 2
-;    matrix:get MMSACMEX_limit_D_new 15 2
+  ]
 
-;  matrix:set MMWaterOperator_weighted_D 0 14 new_matrix_parameter     ;new_matrix_parameter controls between two weights from alternative_names(maintenance and new-infra) to criteria. together sum up to 1.
-;  matrix:set MMWaterOperator_weighted_D 1 14 (1 - new_matrix_parameter)
-;
-;
-;  let MMWaterOperator_limit_D_new  (matrix:times MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D)
-;
-;  let w_sum sum (list matrix:get MMWaterOperator_limit_D_new 2 2
-;    matrix:get MMWaterOperator_limit_D_new 3 2
-;    matrix:get MMWaterOperator_limit_D_new 4 2
-;    matrix:get MMWaterOperator_limit_D_new 5 2
-;    matrix:get MMWaterOperator_limit_D_new 6 2
-;    matrix:get MMWaterOperator_limit_D_new 7 2
-;    matrix:get MMWaterOperator_limit_D_new 8 2
-;    matrix:get MMWaterOperator_limit_D_new 9 2
-;    matrix:get MMWaterOperator_limit_D_new 10 2
-;    matrix:get MMWaterOperator_limit_D_new 11 2
-;    matrix:get MMWaterOperator_limit_D_new 12 2
-;    matrix:get MMWaterOperator_limit_D_new 13 2
-;    matrix:get MMWaterOperator_limit_D_new 14 2
-;    matrix:get MMWaterOperator_limit_D_new 15 2
-;;>>>>>>> c74c88e51d1a64b89da88a3d28c9bf0ff2d08703
-;    )
-;  let jj 0
-;  foreach (list Alternatives_WaterOperator_D) [
-;? ->
-;    ask ?[
-;      set criteria_weights (list (matrix:get MMWaterOperator_limit_D_new 2 2 / w_sum)
-;        (matrix:get MMWaterOperator_limit_D_new 3 2 / w_sum)
-;        (matrix:get MMWaterOperator_limit_D_new 4 2 / w_sum)
-;        (matrix:get MMWaterOperator_limit_D_new 5 2 / w_sum)
-;        (matrix:get MMWaterOperator_limit_D_new 6 2 / w_sum)
-;        (matrix:get MMWaterOperator_limit_D_new 7 2 / w_sum)
-;        (matrix:get MMWaterOperator_limit_D_new 8 2 / w_sum)
-;        (matrix:get MMWaterOperator_limit_D_new 9 2 / w_sum)
-;        (matrix:get MMWaterOperator_limit_D_new 10 2 / w_sum)
-;        (matrix:get MMWaterOperator_limit_D_new 11 2 / w_sum)
-;        (matrix:get MMWaterOperator_limit_D_new 12 2 / w_sum)
-;        (matrix:get MMWaterOperator_limit_D_new 13 2 / w_sum)
-;        (matrix:get MMWaterOperator_limit_D_new 14 2 / w_sum)
-;        (matrix:get MMWaterOperator_limit_D_new 15 2 / w_sum))
-;
-;      set alternative_weights matrix:get MMWaterOperator_limit_D_new jj jj / (matrix:get MMWaterOperator_limit_D_new 0 0 + matrix:get MMWaterOperator_limit_D_new 1 1)
-;
-;      set jj jj + 1
-;    ]
-;  ]
 
 end
 
@@ -492,7 +491,7 @@ CHOOSER
 Visualization
 Visualization
 "d_Mantenimiento" "d_Nueva Infraestructura" "GoogleEarth" "Encharcamientos" "% houses with drainage" "P. Falla D" "Capacidad_D" "Edad Infraestructura D" "hundimiento" "value_function_Age_d" "value_function_ponding" "value_function_falta_d" "value_function_capasity" "value_function_precipitation" "Action_New" "Action_Mant"
-14
+3
 
 BUTTON
 1234
@@ -537,7 +536,7 @@ recursos_para_mantenimiento
 recursos_para_mantenimiento
 0
 2400
-400.0
+600.0
 1
 1
 NIL
@@ -626,7 +625,7 @@ recursos_nuevaInfrastructura
 recursos_nuevaInfrastructura
 0
 2400
-400.0
+600.0
 1
 1
 NIL
@@ -671,7 +670,7 @@ factor_scale
 factor_scale
 0.000000000000000001
 4
-4.0
+0.64
 0.001
 1
 NIL
@@ -836,6 +835,27 @@ false
 "" ""
 PENS
 "default" 1.0 0 -16777216 true "" "plot mean [garbage] of agebs with [CV_estado = \"09\"]"
+
+CHOOSER
+253
+227
+449
+272
+MCDA
+MCDA
+"Favors New Infrastructure" "Favors Mantainance"
+0
+
+SWITCH
+292
+289
+421
+323
+switch_MCDA
+switch_MCDA
+0
+1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1228,11 +1248,11 @@ NetLogo 6.0.1
     <metric>mean [flooding_index] of agebs with [CV_municipio = "017"]</metric>
     <enumeratedValueSet variable="recursos_para_mantenimiento">
       <value value="200"/>
-      <value value="400"/>
+      <value value="600"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="recursos_nuevaInfrastructura">
       <value value="200"/>
-      <value value="400"/>
+      <value value="600"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="Eficiencia_Mantenimiento">
       <value value="0.2"/>
@@ -1243,6 +1263,10 @@ NetLogo 6.0.1
     </enumeratedValueSet>
     <enumeratedValueSet variable="garbage_removal">
       <value value="0.05"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="MCDA">
+      <value value="&quot;Favors New Infrastructure&quot;"/>
+      <value value="&quot;Favors Mantainance&quot;"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>
