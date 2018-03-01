@@ -14,7 +14,7 @@ globals [
   ;;RANGE of Biophisical variables
   ;;Auxiliar variables that define range of value functions for all criteria
   fn
-  Gasto_hidraulico_max
+  Escurri_max
   Antiguedad-infra_D_max       ;;the area with the oldest infrastructure
   Antiguedad-infra_D_min
   peticion_usuarios_max         ;;maximal importance to the different users
@@ -24,10 +24,12 @@ globals [
   hundimiento_max              ;;max level of subside
   infra_dranage_max             ;;max % of houses per ageb covered by the water dranage network
   flooding_max                  ;;max level of flooding (encharcamientos) recored over the last 10 years
+  ponding_max
   precipitation_max             ;;max amount of precipitation recorded
   falla_d_max
   falta_d_max
   max_water_in_mc                  ;;
+  
   Capacidad_d_max
   poblacion_max
   Peticion_Delegacional_max
@@ -62,6 +64,7 @@ globals [
   ;;Other auxiliar variables
   counter
   days
+  IDD
   weeks
   months
   years
@@ -112,15 +115,13 @@ Agebs-own[
  ; Mantenimiento?               ;; what is the probability this patch is under maitnance
   hundimiento
   presion_hidraulica           ;;or an index of low volume of water in the pipes (mean_days_withNo_water)
-  Gasto_hidraulico             ;;water the enter the sewage system in each ageb
+  Escurri             ;;water the enter the sewage system in each ageb
   poblacion                    ;; Population size ageb
-  Income-index                 ;; Actual income
-  Presion_social_annual               ;;social pressure index per ageb (e.g. %pop. involved in the protests?)
-  Presion_social_Index          ;;number of protest per year
   peticion_usuarios
   Peticion_Delegacional
   Flooding                     ;; mean number of encharcamientos during between 2004 and 2014
-                               ;;Charactersitics of the agebs that define criteria
+  ponding
+  ;;Charactersitics of the agebs that define criteria
   houses_with_dranage          ;; % of houses connected to the dranage from ENEGI survey instrument
   garbage                      ;; Garbage as the perception of the cause behind obstruction of dranages
   Obstruccion_dren             ;;obstruction of dranages
@@ -161,18 +162,26 @@ Alternatives_WaterOperator_D-own[ID name_action criteria_names criteria_values c
 to SETUP
   clear-all
   ;profiler:start
-  r:eval "require(pscl)"
+  ;r:eval "require(pscl)"
+  r:eval "require(glmmADMB)"
   r:eval "require(maptools)"
-  r:eval "studyArea_CVG<-readShapeSpatial('C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/data/agebs_abm')"
- ; r:eval "studyArea_CVG<-readShapeSpatial('~/data/agebs_abm')"
+  ;r:eval "studyArea_CVG<-readShapeSpatial('C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/data/agebs_abm')"
+  ;r:eval "studyArea_CVG<-readShapeSpatial('~/data/agebs_abm')"
+  
+  r:eval "studyArea_CVG<-readShapeSpatial('C:/Users/abaezaca/Dropbox (Personal)/Layers/sesmo/agebs_abm')"
+ ;
   r:eval "studyArea_CVG@data$estado<-as.factor(substring(studyArea_CVG@data$cvgeo,1,2))"
-  r:eval "studyArea_CVG@data$municipio<-as.factor(substring(studyArea_CVG@data$cvgeo,3,5))"
-  r:eval "studyArea_CVG@data$AveR<-rowMeans(studyArea_CVG@data[,18:33])"
-  r:eval "studyArea_CVG@data$BASURA<-studyArea_CVG@data$BASURA/10000"
-  r:eval "studyArea_CVG<-studyArea_CVG[studyArea_CVG@data$estado==levels(studyArea_CVG@data$estado)[1],]"
-  r:eval "glm_ponds_zip<-zeroinfl(PONDING~antiguedad+GASTO+subsidenci+BASURA+AveR, data=studyArea_CVG@data)"
-  r:eval "p <- predict(glm_ponds_zip, type = 'zero')"
-  r:eval "lambda <- predict(glm_ponds_zip, type = 'count')"
+  set IDD r:get "studyArea_CVG@data$AGEB_ID"
+  ;r:eval "studyArea_CVG@data$municipio<-as.factor(substring(studyArea_CVG@data$cvgeo,3,5))"
+  ;r:eval "studyArea_CVG@data$AveR<-rowMeans(studyArea_CVG@data[,18:33])"
+  r:eval "studyArea_CVG@data$BASURA<-studyArea_CVG@data$BASURA/1000"
+  r:eval "studyArea_CVG@data$encharca<-round(studyArea_CVG@data$encharca)"
+  r:eval "studyArea_CVG@data$escurri<-studyArea_CVG@data$escurri/1000"
+ ; r:eval "glm_ponds_zip<-zeroinfl(encharca~1+antiguedad+subsidenci+PR_2014, data=studyArea_CVG@data)"
+  ;r:eval "glm_ponds_qp<-glm(formula = encharca~antiguedad+subsidenci+PR_2014,data =studyArea_CVG@data ,family = quasipoisson(link=log))"
+  r:eval "fit_zinbinom <- glmmadmb(encharca~antiguedad+subsidenci+PR_2014+escurri+BASURA,data =studyArea_CVG@data,zeroInflation=TRUE, family='nbinom1')"
+  ;  r:eval "p <- predict(glm_ponds_zip, type = 'zero')"
+ ; r:eval "lambda <- predict(glm_ponds_zip, type = 'count')"
  
 ;4)#################################################################################################################################
   load-GIS-data
@@ -192,8 +201,9 @@ end
 to load-GIS-data
   set Limites_delegacionales gis:load-dataset  "data/limites_deleg_DF_2013.shp"
   set Agebs_map_full gis:load-dataset "data/ageb_abm_full.shp"
-  set Agebs_map gis:load-dataset "data/agebs_abm.shp"
-  
+  ;set Agebs_map gis:load-dataset "data/agebs_abm.shp"
+    set Agebs_map gis:load-dataset "c:/Users/abaezaca/Dropbox (Personal)/Layers/sesmo/agebs_abm.shp"
+  ;set Agebs_map gis:load-dataset "/agebs_abm_B.shp"
   set mascara gis:load-dataset "data/Mask.shp"                  ;Mask of study area                                                                                                                         ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
   ;define city or watersheed scale                                                                             
   set limits_world (gis:envelope-of Agebs_map_full)
@@ -214,15 +224,15 @@ end
   ;  define_neighborhoods_full ;;REFERS TO THE FULL AREA OF STUDY. THAT IS THE ENTIRE WATERSHED OF MEXICO CITY VALEY  (need to complete information for other areas)
   
   
- ( foreach (gis:feature-list-of Agebs_map_full) (gis:feature-list-of Agebs_map); "ID_ZONA" "0"
-    [ [? ?2] ->
+  foreach (gis:feature-list-of Agebs_map); "ID_ZONA" "0"
+    [ ? ->
       let centroid gis:location-of gis:centroid-of ?
       if not empty? centroid[
         create-agebs 1 [
           set xcor item 0 centroid              ;define coodeantes of ageb at the center of the polygone
           set ycor item 1 centroid
           set ID gis:property-value ? "AGEB_ID"
-          set CVEGEO gis:property-value ? "CVEGEO"
+          set CVEGEO gis:property-value ? "cvgeo"
           set CV_estado (substring CVEGEO 0 2)
           set CV_municipio (substring CVEGEO 2 5)
           set Localidad (substring CVEGEO 5 9)
@@ -231,26 +241,26 @@ end
           set shape "circle"
           set size 0.5
           set hidden? false
-          set Antiguedad-infra_D (gis:property-value ?2 "antiguedad")
-          set Capacidad_d ifelse-value(gis:property-value ?2 "capac_d" != nobody)[(gis:property-value ?2 "capac_d") / 10000000][0]
+          set Antiguedad-infra_D (gis:property-value ? "antiguedad")
+          set Capacidad_d ifelse-value(gis:property-value ? "capac_d" != nobody)[(gis:property-value ? "capac_d") / 10000000][0]
           set Falla_d 1
-          set precipitation ifelse-value (gis:property-value ?2 "PR_2009" != nobody)[gis:property-value ?2 "PR_2009"][1]       
+          set precipitation ifelse-value (gis:property-value ? "PR_2014" != nobody)[gis:property-value ? "PR_2014"][1]       
           set falta_d gis:property-value ? "falta_dren"
           set houses_with_dranage 1 - falta_d
-          set hundimiento gis:property-value ?2 "subsidenci"
-          set presion_de_medios gis:property-value ?2 "PRES_MED"
-          set gasto_hidraulico gis:property-value ? "gasto"
+          set hundimiento gis:property-value ? "subsidenci"
+          set presion_de_medios gis:property-value ? "PRES_MED"
+          set Escurri gis:property-value ? "escurri"
           set Peticion_Delegacional gis:property-value ? "pet_del_dr"
-          set poblacion gis:property-value ? "poblacion"
-          set Income-index ifelse-value(gis:property-value ?2 "ingreso" != nobody)[gis:property-value ?2 "ingreso"][random-float 1]
-          set flooding ifelse-value(gis:property-value ?2 "PONDING" != nobody)[gis:property-value ?2  "PONDING"][0]
-          set garbage (gis:property-value ?2 "BASURA") / 10000
-          set Obstruccion_dren gis:property-value ? "obstruc"
-          set Monto gis:property-value ? "monto"        
-          set peticion_usuarios (gis:property-value ? "pet_usr_d") / 100  ;index densidad de infra por cuanca * falta de conexiones por ageb.
+          set poblacion gis:property-value ? "POBTOT_10"
+          ;set Income-index ifelse-value(gis:property-value ? "ingreso" != nobody)[gis:property-value ?2 "ingreso"][random-float 1]
+          set ponding ifelse-value(gis:property-value ? "encharca" != nobody)[gis:property-value ?  "encharca"][0]
+          
+          set flooding ifelse-value(gis:property-value ? "inunda" != nobody)[gis:property-value ?  "inunda"][0]
+          set garbage (gis:property-value ? "BASURA") / 10000
+          set peticion_usuarios (gis:property-value ? "POBTOT_10") ;index densidad de infra por cuanca * falta de conexiones por ageb.
         ]
       ]
-  ])
+  ]
 
 
 end
@@ -403,16 +413,17 @@ end
 
 ;#############################################################################################################################################
 to set_maximum [estado]   ;; update the maximum or minimum of values use by the model to calculate range of the value functions this time relative to the domain of the agent who needs the inforamtion to take decition
-  set Antiguedad-infra_D_max 120 * 336
+  set Antiguedad-infra_D_max 60
   set Antiguedad-infra_D_min min [Antiguedad-infra_D] of agebs with [CV_estado = estado]
-  set Gasto_hidraulico_max max [Gasto_hidraulico] of agebs with [CV_estado = estado]
+  set Escurri_max max [Escurri] of agebs with [CV_estado = estado]
   set Capacidad_d_max max [Capacidad_d] of agebs with [CV_estado = estado]
   set garbage_max max [garbage] of agebs  with [CV_estado = estado]
   set Obstruccion_dren_max max[Obstruccion_dren] of agebs  with [CV_estado = estado]
   set hundimiento_max max [hundimiento] of agebs with [CV_estado = estado]
   set poblacion_max max [poblacion] of agebs with [CV_estado = estado]
+  set peticion_usuarios_max max [peticion_usuarios] of agebs with [CV_estado = estado]
   set infra_dranage_max max [houses_with_dranage] of agebs with [CV_estado = estado]
-  set flooding_max 30;0.5 * max [flooding] of agebs with [CV_estado = estado];;max level of flooding (encharcamientos) recored over the last 10 years
+  set ponding_max 30;0.5 * max [flooding] of agebs with [CV_estado = estado];;max level of flooding (encharcamientos) recored over the last 10 years
   set precipitation_max max [precipitation] of agebs  with [CV_estado = estado]
   set falla_d_max max [Falla_d] of agebs with [CV_estado = estado]
   set monto_max max [monto] of agebs with [CV_estado = estado]

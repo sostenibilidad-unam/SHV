@@ -5,8 +5,8 @@ __includes["setup_SESMO.nls" "value_functions_SESMO.nls"]
 ;#############################################################################################################################################
 to GO
   tick
-;  reset-timer
- ;  profiler:start
+ ; reset-timer
+  ;profiler:start
 
 ;#############################################################################################################################################
 ;calculate annual exposure to floods and GDI
@@ -30,8 +30,8 @@ to GO
 ;  print [flooding] of agebs with[CV_estado = "09"]
  ; print [Antiguedad-infra_d] of agebs with[CV_estado = "09"]
 ; profiler:stop          ;; stop profiling
- ; print profiler:report
- ; profiler:reset         ;pri; clear the data
+; print profiler:report
+; profiler:reset         ;pri; clear the data
   if ticks = 40 [stop]
 end
 ;#############################################################################################################################################
@@ -81,6 +81,7 @@ to WaterOperator-decisions [estado]
     ask Alternatives_WaterOperator_D [
       update_criteria_and_valueFunctions_WaterOperator   ; This function creates the lists of standardized values needed for the function "ideal_distance"
       let ddd (ideal_distance alternative_weights rescaled_criteria_values criteria_weights 1)
+
       if name_action = "Nueva_infraestructura"[
         ask myself[set d_new_D ddd]
       ]
@@ -105,6 +106,7 @@ to repair-Infra_D [estado]
       set investment_here_D_new 1
       set investment_here_accumulated_D_new investment_here_accumulated_D_new + 1
       set Capacidad_d Capacidad_d + Eficiencia_NuevaInfra
+      set houses_with_dranage houses_with_dranage + 0.1 * (1 - houses_with_dranage)
     ]
     ask max-n-of recursos_para_mantenimiento (agebs with [investment_here_D_new =  0 and investment_here_D_mant = 0 and CV_estado = estado]) [d_mantenimiento_D][
       let old_Antiguedad-infra_D Antiguedad-infra_D
@@ -139,7 +141,6 @@ to repair-Infra_D [estado]
       set Capacidad_d Capacidad_d + Eficiencia_NuevaInfra
     ]
 
-
   ]
 
 end
@@ -168,6 +169,14 @@ ifelse MCDA = "Favors New Infrastructure" [
     set fn (word "FM" "-" (word recursos_nuevaInfrastructura "-" (word recursos_para_mantenimiento "-" (word Eficiencia_Mantenimiento "-" (word Eficiencia_NuevaInfra ".txt")))))
 
   ]
+
+;  ifelse switch_MCDA = TRUE [
+;    set fn (word "DC" "-" (word recursos_nuevaInfrastructura "-" (word recursos_para_mantenimiento "-" (word Eficiencia_Mantenimiento "-" (word Eficiencia_NuevaInfra ".txt")))))
+;  ]
+;  [
+;    set fn (word "SC" "-" (word recursos_nuevaInfrastructura "-" (word recursos_para_mantenimiento "-" (word Eficiencia_Mantenimiento "-" (word Eficiencia_NuevaInfra ".txt")))))
+;  ]
+
     ;let fn "estado_key.txt"
     if file-exists? fn
     [ file-delete fn]
@@ -224,13 +233,9 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
       set color scale-color green d_new_D 0 d_new_max]
     ;############################################################################################
     ;############################################################################################
-    if visualization = "Income-index" and ticks > 1 [
-      set color  10 * income-index
-    ] ; visualize Income index
-      ;############################################################################################
-    if visualization = "Encharcamientos" and ticks > 1 [
-      set size flooding * 0.01
-      set color  scale-color sky flooding 0 flooding_max
+    if visualization = "Encharcamientos" and ticks > 2 [
+      set size ponding * 0.5
+      set color  scale-color sky ponding 0 ponding_max
     ] ;;visualized WaterOperator flooding dataset MX 2004-2014
     ;############################################################################################
     if visualization =  "% houses with drainage" and ticks > 1 [
@@ -239,8 +244,7 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
     ] ;;visualized WaterOperator flooding dataset MX 2004-2014
     ;############################################################################################
     if visualization = "Edad Infraestructura D" and ticks > 1 [
-      set shape "square"
-      set size Antiguedad-infra_d * 0.2
+      set size 2
       set color scale-color sky Antiguedad-infra_d Antiguedad-infra_D_min Antiguedad-infra_D_max
     ]
     ;############################################################################################
@@ -321,6 +325,13 @@ to change_supermatrix; procedure to change the weights from the alternative_name
         0.09
         0.22
       ]
+      ifelse name_action = "Mantenimiento"[
+        set alternative_weights 0.52
+      ]
+      [
+        set alternative_weights 0.48
+      ]
+
     ][
       set criteria_weights [
         0.01
@@ -337,16 +348,15 @@ to change_supermatrix; procedure to change the weights from the alternative_name
         0.15
         0.16
       ]
-  ]
-    ifelse name_action = "Mantenimiento"[
-      set alternative_weights ifelse-value (MCDA = "Favors New Infrastructure")[0.48][0.509] ][
-      set alternative_weights ifelse-value (MCDA = "Favors New Infrastructure")[0.52][0.49]
+      ifelse name_action = "Mantenimiento"[
+        set alternative_weights 0.49
+      ]
+      [
+        set alternative_weights 0.509
+      ]
+
     ]
-
-
   ]
-
-
 end
 
 ;##############################################################################################################
@@ -357,27 +367,38 @@ to flooding_InfPoiss
 
   let NE []
   let BA []
-  foreach sort-on [ID] agebs with [CV_estado = "09"]
-  [a ->
-    set NE lput  ([Antiguedad-infra_D] of a) NE
-    set BA lput (([garbage] of a)) BA
-  ]
+
+  set NE map [i -> item 0 [Antiguedad-infra_D] of agebs with [ID = i]] IDD
 
 ;    r:eval "glm_ponds_zip<-zeroinfl(PONDING~antiguedad+GASTO+subsidenci+BASURA+AveR, data=studyArea_CVG@data)"
     r:put "new_Edad" NE
-    r:put "new_garbage" BA
+   ; r:put "new_garbage" BA
     r:eval "studyArea_CVG@data$antiguedad<-new_Edad" ;new age of infrastructure will update the regresion to update the level of flooding. Same can be done to the other variables
-    r:eval "studyArea_CVG@data$BASURA<-new_garbage" ;new garbage will update the regresion to update the level of flooding. Same can be done to the other variables
-    r:eval "p <- predict(glm_ponds_zip, newdata=studyArea_CVG@data, type = 'zero')"
-    r:eval "lambda <- predict(glm_ponds_zip, newdata=studyArea_CVG@data, type = 'count')"
-    let Ee r:get "ifelse(rbinom(n=length(p), size = 1, prob = p) > 0, 0, rpois(n=length(lambda), lambda = lambda))"
+  ;r:eval "studyArea_CVG@data$BASURA<-new_garbage" ;new garbage will update the regresion to update the level of flooding. Same can be done to the other variables
+    ;r:eval "p <- predict(glm_ponds_zip, newdata=studyArea_CVG@data, type = 'zero')"
+    ;r:eval "lambda <- predict(glm_ponds_zip, newdata=studyArea_CVG@data, type = 'count')"
+   ;let Ee r:get "predict(glm_ponds_zip,newdata=studyArea_CVG@data,type='response')";
+   ;let Ee r:get "ifelse(rbinom(n=length(p), size = 1, prob = p) > 0, 0, rpois(n=length(lambda), lambda = lambda))"
+;    let Ee r:get "predict(glm_ponds_qp,newdata=studyArea_CVG@data,type='response')"
+  let Ee r:get "predict(fit_zinbinom,newdata=studyArea_CVG@data,type='response')"
 
-
-  (foreach sort-on [ID] agebs with [CV_estado = "09"] Ee
-    [[a b] ->
-      ask a [set Flooding b]
+  (foreach IDD Ee
+  [ [a b] ->
+      ask agebs with [CV_estado = "09" and ID = a][
+        set ponding b
+      ]
   ])
-  set flooding_max max [flooding] of agebs
+
+;  print map [[ii j] -> ask agebs with [CV_estado = "09" and ID = ii][set ponding j]] IDD EE
+
+;  (foreach (sort-on [ID] agebs with [CV_estado = "09"]) Ee IDD
+;    [[a b c] ->
+;      ask a with [ID = c] [
+;        set ponding b
+;        print (list ID b c)
+;      ]
+;  ])
+  set ponding_max max [ponding] of agebs
 end
 
 
@@ -389,7 +410,7 @@ end
 ;##############################################################################################################
 to indicators
   if ticks > (30) [
-    set flooding_index precision (flooding_index + (1 / 10) * flooding) 2
+    set flooding_index precision (flooding_index + (1 / 10) * ponding) 2
   ]
 end
 ;code ends here
@@ -536,7 +557,7 @@ recursos_para_mantenimiento
 recursos_para_mantenimiento
 0
 2400
-600.0
+1200.0
 1
 1
 NIL
@@ -610,7 +631,7 @@ Eficiencia_Mantenimiento
 Eficiencia_Mantenimiento
 0
 1
-0.5
+0.2
 0.01
 1
 NIL
@@ -625,7 +646,7 @@ recursos_nuevaInfrastructura
 recursos_nuevaInfrastructura
 0
 2400
-600.0
+1200.0
 1
 1
 NIL
@@ -670,7 +691,7 @@ factor_scale
 factor_scale
 0.000000000000000001
 4
-0.64
+0.126
 0.001
 1
 NIL
@@ -685,14 +706,14 @@ Frequencia de Encharcamientos
 NIL
 NIL
 0.0
-80.0
+40.0
 0.0
 10.0
 true
 false
 "" ""
 PENS
-"default" 1.0 1 -16777216 true "" "histogram [flooding] of agebs with [CV_estado = \"09\"]"
+"default" 1.0 1 -16777216 true "" "histogram [ponding] of agebs with [CV_estado = \"09\"]"
 
 PLOT
 1209
@@ -772,7 +793,7 @@ PLOT
 676
 1436
 826
-plot 1
+age hist
 NIL
 NIL
 0.0
@@ -816,7 +837,7 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot mean [flooding] of agebs with [CV_estado = \"09\"]"
+"default" 1.0 0 -16777216 true "" "plot mean [ponding] of agebs with [CV_estado = \"09\"]"
 
 PLOT
 1473
@@ -844,16 +865,16 @@ CHOOSER
 MCDA
 MCDA
 "Favors New Infrastructure" "Favors Mantainance"
-0
+1
 
 SWITCH
 292
 289
 421
-323
+322
 switch_MCDA
 switch_MCDA
-0
+1
 1
 -1000
 
@@ -1223,50 +1244,88 @@ NetLogo 6.0.1
 @#$#@#$#@
 @#$#@#$#@
 <experiments>
-  <experiment name="Test_1_SESMO" repetitions="1" runMetricsEveryStep="false">
+  <experiment name="SESMO_1" repetitions="1" runMetricsEveryStep="false">
     <setup>setup</setup>
     <go>go</go>
     <final>export-map</final>
     <timeLimit steps="40"/>
     <metric>mean [Antiguedad-infra_D] of agebs with [CV_estado = "09"]</metric>
-    <metric>mean [flooding] of agebs with [CV_estado = "09"]</metric>
-    <metric>mean [flooding_index] of agebs with [CV_municipio = "002"]</metric>
-    <metric>mean [flooding_index] of agebs with [CV_municipio = "003"]</metric>
-    <metric>mean [flooding_index] of agebs with [CV_municipio = "004"]</metric>
-    <metric>mean [flooding_index] of agebs with [CV_municipio = "005"]</metric>
-    <metric>mean [flooding_index] of agebs with [CV_municipio = "006"]</metric>
-    <metric>mean [flooding_index] of agebs with [CV_municipio = "007"]</metric>
-    <metric>mean [flooding_index] of agebs with [CV_municipio = "008"]</metric>
-    <metric>mean [flooding_index] of agebs with [CV_municipio = "009"]</metric>
-    <metric>mean [flooding_index] of agebs with [CV_municipio = "010"]</metric>
-    <metric>mean [flooding_index] of agebs with [CV_municipio = "011"]</metric>
-    <metric>mean [flooding_index] of agebs with [CV_municipio = "012"]</metric>
-    <metric>mean [flooding_index] of agebs with [CV_municipio = "013"]</metric>
-    <metric>mean [flooding_index] of agebs with [CV_municipio = "014"]</metric>
-    <metric>mean [flooding_index] of agebs with [CV_municipio = "015"]</metric>
-    <metric>mean [flooding_index] of agebs with [CV_municipio = "016"]</metric>
-    <metric>mean [flooding_index] of agebs with [CV_municipio = "017"]</metric>
+    <metric>sum [flooding] of agebs with [CV_estado = "09"]</metric>
+    <metric>sum [flooding_index] of agebs with [CV_municipio = "002"]</metric>
+    <metric>sum [flooding_index] of agebs with [CV_municipio = "003"]</metric>
+    <metric>sum [flooding_index] of agebs with [CV_municipio = "004"]</metric>
+    <metric>sum [flooding_index] of agebs with [CV_municipio = "005"]</metric>
+    <metric>sum [flooding_index] of agebs with [CV_municipio = "006"]</metric>
+    <metric>sum [flooding_index] of agebs with [CV_municipio = "007"]</metric>
+    <metric>sum [flooding_index] of agebs with [CV_municipio = "008"]</metric>
+    <metric>sum [flooding_index] of agebs with [CV_municipio = "009"]</metric>
+    <metric>sum [flooding_index] of agebs with [CV_municipio = "010"]</metric>
+    <metric>sum [flooding_index] of agebs with [CV_municipio = "011"]</metric>
+    <metric>sum [flooding_index] of agebs with [CV_municipio = "012"]</metric>
+    <metric>sum [flooding_index] of agebs with [CV_municipio = "013"]</metric>
+    <metric>sum [flooding_index] of agebs with [CV_municipio = "014"]</metric>
+    <metric>sum [flooding_index] of agebs with [CV_municipio = "015"]</metric>
+    <metric>sum [flooding_index] of agebs with [CV_municipio = "016"]</metric>
+    <metric>sum [flooding_index] of agebs with [CV_municipio = "017"]</metric>
     <enumeratedValueSet variable="recursos_para_mantenimiento">
-      <value value="200"/>
-      <value value="600"/>
+      <value value="1200"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="recursos_nuevaInfrastructura">
-      <value value="200"/>
-      <value value="600"/>
+      <value value="1200"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="Eficiencia_Mantenimiento">
       <value value="0.2"/>
-      <value value="0.5"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="Eficiencia_NuevaInfra">
       <value value="0.1"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="garbage_removal">
-      <value value="0.05"/>
-    </enumeratedValueSet>
     <enumeratedValueSet variable="MCDA">
       <value value="&quot;Favors New Infrastructure&quot;"/>
       <value value="&quot;Favors Mantainance&quot;"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="SESMO_doublecouppling" repetitions="1" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <final>export-map</final>
+    <timeLimit steps="40"/>
+    <metric>mean [Antiguedad-infra_D] of agebs with [CV_estado = "09"]</metric>
+    <metric>sum [flooding] of agebs with [CV_estado = "09"]</metric>
+    <metric>sum [flooding_index] of agebs with [CV_municipio = "002"]</metric>
+    <metric>sum [flooding_index] of agebs with [CV_municipio = "003"]</metric>
+    <metric>sum [flooding_index] of agebs with [CV_municipio = "004"]</metric>
+    <metric>sum [flooding_index] of agebs with [CV_municipio = "005"]</metric>
+    <metric>sum [flooding_index] of agebs with [CV_municipio = "006"]</metric>
+    <metric>sum [flooding_index] of agebs with [CV_municipio = "007"]</metric>
+    <metric>sum [flooding_index] of agebs with [CV_municipio = "008"]</metric>
+    <metric>sum [flooding_index] of agebs with [CV_municipio = "009"]</metric>
+    <metric>sum [flooding_index] of agebs with [CV_municipio = "010"]</metric>
+    <metric>sum [flooding_index] of agebs with [CV_municipio = "011"]</metric>
+    <metric>sum [flooding_index] of agebs with [CV_municipio = "012"]</metric>
+    <metric>sum [flooding_index] of agebs with [CV_municipio = "013"]</metric>
+    <metric>sum [flooding_index] of agebs with [CV_municipio = "014"]</metric>
+    <metric>sum [flooding_index] of agebs with [CV_municipio = "015"]</metric>
+    <metric>sum [flooding_index] of agebs with [CV_municipio = "016"]</metric>
+    <metric>sum [flooding_index] of agebs with [CV_municipio = "017"]</metric>
+    <enumeratedValueSet variable="recursos_para_mantenimiento">
+      <value value="1200"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="recursos_nuevaInfrastructura">
+      <value value="1200"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Eficiencia_Mantenimiento">
+      <value value="0.2"/>
+      <value value="0.4"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Eficiencia_NuevaInfra">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="MCDA">
+      <value value="&quot;Favors New Infrastructure&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="switch_MCDA">
+      <value value="false"/>
+      <value value="true"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>

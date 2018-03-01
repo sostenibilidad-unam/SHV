@@ -63,11 +63,13 @@ to update_criteria_and_valueFunctions_WaterOperator    ;;update the biphisical v
         let p1 0.174916383				
         let y_vf exp (p1 * 0)
         let yy_vf exp (p1 * 15)
-        let svf (exp (- p1 * (attribute)) - y_vf) / (yy_vf - y_vf)
+        let svf (exp (p1 * (attribute)) - y_vf) / (yy_vf - y_vf)
         if attribute > 15  [set svf 1]
         if attribute < 0  [set svf 0]
         set rescaled_criteria_values replace-item i rescaled_criteria_values svf
         ask myself [set value_function_capasity [item i rescaled_criteria_values] of myself]
+        
+
       ]
       ;###########################################################
       if ? = "Falta"[ ;###check that the function correspond to the scale of the variable measured. lack or
@@ -81,19 +83,19 @@ to update_criteria_and_valueFunctions_WaterOperator    ;;update the biphisical v
       ]
       ;###########################################################
       if ? = "Falla" [
-        set criteria_values replace-item i criteria_values [Falla_d] of myself
+        let attribute [Falla_d] of myself
+        
+        set criteria_values replace-item i criteria_values attribute 
           ;set criteria_max replace-item i criteria_max Falla_d_max
-          set rescaled_criteria_values replace-item i rescaled_criteria_values [Falla_d] of myself;(Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
-       ]
-
+        set rescaled_criteria_values replace-item i rescaled_criteria_values (1 - attribute) 
+      ]
       ;###########################################################
       if ? = "Inundaciones"  [  ;grandes inundaciones !!need to change variable for criteria
-        set criteria_values replace-item i criteria_values [Flooding] of myself
-        set criteria_max replace-item i criteria_max Flooding_max;109.28  ;change with update quantity for speed
-
-          set rescaled_criteria_values replace-item i rescaled_criteria_values ifelse-value ((item i criteria_values) > 60) [1] [0]
+        let attribute  [Flooding] of myself
+        let svf   ifelse-value (attribute > 0)[0][1]      
+        set criteria_values replace-item i criteria_values attribute
+        set rescaled_criteria_values replace-item i rescaled_criteria_values svf
       ]
-
       ;###########################################################
       if ? = "Hundimientos"  [
         let attribute [hundimiento] of myself
@@ -103,7 +105,7 @@ to update_criteria_and_valueFunctions_WaterOperator    ;;update the biphisical v
           let yy_vf 1 - exp ((0 - 10) / p1 )
           let svf ((1 - exp ((attribute - 10) / p1 )) - y_vf) / (yy_vf - y_vf)
         if attribute > 35 [set svf 0]  
-        set rescaled_criteria_values replace-item i rescaled_criteria_values svf
+        set rescaled_criteria_values replace-item i rescaled_criteria_values svf       
       ]
       ;###########################################################
       if ? = "Encharcamientos" [
@@ -111,12 +113,10 @@ to update_criteria_and_valueFunctions_WaterOperator    ;;update the biphisical v
         set criteria_values replace-item i criteria_values attribute
         set criteria_max replace-item i criteria_max Flooding_max  ;change with update quantity for speed
 
-        let p1 200
-        let x_min 0
-        let y_vf exp (-(((200 - x_min) / p1) ^ 2))
-        let yy_vf exp (-(((0 - x_min) / p1) ^ 2))
-        let svf (exp (-(((attribute - x_min) / p1) ^ 2))  - y_vf) / (yy_vf - y_vf)
-        
+        let p1 30
+        let y_vf exp (-((100 / p1) ^ 2))
+        let yy_vf exp (-((0 / p1) ^ 2))
+        let svf (exp (-((attribute / p1) ^ 2))  - y_vf) / (yy_vf - y_vf)        
         set rescaled_criteria_values replace-item i rescaled_criteria_values svf
         ask myself [set value_function_ponding [item i rescaled_criteria_values] of myself]
       ]
@@ -135,13 +135,16 @@ to update_criteria_and_valueFunctions_WaterOperator    ;;update the biphisical v
         if attribute > 1300 [set svf 0]  
         set rescaled_criteria_values replace-item i rescaled_criteria_values svf
         ask myself [set value_function_precipitation [item i rescaled_criteria_values] of myself]      
+     
       ]
         ;###########################################################
-        if ? = "Gasto_hidraulico"[
-          set criteria_values replace-item i criteria_values [Gasto_hidraulico] of myself
-          set criteria_max replace-item i criteria_max Gasto_hidraulico_max; 192.23 ;max value in layer Gasto_V1.shp
+        if ? = "Escurrimiento"[
+         let attribute  [Escurri] of myself
+          set criteria_values replace-item i criteria_values attribute
+          set criteria_max replace-item i criteria_max Escurri_max; 192.23 ;max value in layer Gasto_V1.shp
           set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
-        ]
+     
+      ]
         ;###########################################################
         if ? = "Basura"[
           let attribute [garbage] of myself 
@@ -154,12 +157,6 @@ to update_criteria_and_valueFunctions_WaterOperator    ;;update the biphisical v
           set rescaled_criteria_values replace-item i rescaled_criteria_values  svf
         ]
         ;###########################################################
-        if ? = "Monto"[
-          set criteria_values replace-item i criteria_values 1
-        
-          set rescaled_criteria_values replace-item i rescaled_criteria_values 1
-      ]
-        ;###########################################################
         if ? = "Peticion de Delegaciones"[
           set criteria_values replace-item i criteria_values 1
           set criteria_max replace-item i criteria_max 1
@@ -167,7 +164,7 @@ to update_criteria_and_valueFunctions_WaterOperator    ;;update the biphisical v
         ]
         ;###########################################################
         if ? = "Peticiones de usuarios"[
-          set criteria_values replace-item i criteria_values [peticion_usuarios] of myself
+          set criteria_values replace-item i criteria_values (1 - [peticion_usuarios] of myself / peticion_usuarios_max)         
           set rescaled_criteria_values replace-item i rescaled_criteria_values (item i criteria_values);(Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
         ]
         ;###########################################################
