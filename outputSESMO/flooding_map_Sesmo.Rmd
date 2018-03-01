@@ -9,7 +9,9 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-##This document describe the statistical analisis and the results from simulating the Agent-based model.
+###This document describes the construction and results of statistical models and results of the Agent-based model.
+
+load packages
 ```{r}
 require(ggplot2)
 require(RColorBrewer)
@@ -21,63 +23,135 @@ require(plyr)
 require(foreign)
 require(ggmap)
 require(gridExtra)
-library(pscl)
+require(ggpubr)
+require(pscl)
+require(coefplot2)
+require(glmmADMB)
+require(bbmle)
 ```
 
-#zero-inflated model
-a combined regression iwth binomal probability to account for the inflated number of ceros, and a possion model for values greater than cero.
+#The different statistical models
+
+##models tested:
+Quasipoisson
+Inflated quasipoisson
+Negative Binomial
+Inflated Negative Binomial
+
+The models are used to calculate the sensitivity of ponding to different preference of SACmex agent.  It is important to note that none of the models presented below accuretly predict the data. However, all of them recretes the large scale patterns, and the relationship between ponding and infrastructure oldness.
 ```{r}
-studyArea_CVG<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/data/agebs_abm")
+studyArea_CVG<-readShapeSpatial("C:/Users/abaezaca/Dropbox (Personal)/Layers/sesmo/agebs_abm")
 studyArea_CVG@data$estado<-as.factor(substring(studyArea_CVG@data$cvgeo,1,2))
 studyArea_CVG@data$municipio<-as.factor(substring(studyArea_CVG@data$cvgeo,3,5))
 
-studyArea_CVG<-studyArea_CVG[studyArea_CVG@data$estado==levels(studyArea_CVG@data$estado)[1],]
 
-
-studyArea_CVG@data$AveR<-rowMeans(studyArea_CVG@data[,18:33])
-studyArea_CVG@data$BASURA<-studyArea_CVG@data$BASURA/10000
-studyArea_CVG@data$capac_d<-studyArea_CVG@data$capac_d/100000000
-
-
-#model
-glm_ponds_zip<-zeroinfl(PONDING~antiguedad+GASTO+subsidenci+BASURA+AveR, data=studyArea_CVG@data)
+studyArea_CVG@data$encharca<-round(studyArea_CVG@data$encharca)
+studyArea_CVG@data$BASURA<-studyArea_CVG@data$BASURA/1000
+studyArea_CVG@data$capac_d<-studyArea_CVG@data$capac_d/1000000
+studyArea_CVG@data$escurri<-studyArea_CVG@data$escurri/1000
+#model 1
+glm_ponds_zip<-zeroinfl(encharca~antiguedad+subsidenci+PR_2014+escurri+BASURA, data=studyArea_CVG@data)
 summary(glm_ponds_zip)
-p <- predict(glm_ponds_zip, type = "zero")
+
+#model 2
+glm_ponds_qp<-glm(formula = encharca~antiguedad+subsidenci+PR_2014+escurri+BASURA,data =studyArea_CVG@data ,family = quasipoisson)
+summary(glm_ponds_qp)
+
+#model 1
+fit_poiss <- glmmadmb(encharca~antiguedad+subsidenci+PR_2014+escurri+BASURA,data =studyArea_CVG@data,zeroInflation=FALSE, family="poisson")
+summary(fit_poiss)
+
+#model 2
+fit_zipoiss <- glmmadmb(encharca~antiguedad+subsidenci+PR_2014+escurri+BASURA,data =studyArea_CVG@data,zeroInflation=TRUE, family="poisson")
+summary(fit_zipoiss)
+ 
+#model 3
+fit_nbinom<- glmmadmb(encharca~antiguedad+subsidenci+PR_2014+escurri+BASURA,data =studyArea_CVG@data,zeroInflation=FALSE, family="nbinom1")
+summary(fit_nbinom)
+
+#model 4
+fit_zinbinom <- glmmadmb(encharca~antiguedad+subsidenci+PR_2014+escurri+BASURA,data =studyArea_CVG@data,zeroInflation=TRUE, family="nbinom1")
+summary(fit_zinbinom)
+
+
+#Akaike information criteria
+AICtab(fit_zipoiss,fit_poiss,fit_nbinom,fit_zinbinom)
+
+#variables names of coefficients
+vn <- c("Age","subsidence","Rainfall","runoff","garbage") 
+ 
+#coefficient values plot 
+tiff(filename = "c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SESMO/coefficients_estimate.tiff",width = 16,height = 8,res = 300,units = "cm")
+
+coefplot2(list(P=fit_poiss,
+               ZIP=fit_zipoiss,
+               NB=fit_nbinom,
+               ZINB=fit_zinbinom),
+varnames=vn,
+legend=TRUE)
+
+dev.off() 
+
+coefplot2(list(P=fit_poiss,
+               ZIP=fit_zipoiss,
+               NB=fit_nbinom,
+               ZINB=fit_zinbinom),
+varnames=vn,
+legend=TRUE)
+ #predictions
+
+#zero-inflated
+ p <- predict(glm_ponds_zip, type = "zero")
 lambda <- predict(glm_ponds_zip, type = "count")
+
+#Poisson
+lambda_s2 <- predict(glm_ponds_qp,type="response")
+
 
 #model in the future without actions
 studyArea_CVG@data$antiguedad=studyArea_CVG@data$antiguedad + 40
+
 p_s1 <- predict(glm_ponds_zip,newdata=studyArea_CVG@data, type = "zero")
 lambda_s1 <- predict(glm_ponds_zip,newdata=studyArea_CVG@data, type = "count")
 
-#model in the future without actions
-studyArea_CVG@data$BASURA=studyArea_CVG@data$BASURA -  studyArea_CVG@data$BASURA
-p_s2 <- predict(glm_ponds_zip,newdata=studyArea_CVG@data, type = "zero")
-lambda_s2 <- predict(glm_ponds_zip,newdata=studyArea_CVG@data, type = "count")
 
-#add prediction to map
-studyArea_CVG@data$predict_E<-ifelse(rbinom(n=length(p), size = 1, prob = p) > 0, 0, rpois(n=length(lambda), lambda = lambda))
 
-studyArea_CVG@data$predict_E_s1<-ifelse(rbinom(n=length(p_s1), size = 1, prob = p_s1) > 0, 0, rpois(n=length(lambda_s1), lambda = lambda_s1))
+#add predictions to map
+studyArea_CVG@data$p_E<-ifelse(rbinom(n=length(p), size = 1, prob = p) > 0, 0, rpois(n=length(lambda), lambda = lambda))
+studyArea_CVG@data$p_E_s1<-ifelse(rbinom(n=length(p_s1), size = 1, prob = p_s1) > 0, 0, rpois(n=length(lambda_s1), lambda = lambda_s1))
 
-studyArea_CVG@data$predict_E_s2<-ifelse(rbinom(n=length(p_s2), size = 1, prob = p_s2) > 0, 0, rpois(n=length(lambda_s2), lambda = lambda_s2))
+studyArea_CVG@data$p_E_s2<-predict(glm_ponds_qp,type="response")
+studyArea_CVG@data$p_E_s2b<-predict(glm_ponds_qp,newdata=studyArea_CVG@data,type="response")
+
+#zero-inflated neg-bin
+studyArea_CVG@data$p_E_ZINB<-predict(fit_zinbinom,type='response')
+studyArea_CVG@data$p_E_ZINB_b<-predict(fit_zinbinom,newdata=studyArea_CVG@data,type='response', na.action = na.exclude)
+
+
 ```
 
 
 ```{r}
 
-studyArea_CVG@data<-transform(studyArea_CVG@data, z.M=cut(studyArea_CVG@data$predict_E, breaks=c(-1,15,50,100,200,800)))
+#create breaks based on quantiles of ponding
+#brk=c(0,quantile(studyArea_CVG@data$NewPond[which(studyArea_CVG@data$NewPond>0)]))
+brk=c(-1,1,5,10,15,20,100)
+brk_age=c(-1,20,40,60,80,200)
+#bkr=c(0,20,50,100,200,800)
+studyArea_CVG@data<-transform(studyArea_CVG@data, z.M=cut(studyArea_CVG@data$p_E, breaks=brk))
 
-studyArea_CVG@data<-transform(studyArea_CVG@data, z.M_s1=cut(studyArea_CVG@data$predict_E_s1, breaks=c(-1,15,50,100,200,800)))
+studyArea_CVG@data<-transform(studyArea_CVG@data, z.M_s1=cut(studyArea_CVG@data$p_E_s1, breaks=brk))
+studyArea_CVG@data<-transform(studyArea_CVG@data, z.M_s2=cut(studyArea_CVG@data$p_E_s2, breaks=brk))
+studyArea_CVG@data<-transform(studyArea_CVG@data, z.M_s2b=cut(studyArea_CVG@data$p_E_s2b, breaks=brk))
+studyArea_CVG@data<-transform(studyArea_CVG@data, z.M_ZINB=cut(studyArea_CVG@data$p_E_ZINB, breaks=brk))
+studyArea_CVG@data<-transform(studyArea_CVG@data, z.M_ZINB_b=cut(studyArea_CVG@data$p_E_ZINB_b, breaks=brk))
 
-studyArea_CVG@data<-transform(studyArea_CVG@data, z.M_s2=cut(studyArea_CVG@data$predict_E_s2, breaks=c(-1,15,50,100,200,800)))
+studyArea_CVG@data<-transform(studyArea_CVG@data, z.D=cut(studyArea_CVG@data$encharca, breaks=brk))
 
-studyArea_CVG@data<-transform(studyArea_CVG@data, z.D=cut(studyArea_CVG@data$PONDING, breaks=c(-1,15,50,100,200,800)))
 
-colors1 <- colorRampPalette(c( "lightyellow","lightgreen","green","lightblue","blue"))(length(levels(studyArea_CVG@data$z.D)))
+colors1 <- colorRampPalette(c("lightyellow","lightgreen","green","lightblue","blue","grey"))(length(levels(studyArea_CVG@data$z.D)))
 color2<-rev(colorRamps::blue2yellow(6))
 colors4 <- colorRampPalette(c( "lightyellow","yellow","orange","red","darkred"))(length(levels(studyArea_CVG@data$z.D)))
-
 
 studyArea_CVG@data$id =rownames(studyArea_CVG@data)
   studyArea_CVG.points = fortify(studyArea_CVG, region="id")
@@ -89,89 +163,375 @@ studyArea_CVG@data$id =rownames(studyArea_CVG@data)
   aes(long,lat,group=group,fill=z.M)) + 
   geom_polygon() +
   coord_equal(xlim = c(-99.4, -98.8),ylim = c(19.2, 19.6))+
-  scale_fill_manual(name="Model",values=setNames(color2, levels(studyArea_CVG@data$z.M)),guide="none")+ggtitle("Prediction using initial conditions")
+  scale_fill_manual(name="Model",values=setNames(color2, levels(studyArea_CVG@data$z.M)),guide="none")+ggtitle("zero-inflated Poisson")
 
  M_model_s1<-ggplot(studyArea_CVG.df,
   aes(long,lat,group=group,fill=z.M_s1)) + 
   geom_polygon() +
   coord_equal(xlim = c(-99.4, -98.8),ylim = c(19.2, 19.6))+
-  scale_fill_manual(name="Model_s1",values=setNames(color2, levels(studyArea_CVG@data$z.M_s1)),guide="none")+ggtitle("Null predictions (+40 years)") 
+  scale_fill_manual(name="Model_s1",values=setNames(color2, levels(studyArea_CVG@data$z.M_s1)),guide="none")+ggtitle("zero-inflated Poisson (+40 years)") 
 
  M_model_s2<-ggplot(studyArea_CVG.df,
   aes(long,lat,group=group,fill=z.M_s2)) + 
-  geom_polygon()+
+  geom_polygon() +
   coord_equal(xlim = c(-99.4, -98.8),ylim = c(19.2, 19.6))+
-  scale_fill_manual(name="Model_s2",values=setNames(color2, levels(studyArea_CVG@data$z.M_s2)),guide="none")+ggtitle("null+Remove garbage %50")
+  scale_fill_manual(name="Model_s2",values=setNames(color2, levels(studyArea_CVG@data$z.M_s2)),guide="none")+ggtitle("Only Poisson") 
 
+  M_model_s2b<-ggplot(studyArea_CVG.df,
+  aes(long,lat,group=group,fill=z.M_s2b)) + 
+  geom_polygon() +
+  coord_equal(xlim = c(-99.4, -98.8),ylim = c(19.2, 19.6))+
+  scale_fill_manual(name="Model_s2",values=setNames(color2, levels(studyArea_CVG@data$z.M_s2b)),guide="none")+ggtitle("Only Poisson (+40 years)") 
+  
+  M_model_ZINB<-ggplot(studyArea_CVG.df,
+  aes(long,lat,group=group,fill=z.M_ZINB)) + 
+  geom_polygon() +
+  coord_equal(xlim = c(-99.4, -98.8),ylim = c(19.2, 19.6))+
+  scale_fill_manual(name="Model_ZINB",values=setNames(color2, levels(studyArea_CVG@data$z.M_ZINB)))+ggtitle("ZINB") +
+    theme(plot.title = element_text(size = 12, face = "bold"))  
+  
+ M_model_ZINB_b<-ggplot(studyArea_CVG.df,
+  aes(long,lat,group=group,fill=z.M_ZINB_b)) + 
+  geom_polygon() +
+  coord_equal(xlim = c(-99.4, -98.8),ylim = c(19.2, 19.6))+
+  scale_fill_manual(name="Model_ZINB",values=setNames(color2, levels(studyArea_CVG@data$z.M_ZINB_b)))+ggtitle("ZINB + 40")+
+    theme(plot.title = element_text(size = 12, face = "bold"))  
+  
+  
+  M_model_ZINB_continuous<-ggplot(studyArea_CVG.df,
+  aes(long,lat,group=group,fill=p_E_ZINB)) + 
+  geom_polygon() +
+  coord_equal(xlim = c(-99.4, -98.8),ylim = c(19.2, 19.6))+
+    ggtitle("ZINB") +
+    theme(plot.title = element_text(size = 12, face = "bold"))+
+scale_fill_gradient(low = color2[1],high = color2[5])  
+
+  
  
+  
    M_data<-ggplot(studyArea_CVG.df,aes(long,lat,group=group,fill=z.D)) +
   geom_polygon() +
   coord_equal(xlim = c(-99.4, -98.8),ylim = c(19.2, 19.6))+
-  scale_fill_manual(name="Data",values=setNames(color2,levels(studyArea_CVG@data$z.D)),guide="none")+ggtitle("Ponding (mean events 2004-2014)")
+  scale_fill_manual(name="Data",values=setNames(color2,levels(studyArea_CVG@data$z.D)))+ggtitle("Ponding (mean events 2004-2014)")+
+    theme(plot.title = element_text(size = 12, face = "bold"))  
   
   
   names<-c("Azcapotzalco","Coyoacán","Cuajimalpa","Gustavo A. Madero","Iztacalco","Iztapalapa","Magdalena Contreras","Milpa Alta","Álvaro Obregón","Tláhuac","Tlalpan","Xochimilco","Benito Juárez","Cuauhtémoc","Miguel Hidalgo","Venustiano Carranza")
 ID=c("002","003","004","005","006","007","008","009","010","011","012","013","014","015","016","017")
 
+M_data
 
-grid.arrange(M_data,M_model,M_model_s1,M_model_s2,ncol=2)          
-  
+grid.arrange(M_model,M_model_s1,M_model_s2,M_model_s2b,M_model_ZINB, M_model_ZINB_b,ncol=2)          
+   
+tiff(filename = "c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SESMO/ZINB_regression_model.tiff",width = 16,height = 10,res = 300,units = "cm")
+
+ggarrange(M_data,M_model_ZINB, M_model_ZINB_b,ncol=3,common.legend = T)  
+dev.off()
 ```
 
+#read results from ABM spatial simulations.
+First, simulation assuming single loop using both preferences from SACMEX (two sets of weights). Then, results from simulating the double coupling.
+```{r,fig.width=18,fig.height=10}
+studyArea_CVG@data$Age_Fin_FN<-numeric(length(studyArea_CVG@data$AGEB_ID))
+studyArea_CVG@data$Age_Fin_FM<-numeric(length(studyArea_CVG@data$AGEB_ID))
 
+studyArea_CVG@data$Age_Fin_SL<-numeric(length(studyArea_CVG@data$AGEB_ID))
+studyArea_CVG@data$Age_Fin_DL<-numeric(length(studyArea_CVG@data$AGEB_ID))
 
-```{r,fig.width=18,fig.height=18}
-studyArea_CVG@data$Antiguedad_Final<-numeric(length(studyArea_CVG@data$AGEB_ID))
-studyArea_CVG@data$flood_final<-numeric(length(studyArea_CVG@data$AGEB_ID))
-studyArea_CVG@data$flood_final_B<-numeric(length(studyArea_CVG@data$AGEB_ID))
+studyArea_CVG@data$pond_F_FN<-numeric(length(studyArea_CVG@data$AGEB_ID))
+studyArea_CVG@data$pond_F_FM<-numeric(length(studyArea_CVG@data$AGEB_ID))
+
+studyArea_CVG@data$pond_F_SL<-numeric(length(studyArea_CVG@data$AGEB_ID))
+studyArea_CVG@data$pond_F_DL<-numeric(length(studyArea_CVG@data$AGEB_ID))
+
 studyArea_CVG@data$capasidad_final<-numeric(length(studyArea_CVG@data$AGEB_ID))
 studyArea_CVG@data$Acts<-numeric(length(studyArea_CVG@data$AGEB_ID))
 studyArea_CVG@data$Act_M<-numeric(length(studyArea_CVG@data$AGEB_ID))
 studyArea_CVG@data$Act_N<-numeric(length(studyArea_CVG@data$AGEB_ID))
-map_a<-scan(file = 'C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/1-200-400-0.2-0.1.txt')
-map_b<-scan(file = 'C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/1-400-400-0.2-0.1.txt')
-for (i in seq(1,length(map_a),7)){
-  studyArea_CVG@data$Antiguedad_Final[which(studyArea_CVG@data$AGEB_ID ==map_a[i])]<-map_a[i+1]
-studyArea_CVG@data$flood_final[which(studyArea_CVG@data$AGEB_ID ==map_a[i])]<-map_a[i+2]
-studyArea_CVG@data$flood_final_B[which(studyArea_CVG@data$AGEB_ID ==map_b[i])]<-map_b[i+2]
-studyArea_CVG@data$capasidad_final[which(studyArea_CVG@data$AGEB_ID ==map_a[i])]<-map_a[i+3]
 
-studyArea_CVG@data$Acts[which(studyArea_CVG@data$AGEB_ID ==map_a[i])]<-  round(map_a[i+4])
+studyArea_CVG@data$Act_M_SL<-numeric(length(studyArea_CVG@data$AGEB_ID))
+studyArea_CVG@data$Act_N_SL<-numeric(length(studyArea_CVG@data$AGEB_ID))
 
-studyArea_CVG@data$Act_M[which(studyArea_CVG@data$AGEB_ID ==map_a[i])]<-  round(map_a[i+5])
+studyArea_CVG@data$Act_M_DL<-numeric(length(studyArea_CVG@data$AGEB_ID))
+studyArea_CVG@data$Act_N_DL<-numeric(length(studyArea_CVG@data$AGEB_ID))
 
-studyArea_CVG@data$Act_M[which(studyArea_CVG@data$AGEB_ID ==map_a[i])]<-  round(map_a[i+6])
+
+map_b<-scan(file = 'C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/FN-1200-1200-0.2-0.1.txt')
+map_d<-scan(file = 'C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/FM-1200-1200-0.2-0.1.txt')
+
+#with double coupling
+map_a<-scan(file = 'C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/DC-1200-1200-0.2-0.1.txt')
+map_c<-scan(file = 'C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/SC-1200-1200-0.2-0.1.txt')
+
+
+for (i in seq(1,length(map_b),7)){
+
+  studyArea_CVG@data$Age_Fin_FN[which(studyArea_CVG@data$AGEB_ID ==map_b[i])]<-map_b[i+1]
+  
+studyArea_CVG@data$Age_Fin_FM[which(studyArea_CVG@data$AGEB_ID ==map_d[i])]<-map_d[i+1]
+
+studyArea_CVG@data$Age_Fin_SL[which(studyArea_CVG@data$AGEB_ID ==map_c[i])]<-map_c[i+1]
+
+studyArea_CVG@data$Age_Fin_DL[which(studyArea_CVG@data$AGEB_ID ==map_a[i])]<-map_a[i+1]
+ #flooding results
+
+studyArea_CVG@data$pond_F_FN[which(studyArea_CVG@data$AGEB_ID ==map_b[i])]<-map_b[i+2]
+
+studyArea_CVG@data$pond_F_FM[which(studyArea_CVG@data$AGEB_ID ==map_d[i])]<-map_d[i+2]
+
+studyArea_CVG@data$pond_F_SL[which(studyArea_CVG@data$AGEB_ID ==map_c[i])]<-map_c[i+2]
+studyArea_CVG@data$pond_F_DL[which(studyArea_CVG@data$AGEB_ID ==map_a[i])]<-map_a[i+2]
+
+#actions
+studyArea_CVG@data$Act_N[which(studyArea_CVG@data$AGEB_ID ==map_b[i])]<-  round(map_b[i+5])
+studyArea_CVG@data$Act_N_SL[which(studyArea_CVG@data$AGEB_ID ==map_c[i])]<-  round(map_c[i+5])
+studyArea_CVG@data$Act_N_DL[which(studyArea_CVG@data$AGEB_ID ==map_a[i])]<-  round(map_a[i+5])
+
+studyArea_CVG@data$Act_M[which(studyArea_CVG@data$AGEB_ID ==map_b[i])]<-  round(map_b[i+6])
+studyArea_CVG@data$Act_M_SL[which(studyArea_CVG@data$AGEB_ID ==map_c[i])]<-  round(map_c[i+6])
+studyArea_CVG@data$Act_M_DL[which(studyArea_CVG@data$AGEB_ID ==map_a[i])]<-  round(map_a[i+6])
 
 }
-studyArea_CVG@data<-transform(studyArea_CVG@data, z.ABM=cut(studyArea_CVG@data$flood_final, breaks=c(-1,15,50,100,200,800)))
 
-studyArea_CVG@data<-transform(studyArea_CVG@data, z.ABM_b=cut(studyArea_CVG@data$flood_final_B, breaks=c(-1,15,50,100,200,800)))
+#create categorical variables
+
+studyArea_CVG@data<-transform(studyArea_CVG@data, zAB_FN=cut(studyArea_CVG@data$pond_F_FN,breaks=brk))
+studyArea_CVG@data<-transform(studyArea_CVG@data, zAB_FM=cut(studyArea_CVG@data$pond_F_FM, breaks=brk))
+
+studyArea_CVG@data<-transform(studyArea_CVG@data, zAB_SL=cut(studyArea_CVG@data$pond_F_SL,breaks=brk))
+studyArea_CVG@data<-transform(studyArea_CVG@data, zAB_DL=cut(studyArea_CVG@data$pond_F_DL, breaks=brk))
+
+
+studyArea_CVG@data<-transform(studyArea_CVG@data, zAB_age_FN=cut(studyArea_CVG@data$Age_Fin_FN,breaks=brk_age))
+studyArea_CVG@data<-transform(studyArea_CVG@data, zAB_age_FM=cut(studyArea_CVG@data$Age_Fin_FM,breaks=brk_age))
+studyArea_CVG@data<-transform(studyArea_CVG@data, zAB_age_SL=cut(studyArea_CVG@data$Age_Fin_SL,breaks=brk_age))
+studyArea_CVG@data<-transform(studyArea_CVG@data, zAB_age_DL=cut(studyArea_CVG@data$Age_Fin_DL,breaks=brk_age))
+
+colors5 <- colorRampPalette(c("white","cadetblue1","cornflowerblue","orange","red","azure4"))(length(levels(studyArea_CVG@data$zAB_age_FN)))
+
 
   studyArea_CVG.points = fortify(studyArea_CVG, region="id")
   studyArea_CVG.df = join(studyArea_CVG.points, studyArea_CVG@data, by="id")
 
-
- M_modelABM_s3<-ggplot(studyArea_CVG.df,
-  aes(long,lat,group=group,fill=z.ABM)) + 
-  geom_polygon() +
-  coord_equal(xlim = c(-99.4, -98.8),ylim = c(19.2, 19.6))+
-  scale_fill_manual(name="Model_ABM_s3",values=setNames(color2, levels(studyArea_CVG@data$z.ABM)),guide="none")+ggtitle("ABM s200New-400Mant-0.5-0.1")
-
   M_modelABM_s4<-ggplot(studyArea_CVG.df,
-  aes(long,lat,group=group,fill=z.ABM_b)) + 
+  aes(long,lat,group=group,fill=zAB_FN)) + 
   geom_polygon() +
   coord_equal(xlim = c(-99.4, -98.8),ylim = c(19.2, 19.6))+
-  scale_fill_manual(name="Model_ABM_s3",values=setNames(color2, levels(studyArea_CVG@data$z.ABM_b)),guide="none")+ggtitle("ABM s400New-400Mant-0.5-0.1")
+  scale_fill_manual(name="Model_ABM_s3",values=setNames(color2, levels(studyArea_CVG@data$zAB_FN)),guide="none")+ggtitle("ABM FN-1200-1200-0.2-0.1")
   
 
-tiff(filename = "c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SESMO/models_and_data_map.tiff",width = 16,height = 16,res = 600,units = "cm")
-grid.arrange(M_data,M_model,M_model_s1,M_model_s2,M_modelABM_s3
-,ncol=2)          
+  M_modelABM_s6<-ggplot(studyArea_CVG.df,
+  aes(long,lat,group=group,fill=zAB_FM)) + 
+  geom_polygon() +
+  coord_equal(xlim = c(-99.4, -98.8),ylim = c(19.2, 19.6))+
+  scale_fill_manual(name="Model_ABM_s3",values=setNames(color2, levels(studyArea_CVG@data$zAB_FM)),guide="none")+ggtitle("ABM FM-1200-1200-0.2-0.1")
+ 
+   
+tiff(filename = "c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SESMO/models_and_data_map.tiff",width = 16,height = 10,res = 600,units = "cm")
+
+grid.arrange(M_modelABM_s4,M_modelABM_s6,ncol=2)       
+
 dev.off()
 
-grid.arrange(M_data,M_model,M_model_s1,M_model_s2,M_modelABM_s3,M_modelABM_s4
-,ncol=3)          
+grid.arrange(M_modelABM_s4,M_modelABM_s6,ncol=2)          
 
 
 
+```
+
+#Investments
+```{r}
+ M_modelABM_s7<-ggplot(studyArea_CVG.df,
+  aes(long,lat,group=group,fill=Act_N)) + 
+  geom_polygon() +
+  coord_equal(xlim = c(-99.4, -98.8),ylim = c(19.2, 19.6))+
+  scale_fill_gradient(name="Model_ABM_s3",low=colors4[1],high=colors4[5],guide="colourbar")+ggtitle("ABM Investments New FN-1200-1200-0.2-0.1")
+
+M_modelABM_s8<-ggplot(studyArea_CVG.df,
+  aes(long,lat,group=group,fill=Act_M)) + 
+  geom_polygon() +
+  coord_equal(xlim = c(-99.4, -98.8),ylim = c(19.2, 19.6))+
+  scale_fill_gradient(name="Model_ABM_s4",low=colors4[1],high=colors4[5],guide="colourbar")+ggtitle("Investments mant  FN-1200-1200-0.2-0.1")
+
+  ggarrange(M_modelABM_s7,M_modelABM_s8,ncol=2,common.legend = T)
+```
+
+
+#Age
+```{r}
+  M_modelABM_age_FN<-ggplot(studyArea_CVG.df,aes(long,lat,group=group,fill=zAB_age_FN)) + 
+  geom_polygon() +
+  coord_equal(xlim = c(-99.4, -98.8),ylim = c(19.2, 19.6))+
+  scale_fill_manual(name="Age",values=setNames(colors5, levels(studyArea_CVG@data$zAB_age_FN)))+ggtitle("ABM Age FN-1200-1200-0.2-0.1")
+  
+
+  M_modelABM_age_FM<-ggplot(studyArea_CVG.df, aes(long,lat,group=group,fill=zAB_age_FM)) + 
+  geom_polygon() +
+  coord_equal(xlim = c(-99.4, -98.8),ylim = c(19.2, 19.6))+
+  scale_fill_manual(name="Age",values=setNames(colors5, levels(studyArea_CVG@data$zAB_age_FM)))+ggtitle("ABM Age FM-1200-1200-0.2-0.1")
+  
+  
+  ggarrange(M_modelABM_age_FN,M_modelABM_age_FM,ncol=2,common.legend = T)
+```
+
+
+
+
+Double-loop learning / Double coupling
+
+#time series
+```{r, echo=FALSE,fig.height=4,fig.width=10,fig.align="center"}
+
+
+TS_A<-read.csv(file="C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SESMO/ABM-Empirical-MexicoCity_V6_SESMO Age_infra.csv",header = T,skip = 16)
+TS_P<-read.csv(file="C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SESMO/ABM-Empirical-MexicoCity_V6_SESMO ponding.csv",header = T,skip = 16)
+
+P_TS_A<-ggplot(data=TS_A,aes(x=x,y=y))+
+  geom_path()+
+  scale_x_continuous("years")+
+  scale_y_continuous("Average Age",limits = c(0,40))+
+  geom_vline(xintercept = 20,linetype=2,colour="red")+annotate("text",x=37,y=40,label='a',size=12)
+
+P_TS_P<-ggplot(data=TS_P,aes(x=x,y=y))+
+  geom_path()+
+  scale_x_continuous("years")+
+  scale_y_continuous("Average Ponding",limits = c(0,10))+
+  geom_vline(xintercept = 20,linetype=2,colour="red")+annotate("text",x=37,y=10,label='b',size=12)
+
+tiff(filename = "c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SESMO/timeseries_DoubleCoupling.tiff",width = 16,height = 8,res = 300,units = "cm")
+ggarrange(P_TS_A,P_TS_P,ncol=2)
+dev.off()
+ggarrange(P_TS_A,P_TS_P,ncol=2)
+```
+
+#Number of ponding -single and double coupling
+```{r, echo=FALSE,fig.height=5,fig.width=10}
+
+ M_modelABM_SL<-ggplot(studyArea_CVG.df,
+  aes(long,lat,group=group,fill=zAB_SL)) + 
+  geom_polygon() +
+  coord_equal(xlim = c(-99.4, -98.8),ylim = c(19.2, 19.6))+
+  scale_fill_manual(name="Model_ABM_SC",values=setNames(color2, levels(studyArea_CVG@data$zAB_SL)),guide="none")+ggtitle("Single coupling")+annotate("text",x=-98.85,y=19.56,label='a',size=12)
+  
+ M_modelABM_DL<-ggplot(studyArea_CVG.df,
+  aes(long,lat,group=group,fill=zAB_DL)) + 
+  geom_polygon() +
+  coord_equal(xlim = c(-99.4, -98.8),ylim = c(19.2, 19.6))+
+  scale_fill_manual(name="Model_ABM_SC",values=setNames(color2, levels(studyArea_CVG@data$zAB_DL)),guide="none")+ggtitle("Double coupling")+annotate("text",x=-98.85,y=19.56,label='b',size=12)
+
+ tiff(filename = "c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SESMO/ponding_doubleCoupling.tiff",width = 16,height = 8,res = 300,units = "cm")
+ggarrange(M_modelABM_SL ,M_modelABM_DL,ncol=2)
+
+dev.off()
+ggarrange(M_modelABM_SL ,M_modelABM_DL,ncol=2)
+
+```
+
+#Age infra single and double coupling 
+```{r}
+  M_modelABM_age_SL<-ggplot(studyArea_CVG.df,aes(long,lat,group=group,fill=zAB_age_SL)) + 
+  geom_polygon() +
+  coord_equal(xlim = c(-99.4, -98.8),ylim = c(19.2, 19.6))+
+  scale_fill_manual(name="Age",values=setNames(colors5, levels(studyArea_CVG@data$zAB_age_SL)))+ggtitle("Single coupling")+annotate("text",x=-98.85,y=19.56,label='a',size=12)
+  
+
+  M_modelABM_age_DL<-ggplot(studyArea_CVG.df, aes(long,lat,group=group,fill=zAB_age_DL)) + 
+  geom_polygon() +
+  coord_equal(xlim = c(-99.4, -98.8),ylim = c(19.2, 19.6))+
+  scale_fill_manual(name="Age",values=setNames(colors5, levels(studyArea_CVG@data$zAB_age_DL)))+ggtitle("Double coupling")+annotate("text",x=-98.85,y=19.56,label='b',size=12)
+  
+tiff(filename = "c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SESMO/age_infraDoubleCoupling.tiff",width = 16,height = 8,res = 300,units = "cm")  
+  ggarrange(M_modelABM_age_SL,M_modelABM_age_DL,ncol=2,common.legend = T)
+  dev.off()
+  ggarrange(M_modelABM_age_SL,M_modelABM_age_DL,ncol=2,common.legend = T)
+```
+
+
+
+#Number of pondings by Delegation
+```{r, echo=FALSE,fig.height=5,fig.width=10}
+A<-read.csv(file="C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SESMO/ABM-Empirical-MexicoCity_V6_SESMO_doublecouppling-table.csv",header = T,skip = 6)
+
+l <- reshape(A, 
+  varying = names(A)[11:26],
+  v.names = "Flooding",
+  timevar = "Delegation", 
+  times = names(A)[11:26], 
+  direction = "long")
+null_s<-numeric(16)
+for(i in 1:16){
+null_s[i]<-sum(subset(studyArea_CVG@data, municipio== levels(studyArea_CVG@data$municipio)[i])$p_E_s2)
+}
+
+names_M<-c("Azcapotzalco","Coyoacán","Cuajimalpa","Gustavo A. Madero","Iztacalco","Iztapalapa","Magdalena Contreras","Milpa Alta","Álvaro Obregón","Tláhuac","Tlalpan","Xochimilco","Benito Juárez","Cuauhtémoc","Miguel Hidalgo","Venustiano Carranza")
+ID=c("002","003","004","005","006","007","008","009","010","011","012","013","014","015","016","017")
+
+Null_M=as.data.frame(cbind(names_M,ID,null_s))
+Null_M$null_s=as.numeric(as.character(Null_M$null_s))
+
+G1<-ggplot(subset(l,Eficiencia_Mantenimiento==0.2),aes(x=reorder(Delegation,-Flooding, order = T),y=Flooding,colour=switch_MCDA))+
+    geom_segment(aes(xend=reorder(Delegation,-Flooding, order = T),y=Flooding,yend=0),colour="grey60",size=.9)+  
+  geom_point(size=4) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+
+   scale_y_continuous(name = "Flooding [Events / year]",limits = c(0, 2500))+
+   scale_color_discrete(name="Relative importance",label=c("Single loop","Double loop"))+
+   annotate("rect", xmin=0, xmax=16, ymin=0 , ymax=500, alpha=0.1, fill="green")+
+   annotate("rect", xmin=0, xmax=16, ymin=500 , ymax=1500, alpha=0.1,  fill="yellow")+
+   annotate("rect", xmin=0, xmax=16, ymin=1500 , ymax=2500, alpha=0.1, fill="red")+
+  theme_bw()+
+      theme(
+         text=element_text(size = 10),
+        axis.line.x= element_line(linetype="solid", colour="black"),
+        axis.line.y=element_blank(),
+        panel.grid.major.y = element_line(colour="grey80",linetype="dashed"),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor =element_blank(),
+        panel.border=element_blank(),
+       # axis.ticks.y=element_blank(),
+       # axis.ticks.x=element_blank(),
+        legend.box = "vertical",
+    legend.box.margin = margin(3, 3, 3, 3), 
+    legend.margin = margin(),
+    legend.box.background = element_rect(colour = "black"),
+        axis.text.y=element_blank(),
+        axis.text.x=element_text(size=12,hjust=1,vjust=1,colour = "black",angle = 45),
+        axis.title.y=element_blank(),
+        axis.title.x=element_blank())
+tiff(filename = "c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SESMO/pondingbyDelegationDoubpleCoupling.tiff",width = 16,height = 10,res = 600,units = "cm")
+  G1 
+dev.off()
+  G1  
+```
+
+##Null model
+The results from the poisson model without interventions
+```{r, echo=FALSE,fig.height=5,fig.width=10}
+G2<-ggplot(data=Null_M,aes(x=reorder(names,-null_s, order = T),y=null_s))+
+geom_point(colour="black")+
+      theme(
+         text=element_text(size = 12),
+        axis.line.x= element_line(linetype="solid", colour="black"),
+        axis.line.y=element_blank(),
+        panel.grid.major.y = element_line(colour="grey80",linetype="dashed"),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor =element_blank(),
+        panel.border=element_blank(),
+        axis.ticks.y=element_blank(),
+        axis.ticks.x=element_blank(),
+        legend.box = "vertical",
+    legend.box.margin = margin(3, 3, 3, 3), 
+    legend.margin = margin(),
+    legend.box.background = element_rect(colour = "black"),
+        axis.text.y=element_blank(),
+        axis.text.x=element_text(size=17,hjust=1,vjust=1,colour = "black",angle = 45),
+        axis.title.y=element_blank(),
+        axis.title.x=element_blank())
+G2
+```
+
+
+#save results in shapefile
+```{r}
+writeSpatialShape(studyArea_CVG,fn ="agebs_ABM_resultados" )
 ```
