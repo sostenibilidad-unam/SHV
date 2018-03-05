@@ -1,4 +1,4 @@
-extensions [GIS bitmap profiler csv matrix]
+extensions [GIS bitmap profiler csv matrix R]
 __includes["setup.nls" "value_functions.nls"]
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -17,7 +17,8 @@ to GO
   if weeks = 1 and months = 1[
     ;flood_risk
     flood_risk_capacitysewer
-    health_risk
+    flooding_InfPoiss
+    ;health_risk
 
     ; flooding_glm
 ;#############################################################################################################################################
@@ -1351,6 +1352,12 @@ to flooding_glm
    set Flooding random-poisson (p1 + p2 * (Antiguedad-infra_D / 365) + p3 * Capacidad_D + p4 * gasto_hidraulico + p5 * hundimiento)
  ]
 end
+to flooding_InfPoiss
+print r:get "rbinom(100,1,0.2)"
+end
+
+
+
 ;/flooding-simulation;
 ;##############################################################################################################
 ;##############################################################################################################

@@ -140,28 +140,34 @@ to update_criteria_and_valueFunctions_WaterOperator    ;;update the biphisical v
         ;###########################################################
         if ? = "Escurrimiento"[
          let attribute  [Escurri] of myself
-          set criteria_values replace-item i criteria_values attribute
-          set criteria_max replace-item i criteria_max Escurri_max; 192.23 ;max value in layer Gasto_V1.shp
-          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
+        let y_vf  exp(-(((0 - 30000) / 20000) ^ 2))
+        let yy_vf exp(-(( (30000 - 30000) / 20000) ^ 2))
+        let svf 1 -(exp(-(((attribute - 30000) / 20000) ^ 2)) - y_vf) / (yy_vf + y_vf)
+        if attribute > 30000 [set svf 0]  
+        set rescaled_criteria_values replace-item i rescaled_criteria_values svf
+;        set criteria_values replace-item i criteria_values attribute
+;          set criteria_max replace-item i criteria_max Escurri_max; 192.23 ;max value in layer Gasto_V1.shp
+;          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
      
       ]
         ;###########################################################
-        if ? = "Basura"[
+      if ? = "Basura"[
           let attribute [garbage] of myself 
           set criteria_values replace-item i criteria_values attribute         
           let p1 2.6514
           let p2 5000
           let y_vf (exp (- ((0 - p1) / p2) ^ 2))
           let yy_vf (exp (- ((2.6514 - p1) / p2) ^ 2))
-          let svf ((exp (- ((attribute - p1) / p2) ^ 2))  - y_vf) / (yy_vf - y_vf)
+          let svf 1 - ((exp (- ((attribute - p1) / p2) ^ 2))  - y_vf) / (yy_vf - y_vf)
           set rescaled_criteria_values replace-item i rescaled_criteria_values  svf
-        ]
+      ]
         ;###########################################################
-        if ? = "Peticion de Delegaciones"[
-          set criteria_values replace-item i criteria_values 1
-          set criteria_max replace-item i criteria_max 1
-          set rescaled_criteria_values replace-item i rescaled_criteria_values (item i criteria_values); (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
-        ]
+      if ? = "Peticion de Delegaciones"[
+        let attribute [Peticion_Delegacional] of myself   
+        set criteria_values replace-item i criteria_values attribute
+        let svf 1 - attribute  
+        set rescaled_criteria_values replace-item i rescaled_criteria_values svf
+      ]
         ;###########################################################
         if ? = "Peticiones de usuarios"[
           set criteria_values replace-item i criteria_values (1 - [peticion_usuarios] of myself / peticion_usuarios_max)         
