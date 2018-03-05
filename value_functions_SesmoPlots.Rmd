@@ -1,0 +1,207 @@
+---
+title: "value_function_SESMO"
+author: "Andres Baeza"
+date: "March 5, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+####Load packages
+```{r}
+require(ggplot2)
+require(gridExtra)
+```
+
+
+
+#Risks
+##Ponding
+```{r}
+v_c=seq(0,100,1)
+
+y_menos =exp(-((100/30)^2))
+y_mas=exp(-((0/30)^2))
+
+standardized_value=(exp(-((v_c/30)^2))-y_menos)/(y_mas+y_menos)
+
+dd<-data.frame(Ponding=seq(0,100,1),standardized_value=(exp(-((v_c/30)^2))-y_menos)/(y_mas+y_menos))
+p1=ggplot(data=dd,aes(x=Ponding,y=standardized_value))+geom_line()
+p1
+```
+
+##Flooding
+```{r}
+v_c=seq(0,5,1)
+
+standardized_value=1 -(v_c>1)
+dd<-data.frame(Flooding=seq(0,5,1),standardized_value=1 -(v_c>1))
+
+p2=ggplot(data=dd,aes(x=Flooding,y=standardized_value))+geom_line()
+p2
+```
+
+
+#Socio-Institutional drivers
+##Media
+```{r}
+v_c=seq(0,600,1)
+p_1=(-log(log(1.1+0.88*(10-2),base = 10),base = 10))/((log(600,base = 10))^2)
+
+y_menos =exp(-p_1*600)
+y_mas=exp(-p_1*0)
+
+standardized_value=(exp(-p_1*v_c)-y_menos)/(y_mas+y_menos)
+
+dd<-data.frame(Media=seq(0,600,1),standardized_value=(exp(-p_1*v_c)-y_menos)/(y_mas+y_menos))
+
+p3=ggplot(data=dd,aes(x=Media,y=standardized_value))+geom_line()
+p3
+
+```
+
+##Citizen
+```{r}
+v_c=seq(0,17152,10)
+standardized_value = 1 - v_c/max(v_c)
+dd<-data.frame(Citizen=seq(0,17152,10),standardized_value = 1 - v_c/max(v_c))
+
+p4=ggplot(data=dd,aes(x=Citizen,y=standardized_value))+geom_line()
+p4
+```
+
+##Delegation
+```{r}
+v_c=seq(0,1,0.01)
+standardized_value = 1 - v_c
+
+dd<-data.frame(Delegation=seq(0,1,0.01),standardized_value = 1 - v_c)
+
+p5=ggplot(data=dd,aes(x=Delegation,y=standardized_value))+geom_line()
+p5
+```
+
+#Infrastructure
+##Oldness
+```{r}
+Oldness=seq(0,120,1)
+
+y_mas =exp(-(((120-120)/80)^2))
+y_menos=exp(-(((0-120)/80)^2))
+
+standardized_value=1 -(exp(-(((Oldness-120)/80)^2))-y_menos)/(y_mas+y_menos)
+
+dd<-data.frame(Oldness=seq(0,120,1),standardized_value=1 -(exp(-(((Oldness-120)/80)^2))-y_menos)/(y_mas+y_menos))
+
+p6=ggplot(data=dd,aes(x=Oldness,y=standardized_value))+geom_line()
+
+p6
+
+```
+##Lack of infrastructure (Deficiency)
+```{r}
+v_c=seq(0,100,1)
+p_1=(-log(log(1.1+0.88*(10-10),base = 10),base = 10))/((log(100,base = 10))^2)
+
+y_menos =exp(p_1*100)
+y_mas=exp(p_1*0)
+
+standardized_value=(exp(p_1*v_c)-y_menos)/(y_mas+y_menos)
+
+dd<-data.frame(Deficiency=seq(0,100,1),
+standardized_value=(exp(p_1*v_c)-y_menos)/(y_mas+y_menos))
+
+p7=ggplot(data=dd,aes(x=Deficiency,y=standardized_value))+geom_line()
+
+p7
+```
+
+##Failure
+```{r}
+v_c=seq(0,1,0.01)
+standardized_value=1-v_c
+
+dd<-data.frame(Failure=seq(0,1,0.01),
+standardized_value=1-v_c)
+
+p8=ggplot(data=dd,aes(x=Failure,y=standardized_value))+geom_line()
+p8
+```
+
+#Bio-phisical
+##Subsidence
+```{r}
+v_c=seq(0,35,0.1)
+p_1= 26.06766112					
+y_menos= 1 - exp ((35 - 10) / p_1 )
+y_mas= 1 - exp ((0 - 10) / p_1 )
+standardized_value= ((1 - exp ((v_c - 10) / p_1 )) - y_menos) / (y_mas - y_menos)
+
+dd<-data.frame(Subsidence=seq(0,35,0.1),
+standardized_value= ((1 - exp ((v_c - 10) / p_1 )) - y_menos) / (y_mas - y_menos))
+
+p9=ggplot(data=dd,aes(x=Subsidence,y=standardized_value))+geom_line()
+
+p9
+```
+
+##Rainfall
+```{r}
+v_c=seq(0,1300,1)
+p_1= 742.8737773									
+y_menos= 1 - exp ((1300 - 10) / p_1 )
+y_mas= 1 - exp ((0 - 10) / p_1 )
+standardized_value =((1 - exp ((v_c - 10) / p_1 )) - y_menos) / (y_mas - y_menos)
+
+
+dd<-data.frame(Rainfall=seq(0,1300,1),
+standardized_value =((1 - exp ((v_c - 10) / p_1 )) - y_menos) / (y_mas - y_menos))
+
+p10=ggplot(data=dd,aes(x=Rainfall,y=standardized_value))+geom_line()
+p10
+
+```
+
+##Runoff
+```{r}
+v_c=seq(0,30000,100)
+
+y_mas =exp(-(((30000-30000)/20000)^2))
+y_menos=exp(-(((0-30000)/20000)^2))
+
+standardized_value=1 -(exp(-(((v_c-30000)/20000)^2))-y_menos)/(y_mas+y_menos)
+
+dd<-data.frame(Runoff=seq(0,30000,100),
+standardized_value=1 -(exp(-(((v_c-30000)/20000)^2))-y_menos)/(y_mas+y_menos))
+
+p11=ggplot(data=dd,aes(x=Runoff,y=standardized_value))+geom_line()
+p11
+```
+
+
+##Garbage
+```{r}
+v_c=seq(0,2.6514,0.01)
+p_1= 2.6514
+p_2= 5000
+y_menos= (exp (- ((0 - p_1) / p_2) ^ 2))
+y_mas= (exp (- ((2.6514 - p_1) / p_2) ^ 2))
+standardized_value= 1 - ((exp (- ((v_c - p_1) / p_2) ^ 2))  - y_menos) / (y_mas - y_menos)
+
+dd<-data.frame(Garbage=seq(0,2.6514,0.01),
+standardized_value= 1 - ((exp (- ((v_c - p_1) / p_2) ^ 2))  - y_menos) / (y_mas - y_menos))
+
+p12=ggplot(data=dd,aes(x=Garbage,y=standardized_value))+geom_line()
+p12
+
+```
+
+```{r}
+tiff(filename = "c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SESMO/standardized_score_functions.tif",width = 12,height = 8,units = "in",res = 300)
+grid.arrange(p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,p12,ncol=4)
+dev.off()
+grid.arrange(p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,p12,ncol=4)
+```
+
