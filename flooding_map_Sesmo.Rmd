@@ -32,13 +32,16 @@ require(bbmle)
 
 #The different statistical models
 
-##models tested:
-Quasipoisson
-Inflated quasipoisson
-Negative Binomial
-Inflated Negative Binomial
 
-The models are used to calculate the sensitivity of ponding to different preference of SACmex agent.  It is important to note that none of the models presented below accuretly predict the data. However, all of them recretes the large scale patterns, and the relationship between ponding and infrastructure oldness.
+
+The models represent changes in the frequency of ponding events in Mexico City.  The statistical regression models presented recreates the large-scale patterns, and the relationship between ponding and infrastructure conditions, garbage, subsidence, runoff, and rainfall.
+
+##Models tested:
+Poisson
+QuasiPoisson
+Zero-Inflated quasipoisson
+Negative Binomial
+Zero-Inflated Negative Binomial (\ZINB)
 ```{r}
 studyArea_CVG<-readShapeSpatial("C:/Users/abaezaca/Dropbox (Personal)/Layers/sesmo/agebs_abm")
 studyArea_CVG@data$estado<-as.factor(substring(studyArea_CVG@data$cvgeo,1,2))
@@ -49,6 +52,17 @@ studyArea_CVG@data$encharca<-round(studyArea_CVG@data$encharca)
 studyArea_CVG@data$BASURA<-studyArea_CVG@data$BASURA/1000
 studyArea_CVG@data$capac_d<-studyArea_CVG@data$capac_d/1000000
 studyArea_CVG@data$escurri<-studyArea_CVG@data$escurri/1000
+
+#test the collinearity
+mctest(studyArea_CVG@data[,c(8,9,10,16,17)],y = studyArea_CVG@data$encharca)
+
+#overall test
+omcdiag(studyArea_CVG@data[,c(8,9,10,16,17)],y = studyArea_CVG@data$encharca)
+
+#individual variables
+imcdiag(studyArea_CVG@data[,c(8,9,10,16,17)],y = studyArea_CVG@data$encharca)
+
+#Fitting
 #model 1
 glm_ponds_zip<-zeroinfl(encharca~antiguedad+subsidenci+PR_2014+escurri+BASURA, data=studyArea_CVG@data)
 summary(glm_ponds_zip)
@@ -81,6 +95,8 @@ AICtab(fit_zipoiss,fit_poiss,fit_nbinom,fit_zinbinom)
 vn <- c("Age","subsidence","Rainfall","runoff","garbage") 
  
 #coefficient values plot 
+tiff(filename = "c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SESMO/coefficients_estimate.tiff",width = 16,height = 8,res = 300,units = "cm")
+
 coefplot2(list(P=fit_poiss,
                ZIP=fit_zipoiss,
                NB=fit_nbinom,
@@ -88,7 +104,14 @@ coefplot2(list(P=fit_poiss,
 varnames=vn,
 legend=TRUE)
 
- 
+dev.off() 
+
+coefplot2(list(P=fit_poiss,
+               ZIP=fit_zipoiss,
+               NB=fit_nbinom,
+               ZINB=fit_zinbinom),
+varnames=vn,
+legend=TRUE)
  #predictions
 
 #zero-inflated
@@ -117,7 +140,6 @@ studyArea_CVG@data$p_E_s2b<-predict(glm_ponds_qp,newdata=studyArea_CVG@data,type
 #zero-inflated neg-bin
 studyArea_CVG@data$p_E_ZINB<-predict(fit_zinbinom,type='response')
 studyArea_CVG@data$p_E_ZINB_b<-predict(fit_zinbinom,newdata=studyArea_CVG@data,type='response', na.action = na.exclude)
-
 
 ```
 
@@ -172,23 +194,33 @@ studyArea_CVG@data$id =rownames(studyArea_CVG@data)
   aes(long,lat,group=group,fill=z.M_s2b)) + 
   geom_polygon() +
   coord_equal(xlim = c(-99.4, -98.8),ylim = c(19.2, 19.6))+
-  scale_fill_manual(name="Model_s2",values=setNames(color2, levels(studyArea_CVG@data$z.M_s2b)),guide="none")+ggtitle("Only Poisson (+40 years)") 
+  scale_fill_manual(name="Number of poonding",values=setNames(color2, levels(studyArea_CVG@data$z.M_s2b)),guide="none")+ggtitle("Only Poisson (+40 years)") 
   
   M_model_ZINB<-ggplot(studyArea_CVG.df,
   aes(long,lat,group=group,fill=z.M_ZINB)) + 
   geom_polygon() +
   coord_equal(xlim = c(-99.4, -98.8),ylim = c(19.2, 19.6))+
-  scale_fill_manual(name="Model_ZINB",values=setNames(color2, levels(studyArea_CVG@data$z.M_ZINB)))+ggtitle("ZINB") +
+  scale_fill_manual(name="Number of poonding",values=setNames(color2, levels(studyArea_CVG@data$z.M_ZINB)))+ggtitle("ZINB") +
     theme(plot.title = element_text(size = 12, face = "bold"))  
   
  M_model_ZINB_b<-ggplot(studyArea_CVG.df,
   aes(long,lat,group=group,fill=z.M_ZINB_b)) + 
   geom_polygon() +
   coord_equal(xlim = c(-99.4, -98.8),ylim = c(19.2, 19.6))+
-  scale_fill_manual(name="Model_ZINB",values=setNames(color2, levels(studyArea_CVG@data$z.M_ZINB_b)))+ggtitle("ZINB + 40")+
+  scale_fill_manual(name="Number of poonding",values=setNames(color2, levels(studyArea_CVG@data$z.M_ZINB_b)))+ggtitle("ZINB + 40")+
     theme(plot.title = element_text(size = 12, face = "bold"))  
   
   
+  M_model_ZINB_continuous<-ggplot(studyArea_CVG.df,
+  aes(long,lat,group=group,fill=p_E_ZINB)) + 
+  geom_polygon() +
+  coord_equal(xlim = c(-99.4, -98.8),ylim = c(19.2, 19.6))+
+    ggtitle("ZINB") +
+    theme(plot.title = element_text(size = 12, face = "bold"))+
+scale_fill_gradient(low = color2[1],high = color2[5])  
+
+  
+ 
   
    M_data<-ggplot(studyArea_CVG.df,aes(long,lat,group=group,fill=z.D)) +
   geom_polygon() +
@@ -204,9 +236,9 @@ M_data
 
 grid.arrange(M_model,M_model_s1,M_model_s2,M_model_s2b,M_model_ZINB, M_model_ZINB_b,ncol=2)          
    
-tiff(filename = "c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SESMO/ZINB_regression_model.tiff",width = 16,height = 10,res = 300,units = "cm")
+tiff(filename = "c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SESMO/ZINB_regression_model.tiff",width = 12,height = 8,res = 300,units = "cm")
 
-ggarrange(M_data,M_model_ZINB, M_model_ZINB_b,ncol=3,common.legend = T)  
+ggarrange(M_model_ZINB, M_model_ZINB_b,ncol=2,common.legend = T)  
 dev.off()
 ```
 
