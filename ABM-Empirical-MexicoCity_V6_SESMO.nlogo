@@ -33,6 +33,8 @@ to GO
 ; print profiler:report
 ; profiler:reset         ;pri; clear the data
   if ticks = 40 [stop]
+  if ticks = 1 [export-map_dvalues]
+
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -162,20 +164,19 @@ end
 to export-map
   ;this procedure creates a txt file with a vector containing a particular atribute from the agebs
   ;let PATH "c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/CarpetasTrabajo/AndresBaeza/"
-ifelse MCDA = "Favors New Infrastructure" [
-    set fn (word "FN" "-" (word recursos_nuevaInfrastructura "-" (word recursos_para_mantenimiento "-" (word Eficiencia_Mantenimiento "-" (word Eficiencia_NuevaInfra ".txt")))))
-  ]
-  [
-    set fn (word "FM" "-" (word recursos_nuevaInfrastructura "-" (word recursos_para_mantenimiento "-" (word Eficiencia_Mantenimiento "-" (word Eficiencia_NuevaInfra ".txt")))))
-
-  ]
-
-;  ifelse switch_MCDA = TRUE [
-;    set fn (word "DC" "-" (word recursos_nuevaInfrastructura "-" (word recursos_para_mantenimiento "-" (word Eficiencia_Mantenimiento "-" (word Eficiencia_NuevaInfra ".txt")))))
+;ifelse MCDA = "Favors New Infrastructure" [
+;    set fn (word "FN" "-" (word recursos_nuevaInfrastructura "-" (word recursos_para_mantenimiento "-" (word Eficiencia_Mantenimiento "-" (word Eficiencia_NuevaInfra ".txt")))))
 ;  ]
 ;  [
-;    set fn (word "SC" "-" (word recursos_nuevaInfrastructura "-" (word recursos_para_mantenimiento "-" (word Eficiencia_Mantenimiento "-" (word Eficiencia_NuevaInfra ".txt")))))
+ ;   set fn (word "FM" "-" (word recursos_nuevaInfrastructura "-" (word recursos_para_mantenimiento "-" (word Eficiencia_Mantenimiento "-" (word Eficiencia_NuevaInfra ".txt")))))
 ;  ]
+
+  ifelse switch_MCDA = TRUE [
+    set fn (word "DC" "-" (word recursos_nuevaInfrastructura "-" (word recursos_para_mantenimiento "-" (word Eficiencia_Mantenimiento "-" (word Eficiencia_NuevaInfra ".txt")))))
+  ]
+  [
+    set fn (word "SC" "-" (word recursos_nuevaInfrastructura "-" (word recursos_para_mantenimiento "-" (word Eficiencia_Mantenimiento "-" (word Eficiencia_NuevaInfra ".txt")))))
+  ]
 
     ;let fn "estado_key.txt"
     if file-exists? fn
@@ -197,6 +198,41 @@ ifelse MCDA = "Favors New Infrastructure" [
     file-close                                        ;close the File
 end
 
+
+
+to export-map_dvalues
+  ;this procedure creates a txt file with a vector containing a particular atribute from the agebs
+  ;let PATH "c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/CarpetasTrabajo/AndresBaeza/"
+ifelse MCDA = "Favors New Infrastructure" [
+    set fn (word ticks (word "FN-dvalue" "-" (word recursos_nuevaInfrastructura "-" (word recursos_para_mantenimiento "-" (word Eficiencia_Mantenimiento "-" (word Eficiencia_NuevaInfra ".txt"))))))
+  ]
+  [
+    set fn (word ticks (word "FM-dvalue" "-" (word recursos_nuevaInfrastructura "-" (word recursos_para_mantenimiento "-" (word Eficiencia_Mantenimiento "-" (word Eficiencia_NuevaInfra ".txt"))))))
+
+  ]
+
+;  ifelse switch_MCDA = TRUE [
+;    set fn (word "DC" "-" (word recursos_nuevaInfrastructura "-" (word recursos_para_mantenimiento "-" (word Eficiencia_Mantenimiento "-" (word Eficiencia_NuevaInfra ".txt")))))
+;  ]
+;  [
+;    set fn (word "SC" "-" (word recursos_nuevaInfrastructura "-" (word recursos_para_mantenimiento "-" (word Eficiencia_Mantenimiento "-" (word Eficiencia_NuevaInfra ".txt")))))
+;  ]
+
+    ;let fn "estado_key.txt"
+    if file-exists? fn
+    [ file-delete fn]
+    file-open fn
+    foreach sort-on [ID] agebs[
+    ? ->
+    ask ?
+      [
+        file-write ID                                    ;;write the ID of each ageb using a numeric value (update acording to Marco's Identification)
+        file-write d_mantenimiento_D
+        file-write d_new_D                           ;;number of floods
+      ]
+    ]
+    file-close                                        ;close the File
+end
 
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -512,7 +548,7 @@ CHOOSER
 Visualization
 Visualization
 "d_Mantenimiento" "d_Nueva Infraestructura" "GoogleEarth" "Encharcamientos" "% houses with drainage" "P. Falla D" "Capacidad_D" "Edad Infraestructura D" "hundimiento" "value_function_Age_d" "value_function_ponding" "value_function_falta_d" "value_function_capasity" "value_function_precipitation" "Action_New" "Action_Mant"
-3
+1
 
 BUTTON
 1234

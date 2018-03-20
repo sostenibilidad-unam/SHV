@@ -168,8 +168,9 @@ to SETUP
   ;r:eval "studyArea_CVG<-readShapeSpatial('C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/data/agebs_abm')"
   ;r:eval "studyArea_CVG<-readShapeSpatial('~/data/agebs_abm')"
   
-  r:eval "studyArea_CVG<-readShapeSpatial('C:/Users/abaezaca/Dropbox (Personal)/Layers/sesmo/agebs_abm')"
- ;
+;  r:eval "studyArea_CVG<-readShapeSpatial('C:/Users/abaezaca/Dropbox (Personal)/Layers/sesmo/agebs_abm')"
+   r:eval "studyArea_CVG<-readShapeSpatial('data/agebs_abm')"
+  ;
   r:eval "studyArea_CVG@data$estado<-as.factor(substring(studyArea_CVG@data$cvgeo,1,2))"
   set IDD r:get "studyArea_CVG@data$AGEB_ID"
   ;r:eval "studyArea_CVG@data$municipio<-as.factor(substring(studyArea_CVG@data$cvgeo,3,5))"
@@ -202,7 +203,9 @@ to load-GIS-data
   set Limites_delegacionales gis:load-dataset  "data/limites_deleg_DF_2013.shp"
   set Agebs_map_full gis:load-dataset "data/ageb_abm_full.shp"
   ;set Agebs_map gis:load-dataset "data/agebs_abm.shp"
-    set Agebs_map gis:load-dataset "c:/Users/abaezaca/Dropbox (Personal)/Layers/sesmo/agebs_abm.shp"
+;    set Agebs_map gis:load-dataset "c:/Users/abaezaca/Dropbox (Personal)/Layers/sesmo/agebs_abm.shp"
+   set Agebs_map gis:load-dataset "data/agebs_abm.shp"
+
   ;set Agebs_map gis:load-dataset "/agebs_abm_B.shp"
   set mascara gis:load-dataset "data/Mask.shp"                  ;Mask of study area                                                                                                                         ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
   ;define city or watersheed scale                                                                             

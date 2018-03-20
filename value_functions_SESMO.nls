@@ -83,10 +83,8 @@ to update_criteria_and_valueFunctions_WaterOperator    ;;update the biphisical v
       ]
       ;###########################################################
       if ? = "Falla" [
-        let attribute [Falla_d] of myself
-        
+        let attribute [Falla_d] of myself  
         set criteria_values replace-item i criteria_values attribute 
-          ;set criteria_max replace-item i criteria_max Falla_d_max
         set rescaled_criteria_values replace-item i rescaled_criteria_values (1 - attribute) 
       ]
       ;###########################################################
@@ -170,10 +168,13 @@ to update_criteria_and_valueFunctions_WaterOperator    ;;update the biphisical v
       ]
         ;###########################################################
         if ? = "Peticiones de usuarios"[
-          set criteria_values replace-item i criteria_values (1 - [peticion_usuarios] of myself / peticion_usuarios_max)         
-          set rescaled_criteria_values replace-item i rescaled_criteria_values (item i criteria_values);(Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
-        ]
-        ;###########################################################
+        let attribute [peticion_usuarios] of myself
+          set criteria_values replace-item i criteria_values attribute      
+        let svf 1 - (attribute / peticion_usuarios_max)   
+        set rescaled_criteria_values replace-item i rescaled_criteria_values  svf   ;(Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
+        print list attribute svf
+      ]
+      ;###########################################################
         if ? = "Presion de medios"[
         let attribute [Presion_de_medios] of myself
         set criteria_values replace-item i criteria_values attribute
