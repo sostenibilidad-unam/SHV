@@ -284,8 +284,8 @@ Agebs-own[
   value_function_Age_Ab
   value_function_Age_d
   value_function_scarcity
-  value_function_floods
-  value_function_floods_Wextraction 
+  value_function_ponding
+  value_function_ponding_Wextraction 
   value_function_capasity
   value_function_falta_Ab
   value_function_falta_d
@@ -406,188 +406,188 @@ define_initial-contitions_PipedwaterDistribution
 
 end
 
-to define-infrastructuresystems
+;to define-infrastructuresystems
   ;define infrastructure as agents
 
   ;#################################################################################################################################################  
   ;create infraestructure as agents
   ;#################################################################################################################################################  
   ;rainfall stations
-  foreach gis:feature-list-of estaciones_lluvia_SACMEX [
-    ? ->
-    let centroid gis:location-of gis:centroid-of ?
-    
-    if not empty? centroid[
-      create-Rain_Stations 1 [
-        set xcor item 0 centroid              ;define coodeantes of ageb at the center of the polygone
-        set ycor item 1 centroid
-        set color blue
-        set name gis:property-value ? "name"
-        set p_rain (list gis:property-value ? "jan_P" gis:property-value ? "feb_P" gis:property-value ? "mar_P" gis:property-value ? "apr_P" gis:property-value ? "may_P" gis:property-value ? "jun_P" gis:property-value ? "jul_P" gis:property-value ? "aug_P" gis:property-value ? "sep_P" gis:property-value ? "oct_P" gis:property-value ? "nov_P" gis:property-value ? "dec_P")
-        set shp_gamma (list gis:property-value ? "jan_S" gis:property-value ? "feb_S" gis:property-value ? "mar_S" gis:property-value ? "apr_S" gis:property-value ? "may_S" gis:property-value ? "jun_S" gis:property-value ? "jul_S" gis:property-value ? "aug_S" gis:property-value ? "sep_S" gis:property-value ? "oct_S" gis:property-value ? "nov_S" gis:property-value ? "dec_S")
-        set rate_gamma (list gis:property-value ? "jan_R" gis:property-value ? "feb_R" gis:property-value ? "mar_R" gis:property-value ? "apr_R" gis:property-value ? "may_R" gis:property-value ? "jun_R" gis:property-value ? "jul_R" gis:property-value ? "aug_R" gis:property-value ? "sep_R" gis:property-value ? "oct_R" gis:property-value ? "nov_R" gis:property-value ? "dec_R")
-        set shape "drop"
-      ]
-    ]
-  ]  
- ;#################################################################################################################################################  
- ;Wells
- ;#################################################################################################################################################  
- 
-  ;CMZM
-  foreach gis:feature-list-of PozosCMZM_Project [
-    ? ->
-    let centroid gis:location-of gis:centroid-of ?
-    if not empty? centroid
-      [ create-pozos 1
-        [ set xcor item 0 centroid
-          set ycor item 1 centroid
-          set CVEGEO [CVEGEO] of min-one-of agebs [distance myself]
-          if CVEGEO != 0 [
-            set CV_estado (substring CVEGEO 0 2)
-            set CV_municipio (substring CVEGEO 2 5)
-            set Localidad (substring CVEGEO 5 9)
-            set AGEB_key (substring CVEGEO 9 13)
-          ]
-          set shape "circle 2"
-          set size 2
-          set color sky
-          set hidden? TRUE
-          set age_pozo (1 + random 20) * 365
-          set extraction_rate 87225 ;m3/dia
-          set aquifer "2"
-        ]
-    ]
-  ]
-  
-  ; chalco
-  foreach gis:feature-list-of PozosChalco_Project [
-    ? ->
-    let centroid gis:location-of gis:centroid-of ?
-    if not empty? centroid
-      [ create-pozos 1
-        [ set xcor item 0 centroid
-          set ycor item 1 centroid
-          set CVEGEO [CVEGEO] of min-one-of agebs [distance myself]
-          if CVEGEO != 0 [
-            set CV_estado (substring CVEGEO 0 2)
-            set CV_municipio (substring CVEGEO 2 5)
-            set Localidad (substring CVEGEO 5 9)
-            set AGEB_key (substring CVEGEO 9 13)
-          ]
-          set shape "circle 2"
-          set size 2
-          set color magenta
-          set hidden? TRUE
-          set age_pozo (1 + random 20) * 365
-          set extraction_rate 87225 ;m3/dia
-        ;  set aquifer "Chalco"
-        ]
-    ]
-  ]
-  
-  ;pachuca
-  foreach gis:feature-list-of PozosPachuca_Project [
-    ? ->
-    let centroid gis:location-of gis:centroid-of ?
-    if not empty? centroid
-      [ create-pozos 1
-        [ set xcor item 0 centroid
-          set ycor item 1 centroid
-          set CVEGEO [CVEGEO] of min-one-of agebs [distance myself]
-          if CVEGEO != 0 [
-            set CV_estado (substring CVEGEO 0 2)
-            set CV_municipio (substring CVEGEO 2 5)
-            set Localidad (substring CVEGEO 5 9)
-            set AGEB_key (substring CVEGEO 9 13)
-          ]
-          set shape "circle 2"
-          set size 2
-          set color green
-          set hidden? TRUE
-          set age_pozo (1 + random 20) * 365
-          set extraction_rate 87225 ;m3/dia
-        ;  set aquifer "Pachuca"
-        ]
-    ]
-  ]
-  
-  ;Texcoco
-  
-  foreach gis:feature-list-of PozosTexcoco_Project [
-    ? ->
-    let centroid gis:location-of gis:centroid-of ?
-    if not empty? centroid
-      [ create-pozos 1
-        [ set xcor item 0 centroid
-          set ycor item 1 centroid
-          set CVEGEO [CVEGEO] of min-one-of agebs [distance myself]
-          if CVEGEO != 0 [
-            set CV_estado (substring CVEGEO 0 2)
-            set CV_municipio (substring CVEGEO 2 5)
-            set Localidad (substring CVEGEO 5 9)
-            set AGEB_key (substring CVEGEO 9 13)
-          ]
-          set shape "circle 2"
-          set size 2
-          set color white
-          set hidden? TRUE
-          set age_pozo (1 + random 20) * 365
-          set extraction_rate 87225 ;m3/dia
-         ;set aquifer "Texcoco"
-        ]
-    ]
-  ]
-  
-  
-  ask pozos [
-    set production extraction_rate * (1 / count pozos)
-  ] ; set daily production of water in [mts^3/s]*[s/min]*[min/hour]*[hours/day]*[1/tot pozos]=[mts^3/(day*pozo)]
-  
-  
-  ;;read nodes secondary sewer
-  foreach gis:feature-list-of desalojo_primario [
-    ? ->
-    let centroid gis:location-of gis:centroid-of ?
-    if not empty? centroid
-      [ create-sewage_nodes 1 [
-        set xcor item 0 centroid
-        set ycor item 1 centroid
-        set ID  gis:property-value ? "Id"
-        set age [Antiguedad-infra_D] of agebs-here
-        set shape "circle 2"
-        set size 3
-        set color red
-        set Betweeness gis:property-value ? "Norm_Betwe"
-        ]
-    ]
-  ]
-  
-  let pipes csv:from-file "data/network_directed_sewage.csv"
-  let pipes_matrix matrix:from-row-list but-first pipes
-  let destination_node matrix:get-column  pipes_matrix 0
-  let source_node matrix:get-column  pipes_matrix 1
-  
-  (foreach destination_node source_node [
-    [a b] ->
-    let nn sewage_nodes with [ID = a]
-    let mm sewage_nodes with [ID = b]
-    ask mm [create-D_pipes-to nn[]]
-  ])
-  
-  ask agebs [
-    set pozos_agebs turtle-set pozos with [CVEGEO = [CVEGEO] of myself]
-    ask pozos_agebs [
-      set zone [zona_aquifera] of myself
-      set aquifer [aquifer] of myself
-    ]
-    if CV_estado = 09[
-      set rainfall_station_influ turtle-set Rain_Stations in-radius 30
-    ]
-  ]
-  
-  set count_pozos_initial count pozos with [aquifer = "2"]
-end
+;  foreach gis:feature-list-of estaciones_lluvia_SACMEX [
+;    ? ->
+;    let centroid gis:location-of gis:centroid-of ?
+;    
+;    if not empty? centroid[
+;      create-Rain_Stations 1 [
+;        set xcor item 0 centroid              ;define coodeantes of ageb at the center of the polygone
+;        set ycor item 1 centroid
+;        set color blue
+;        set name gis:property-value ? "name"
+;        set p_rain (list gis:property-value ? "jan_P" gis:property-value ? "feb_P" gis:property-value ? "mar_P" gis:property-value ? "apr_P" gis:property-value ? "may_P" gis:property-value ? "jun_P" gis:property-value ? "jul_P" gis:property-value ? "aug_P" gis:property-value ? "sep_P" gis:property-value ? "oct_P" gis:property-value ? "nov_P" gis:property-value ? "dec_P")
+;        set shp_gamma (list gis:property-value ? "jan_S" gis:property-value ? "feb_S" gis:property-value ? "mar_S" gis:property-value ? "apr_S" gis:property-value ? "may_S" gis:property-value ? "jun_S" gis:property-value ? "jul_S" gis:property-value ? "aug_S" gis:property-value ? "sep_S" gis:property-value ? "oct_S" gis:property-value ? "nov_S" gis:property-value ? "dec_S")
+;        set rate_gamma (list gis:property-value ? "jan_R" gis:property-value ? "feb_R" gis:property-value ? "mar_R" gis:property-value ? "apr_R" gis:property-value ? "may_R" gis:property-value ? "jun_R" gis:property-value ? "jul_R" gis:property-value ? "aug_R" gis:property-value ? "sep_R" gis:property-value ? "oct_R" gis:property-value ? "nov_R" gis:property-value ? "dec_R")
+;        set shape "drop"
+;      ]
+;    ]
+;  ]  
+; ;#################################################################################################################################################  
+; ;Wells
+; ;#################################################################################################################################################  
+; 
+;  ;CMZM
+;  foreach gis:feature-list-of PozosCMZM_Project [
+;    ? ->
+;    let centroid gis:location-of gis:centroid-of ?
+;    if not empty? centroid
+;      [ create-pozos 1
+;        [ set xcor item 0 centroid
+;          set ycor item 1 centroid
+;          set CVEGEO [CVEGEO] of min-one-of agebs [distance myself]
+;          if CVEGEO != 0 [
+;            set CV_estado (substring CVEGEO 0 2)
+;            set CV_municipio (substring CVEGEO 2 5)
+;            set Localidad (substring CVEGEO 5 9)
+;            set AGEB_key (substring CVEGEO 9 13)
+;          ]
+;          set shape "circle 2"
+;          set size 2
+;          set color sky
+;          set hidden? TRUE
+;          set age_pozo (1 + random 20) * 365
+;          set extraction_rate 87225 ;m3/dia
+;          set aquifer "2"
+;        ]
+;    ]
+;  ]
+;  
+;  ; chalco
+;  foreach gis:feature-list-of PozosChalco_Project [
+;    ? ->
+;    let centroid gis:location-of gis:centroid-of ?
+;    if not empty? centroid
+;      [ create-pozos 1
+;        [ set xcor item 0 centroid
+;          set ycor item 1 centroid
+;          set CVEGEO [CVEGEO] of min-one-of agebs [distance myself]
+;          if CVEGEO != 0 [
+;            set CV_estado (substring CVEGEO 0 2)
+;            set CV_municipio (substring CVEGEO 2 5)
+;            set Localidad (substring CVEGEO 5 9)
+;            set AGEB_key (substring CVEGEO 9 13)
+;          ]
+;          set shape "circle 2"
+;          set size 2
+;          set color magenta
+;          set hidden? TRUE
+;          set age_pozo (1 + random 20) * 365
+;          set extraction_rate 87225 ;m3/dia
+;        ;  set aquifer "Chalco"
+;        ]
+;    ]
+;  ]
+;  
+;  ;pachuca
+;  foreach gis:feature-list-of PozosPachuca_Project [
+;    ? ->
+;    let centroid gis:location-of gis:centroid-of ?
+;    if not empty? centroid
+;      [ create-pozos 1
+;        [ set xcor item 0 centroid
+;          set ycor item 1 centroid
+;          set CVEGEO [CVEGEO] of min-one-of agebs [distance myself]
+;          if CVEGEO != 0 [
+;            set CV_estado (substring CVEGEO 0 2)
+;            set CV_municipio (substring CVEGEO 2 5)
+;            set Localidad (substring CVEGEO 5 9)
+;            set AGEB_key (substring CVEGEO 9 13)
+;          ]
+;          set shape "circle 2"
+;          set size 2
+;          set color green
+;          set hidden? TRUE
+;          set age_pozo (1 + random 20) * 365
+;          set extraction_rate 87225 ;m3/dia
+;        ;  set aquifer "Pachuca"
+;        ]
+;    ]
+;  ]
+;  
+;  ;Texcoco
+;  
+;  foreach gis:feature-list-of PozosTexcoco_Project [
+;    ? ->
+;    let centroid gis:location-of gis:centroid-of ?
+;    if not empty? centroid
+;      [ create-pozos 1
+;        [ set xcor item 0 centroid
+;          set ycor item 1 centroid
+;          set CVEGEO [CVEGEO] of min-one-of agebs [distance myself]
+;          if CVEGEO != 0 [
+;            set CV_estado (substring CVEGEO 0 2)
+;            set CV_municipio (substring CVEGEO 2 5)
+;            set Localidad (substring CVEGEO 5 9)
+;            set AGEB_key (substring CVEGEO 9 13)
+;          ]
+;          set shape "circle 2"
+;          set size 2
+;          set color white
+;          set hidden? TRUE
+;          set age_pozo (1 + random 20) * 365
+;          set extraction_rate 87225 ;m3/dia
+;         ;set aquifer "Texcoco"
+;        ]
+;    ]
+;  ]
+;  
+;  
+;  ask pozos [
+;    set production extraction_rate * (1 / count pozos)
+;  ] ; set daily production of water in [mts^3/s]*[s/min]*[min/hour]*[hours/day]*[1/tot pozos]=[mts^3/(day*pozo)]
+;  
+;  
+;  ;;read nodes secondary sewer
+;  foreach gis:feature-list-of desalojo_primario [
+;    ? ->
+;    let centroid gis:location-of gis:centroid-of ?
+;    if not empty? centroid
+;      [ create-sewage_nodes 1 [
+;        set xcor item 0 centroid
+;        set ycor item 1 centroid
+;        set ID  gis:property-value ? "Id"
+;        set age [Antiguedad-infra_D] of agebs-here
+;        set shape "circle 2"
+;        set size 3
+;        set color red
+;        set Betweeness gis:property-value ? "Norm_Betwe"
+;        ]
+;    ]
+;  ]
+;  
+;  let pipes csv:from-file "data/network_directed_sewage.csv"
+;  let pipes_matrix matrix:from-row-list but-first pipes
+;  let destination_node matrix:get-column  pipes_matrix 0
+;  let source_node matrix:get-column  pipes_matrix 1
+;  
+;  (foreach destination_node source_node [
+;    [a b] ->
+;    let nn sewage_nodes with [ID = a]
+;    let mm sewage_nodes with [ID = b]
+;    ask mm [create-D_pipes-to nn[]]
+;  ])
+;  
+;  ask agebs [
+;    set pozos_agebs turtle-set pozos with [CVEGEO = [CVEGEO] of myself]
+;    ask pozos_agebs [
+;      set zone [zona_aquifera] of myself
+;      set aquifer [aquifer] of myself
+;    ]
+;    if CV_estado = 09[
+;      set rainfall_station_influ turtle-set Rain_Stations in-radius 30
+;    ]
+;  ]
+;  
+;  set count_pozos_initial count pozos with [aquifer = "2"]
+;end
 
 to load-GIS-data
   set Agebs_map_full_csv_list csv:from-file "data/ageb_abm_full_centroid_acuif.csv"
@@ -595,13 +595,13 @@ to load-GIS-data
   
 ;  print matrix:pretty-print-text Agebs_map_full_csv 
   
-  set estaciones_lluvia_SACMEX gis:load-dataset  "data/estacionesRain/rainfall_statistics_CDMX.shp"
-  set desalojo_primario gis:load-dataset  "data/Sewer_Nodes_July27_Project.shp"
+  ;set estaciones_lluvia_SACMEX gis:load-dataset  "data/estacionesRain/rainfall_statistics_CDMX.shp"
+  ;set desalojo_primario gis:load-dataset  "data/Sewer_Nodes_July27_Project.shp"
   ;set pozos_WaterOperator gis:load-dataset  "data/Join_pozosColoniasAgebs.shp"                                 ;wells
-  set PozosCMZM_Project gis:load-dataset  "data/PozosCMZM_Project.shp"
-  set PozosPachuca_Project gis:load-dataset  "data/PozosPachuca_Project.shp"
-  set PozosTexcoco_Project gis:load-dataset  "data/PozosTexcoco_Project.shp"
-  set PozosChalco_Project gis:load-dataset  "data/PozosChalco_Project.shp"
+  ;set PozosCMZM_Project gis:load-dataset  "data/PozosCMZM_Project.shp"
+  ;set PozosPachuca_Project gis:load-dataset  "data/PozosPachuca_Project.shp"
+  ;set PozosTexcoco_Project gis:load-dataset  "data/PozosTexcoco_Project.shp"
+  ;set PozosChalco_Project gis:load-dataset  "data/PozosChalco_Project.shp"
   set Limites_delegacionales gis:load-dataset  "data/limites_deleg_DF_2013.shp"
   set zonas_aquif_map gis:load-dataset  "data/AGEB_Zona_Project.shp"
   set Agebs_map_full gis:load-dataset "data/ageb_abm_full.shp"
@@ -637,79 +637,6 @@ end
   to define_neighborhoods
   ;  define_neighborhoods_full ;;REFERS TO THE FULL AREA OF STUDY. THAT IS THE ENTIRE WATERSHED OF MEXICO CITY VALEY  (need to complete information for other areas)
   
-;  let j 0
-;    
-; foreach gis:feature-list-of Agebs_map_full; "ID_ZONA" "0"  
-; [ ? ->
-;   let centroid gis:location-of gis:centroid-of ?
-;   if not empty? centroid[
-;     create-agebs 1 [      
-;       let row_ageb matrix:get-row Agebs_map_full_csv j 
-;        print row_ageb
-;       set xcor item 0 centroid              ;define coodeantes of ageb at the center of the polygone
-;       set ycor item 1 centroid 
-;       set ID item 3 row_ageb 
-;       set CVEGEO gis:property-value ? "CVEGEO"
-;       ;(gis:location-of gis:centroid-of gis:find-one-feature Agebs_map_full "CVEGEO" CVEGEO)      
-;       
-;       set CV_estado (substring CVEGEO 0 2)
-;       set CV_municipio (substring CVEGEO 2 5)
-;       set Localidad (substring CVEGEO 5 9)
-;       set AGEB_key (substring CVEGEO 9 13)
-;       set color grey
-;       set shape "circle"
-;       set size 0.5
-;       set hidden? false
-;       set Antiguedad-infra_Ab 365 *  item 5 row_ageb 
-;        print item 5 row_ageb 
-;       set Antiguedad-infra_D 365 *  item 5 row_ageb 
-;       set Abastecimiento item 6 row_ageb 
-;       set Capacidad_d item 7 row_ageb ;ifelse-value(gis:property-value ? "capacidad" != nobody)[gis:property-value ? "capacidad"][0]
-;       set water_quality item 8 row_ageb 
-;       set urban_growth item 10 row_ageb 
-;       set desperdicio_agua item 11 row_ageb       ;;Por fugas, falta de conciencia del uso del agua
-;       set desviacion_agua item 12 row_ageb ;; 1 si hay pozo en ageb o en agebs colindantes; 0 si no.
-;       set altitude item 14 row_ageb 
-;       set scarcity item 15 row_ageb 
-;       set FALLA_ab item 16 row_ageb 
-;       set FAlta_ab item 17 row_ageb 
-;       set houses_with_abastecimiento 1 - FALTA_ab
-;       set FAlta_d item 18 row_ageb 
-;        print FAlta_d
-;       set houses_with_dranage 1 - falta_d
-;       set gasto_hidraulico item 19 row_ageb 
-;       set health item 20 row_ageb ;ifelse-value(gis:property-value ? "health" != nobody)[gis:property-value ?  "health"][random-float 0]
-;       set Income-index item 21 row_ageb ;ifelse-value(gis:property-value ? "ingreso" != nobody)[gis:property-value ? "ingreso"][random-float 1]
-;       ;print Income-index
-;        set  monto item 22 row_ageb 
-;       set Obstruccion_dren item 23 row_ageb 
-;       set Peticion_Delegacional_D item 24 row_ageb ;gis:property-value ? "pet_del_dr"
-;       set peticion_usuarios  item 25 row_ageb 
-;       set poblacion item 26 row_ageb 
-;       set flooding item 27 row_ageb 
-;       set presion_hidraulica item 28 row_ageb 
-;       set hundimiento item 29 row_ageb 
-;       set group_kmean item 32 row_ageb 
-;       set precipitation item 33 row_ageb 
-;       set garbage ifelse-value (Income-index != nobody)[poblacion * (1 - Income-index)][poblacion * (1 - random-float 1)]
-;       set aquifer item 33 row_ageb ;gis:property-value (gis:find-one-feature zonas_aquif_map "CVEGEO" CVEGEO) "ACUIF"
-;       set Capacidad_Ab 1
-;       set Falla_d 1
-;       set presion_de_medios 1;gis:property-value ? "pres_med"
-;;;        
-;        set scarcity_annual 0
-;        set mean_days_withNo_water 6 / 7
-;        set days_water_in 0
-;        set Y_F 1
-;        set Y_S 1
-;        set vulnerability_S 1
-;        set vulnerability_F 1
-;        
-;      ]
-;      set j j + 1    
-;    ]
-;  ]
-
   
  ( foreach (gis:feature-list-of Agebs_map_full) (gis:feature-list-of Agebs_map); "ID_ZONA" "0"
   
@@ -792,89 +719,6 @@ end
   ])
 
 
-  
- 
-    
-;  foreach gis:feature-list-of Agebs_map; "ID_ZONA" "0"
-;  
-;  [ ? ->
-;    let centroid gis:location-of gis:centroid-of ?
-;    if not empty? centroid[
-;      ;if not empty? centroid[
-;      create-agebs 1 [
-;        set xcor item 0 centroid              ;define coodeantes of ageb at the center of the polygone
-;        set ycor item 1 centroid
-;        set ID gis:property-value ? "AGEB_ID"
-;        set CVEGEO gis:property-value ? "cvgeo"
-;        set CV_estado (substring CVEGEO 0 2)
-;        set CV_municipio (substring CVEGEO 2 5)
-;        set Localidad (substring CVEGEO 5 9)
-;        set AGEB_key (substring CVEGEO 9 13)
-;        set color grey
-;        set shape "circle"
-;        set size 0.5
-;        set hidden? false
-;        set group_kmean ifelse-value (gis:property-value ? "grupo" = nobody)[0][gis:property-value ? "grupo"]
-;       ; set Abastecimiento gis:property-value ?  "abastecimi"; poblacion * Requerimiento_deAgua
-;        set Antiguedad-infra_Ab 365 * gis:property-value ? "antiguedad"
-;        set Antiguedad-infra_D 365 * gis:property-value ? "antiguedad"
-;        set altitude gis:property-value ? "ELEVACION"
-;        set aquifer gis:property-value (gis:find-one-feature zonas_aquif_map "CVEGEO" CVEGEO) "acuif"
-;  ;      set low_high-land gis:property-value (gis:find-one-feature LHland "AGEB_ID" (word ID)) "LOW_HIG"
-;      
-;        ; set precipitation gis:property-value (gis:find-one-feature ageb13 "CVEGEO" CVEGEO) "PRECIP"        
-;        
-;        set Capacidad_Ab 1
-;        set Capacidad_d ifelse-value(gis:property-value ? "capac_d" != nobody)[gis:property-value ? "capac_d"][0]
-;        set Falla_d 1
-;        set precipitation ifelse-value (gis:property-value ? "PR_2009" != nobody)[gis:property-value ? "PR_2009"][1]
-;        
-;        set water_quality 1;gis:property-value ? "cal_agua"
-;        set scarcity gis:property-value ? "ESCASEZ"
-;        ;set FALTA_ab gis:property-value ? "Falta_in"
-;        ;set houses_with_abastecimiento 1 - FALTA_ab
-;        ;set FALLA_ab gis:property-value ? "falla_in"
-;        ;set falta_d gis:property-value ? "falta_dren"
-;        
-;        ;set presion_hidraulica gis:property-value ? "pres_hid"
-;        set hundimiento gis:property-value ? "subsidenci"
-;        set presion_de_medios gis:property-value ? "PRES_MED"
-;        set desviacion_agua gis:property-value ? "desv_agua" ;; 1 si hay pozo en ageb o en agebs colindantes; 0 si no.
-;        
-;        ;set houses_with_dranage 1 - falta_d
-;        set gasto_hidraulico gis:property-value ? "GASTO"
-;        ;set Peticion_Delegacional_D gis:property-value ? "pet_del_dr"
-;        ;set abastecimiento_b gis:property-value ? "abastecimi"
-;        
-;        ;set poblacion gis:property-value ? "poblacion"
-;        set Income-index ifelse-value(gis:property-value ? "ingreso" != nobody)[gis:property-value ? "ingreso"][random-float 1]
-;        set health ifelse-value(gis:property-value ? "ENF_14" != nobody)[gis:property-value ?  "ENF_14"][random-float 0]
-;        set flooding ifelse-value(gis:property-value ? "PONDING" != nobody)[gis:property-value ?  "PONDING"][0]
-;        set garbage (gis:property-value ? "BASURA") / 10000
-;        ;set Obstruccion_dren gis:property-value ? "obstruc"
-;        
-;;        set Monto gis:property-value ? "monto"
-;        
-; ;       set desperdicio_agua gis:property-value ? "desp_agua"       ;;Por fugas, falta de conciencia del uso del agua
-;  ;      set peticion_usuarios gis:property-value ? "pet_usr_d"  ;index densidad de infra por cuanca * falta de conexiones por ageb.
-;        set urban_growth gis:property-value ? "crec_urb"
-;       ; set zona_aquifera gis:property-value (gis:find-one-feature zonas_aquif_map "CVEGEO" CVEGEO) "ID_ZONA"
-;        
-;        set scarcity_annual 0
-;        set mean_days_withNo_water 6 / 7
-;        set days_water_in 0
-;        set Y_F 0
-;        set Y_S 1
-;        set vulnerability_S 1
-;        set vulnerability_F 1
-;        set neighboor_weights []
-;        set contiguous_agebs turtle-set nobody
-;      ]
-;    ]
-;  ]
-;
-
-  
 end
 ;####################################################################################################### 
    to define_ActionsCriteria
@@ -1876,65 +1720,4 @@ to set-matrix-contj
     ])
     set j j + 1
   ] 
-end
-
-to define_initial-contitions_PipedwaterDistribution
-  ;to define areas with irregular water supply by pipes (e.g. mean_days_withNo_water)[days per week]
-  ;crear csv table and read the values from it
-  ask agebs with [CV_municipio = "002"][
-    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "002"]
-    set mean_days_withNo_water item 3 item 2 average_day_nowater_perweek];"Azcapotzalco"
-  ask agebs with [CV_municipio = "003"][
-    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "003"]
-    set mean_days_withNo_water item 3 item 4 average_day_nowater_perweek];"Coyoacan"
-  ask agebs with [CV_municipio = "004"][
-    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "004"]
-    set mean_days_withNo_water item 3 item 5 average_day_nowater_perweek];"Cuajimalpa"
-  ask agebs with [CV_municipio = "005"][
-    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "005"]
-    set mean_days_withNo_water item 3 item 7 average_day_nowater_perweek];"Gustavo A. Madero"
-  ask agebs with [CV_municipio = "006"][
-    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "006"]
-    set mean_days_withNo_water item 3 item 8 average_day_nowater_perweek];"Iztacalco"
-  ask agebs with [CV_municipio = "007"][
-    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "007"]
-    set mean_days_withNo_water item 3 item 9 average_day_nowater_perweek];"Iztapalapa"
-  ask agebs with [CV_municipio = "008"][
-    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "008"]
-    set mean_days_withNo_water item 3 item 10 average_day_nowater_perweek];"La Magdalena Contreras"
-  ask agebs with [CV_municipio = "009"][
-    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "009"]
-    set mean_days_withNo_water item 3 item 11 average_day_nowater_perweek];"Milpa Alta"
-  ask agebs with [CV_municipio = "010"][
-    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "010"]
-    set mean_days_withNo_water item 3 item 1 average_day_nowater_perweek];"Álvaro Obregón"
-  ask agebs with [CV_municipio = "011"][
-    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "011"]
-    set mean_days_withNo_water item 3 item 13 average_day_nowater_perweek];"Tláhuac"
-  ask agebs with [CV_municipio = "012"][
-    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "012"]
-    set mean_days_withNo_water item 3 item 14 average_day_nowater_perweek];"Tlalpan"
-  ask agebs with [CV_municipio = "013"][
-    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "013"]
-    set mean_days_withNo_water item 3 item 16 average_day_nowater_perweek];"Xochimilco"
-  ask agebs with [CV_municipio = "014"][
-    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "014"]
-    set mean_days_withNo_water item 3 item 3 average_day_nowater_perweek];"Benito Juárez"
-  ask agebs with [CV_municipio = "015"][
-    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "015"]
-    set mean_days_withNo_water item 3 item 6 average_day_nowater_perweek];"Cuauhtémoc"
-  ask agebs with [CV_municipio = "016"][
-    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "016"]
-    set mean_days_withNo_water item 3 item 12 average_day_nowater_perweek];"Miguel Hidalgo"
-  ask agebs with [CV_municipio = "017"][
-    set alt_mean_Delegation mean [altitude] of agebs with [CV_municipio = "017"]
-    set mean_days_withNo_water item 3 item 15 average_day_nowater_perweek];"Venustiano Carranza"
-  
-end
-
-;#############################################################################################################################################
-;#############################################################################################################################################
-to show_sewer
-  ask sewage_nodes [ifelse hidden? = false [set hidden? true][set hidden? false]]
-  ask D_pipes [ifelse hidden? = false [set hidden? true][set hidden? false]]
 end
