@@ -168,8 +168,8 @@ to SETUP
   ;r:eval "studyArea_CVG<-readShapeSpatial('C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/data/agebs_abm')"
   ;r:eval "studyArea_CVG<-readShapeSpatial('~/data/agebs_abm')"
   
-;  r:eval "studyArea_CVG<-readShapeSpatial('C:/Users/abaezaca/Dropbox (Personal)/Layers/sesmo/agebs_abm')"
-   r:eval "studyArea_CVG<-readShapeSpatial('data/agebs_abm')"
+  r:eval "studyArea_CVG<-readShapeSpatial('C:/Users/abaezaca/Dropbox (Personal)/Layers/sesmo/agebs_abm')"
+;   r:eval "studyArea_CVG<-readShapeSpatial('~/data/agebs_abm')"
   ;
   r:eval "studyArea_CVG@data$estado<-as.factor(substring(studyArea_CVG@data$cvgeo,1,2))"
   set IDD r:get "studyArea_CVG@data$AGEB_ID"
