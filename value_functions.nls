@@ -60,109 +60,86 @@ to update_criteria_and_valueFunctions_WaterOperator    ;;update the biphisical v
       if ? = "Antiguedad"[
         if breed = alternatives_WaterOperator_AB[
           let attribute (([Antiguedad-infra_Ab] of myself) / 365)
-
-          set criteria_values replace-item i criteria_values attribute
-          ; set criteria_max replace-item i criteria_max Antiguedad-infra_Ab_max
-          ;set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
-          ;set rescaled_criteria_values replace-item i rescaled_criteria_values VF1 120 ((item i criteria_values)  / 365)
-          let min_x 120
+         let min_x 120
           let alpha_vf 80
           let y_vf exp ( - ((0 - min_x) / alpha_vf) ^ 2)
           let yy_vf exp ( - ((120 - min_x) / alpha_vf) ^ 2)
           let svf 1 - ((exp ( - ((attribute - min_x) / alpha_vf) ^ 2) - y_vf) / (yy_vf - y_vf))
-
           set rescaled_criteria_values replace-item i rescaled_criteria_values svf
-          ask myself [set value_function_Age_Ab [item i rescaled_criteria_values] of myself]
         ]
         if breed = alternatives_WaterOperator_d[
-          let attribute (([Antiguedad-infra_d] of myself) / 365)
-
-          set criteria_values replace-item i criteria_values attribute
+          let attribute ([Antiguedad-infra_d] of myself / 365)
           let min_x 120
           let alpha_vf 80
           let y_vf exp ( - ((0 - min_x) / alpha_vf) ^ 2)
           let yy_vf exp ( - ((120 - min_x) / alpha_vf) ^ 2)
           let svf 1 - ((exp ( - ((attribute - min_x) / alpha_vf) ^ 2) - y_vf) / (yy_vf - y_vf))
-
+          if attribute > 120 [set svf 0]
+          if attribute < 0 [set svf 1]    
           set rescaled_criteria_values replace-item i rescaled_criteria_values svf
-          ask myself [set value_function_Age_d [item i rescaled_criteria_values] of myself]
+          
         ]
        ]
       ;###########################################################
       if ? = "Capacidad"[
         if breed = alternatives_WaterOperator_AB[
           let attribute [Capacidad_Ab] of myself
-          set criteria_values replace-item i criteria_values attribute
-          ; set criteria_max replace-item i criteria_max  Capacidad_Ab_max ;change with update quantity for speed
-          ;      set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937] ["" "" "" ""] (item i criteria_max)  [1 0.8 0.6 0.4 0.2])
           set rescaled_criteria_values replace-item i rescaled_criteria_values 1 ;replace-item i rescaled_criteria_values VF3 (100 * (item i criteria_values))
 
         ]
         if breed = alternatives_WaterOperator_D [
           let attribute [Capacidad_D] of myself
-          set criteria_values replace-item i criteria_values attribute
-          ; set criteria_max replace-item i criteria_max  Capacidad_D_max ;change with update quantity for speed
-      ;    set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937] ["" "" "" ""] (item i criteria_max) [1 0.8 0.6 0.4 0.2])
-          ; set rescaled_criteria_values replace-item i rescaled_criteria_values VF3 (100 * (item i criteria_values))
-
           let p1 0.174916383				
-				
-
           let y_vf exp (p1 * 0)
           let yy_vf exp (p1 * 15)
-          let svf (exp (- p1 * (attribute)) - y_vf) / (yy_vf - y_vf)
-          if svf > 1  [set svf 1]
-          if svf < 0  [set svf 0]
+          let svf (exp (p1 * (attribute)) - y_vf) / (yy_vf - y_vf)
+          if attribute > 15  [set svf 1]
+          if attribute < 0  [set svf 0]
           set rescaled_criteria_values replace-item i rescaled_criteria_values svf
-
           ask myself [set value_function_capasity [item i rescaled_criteria_values] of myself]
         ]
       ]
-
       ;###########################################################
       if ? = "Falta"[ ;###check that the function correspond to the scale of the variable measured. lack or
         if breed = alternatives_WaterOperator_AB[
-          set criteria_values  replace-item i criteria_values [falta_Ab] of myself
-          ; set criteria_max replace-item i criteria_max falta_Ab_max
-          ;set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
-          set rescaled_criteria_values replace-item i rescaled_criteria_values (VF12 (100 * (item i criteria_values)))
 
-          ask myself [set value_function_falta_ab [item i rescaled_criteria_values] of myself]
+          let attribute 100 * [houses_with_abastecimiento] of myself
+          ;set criteria_values replace-item i criteria_values attribute
+          let p1 0.3457691				
+          let y_vf exp (p1 * 0)
+          let yy_vf exp (p1 * 100)
+          let svf (exp (p1 * (attribute)) - y_vf) / (yy_vf - y_vf)
+          set rescaled_criteria_values replace-item i rescaled_criteria_values svf
         ]
         if breed = alternatives_WaterOperator_d[
-          set criteria_values  replace-item i criteria_values [falta_d] of myself
-          ;set criteria_max replace-item i criteria_max falta_Ab_max
-          ;     set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
-          set rescaled_criteria_values replace-item i rescaled_criteria_values (VF12 (100 * (item i criteria_values)))
-
-          ask myself [set value_function_falta_d [item i rescaled_criteria_values] of myself]
+          let attribute 100 * [houses_with_dranage] of myself
+        let p1 0.3457691				
+        let y_vf exp (p1 * 0)
+        let yy_vf exp (p1 * 100)
+        let svf (exp (p1 * (attribute)) - y_vf) / (yy_vf - y_vf)
+        set rescaled_criteria_values replace-item i rescaled_criteria_values svf
         ]
       ]
       ;###########################################################
       if ? = "Falla" [
         if breed = alternatives_WaterOperator_AB[
-          set criteria_values replace-item i criteria_values [Falla_Ab] of myself
-          ;set criteria_max replace-item i criteria_max Falla_Ab_max
-          set rescaled_criteria_values replace-item i rescaled_criteria_values [Falla_Ab] of myself;(Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
+          let attribute [Falla_Ab] of myself
+          set rescaled_criteria_values replace-item i rescaled_criteria_values (1 - attribute) 
+        
         ]
         if breed = Alternatives_WaterOperator_D[
-          set criteria_values replace-item i criteria_values [Falla_d] of myself
-          ;set criteria_max replace-item i criteria_max Falla_d_max
-          set rescaled_criteria_values replace-item i rescaled_criteria_values [Falla_d] of myself;(Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
+          let attribute [Falla_d] of myself  
+          set rescaled_criteria_values replace-item i rescaled_criteria_values (1 - attribute) 
         ]
       ]
 
       ;###########################################################
       if ? = "Escasez de agua"[
 
-        ;      set criteria_values replace-item i criteria_values [scarcity] of myself
+        ;      ;set criteria_values replace-item i criteria_values [scarcity] of myself
         if-else name_action = "Distribucion_agua"[
         let attribute [days_wno_water] of myself
-          set criteria_values replace-item i criteria_values attribute
-          ;        set criteria_max replace-item i criteria_max days_wno_water_max
-          ; set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
-
-          let p1 0.06233948
+           let p1 0.06233948
           let y_vf exp (-(28 * p1))
           let yy_vf exp (-(0 * p1))
           let svf (exp (-(attribute * p1))  - y_vf) / (yy_vf - y_vf)
@@ -171,339 +148,306 @@ to update_criteria_and_valueFunctions_WaterOperator    ;;update the biphisical v
         ]
         [
           let attribute [scarcity_annual] of myself
-          set criteria_values replace-item i criteria_values attribute
-          set criteria_max replace-item i criteria_max days_wno_water_max
-          ;          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
-          ;       set rescaled_criteria_values replace-item i rescaled_criteria_values  VF5 (item i criteria_values)
           let p1 0.020455577
           let y_vf exp (-(336 * p1))
           let yy_vf exp (-(0 * p1))
           let svf (exp (-(attribute * p1))  - y_vf) / (yy_vf - y_vf)
           set rescaled_criteria_values replace-item i rescaled_criteria_values svf
-          ask myself [set value_function_scarcity [item i rescaled_criteria_values] of myself]
         ]
       ]
       ;###########################################################
       if ? = "Inundaciones" and (months = 12 or ticks < 10) [  ;grandes inundaciones !!need to change variable for criteria
-        set criteria_values replace-item i criteria_values [Flooding] of myself
-        set criteria_max replace-item i criteria_max Flooding_max;109.28  ;change with update quantity for speed
-
-        if-else name_action = "Extraccion_agua"[
-          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937] ["" "" "" ""] (item i criteria_max)  [1 0.8 0.6 0.4 0.2])
-          ask myself [set value_function_floods_Wextraction [item i rescaled_criteria_values] of myself]
-        ]
-        [
-          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
-          set rescaled_criteria_values replace-item i rescaled_criteria_values VF7 (ifelse-value ((item i criteria_values) > 60) [1] [0])
-          ask myself [set value_function_floods [item i rescaled_criteria_values] of myself]
-
-        ]
+        let attribute  [Flooding] of myself
+        let svf   ifelse-value (attribute > 0)[0][1]      
+        set rescaled_criteria_values replace-item i rescaled_criteria_values svf
       ]
-
       ;###########################################################
       if ? = "Presion social" and (months = 12 or ticks < 10) [
-        set criteria_values replace-item i criteria_values [Presion_social_annual] of myself
-        set criteria_max replace-item i criteria_max Presion_social_annual_max;change with update quantity for speed
-                                                                              ;    set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
-        set rescaled_criteria_values replace-item i rescaled_criteria_values VF4 (item i criteria_values)
+        let attribute [Presion_social_annual] of myself
+        set rescaled_criteria_values replace-item i rescaled_criteria_values VF4 attribute
       ]
 
       ;###########################################################
-      if ? = "Hundimientos" and (months = 12 or ticks < 10) [
+      if ? = "Hundimientos"[
         let attribute [hundimiento] of myself
-        set criteria_values replace-item i criteria_values attribute
-        set criteria_max replace-item i criteria_max hundimiento_max;change with update quantity for speed
-;        if-else name_action = "Extraccion_agua"[
-          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
-        ;  set rescaled_criteria_values replace-item i rescaled_criteria_values VF11 (item i criteria_values)
- ;       ]
-  ;      [
-
-          let p1 26.06766112					
-
-          let y_vf 1 - exp ((35 - 10) / p1 )
-          let yy_vf 1 - exp ((0 - 10) / p1 )
-          let svf ((1 - exp ((attribute - 10) / p1 )) - y_vf) / (yy_vf - y_vf)
-
-;          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937] ["" "" "" ""] (item i criteria_max)  [1 0.8 0.6 0.4 0.2])
-          set rescaled_criteria_values replace-item i rescaled_criteria_values svf
-            print list svf [hundimiento] of myself
-   ;     ]
+        let p1 26.06766112					
+        let y_vf 1 - exp ((35 - 10) / p1 )
+        let yy_vf 1 - exp ((0 - 10) / p1 )
+        let svf ((1 - exp ((attribute - 10) / p1 )) - y_vf) / (yy_vf - y_vf)
+        if attribute > 35 [set svf 0]  
+        set rescaled_criteria_values replace-item i rescaled_criteria_values svf 
       ]
       ;###########################################################
-      if ? = "Encharcamientos" and (months = 12 or ticks < 10) [
-        let attribute [Flooding] of myself
-        set criteria_values replace-item i criteria_values attribute
-        set criteria_max replace-item i criteria_max Flooding_max  ;change with update quantity for speed
-        if-else name_action = "Extraccion_agua"[
-          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937] ["" "" "" ""] (item i criteria_max)  [1 0.8 0.6 0.4 0.2])
-          ;      set rescaled_criteria_values replace-item i rescaled_criteria_values VF6 (item i criteria_values) ;"change!!!"
-        ]
-        [
-          ;   set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
-          let p1 200
-          let x_min 0
-          let y_vf exp (-(((200 - x_min) / p1) ^ 2))
-          let yy_vf exp (-(((0 - x_min) / p1) ^ 2))
-          let svf (exp (-(((attribute - x_min) / p1) ^ 2))  - y_vf) / (yy_vf - y_vf)
-
-          set rescaled_criteria_values replace-item i rescaled_criteria_values svf
-        ]
+      if ? = "Encharcamientos" [
+        let attribute [ponding] of myself
+        ;set criteria_values replace-item i criteria_values attribute
+        let p1 30
+        let y_vf exp (-((100 / p1) ^ 2))
+        let yy_vf exp (-((0 / p1) ^ 2))
+        let svf (exp (-((attribute / p1) ^ 2))  - y_vf) / (yy_vf - y_vf)        
+        set rescaled_criteria_values replace-item i rescaled_criteria_values svf
       ]
-
-      if ticks < 10 [ ;The procedure only updates variables that are changing with the actors actions. Thus those criteria that are not changing will only be updated at the beginning (t<10) of the simulation.
-
         ;###########################################################
         if ? = "Precipitacion"[
-          set criteria_values replace-item i criteria_values [precipitation] of myself
-          set criteria_max replace-item i criteria_max precipitation_max;change with update quantity for speed
-          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937] ["" "" "" ""] (item i criteria_max)  [1 0.8 0.6 0.4 0.2])
-          ask myself [set value_function_precipitation [item i rescaled_criteria_values] of myself]
+           let attribute [precipitation] of myself
+          let p1 742.8737773									
+          let y_vf 1 - exp ((1300 - 10) / p1 )
+          let yy_vf 1 - exp ((0 - 10) / p1 )
+          let svf ((1 - exp ((attribute - 10) / p1 )) - y_vf) / (yy_vf - y_vf)
+          if attribute > 1300 [set svf 0]  
+          set rescaled_criteria_values replace-item i rescaled_criteria_values svf
         ]
+         ;###########################################################
+        if ? = "Escurrimiento"[
+         let attribute  [Escurri] of myself
+        let y_vf  exp(-(((0 - 30000) / 20000) ^ 2))
+        let yy_vf exp(-(( (30000 - 30000) / 20000) ^ 2))
+        let svf 1 -(exp(-(((attribute - 30000) / 20000) ^ 2)) - y_vf) / (yy_vf + y_vf)
+        if attribute > 30000 [set svf 0]  
+        set rescaled_criteria_values replace-item i rescaled_criteria_values svf     
+      ]
         ;###########################################################
-
+        
         if ? = "Presion_hidraulica"[
-          set criteria_values replace-item i criteria_values [Presion_hidraulica] of myself
-          set criteria_max replace-item i criteria_max Presion_hidraulica_max
-          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937] ["" "" "" ""] (item i criteria_max)  [1 0.8 0.6 0.4 0.2])
+          let attribute [Presion_hidraulica] of myself
+          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function attribute [0.5 0.75 0.875 0.937] ["" "" "" ""] Presion_hidraulica_max [1 0.8 0.6 0.4 0.2])
         ]
+        
         ;###########################################################
         if ? = "Gasto_hidraulico"[
-          set criteria_values replace-item i criteria_values [Gasto_hidraulico] of myself
-          set criteria_max replace-item i criteria_max Gasto_hidraulico_max; 192.23 ;max value in layer Gasto_V1.shp
-          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
+          let attribute [Gasto_hidraulico] of myself
+          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function attribute [0.0625 0.125 0.25 0.5] ["" "" "" ""] Gasto_hidraulico_max [0.2 0.4 0.6 0.8 1])
         ]
         ;###########################################################
         if ? = "Basura"[
-          set criteria_values replace-item i criteria_values [garbage] of myself
-          ;     set criteria_max replace-item i criteria_max garbage_max;12546
-          ;      set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
-          set rescaled_criteria_values replace-item i rescaled_criteria_values  VF9 (item i criteria_values)
-
+          let attribute [garbage] of myself 
+          let p1 2.6514
+          let p2 5000
+          let y_vf (exp (- ((0 - p1) / p2) ^ 2))
+          let yy_vf (exp (- ((2.6514 - p1) / p2) ^ 2))
+          let svf 1 - ((exp (- ((attribute - p1) / p2) ^ 2))  - y_vf) / (yy_vf - y_vf)
+          set rescaled_criteria_values replace-item i rescaled_criteria_values  svf
         ]
         ;###########################################################
         if ? = "Monto"[
-          set criteria_values replace-item i criteria_values [Monto] of myself
-          set criteria_max replace-item i criteria_max Monto_max
-          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937] ["" "" "" ""] (item i criteria_max)  [1 0.8 0.6 0.4 0.2])
+   ;       print  [Monto] of myself
+          set rescaled_criteria_values replace-item i rescaled_criteria_values 1;(Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937] ["" "" "" ""] (item i criteria_max)  [1 0.8 0.6 0.4 0.2])
         ]
         ;###########################################################
         if ? = "Calidad_agua"[
-          set criteria_values replace-item i criteria_values [water_quality] of myself
-          set criteria_max replace-item i criteria_max water_quality_max
-          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937] ["" "" "" ""] (item i criteria_max)  [1 0.8 0.6 0.4 0.2])
+          set rescaled_criteria_values replace-item i rescaled_criteria_values 1;(Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937] ["" "" "" ""] (item i criteria_max)  [1 0.8 0.6 0.4 0.2])
         ]
         ;###########################################################
         if ? = "Abastecimiento"[
-          set criteria_values replace-item i criteria_values [Abastecimiento] of myself
-          set criteria_max replace-item i criteria_max Abastecimiento_max
-          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values)  [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
+          let attribute [Abastecimiento] of myself
+          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function attribute [0.0625 0.125 0.25 0.5] ["" "" "" ""] Abastecimiento_max [0.2 0.4 0.6 0.8 1])
         ]
         ;###########################################################
         if ? = "Peticion de Delegaciones"[
-          set criteria_values replace-item i criteria_values 1
-          set criteria_max replace-item i criteria_max 1
-          set rescaled_criteria_values replace-item i rescaled_criteria_values (item i criteria_values); (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
+          let attribute [Peticion_Delegacional] of myself   
+          ;set criteria_values replace-item i criteria_values attribute
+          let svf 1 - attribute
+          set rescaled_criteria_values replace-item i rescaled_criteria_values svf
         ]
         ;###########################################################
         if ? = "Peticiones de usuarios"[
-          set criteria_values replace-item i criteria_values [peticion_usuarios] of myself
-          set criteria_max replace-item i criteria_max peticion_usuarios_max
-          set rescaled_criteria_values replace-item i rescaled_criteria_values (item i criteria_values);(Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
+         let attribute [peticion_usuarios] of myself
+          let svf 1 - (attribute / peticion_usuarios_max)   
+          set rescaled_criteria_values replace-item i rescaled_criteria_values  svf   ;(Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
         ]
         ;###########################################################
         if ? = "Presion de medios"[
-          set criteria_values replace-item i criteria_values 1;[Presion_de_medios] of myself
-          set criteria_max replace-item i criteria_max 1 ;change with update quantity for speed
-          set rescaled_criteria_values replace-item i rescaled_criteria_values (item i criteria_values);(Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
+           let attribute [Presion_de_medios] of myself
+          let p1 0.005268212					
+          let y_vf (exp (- 0 * p1))
+          let yy_vf (exp (- 600 * p1))
+          let svf ((exp (- attribute * p1))  - y_vf) / (yy_vf - y_vf)
+          if attribute > 600 [set svf 0]
+          set rescaled_criteria_values replace-item i rescaled_criteria_values svf  
         ]
         ;###########################################################
-      ]
       set i i + 1
     ]
   )
 end
 
 to update_criteria_and_valueFunctions_residentes
-  let cc 0
-    let i 0
-  (foreach criteria_names criteria_weights
-    [[a b] ->
-      if b > cut-off_priorities [  ;to consider only weights greaters than a threshold =0.1
-        set cc cc + 1
-
+  let i 0
+  foreach criteria_names 
+    [a ->
         ;###########################################################
         if a = "Crecimiento urbano"[
-          set criteria_values replace-item i criteria_values [urban_growth] of myself
-          set criteria_max replace-item i criteria_max urban_growth_max  ;change with update quantity for speed
-          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937] ["" "" "" ""] (item i criteria_max)  [1 0.8 0.6 0.4 0.2])
-
+        let attribute [urban_growth] of myself 
+          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function attribute [0.5 0.75 0.875 0.937] ["" "" "" ""] urban_growth_max [1 0.8 0.6 0.4 0.2])
         ]
         ;###########################################################
-        if a = "Contaminacion de agua"[
-          set criteria_values replace-item i criteria_values [water_quality] of myself
-          set criteria_max replace-item i criteria_max water_quality_max  ;change with update quantity for speed
-          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max) [0.2 0.4 0.6 0.8 1])
-        set rescaled_criteria_values replace-item i rescaled_criteria_values VF13 (item i criteria_values)
-        ]
+      if a = "Contaminacion de agua"[
+        let attribute [water_quality] of myself
+        ;set criteria_values replace-item i criteria_values attribute
+        let p1 0.3457691
+        let y_vf exp (0 * p1)
+        let yy_vf exp (100 * p1)
+        let svf ((exp (attribute * p1 )) - y_vf) / (yy_vf - y_vf)
+        set rescaled_criteria_values replace-item i rescaled_criteria_values svf 
+      ]
         ;###########################################################
         if a = "Obstruccion de alcantarillado"[
-          set criteria_values replace-item i criteria_values [garbage] of myself  ;future use Obstruccion_dren. Now it is still a dummy
-          set criteria_max replace-item i criteria_max Obstruccion_dren_max  ;change with update quantity for speed
-;          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
-          set rescaled_criteria_values replace-item i rescaled_criteria_values  VF9 (item i criteria_values)
-
-        ]
-        ;###########################################################
-        if a = "Salud"[
-          set criteria_values replace-item i criteria_values [health] of myself
-          set criteria_max replace-item i criteria_max health_max;change with update quantity for speed
-       ;   set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max) [0.2 0.4 0.6 0.8 1])
-          set rescaled_criteria_values replace-item i rescaled_criteria_values VF2 (item i criteria_values)
+       let attribute [garbage] of myself 
+          let p1 2.6514
+          let p2 5000
+          let y_vf (exp (- ((0 - p1) / p2) ^ 2))
+          let yy_vf (exp (- ((2.6514 - p1) / p2) ^ 2))
+          let svf 1 - ((exp (- ((attribute - p1) / p2) ^ 2))  - y_vf) / (yy_vf - y_vf)
+          set rescaled_criteria_values replace-item i rescaled_criteria_values  svf  
+      ]
+      ;###########################################################
+      if a = "Salud"[
+        let attribute [health] of myself
+        let p1 15.848931
+        let yy_vf 1 - exp ((0 - 10) / p1)
+        let y_vf 1 - exp ((100 - 10) / p1)
+        let svf ((1 - exp ((attribute - 10) / p1)) - y_vf) / (yy_vf - y_vf)
+  
+        set rescaled_criteria_values replace-item i rescaled_criteria_values svf
+   
         ]
         ;###########################################################
         if a = "Escasez de agua"[
-          set criteria_values replace-item i criteria_values [days_wno_water] of myself
-          set criteria_max replace-item i criteria_max days_wno_water_max
-          ;            set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
-          set rescaled_criteria_values replace-item i rescaled_criteria_values  VF5 (item i criteria_values)
+        let attribute [days_wno_water] of myself
+        set rescaled_criteria_values ifelse-value (attribute > 12) [replace-item i rescaled_criteria_values 1][replace-item i rescaled_criteria_values 0]
         ]
-        ;###########################################################
-        if a = "Inundaciones"[
-          set criteria_values replace-item i criteria_values [flooding] of myself
-          set criteria_max replace-item i criteria_max flooding_max
-          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values)  [0.5 0.75 0.875 0.937]  ["" "" "" ""] (item i criteria_max)  [1 0.8 0.6 0.4 0.2])
+      ;###########################################################
+      if a = "Inundaciones"[
+        let attribute [ponding] of myself
+        let p1 30
+        let y_vf exp (-((100 / p1) ^ 2))
+        let yy_vf exp (-((0 / p1) ^ 2))
+        let svf (exp (-((attribute / p1) ^ 2))  - y_vf) / (yy_vf - y_vf)        
+        set rescaled_criteria_values replace-item i rescaled_criteria_values svf
+
           if name_action = "Captacion de agua" or name_action = "Compra de agua" or name_action = "Movilizaciones"[
-            set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937]  ["" "" "" ""] (item i criteria_max)  [1 0.8 0.6 0.4 0.2])
+            set rescaled_criteria_values replace-item i rescaled_criteria_values 0
           ]
         ]
         ;###########################################################
-        if a = "agua insuficiente" [
-          set criteria_values replace-item i criteria_values [days_wno_water] of myself ;#escasez
-          set criteria_max replace-item i criteria_max  days_wno_water_max ;change with update quantity for speed
-         ; set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937]  ["" "" "" ""] (item i criteria_max)  [1 0.8 0.6 0.4 0.2])
-          set rescaled_criteria_values replace-item i rescaled_criteria_values VF10 (item i criteria_values)
+      if a = "agua insuficiente" [
+        let attribute [days_wno_water] of myself
+        set rescaled_criteria_values ifelse-value(attribute > 12) [replace-item i rescaled_criteria_values 1][replace-item i rescaled_criteria_values 0]
+      ]
+        ;###########################################################
+      if a = "Desviacion de agua" [
+        let attribute [desviacion_agua] of myself 
+        set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function attribute [0.5 0.75 0.875 0.937]  ["" "" "" ""] desviacion_agua_max  [1 0.8 0.6 0.4 0.2])
+        if name_action = "Modificacion vivienda"[
+          set rescaled_criteria_values replace-item i rescaled_criteria_values 0
+        ]
         ]
         ;###########################################################
-        if a = "Desviacion de agua" [
-          set criteria_values replace-item i criteria_values [desviacion_agua] of myself ;#escasez
-          set criteria_max replace-item i criteria_max  desviacion_agua_max ;change with update quantity for speed
-          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937]  ["" "" "" ""] (item i criteria_max)  [1 0.8 0.6 0.4 0.2])
-          if name_action = "Modificacion vivienda"[
-            set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values)[0.5 0.75 0.875 0.937] ["" "" "" ""] (item i criteria_max)  [0 0 0 0 0])
-          ]
+      if a = "Falta de infraestructura" [
+        
+        if name_action = "Modificacion vivienda"[
+          let attribute 100 * [houses_with_dranage] of myself
+          let p1 0.3457691				
+          let y_vf exp (p1 * 0)
+          let yy_vf exp (p1 * 100)
+          let svf (exp (p1 * (attribute)) - y_vf) / (yy_vf - y_vf)
+          set rescaled_criteria_values replace-item i rescaled_criteria_values svf
         ]
-        ;###########################################################
-        if a = "Falta de infraestructura" [
-          if name_action = "Accion colectiva" [
-            set criteria_values replace-item i criteria_values [houses_with_abastecimiento] of myself
-            set criteria_max replace-item i criteria_max  (falta_ab_max + falta_d_max) ;change with update quantity for speed
-          ;  set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values)[0.5 0.75 0.875 0.937] ["" "" "" ""] (item i criteria_max) [1 0.8 0.6 0.4 0.2])
-                  set rescaled_criteria_values replace-item i rescaled_criteria_values (VF12 (100 * (item i criteria_values)))
-
-          ]
-
-          if name_action = "Modificacion vivienda"[
-            set criteria_values replace-item i criteria_values [houses_with_dranage] of myself
-            set criteria_max replace-item i criteria_max  infra_dranage_max ;change with update quantity for speed
-          ;  set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937] ["" "" "" ""] (item i criteria_max) [1 0.8 0.6 0.4 0.2])
-            set rescaled_criteria_values replace-item i rescaled_criteria_values (VF12 (100 * (item i criteria_values)))
-
-          ]
-          if name_action = "Captacion de agua" or name_action = "Compra de agua" or name_action = "Movilizaciones"[
-            set criteria_values replace-item i criteria_values [houses_with_abastecimiento] of myself
-            set criteria_max replace-item i criteria_max  falta_ab_max ;change with update quantity for speed
-   ;         set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937] ["" "" "" ""] (item i criteria_max) [1 0.8 0.6 0.4 0.2])
-            set rescaled_criteria_values replace-item i rescaled_criteria_values (VF12 (100 * (item i criteria_values)))
+        if name_action = "Captacion de agua" or name_action = "Movilizaciones"[
+          
+            let attribute 100 * [houses_with_abastecimiento] of myself
+            let p1 0.3457691				
+            let y_vf exp (p1 * 0)
+            let yy_vf exp (p1 * 100)
+            let svf (exp (p1 * (attribute)) - y_vf) / (yy_vf - y_vf)
+            set rescaled_criteria_values replace-item i rescaled_criteria_values svf
           ]
         ]
         ;###########################################################
         if a = "Infraestructura insuficiente" [
           if name_action = "Accion colectiva" [
-            set criteria_values replace-item i criteria_values [houses_with_abastecimiento] of myself
-            set criteria_max replace-item i criteria_max 1 ;change with update quantity for speed
-            ;set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937] ["" "" "" ""] (item i criteria_max) [1 0.8 0.6 0.4 0.2])
-            set rescaled_criteria_values replace-item i rescaled_criteria_values (VF12 (100 * (item i criteria_values)))
-
-          ]
-          if name_action = "Modificacion vivienda"[
-            set criteria_values replace-item i criteria_values [houses_with_dranage] of myself
-            set criteria_max replace-item i criteria_max  infra_dranage_max ;change with update quantity for speed
-            ;set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937] ["" "" "" ""] (item i criteria_max) [1 0.8 0.6 0.4 0.2])
-            set rescaled_criteria_values replace-item i rescaled_criteria_values (VF12 (100 * (item i criteria_values)))
-          ]
+            let attribute 100 * [houses_with_abastecimiento] of myself
+            let p1 0.3457691				
+            let y_vf exp (p1 * 0)
+            let yy_vf exp (p1 * 100)
+            let svf (exp (p1 * (attribute)) - y_vf) / (yy_vf - y_vf)
+            set rescaled_criteria_values replace-item i rescaled_criteria_values svf
+          
+        ]
+        if name_action = "Modificacion vivienda"[
+          let attribute 100 * [houses_with_dranage] of myself
+          let p1 0.3457691				
+          let y_vf exp (p1 * 0)
+          let yy_vf exp (p1 * 100)
+          let svf (exp (p1 * (attribute)) - y_vf) / (yy_vf - y_vf)
+          set rescaled_criteria_values replace-item i rescaled_criteria_values svf
+        ]
           if name_action = "Compra de agua" [
-            set criteria_values replace-item i criteria_values [houses_with_abastecimiento] of myself
-            set criteria_max replace-item i criteria_max  infra_abast_max ;change with update quantity for speed
-            ;set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937] ["" "" "" ""] (item i criteria_max) [1 0.8 0.6 0.4 0.2])
-            set rescaled_criteria_values replace-item i rescaled_criteria_values (VF12 (100 * (item i criteria_values)))
-          ]
+            let attribute 100 * [houses_with_abastecimiento] of myself
+            ;set criteria_values replace-item i criteria_values attribute
+            let p1 0.3457691				
+            let y_vf exp (p1 * 0)
+            let yy_vf exp (p1 * 100)
+            let svf (exp (p1 * (attribute)) - y_vf) / (yy_vf - y_vf)
+            set rescaled_criteria_values replace-item i rescaled_criteria_values svf
+         ]
           if name_action = "Captacion de agua" or name_action = "Movilizaciones"[
-            set criteria_values replace-item i criteria_values [houses_with_abastecimiento] of myself
-            set criteria_max replace-item i criteria_max  infra_abast_max ;change with update quantity for speed
-           ; set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937]["" "" "" ""] (item i criteria_max) [1 0.8 0.6 0.4 0.2])
-            set rescaled_criteria_values replace-item i rescaled_criteria_values (VF12 (100 * (item i criteria_values)))
-          ]
+         let attribute 100 * [houses_with_abastecimiento] of myself
+            ;set criteria_values replace-item i criteria_values attribute
+            let p1 0.3457691				
+            let y_vf exp (p1 * 0)
+            let yy_vf exp (p1 * 100)
+            let svf (exp (p1 * (attribute)) - y_vf) / (yy_vf - y_vf)
+            set rescaled_criteria_values replace-item i rescaled_criteria_values svf
+             ]
         ]
         ;###########################################################
         if a = "Desperdicio de agua" [
-          set criteria_values replace-item i criteria_values [desperdicio_agua] of myself
-          set criteria_max replace-item i criteria_max desperdicio_agua_max  ;change with update quantity for speed
-          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937]  ["" "" "" ""] (item i criteria_max) [1 0.8 0.6 0.4 0.2])
+          let attribute [desperdicio_agua] of myself
+          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function attribute  [0.5 0.75 0.875 0.937]  ["" "" "" ""] desperdicio_agua_max [1 0.8 0.6 0.4 0.2])
         ]
          ;###########################################################
         if a = "Crecimiento de poblacion" [
-          set criteria_values replace-item i criteria_values [poblacion] of myself
-          set criteria_max replace-item i criteria_max poblacion_max  ;change with update quantity for speed
-          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937]  ["" "" "" ""] (item i criteria_max) [1 0.8 0.6 0.4 0.2])
+          let attribute [poblacion] of myself
+          ;change with update quantity for speed
+          set rescaled_criteria_values replace-item i rescaled_criteria_values (attribute / poblacion_max)
         ]
 
         ;###########################################################
         if a = "Eficacia del servicio" [
-          if name_action = "Accion colectiva" [
-            set criteria_values replace-item i criteria_values [days_wno_water] of myself
-            set criteria_max replace-item i criteria_max  (days_wno_water_max) ;change with update quantity for speed
-            set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values)  [0.5 0.75 0.875 0.937]  ["" "" "" ""] (item i criteria_max) [1 0.8 0.6 0.4 0.2])
-          ]
-          if name_action = "Modificacion vivienda"[
-            set criteria_values replace-item i criteria_values [houses_with_dranage] of myself
-            set criteria_max replace-item i criteria_max  infra_dranage_max ;change with update quantity for speed
-            set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values)[0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max) [0.2 0.4 0.6 0.8 1])
-          ]
-          if name_action = "Captacion de agua" or (name_action = "Compra de agua" or name_action = "Movilizaciones")[
-            set criteria_values replace-item i criteria_values [falta_ab] of myself
-            set criteria_max replace-item i criteria_max  falta_ab_max ;change with update quantity for speed
-            set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937]  ["" "" "" ""] (item i criteria_max) [1 0.8 0.6 0.4 0.2])
-          ]
+        set rescaled_criteria_values replace-item i rescaled_criteria_values 1
         ]
         ;###########################################################
         if a = "Fugas" [
-          set criteria_values replace-item i criteria_values [falla_ab] of myself
-          set criteria_max replace-item i criteria_max falla_ab_max  ;change with update quantity for speed
-          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values)  [0.5 0.75 0.875 0.937]  ["" "" "" ""] (item i criteria_max) [1 0.8 0.6 0.4 0.2])
+          set rescaled_criteria_values replace-item i rescaled_criteria_values 1;replace-item i rescaled_criteria_values (Value-Function (item i criteria_values)  [0.5 0.75 0.875 0.937]  ["" "" "" ""] (item i criteria_max) [1 0.8 0.6 0.4 0.2])
         ]
         ;###########################################################
         if a = "Mala calidad de agua" [
-          set criteria_values replace-item i criteria_values [water_quality] of myself
-          set criteria_max replace-item i criteria_max water_quality_max  ;change with update quantity for speed
-          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937]  ["" "" "" ""] (item i criteria_max) [1 0.8 0.6 0.4 0.2])
+          let attribute [water_quality] of myself
+          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function attribute [0.5 0.75 0.875 0.937]  ["" "" "" ""] water_quality_max [1 0.8 0.6 0.4 0.2])
         ]
         ;###########################################################
-        if a = "Falta de infraestructura" [
-          set criteria_values replace-item i criteria_values [houses_with_abastecimiento] of myself
-          set criteria_max replace-item i criteria_max  infra_abast_max ;change with update quantity for speed
-          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max) [0.2 0.4 0.6 0.8 1])
-        ]
+      if a = "Falta de infraestructura" [
+        let attribute 100 * [houses_with_abastecimiento] of myself
+        let p1 0.3457691				
+        let y_vf exp (p1 * 0)
+        let yy_vf exp (p1 * 100)
+        let svf (exp (p1 * (attribute)) - y_vf) / (yy_vf - y_vf)
+        set rescaled_criteria_values replace-item i rescaled_criteria_values svf
+      ]
          ;###########################################################
         if a = "Basura" [
-          set criteria_values replace-item i criteria_values [garbage] of myself
-          set criteria_max replace-item i criteria_max garbage_max  ;change with update quantity for speed
-          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function (item i criteria_values) [0.5 0.75 0.875 0.937]  ["" "" "" ""] (item i criteria_max) [1 0.8 0.6 0.4 0.2])
+        let attribute [garbage] of myself 
+          let p1 2.6514
+          let p2 5000
+          let y_vf (exp (- ((0 - p1) / p2) ^ 2))
+          let yy_vf (exp (- ((2.6514 - p1) / p2) ^ 2))
+          let svf 1 - ((exp (- ((attribute - p1) / p2) ^ 2))  - y_vf) / (yy_vf - y_vf)
+          set rescaled_criteria_values replace-item i rescaled_criteria_values svf
         ]
-      ]
+      
         set i i + 1
       ]
-      )
 end
 ;/normalize-criteria-values;
 ;#############################################################################################################################################
@@ -581,7 +525,6 @@ to-report VF6 [attribute] ;value function criterium: ponding
   let y_vf exp (-(((100 - x_min) / p1) ^ 2))
   let yy_vf exp (-(((0 - x_min) / p1) ^ 2))
   let svf (exp (-(((attribute - x_min) / p1) ^ 2))  - y_vf) / (yy_vf - y_vf)
-
   report svf
 end
 ;#########################################################
