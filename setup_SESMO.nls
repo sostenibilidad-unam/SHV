@@ -163,13 +163,23 @@ to SETUP
   clear-all
   ;profiler:start
   ;r:eval "require(pscl)"
+;  r:eval "setwd('/srv/home/rgarcia/SHV/')"
+  ;r:eval ".libPaths(c(.libPaths(), 'packrat/lib/x86_64-debian-linux-gnu/3.3.1'))"
+ ; r:eval ".libPaths(c(.libPaths(), 'packrat/lib-ext/x86_64-debian-linux-gnu/3.3.1'))"
+ ; r:eval ".libPaths(c(.libPaths(), 'packrat/lib-R/x86_64-debian-linux-gnu/3.3.1'))"
+  
   r:eval "require(glmmADMB)"
   r:eval "require(maptools)"
   ;r:eval "studyArea_CVG<-readShapeSpatial('C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/data/agebs_abm')"
   ;r:eval "studyArea_CVG<-readShapeSpatial('~/data/agebs_abm')"
   
+;<<<<<<< HEAD
   r:eval "studyArea_CVG<-readShapeSpatial('C:/Users/abaezaca/Dropbox (Personal)/Layers/sesmo/agebs_abm')"
 ;   r:eval "studyArea_CVG<-readShapeSpatial('~/data/agebs_abm')"
+;  r:eval "studyArea_CVG<-readShapeSpatial('C:/Users/abaezaca/Dropbox (Personal)/Layers/sesmo/agebs_abm')"
+;   r:eval "studyArea_CVG<-readShapeSpatial('data/agebs_abm')"
+
+;>>>>>>> 14f15bac144ad2268263afc30f0fd76728d962f7
   ;
   r:eval "studyArea_CVG@data$estado<-as.factor(substring(studyArea_CVG@data$cvgeo,1,2))"
   set IDD r:get "studyArea_CVG@data$AGEB_ID"
