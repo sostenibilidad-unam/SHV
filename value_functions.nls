@@ -164,7 +164,12 @@ to update_criteria_and_valueFunctions_WaterOperator    ;;update the biphisical v
       ;###########################################################
       if ? = "Presion social" and (months = 12 or ticks < 10) [
         let attribute [Presion_social_annual] of myself
-        set rescaled_criteria_values replace-item i rescaled_criteria_values VF4 attribute
+        let p1 20
+        let p2 54
+        let y_vf (exp (- ((0 - p2) / p1) ^ 2))
+        let yy_vf (exp (- ((54 - p2) / p1) ^ 2))
+        let svf ((exp (- ((attribute - p2) / p1) ^ 2))  - y_vf) / (yy_vf - y_vf)
+        set rescaled_criteria_values replace-item i rescaled_criteria_values svf
       ]
 
       ;###########################################################
@@ -470,80 +475,55 @@ end
 ;#############################################################################################################################################
 ;Implementation of different value functions
 
-to-report VF1 [attribute] ;value function criterium: edad infrastructure
-  ;min_x: value of attribute x at which y = 0
-  ;attribute: value of attribute x in the census block
-  let min_x 120
-  let alpha_vf 80
-  let y_vf exp ( - ((0 - min_x) / alpha_vf) ^ 2)
-  let yy_vf exp ( - ((120 - min_x) / alpha_vf) ^ 2)
-  let svf 1 - ((exp ( - ((attribute - min_x) / alpha_vf) ^ 2) - y_vf) / (yy_vf - y_vf))
-
-  report svf
+to-report logistic [x k center xmax xmin]
+    set x  min list xmax x
+    set x  max list xmin x
+    report 1 / (1.0 + exp(- k * (   (100 * ( x - xmin ) / ( xmax - xmin ) )  - ( 100 * ( center - xmin ) / ( xmax - xmin ) ) )) )
 
 end
 
 ;#########################################################
-to-report VF2 [attribute];value function criterium health
-  let p1 15.848931
-  let yy_vf 1 - exp ((0 - 10) / p1)
-  let y_vf 1 - exp ((100 - 10) / p1)
-  let svf ((1 - exp ((attribute - 10) / p1)) - y_vf) / (yy_vf - y_vf)
-  report svf
+to-report logistica_invertida [x k center xmax xmin]   
+    set x  min list xmax x
+    set x  max list xmin x
+    report 1.0 - logistic x k center xmax xmin
 end
 ;#########################################################
-to-report VF3 [attribute] ;value function criterium: capasity
-  let p1 0.032638
-  let y_vf exp (p1 * 0)
-  let yy_vf exp (p1 * 100)
-  let svf (exp (- p1 * attribute) - y_vf) / (yy_vf - y_vf)
-
-  report svf
+to-report gaussian [x a center xmax xmin]
+    set x  min list xmax x
+    set x  max list xmin x
+  report exp(0.0 - ((( (100 * ( x - xmin ) / ( xmax - xmin ) ) - (100 * ( x - xmin ) / ( xmax - xmin ) )) / (  a  ) ) * 2))
+end
+  
+;#########################################################
+to-report campana_invertida [x a center xmax xmin]
+    set x  min list xmax x
+    set x  max list xmin x
+  report 1.0 - gaussian x a center xmax xmin
+end
+ ;#########################################################
+to-report concava_decreciente [x gama xmax xmin]
+    set x  min list xmax x
+    set x  max list xmin x
+  report ( ( exp(gama * (100.0 - (100.0 * (x - xmin) / (xmax - xmin) ) ) ) ) - 1 )  / ( exp(gama * 100) - 1)
 end
 ;#########################################################
-to-report VF4 [attribute] ;value function criterium: social pressure
-  let p1 20
-  let p2 54
-  let y_vf (exp (- ((0 - p2) / p1) ^ 2))
-  let yy_vf (exp (- ((54 - p2) / p1) ^ 2))
-  let svf ((exp (- ((attribute - p2) / p1) ^ 2))  - y_vf) / (yy_vf - y_vf)
-  report svf
+to-report concava_creciente [x gama xmax xmin]
+    set x  min list xmax x
+    set x  max list xmin x
+  report ((exp(gama * (100 * (x - xmin) / (xmax - xmin) ) ) ) - 1) / (exp(gama * 100) - 1)
 end
 ;#########################################################
-to-report VF5 [attribute] ;value function criterium: scarcity (montly) use for water authority to montly decide where to foucs the efforts of distributing water by other system than pipes
-  let p1 0.06233948
-  let y_vf exp (-(28 * p1))
-  let yy_vf exp (-(0 * p1))
-  let svf (exp (-(attribute * p1))  - y_vf) / (yy_vf - y_vf)
-
-  report svf
+to-report convexa_decreciente [x gama xmax xmin]
+    set x  min list xmax x
+    set x  max list xmin x
+  report 1.0 - concava_creciente x gama xmax xmin
 end
 ;#########################################################
-to-report VF6 [attribute] ;value function criterium: ponding
-  let p1 80
-  let x_min 0
-  let y_vf exp (-(((100 - x_min) / p1) ^ 2))
-  let yy_vf exp (-(((0 - x_min) / p1) ^ 2))
-  let svf (exp (-(((attribute - x_min) / p1) ^ 2))  - y_vf) / (yy_vf - y_vf)
-  report svf
-end
-;#########################################################
-to-report VF7 [attribute] ;value function criterium: Flooding
-  let p1 1
-  let svf ifelse-value (attribute > p1)[0][1]
-  report svf
-end
-;#########################################################
-to-report VF8 [attribute] ;value function criterium: scarcity (annual) use for water authority to annualy decide where to foucs the efforts to new infrastructure and reparations
-  let p1 0.020455577
-
-;0.006370766
-
-  let y_vf exp (-(336 * p1))
-  let yy_vf exp (-(0 * p1))
-  let svf (exp (-(attribute * p1))  - y_vf) / (yy_vf - y_vf)
-
-  report svf
+to-report convexa_creciente [x gama xmax xmin]
+    set x  min list xmax x
+    set x  max list xmin x
+  report 1.0 - concava_decreciente x gama xmax xmin
 end
 
 ;#########################################################
