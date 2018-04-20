@@ -491,14 +491,23 @@ to doNondominatedSorting
   r:put "dr4" pd4
   r:put "id_so" ID_sort
   r:put "tau_r" tau_ndom
+  r:put "budget" budget_M
   r:eval "dm<-matrix(c(dr1,dr2,dr3,dr4),nrow=4,byrow=TRUE)"
   r:eval "r<-doNondominatedSorting(dm)$ranks"
-  set sorted_ID_filter r:get "rep(1,length(id_so)) * (r>tau_r)"
-  set pd1 r:get "dr1[which(r>tau_r)]"
-  set pd2 r:get "dr2[which(r>tau_r)]"
-  set pd3 r:get "dr3[which(r>tau_r)]"
-  set pd4 r:get "dr4[which(r>tau_r)]"
-  set N_neighborhoods sum sorted_ID_filter
+
+  set pd1 r:get "dr1[order(r)[1:budget]]"
+  set pd2 r:get "dr2[order(r)[1:budget]]"
+  set pd3 r:get "dr3[order(r)[1:budget]]"
+  set pd4 r:get "dr4[order(r)[1:budget]]"
+  r:eval "ff<-rep(0,length(id_so))"
+  r:eval "ff[order(r)[1:budget]]<-1"
+  set sorted_ID_filter r:get "ff"
+
+;  set pd1 r:get "dr1[which(r>tau_r)]"
+;  set pd2 r:get "dr2[which(r>tau_r)]"
+;  set pd3 r:get "dr3[which(r>tau_r)]"
+;  set pd4 r:get "dr4[which(r>tau_r)]"
+  set N_neighborhoods length pd1
 
 ;#############################################################################################################################################
 ;#############################################################################################################################################
@@ -539,6 +548,7 @@ end
 to take_action_WM
   let kk 0
   let max_part max-one-of Particles [tf]
+
   (foreach ID_sort sorted_ID_filter ;for those alternatives sorted by ID and which are part of the non-dominated front
     [[a b] ->
       if b > 0 [
@@ -1301,7 +1311,7 @@ to optimization
   replicate-Particles
   set mf_current mean [tf] of Particles
   let tolerance mf_current - mf_old
-  repeat 2000 [
+  repeat 10000 [
  ; while [tolerance  >= threshold] [
     set mf_old mean [tf] of Particles
     replicate-Particles
@@ -1646,7 +1656,7 @@ Budget_M
 Budget_M
 1
 2400
-750.0
+325.0
 1
 1
 NIL
@@ -1761,7 +1771,7 @@ Budget_D
 Budget_D
 0
 2400
-500.0
+911.0
 1
 1
 NIL
@@ -2074,7 +2084,7 @@ INPUTBOX
 218
 735
 particles-population-size
-500.0
+50.0
 1
 0
 Number
@@ -2085,7 +2095,7 @@ INPUTBOX
 218
 795
 mutant-size
-50.0
+20.0
 1
 0
 Number
@@ -2115,6 +2125,24 @@ tau_ndom
 1
 NIL
 HORIZONTAL
+
+PLOT
+514
+638
+714
+788
+plot 1
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot mf_old"
 
 @#$#@#$#@
 ## WHAT IS IT?
