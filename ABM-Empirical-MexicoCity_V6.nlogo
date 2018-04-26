@@ -1337,21 +1337,27 @@ to setup_InitialParticles
 end
 
 to setup-genome
-    set gg1 n-values N_neighborhoods [0]
+
+
+  set gg1 n-values N_neighborhoods [0]
     set gg2 n-values N_neighborhoods [0]
     set gg3 n-values N_neighborhoods [0]
     set gg4 n-values N_neighborhoods [0]
     let i 0
-    while [i < budget_M] [
-     let nloc random 4
-     let ng1 random (N_neighborhoods - 1)
+  let n_loc n-values N_neighborhoods [random 4]
 
-     if nloc = 0 [set gg1 replace-item ng1 gg1 1]
-     if nloc = 1 [set gg2 replace-item ng1 gg2 1]
-     if nloc = 2 [set gg3 replace-item ng1 gg3 1]
-     if nloc = 3 [set gg4 replace-item ng1 gg4 1]
+    while [i < budget_M] [
+    let nloc item i n_loc
+     if nloc = 0 [set gg1 replace-item i gg1 1]
+     if nloc = 1 [set gg2 replace-item i gg2 1]
+     if nloc = 2 [set gg3 replace-item i gg3 1]
+     if nloc = 3 [set gg4 replace-item i gg4 1]
      set i i + 1
   ]
+  print gg1
+  print gg2
+  print gg3
+  print gg4
 end
 
 to setup-Particles
@@ -1599,10 +1605,10 @@ Visualization
 11
 
 BUTTON
-1234
-19
-1398
-89
+919
+25
+1083
+95
 NIL
 show_limitesDelegaciones
 NIL
@@ -1616,10 +1622,10 @@ NIL
 1
 
 BUTTON
-1238
-90
-1397
-155
+924
+95
+1083
+160
 NIL
 show_AGEBS
 NIL
@@ -1678,10 +1684,10 @@ NIL
 HORIZONTAL
 
 BUTTON
-1399
-155
-1511
-219
+1085
+160
+1197
+224
 NIL
 show-actors-actions
 NIL
@@ -1695,10 +1701,10 @@ NIL
 1
 
 BUTTON
-1397
-89
-1509
-154
+1083
+95
+1195
+160
 NIL
 clear-plots
 NIL
@@ -1874,10 +1880,10 @@ ANP
 -1000
 
 BUTTON
-1402
-16
-1509
-86
+1087
+22
+1194
+92
 NIL
 show_sewer
 NIL
@@ -1921,10 +1927,10 @@ NIL
 HORIZONTAL
 
 PLOT
-1209
-527
-1432
-672
+1125
+247
+1348
+392
 Frequencia de Encharcamientos
 NIL
 NIL
@@ -1939,10 +1945,10 @@ PENS
 "default" 1.0 1 -16777216 true "" "histogram [ponding] of alternatives_CDMX"
 
 PLOT
-1209
-379
-1429
-524
+895
+385
+1115
+530
 Agua disponible
 NIL
 NIL
@@ -1972,10 +1978,10 @@ NIL
 HORIZONTAL
 
 PLOT
-1205
-237
-1430
-380
+890
+243
+1115
+386
 Capacidad Systema de Drenaje
 NIL
 NIL
@@ -2125,24 +2131,6 @@ tau_ndom
 1
 NIL
 HORIZONTAL
-
-PLOT
-514
-638
-714
-788
-plot 1
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -16777216 true "" "plot mf_old"
 
 @#$#@#$#@
 ## WHAT IS IT?
