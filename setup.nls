@@ -677,7 +677,7 @@ to load-GIS-data
 ;  set desalojo_primario gis:load-dataset  "data/Sewer_Nodes_July27_Project.shp"
   ;set pozos_WaterOperator gis:load-dataset  "data/Join_pozosColoniasAgebs.shp"                                 ;wells
   set PozosCMZM_Project gis:load-dataset  "data/PozosCMZM_Project.shp"
-   if escala = "cuenca"[
+  if escala = "cuenca"[
     set PozosPachuca_Project gis:load-dataset  "data/PozosPachuca_Project.shp"
     set PozosTexcoco_Project gis:load-dataset  "data/PozosTexcoco_Project.shp"
     set PozosChalco_Project gis:load-dataset  "data/PozosChalco_Project.shp"
@@ -721,8 +721,6 @@ end
 
 
   let gis_f (gis:feature-list-of Agebs_map_full)
- ; let gis_a (gis:feature-list-of Agebs_map)
-  ;let falta r:get "studyArea_CVG@data$falta_dren"
   let ly_IDB r:get "studyArea_CVG_B@data$AGEB_ID"
   let lya r:get "studyArea_CVG_B@data$antiguedad"
   let lyc r:get "studyArea_CVG_B@data$capac_d"
@@ -753,7 +751,7 @@ end
   let ly_pu r:get "studyArea_CVG_C@data$pet_usr_d"
   let ly_cu r:get "studyArea_CVG_C@data$crec_urb"
   let iid 0 
-  foreach gis_f ; "ID_ZONA" "0"
+  foreach gis_f 
     [ ? ->
       let centroid gis:location-of gis:centroid-of ?
       if not empty? centroid[
