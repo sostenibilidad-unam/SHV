@@ -9,52 +9,55 @@ to GO
 ; profiler:start
 
   counter_weeks
-  water_production_importation    ;;calculate total water available in a day
   ;#############################################################################################################################################
-;calculate annual exposure to floods and GDI
+;Risk Module
   if weeks = 1 and months = 1[
-    ;flood_risk
-    ;flood_risk_capacitysewer
-    flooding_InfPoiss
-    ;health_risk
-    ; flooding_glm
+    water_production_importation    ;;calculate total water available in a day
+                                    ;flood_risk
+                                    ;flood_risk_capacitysewer
+    flooding_InfPoiss   ;risk of flooding
+                        ;health_risk  # Risk of waterborne infectious diseases incidence ##############commented for now until highland is implemented
+                        ; flooding_glm
+                        ;scarcity model ;;;;;::::::::::::::::need to be implemented
 
-;#############################################################################################################################################
-    change_subsidence_rate
-    WaterOperator-decisions            ;;decisions by WaterOperator
+    ;    change_subsidence_rate  #commented until a better model is provided
+    ;#############################################################################################################################################
+    ;Socio-Institutional module
+    Site_Suitability            ;;decisions by WaterOperator
     site_selection
-  ]
-
-  ask alternatives_CDMX [
-    set investment_here_AB 0
-    set investment_here_D 0
-    set investment_here_AB_mant 0
-    set investment_here_D_mant 0
-    set investment_here_AB_new 0
-    set investment_here_D_new 0
-    set protest_here 0
-    water_by_pipe  ;define if an ageb will receive water by pipe. It depends on mean_days_withNo_water and the probability of failure,
-    p_falla_infra ;
-    take_action_residents
-    Vulnerability_indicator
-    condition_infra_change
-  ]
-;##########################################################
-;distribute water to Mexico City using resources by WaterOperator
-  water_distribution
-  if weeks = 4 [
     take_action_WM
-    ask alternatives_CDMX[
-      residents-decisions
+    ask census_blocks_CDMX [
+      set investment_here_AB 0
+      set investment_here_D 0
+      set investment_here_AB_mant 0
+      set investment_here_D_mant 0
+      set investment_here_AB_new 0
+      set investment_here_D_new 0
+      set protest_here 0
+      p_falla_infra ;
+      Vulnerability_indicator
+      condition_infra_change
+    ]
+  ]
+  ;##########################################################
+  ;distribute water to Mexico City using resources by WaterOperator
+  ; water_distribution
+  if weeks = 4 [
+
+    ask census_blocks_CDMX[
+      water_by_pipe  ;define if an ageb will receive water by pipe. It depends on mean_days_withNo_water and the probability of failure, CHANGe with NEw scarcity model developed by Yosune y ALe
+      update_income_W
+      residents_action_suitability
+      take_action_residents
       set scarcity_annual scarcity_annual + days_wno_water
       set days_wno_water 0
     ]
- ]
+  ]
   Landscape_visualization          ;;visualization of social and physical processes
   ;##########################################################
   ;update indicators of flood and scaricty at the end of the simulation
   if months = 12 AND weeks = 4 [
-    ask alternatives_CDMX [
+    ask census_blocks_CDMX [
       indicators
       set scarcity_annual 0]
     water_extraction2             ;the action by the Water authority on where to increase the extraction of water
@@ -91,8 +94,12 @@ to show_AGEBS
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
- ;calculate-distances-to-ideal-points;
-to residents-decisions  ;calculation of distance metric using the distance metric. The code updates the value of the atributes in the landscape and its standarize value
+;Socio-political module
+;#############################################################################################################################################
+;#############################################################################################################################################
+
+;calculate-distances-to-ideal-points;
+to residents_action_suitability  ;calculation of distance metric using the distance metric. The code updates the value of the atributes in the landscape and its standarize value
   ;test to -recalculate weighted supermatrix_residents using
   if months = 12 [
  ;   print days_wno_water
@@ -101,7 +108,7 @@ to residents-decisions  ;calculation of distance metric using the distance metri
     ;ask Alternatives_MC  [print  supermatrix_residents W_matrix 3 2 9 [days_wno_water] of myself]
   ]
 ;#############################################################################################################################################
-
+;alternative suitability
   if group_kmean = 0[ ;#Residents type Iztapalapa
     ask Alternatives_MCc [
       update_criteria_and_valueFunctions_residentes
@@ -227,16 +234,23 @@ to residents-decisions  ;calculation of distance metric using the distance metri
   ]
 end
 ;/calculate-distances-to-ideal-points;
+
 ;#############################################################################################################################################
 ;#############################################################################################################################################
-;take-action1;
+to update_income_W
+set income-W income-W + income-Index * 1
+end
+
+;#############################################################################################################################################
+;#############################################################################################################################################
+;take-actions;
 ;resident decides what action to take. The action with the large metric is defined
 to take_action_residents
+  if d_Modificacion_vivienda > d_Captacion_agua and Income-W > C_AF [house-modification]
 
-    house-modification
-    protest
+  if d_Captacion_agua > d_Modificacion_vivienda  and Income-W > C_AW [rain-waterCapture]
+  if d_Movilizaciones > d_Captacion_agua and Income-W > C_P [protest]
 
-    rain-waterCapture
 
 end
 
@@ -245,6 +259,7 @@ end
 to house-modification
   set Y_F Y_F + 1
   set Sensitivity_F 1 - (Y_F / (Y_F + hsc_f))
+  set Income-W Income-W - C_AF
 end
 ;#############################################################################################################################################
 to make_rain
@@ -258,6 +273,8 @@ to rain-waterCapture
  if scarcity_annual > 100 [
   set Y_S Y_S + 1
   set Sensitivity_S 1 - (Y_S / (Y_S + hsc_s))
+  set Income-W Income-W - C_AW
+
   ]
 end
 ;#############################################################################################################################################
@@ -265,19 +282,22 @@ to water-Purchase
   if-else (0.1 + income-index) / 2 > random-float 1[  ;in you have resources purchese water
     ;set resources_water resources_water - 1 / 30
     set water_in_buying 1
+    set Income-W Income-W - C_AWS
   ]
   [
     set water_in_buying 0
     ]
 end
 ;#############################################################################################################################################
-to collective-action
+to others_collective-action
 end
 ;#############################################################################################################################################
 to protest  ;if the distant to ideal for protest is greater than
-  if (days_wno_water * Sensitivity_S) > 12 [
+  if (days_wno_water * Sensitivity_S) > 12 and d_Movilizaciones > random-float 1[
     set protest_here  1
     set Presion_social_annual Presion_social_annual + 1
+    set Income-W Income-W - C_AF
+    print protest_here
   ]
 end
 ;/take-action1;
@@ -287,51 +307,51 @@ to update_maximum_full  ;; update the maximum or minimum of values use by the mo
   set Antiguedad-infra_Ab_max max [Antiguedad-infra_Ab] of agebs
   set Antiguedad-infra_D_max max [Antiguedad-infra_D] of agebs
   set desperdicio_agua_max max [desperdicio_agua] of agebs;;max level of perception of deviation
-  set days_wno_water_max max [days_wno_water] of alternatives_CDMX
-  set Gasto_hidraulico_max max [Gasto_hidraulico] of alternatives_CDMX
-  set presion_hidraulica_max max [presion_hidraulica] of alternatives_CDMX
-  set desviacion_agua_max max [desviacion_agua] of alternatives_CDMX
-  set Capacidad_Ab_max max [Capacidad_Ab] of alternatives_CDMX
-  set Capacidad_d_max max [Capacidad_d] of alternatives_CDMX
-  set garbage_max max [garbage] of alternatives_CDMX
-  set Obstruccion_dren_max max[Obstruccion_dren] of alternatives_CDMX
-  set hundimiento_max max [hundimiento] of alternatives_CDMX
+  set days_wno_water_max max [days_wno_water] of census_blocks_CDMX
+  set Gasto_hidraulico_max max [Gasto_hidraulico] of census_blocks_CDMX
+  set presion_hidraulica_max max [presion_hidraulica] of census_blocks_CDMX
+  set desviacion_agua_max max [desviacion_agua] of census_blocks_CDMX
+  set Capacidad_Ab_max max [Capacidad_Ab] of census_blocks_CDMX
+  set Capacidad_d_max max [Capacidad_d] of census_blocks_CDMX
+  set garbage_max max [garbage] of census_blocks_CDMX
+  set Obstruccion_dren_max max[Obstruccion_dren] of census_blocks_CDMX
+  set hundimiento_max max [hundimiento] of census_blocks_CDMX
   set water_quality_max 1
-  set max_water_in_mc max [days_water_in] of alternatives_CDMX
-  set infra_abast_max max [houses_with_abastecimiento] of alternatives_CDMX
-  set infra_dranage_max max [houses_with_dranage] of alternatives_CDMX
-  set flooding_max max [flooding] of alternatives_CDMX ;;max level of flooding (encharcamientos) recored over the last 10 years
-  set precipitation_max max [precipitation] of alternatives_CDMX
-  set falla_ab_max max [Falla_ab] of alternatives_CDMX
-  set Abastecimiento_max max [Abastecimiento] of alternatives_CDMX
-  set health_max max [health] of alternatives_CDMX
-  set monto_max max [monto] of alternatives_CDMX
-  set scarcity_max max [scarcity] of alternatives_CDMX
-  set Presion_social_annual_max max [Presion_social_annual] of alternatives_CDMX
+  set max_water_in_mc max [days_water_in] of census_blocks_CDMX
+  set infra_abast_max max [houses_with_abastecimiento] of census_blocks_CDMX
+  set infra_dranage_max max [houses_with_dranage] of census_blocks_CDMX
+  set flooding_max max [flooding] of census_blocks_CDMX ;;max level of flooding (encharcamientos) recored over the last 10 years
+  set precipitation_max max [precipitation] of census_blocks_CDMX
+  set falla_ab_max max [Falla_ab] of census_blocks_CDMX
+  set Abastecimiento_max max [Abastecimiento] of census_blocks_CDMX
+  set health_max max [health] of census_blocks_CDMX
+  set monto_max max [monto] of census_blocks_CDMX
+  set scarcity_max max [scarcity] of census_blocks_CDMX
+  set Presion_social_annual_max max [Presion_social_annual] of census_blocks_CDMX
   set falta_d_max 1
   set falta_Ab_max 1
-  set d_Compra_agua_max max [d_Compra_agua] of alternatives_CDMX
-  set d_Captacion_agua_max max [d_Captacion_agua] of alternatives_CDMX
-  set d_Movilizaciones_max max [d_Movilizaciones] of alternatives_CDMX
-  set d_Modificacion_vivienda_max max [d_Modificacion_vivienda] of alternatives_CDMX
-  set d_Accion_colectiva_max max [d_Accion_colectiva] of alternatives_CDMX
-  set d_water_extraction_max max [d_water_extraction] of alternatives_CDMX
-  set d_mantenimiento_max max [d_mantenimiento_Ab] of alternatives_CDMX
-  set d_mantenimiento_D_max max [d_mantenimiento_D] of alternatives_CDMX
-  set d_new_max max [d_new_Ab] of alternatives_CDMX
-   set d_new_D_max max [d_new_D] of alternatives_CDMX
-  set d_water_distribution_max max [d_water_distribution] of alternatives_CDMX
-  set d_water_importacion_max max [d_water_importacion] of alternatives_CDMX
-  set Y_F_Max  max [Y_F] of alternatives_CDMX    ;max level of changes made to houses
-  set Y_S_Max  max [Y_S] of alternatives_CDMX    ;max level of changes made to houses
-  set Vulnerability_S_max max [vulnerability_S] of alternatives_CDMX
-  set Vulnerability_F_max max [vulnerability_F] of alternatives_CDMX
-  set densidad_pop_max max [densidad_pop] of alternatives_CDMX
+  set d_Compra_agua_max max [d_Compra_agua] of census_blocks_CDMX
+  set d_Captacion_agua_max max [d_Captacion_agua] of census_blocks_CDMX
+  set d_Movilizaciones_max max [d_Movilizaciones] of census_blocks_CDMX
+  set d_Modificacion_vivienda_max max [d_Modificacion_vivienda] of census_blocks_CDMX
+  set d_Accion_colectiva_max max [d_Accion_colectiva] of census_blocks_CDMX
+  set d_water_extraction_max max [d_water_extraction] of census_blocks_CDMX
+  set d_mantenimiento_max max [d_mantenimiento_Ab] of census_blocks_CDMX
+  set d_mantenimiento_D_max max [d_mantenimiento_D] of census_blocks_CDMX
+  set d_new_max max [d_new_Ab] of census_blocks_CDMX
+   set d_new_D_max max [d_new_D] of census_blocks_CDMX
+  set d_water_distribution_max max [d_water_distribution] of census_blocks_CDMX
+  set d_water_importacion_max max [d_water_importacion] of census_blocks_CDMX
+  set Y_F_Max  max [Y_F] of census_blocks_CDMX    ;max level of changes made to houses
+  set Y_S_Max  max [Y_S] of census_blocks_CDMX    ;max level of changes made to houses
+  set Vulnerability_S_max max [vulnerability_S] of census_blocks_CDMX
+  set Vulnerability_F_max max [vulnerability_F] of census_blocks_CDMX
+  set densidad_pop_max max [densidad_pop] of census_blocks_CDMX
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 to p_falla_infra    ;;update age and probability of failure and also is color if well is working
-     set P_failure_AB 1 - exp(Antiguedad-infra_Ab  * (- lambda))
+     set P_failure_AB 1 - exp(Antiguedad-infra_Ab  * (- lambda)) ;Scarcity regression 1
      set P_failure_D  1 - exp(Antiguedad-infra_D  * (- lambda))
      set p_failure_hund  hundimiento * factor_subsidencia
      set p_falla_AB (p_failure_hund + P_failure_AB) / 2  ; need to refine using available data
@@ -420,12 +440,12 @@ end
 ;#################################################################################################################################################
 ;#################################################################################################################################################
 
-to WaterOperator-decisions
+to Site_Suitability
  ;;; Define value functions
  ;;here water operators evalaute each census block by calculating the distance from an ideal point
  ;the procedure calls each action to update the normalized value of the CB's attributes associated to the criteria set
  ;we set the value functions and define the distant metric based on compromized programing function with exponent = 2  (see value function.nls)
-  ask  alternatives_CDMX [
+  ask  census_blocks_CDMX [
     ;#################################################################################################################################################
  ;water operator potable water system decision-making process
 
@@ -491,7 +511,7 @@ to doNondominatedSorting
   r:put "dr4" pd4
   r:put "id_so" ID_sort
   r:put "tau_r" tau_ndom
-  r:put "budget" budget_M
+  r:put "budget" Budget_CDMX
   r:eval "dm<-matrix(c(dr1,dr2,dr3,dr4),nrow=4,byrow=TRUE)"
   r:eval "r<-doNondominatedSorting(dm)$ranks"
 
@@ -545,14 +565,14 @@ end
 ;take-action1;
 ;#############################################################################################################################################
 ;#############################################################################################################################################
-to take_action_WM
+to take_action_WM ;Action New infrastructure
   let kk 0
   let max_part max-one-of Particles [tf]
 
   (foreach ID_sort sorted_ID_filter ;for those alternatives sorted by ID and which are part of the non-dominated front
     [[a b] ->
       if b > 0 [
-        let ag_ch Alternatives_CDMX with[ID = a]
+        let ag_ch census_blocks_CDMX with[ID = a]
         if (item kk ([g1] of max_part)) = 1[ask ag_ch [Repair-Infra_Ab]]  ; Repair-Infra_Ab
         if (item kk ([g2] of max_part)) = 1[ask ag_ch [New-Infra_Ab]]  ; New-Infra_Ab
         if (item kk ([g3] of max_part) ) = 1[ask ag_ch [Repair-Infra_D]]  ; Repair-Infra_Ab
@@ -562,9 +582,10 @@ to take_action_WM
 
   ])
 end
+
 ;#############################################################################################################################################
 ;#############################################################################################################################################
-to repair-Infra_Ab
+to repair-Infra_Ab ;Action mantainance
             set Antiguedad-infra_Ab Antiguedad-infra_Ab - Eficiencia_Mantenimiento * Antiguedad-infra_Ab
             ask pozos_agebs [set age_pozo age_pozo + Eficiencia_Mantenimiento * age_pozo]
             set investment_here_accumulated_AB investment_here_accumulated_AB + 1
@@ -572,9 +593,9 @@ to repair-Infra_Ab
 end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
-to New-Infra_Ab
+to New-Infra_Ab ;Action New infrastructure
           set houses_with_abastecimiento ifelse-value (houses_with_abastecimiento < 1)[houses_with_abastecimiento + Eficiencia_NuevaInfra * (1 - houses_with_abastecimiento)][1]
-          ask pozos_agebs with [age_pozo > 40 * 54][set age_pozo 1]
+          ask pozos_agebs with [age_pozo > 40][set age_pozo 1]
           set falta_Ab 1 - houses_with_abastecimiento
           set investment_here_accumulated_AB investment_here_accumulated_AB + 1
           set investment_here_accumulated_AB_new investment_here_accumulated_AB_new + 1
@@ -591,7 +612,7 @@ end
 to New-Infra_D
           set houses_with_dranage ifelse-value (houses_with_dranage < 1)[houses_with_dranage + Eficiencia_NuevaInfra * (1 - houses_with_dranage)][1]
           set falta_d 1 - houses_with_dranage
-          set Capacidad_D Capacidad_D + Eficiencia_NuevaInfra
+          set Capacidad_D Capacidad_D + Eficiencia_NuevaInfra * Capacidad_D
           if Capacidad_D > 1 [set Capacidad_D 1]
           set investment_here_accumulated_D investment_here_accumulated_D + 1
           set investment_here_accumulated_D_new investment_here_accumulated_D_new + 1
@@ -599,7 +620,7 @@ end
 ;#############################################################################################################################################
 to water_extraction2
   let Budget 0
-    let sort_ag_d sort-on [(1 - d_water_extraction)]  alternatives_CDMX
+    let sort_ag_d sort-on [(1 - d_water_extraction)]  census_blocks_CDMX
     foreach sort_ag_d [
       ageb_sorted ->
       if Budget < recursos_extraccion [
@@ -631,13 +652,13 @@ to water_extraction2
 end
 
 ;#############################################################################################################################################
-to water_distribution ;distribution of water from government by truck
+to water_distribution ;distribution of water from government by truck  obsolite !!!
 
-let DW max-n-of Budget_D alternatives_CDMX with [NOWater_week_pois > 0] [d_water_distribution]
+let DW max-n-of Budget_CDMX census_blocks_CDMX with [NOWater_month_pois > 0] [d_water_distribution]
   ask DW [
     set days_water_in 7
     set days_wno_water 0
-    set weekly_water_available ifelse-value (weekly_water_available > NOWater_week_pois * truck_capasity) [weekly_water_available - NOWater_week_pois * truck_capasity][0]
+    set weekly_water_available ifelse-value (weekly_water_available > NOWater_month_pois * truck_capasity) [weekly_water_available - NOWater_month_pois * truck_capasity][0]
     set water_in water_distributed_trucks + water_distributed_pipes
   ]
 end
@@ -654,29 +675,39 @@ end
 ;/subsidence;
 ;##############################################################################################################
 ;water-supply-simulation;
+to scarcity_model
+
+;r:get disruption "exp(fitted(modelo_zip_disrupcion,data=?age_infra_Ab))"   ;;;consultation with yosune
+;r:get connection "exp(fitted(modelo_glm_conexion,newdata=(1-house_h)))
+;r:eval "new_data_lambda=cbind(disruption, connection)"
+;r:get lambda_est " exp(fitted(modelo_glm_completo,newdata=new_data_lambda))
+;  set days_wno_water lambda_est
+end
+
+
 to water_by_pipe
 ;having water by pipe depends on mean_days_withNo_water (p having water based on info collected by ALE,about days with water), infrastructure and ifra failure distribution of water by trucks
 ;  let BA count_pozos_tot ;sum [extraction_rate] of pozos_agebs - Requerimiento_deAgua * poblacion   ;
-  set NOWater_week_pois random-poisson (mean_days_withNo_water); + alt * (altitude - alt_mean_Delegation) + a_failure * (ifelse-value (p_falla_AB > random-float 1) [1][0]))
-  set days_wno_water days_wno_water + NOWater_week_pois
-  if NOWater_week_pois > 7[set NOWater_week_pois  7]
-  set days_water_in 7 - NOWater_week_pois
-  set water_distributed_pipes  days_water_in * Requerimiento_deAgua * poblacion * houses_with_abastecimiento
-  set weekly_water_available  weekly_water_available -  water_distributed_pipes
+  set NOWater_month_pois random-poisson (4 * mean_days_withNo_water); lambda_est
+  set days_wno_water days_wno_water + NOWater_month_pois
+  ;if NOWater_month_pois > 7[set NOWater_month_pois  7]
+  set days_water_in 4 * 7 - NOWater_month_pois
+;  set water_distributed_pipes  days_water_in * Requerimiento_deAgua * poblacion * houses_with_abastecimiento
+;  set weekly_water_available  weekly_water_available -  water_distributed_pipes
 end
 ;##############################################################################################################
 ;/water-supply-simulation;
 ;#############################################################################################################################################
 to condition_infra_change
-  set Antiguedad-infra_Ab Antiguedad-infra_Ab + 7
-  set Antiguedad-infra_D Antiguedad-infra_D + 7
+  set Antiguedad-infra_Ab Antiguedad-infra_Ab + 1
+  set Antiguedad-infra_D Antiguedad-infra_D + 1
   set Capacidad_D Capacidad_D - Capacidad_D * decay_capacity
-  ask pozos_agebs [set age_pozo age_pozo + 7]
+  ask pozos_agebs [set age_pozo age_pozo + 1]
 end
 ;##############################################################################################################
 to water_production_importation
-  set water_produced 7 * sum [extraction_rate] of pozos
-  set water_imported 7 * (Tot_water_Imported_Cutzamala + Tot_water_Imported_Lerma)
+  set water_produced 54 * 7 * sum [extraction_rate] of pozos
+  set water_imported 54 * 7 * (Tot_water_Imported_Cutzamala + Tot_water_Imported_Lerma)
   set weekly_water_available water_produced + water_imported
 end
 
@@ -694,12 +725,12 @@ to export-map
   ;this procedure creates a txt file with a vector containing a particular atribute from the agebs
   ;let PATH "c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/CarpetasTrabajo/AndresBaeza/"
 
-    let fn (word n_runs "-" (word Budget_D "-" (word recursos_nuevaInfrastructura "-" (word Budget_M "-" (word Eficiencia_Mantenimiento "-" (word Eficiencia_NuevaInfra ".txt"))))))
+    let fn (word n_runs "-" (word Budget_CDMX "-" (word Eficiencia_Mantenimiento "-" (word Eficiencia_NuevaInfra ".txt"))))
     ;let fn "estado_key.txt"
     if file-exists? fn
     [ file-delete fn]
     file-open fn
-    foreach sort-on [ID] alternatives_CDMX[
+    foreach sort-on [ID] census_blocks_CDMX[
     ? ->
     ask ?
       [
@@ -726,12 +757,12 @@ to export-map-ts
   ;this procedure creates a txt file with a vector containing a particular atribute from the agebs
   let PATH "c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/UG_hallieTalk/"
 
-    let fn (word ticks "-" (word Budget_D "-" (word recursos_nuevaInfrastructura "-" (word Budget_M "-" (word Eficiencia_Mantenimiento "-" (word Eficiencia_NuevaInfra ".txt"))))))
+    let fn (word ticks "-" (word Budget_CDMX "-" (word Eficiencia_Mantenimiento "-" (word Eficiencia_NuevaInfra ".txt"))))
     let fnn word PATH fn
     if file-exists? fnn
     [ file-delete fnn]
     file-open fnn
-    foreach sort-on [ID] alternatives_CDMX[
+    foreach sort-on [ID] census_blocks_CDMX[
     ? ->
     ask ?
       [
@@ -794,7 +825,7 @@ end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
-  ask alternatives_CDMX [
+  ask census_blocks_CDMX [
     set size factor_scale * 1
     set shape "circle"
     ;############################################################################################
@@ -1172,7 +1203,7 @@ to flooding_InfPoiss
   let NE []
   let BA []
 
-  set NE map [i -> item 0 [Antiguedad-infra_D / 365] of alternatives_CDMX with [ID = i]] IDD
+  set NE map [i -> item 0 [Antiguedad-infra_D] of census_blocks_CDMX with [ID = i]] IDD
 
 ;    r:eval "glm_ponds_zip<-zeroinfl(PONDING~antiguedad+GASTO+subsidenci+BASURA+AveR, data=studyArea_CVG@data)"
     r:put "new_Edad" NE
@@ -1188,7 +1219,7 @@ to flooding_InfPoiss
 
   (foreach IDD Ee
   [ [a b] ->
-      ask alternatives_CDMX with [ID = a][
+      ask census_blocks_CDMX with [ID = a][
         set ponding b
       ]
   ])
@@ -1202,7 +1233,7 @@ to flooding_InfPoiss
 ;        print (list ID b c)
 ;      ]
 ;  ])
-  set ponding_max max [ponding] of alternatives_CDMX
+  set ponding_max max [ponding] of census_blocks_CDMX
 end
 
 
@@ -1224,7 +1255,6 @@ to indicators
     set scarcity_index precision (scarcity_index + scarcity_annual) 2
     set flooding_index precision (flooding_index + ponding) 2
     set Presion_social_Index Presion_social_Index + Presion_social_annual
-
   ]
   set scarcity_annual 0
 end
@@ -1253,48 +1283,48 @@ end
 ;/gastrointestinal-disease-simulation;
 ;#############################################################################################################################################
 to update_maximum [estado]  ;; update the maximum or minimum of values use by the model to calculate range of the value functions this time relative to the domain of the agent who needs the inforamtion to take decition
-  set Antiguedad-infra_Ab_max max [Antiguedad-infra_Ab] of alternatives_CDMX
-  set Antiguedad-infra_D_max max [Antiguedad-infra_D] of alternatives_CDMX
-  set desperdicio_agua_max max [desperdicio_agua] of alternatives_CDMX;;max level of perception of deviation
-  set days_wno_water_max max[days_wno_water] of alternatives_CDMX
-  set Gasto_hidraulico_max max [Gasto_hidraulico] of alternatives_CDMX
-  set presion_hidraulica_max max [presion_hidraulica] of alternatives_CDMX
-  set desviacion_agua_max max [desviacion_agua] of alternatives_CDMX
-  set Capacidad_Ab_max max [Capacidad_Ab] of alternatives_CDMX
-  set Capacidad_d_max max [Capacidad_d] of alternatives_CDMX
-  set garbage_max max [garbage] of alternatives_CDMX
-  set Obstruccion_dren_max max[Obstruccion_dren] of alternatives_CDMX
-  set hundimiento_max max [hundimiento] of alternatives_CDMX
+  set Antiguedad-infra_Ab_max max [Antiguedad-infra_Ab] of census_blocks_CDMX
+  set Antiguedad-infra_D_max max [Antiguedad-infra_D] of census_blocks_CDMX
+  set desperdicio_agua_max max [desperdicio_agua] of census_blocks_CDMX;;max level of perception of deviation
+  set days_wno_water_max max[days_wno_water] of census_blocks_CDMX
+  set Gasto_hidraulico_max max [Gasto_hidraulico] of census_blocks_CDMX
+  set presion_hidraulica_max max [presion_hidraulica] of census_blocks_CDMX
+  set desviacion_agua_max max [desviacion_agua] of census_blocks_CDMX
+  set Capacidad_Ab_max max [Capacidad_Ab] of census_blocks_CDMX
+  set Capacidad_d_max max [Capacidad_d] of census_blocks_CDMX
+  set garbage_max max [garbage] of census_blocks_CDMX
+  set Obstruccion_dren_max max[Obstruccion_dren] of census_blocks_CDMX
+  set hundimiento_max max [hundimiento] of census_blocks_CDMX
   set water_quality_max 1
-  set max_water_in_mc max [days_water_in] of alternatives_CDMX
-  set infra_abast_max max [houses_with_abastecimiento] of alternatives_CDMX
-  set infra_dranage_max max [houses_with_dranage] of alternatives_CDMX
-  set flooding_max max [flooding] of alternatives_CDMX;;max level of flooding (encharcamientos) recored over the last 10 years
-  set precipitation_max max [precipitation] of alternatives_CDMX
-  set falla_ab_max max [Falla_ab] of alternatives_CDMX
-  set Abastecimiento_max max [Abastecimiento] of alternatives_CDMX
-  set health_max max [health] of alternatives_CDMX
-  set monto_max max [monto] of alternatives_CDMX
-  set scarcity_max max [scarcity] of alternatives_CDMX
-  set Presion_social_annual_max max [Presion_social_annual] of alternatives_CDMX
+  set max_water_in_mc max [days_water_in] of census_blocks_CDMX
+  set infra_abast_max max [houses_with_abastecimiento] of census_blocks_CDMX
+  set infra_dranage_max max [houses_with_dranage] of census_blocks_CDMX
+  set flooding_max max [flooding] of census_blocks_CDMX;;max level of flooding (encharcamientos) recored over the last 10 years
+  set precipitation_max max [precipitation] of census_blocks_CDMX
+  set falla_ab_max max [Falla_ab] of census_blocks_CDMX
+  set Abastecimiento_max max [Abastecimiento] of census_blocks_CDMX
+  set health_max max [health] of census_blocks_CDMX
+  set monto_max max [monto] of census_blocks_CDMX
+  set scarcity_max max [scarcity] of census_blocks_CDMX
+  set Presion_social_annual_max max [Presion_social_annual] of census_blocks_CDMX
   set falta_d_max 1
   set falta_Ab_max 1
-  set d_Compra_agua_max max [d_Compra_agua] of alternatives_CDMX
-  set d_Captacion_agua_max max [d_Captacion_agua] of alternatives_CDMX
-  set d_Movilizaciones_max max [d_Movilizaciones] of alternatives_CDMX
-  set d_Modificacion_vivienda_max max [d_Modificacion_vivienda] of alternatives_CDMX
-  set d_Accion_colectiva_max max [d_Accion_colectiva] of alternatives_CDMX
-  set d_water_extraction_max max [d_water_extraction] of alternatives_CDMX
-  set d_mantenimiento_D_max max [d_mantenimiento_D] of alternatives_CDMX
-  set d_mantenimiento_max max [d_mantenimiento_Ab] of alternatives_CDMX
-  set d_new_max max [d_new_Ab] of alternatives_CDMX
-  set d_water_distribution_max max [d_water_distribution] of alternatives_CDMX
-  set d_water_importacion_max max [d_water_importacion] of alternatives_CDMX
-  set Y_F_Max  max [Y_F] of alternatives_CDMX    ;max level of changes made to houses
-  set Y_S_Max  max [Y_S] of alternatives_CDMX   ;max level of changes made to houses
-  set Vulnerability_S_max max [vulnerability_S] of alternatives_CDMX
-  set Vulnerability_F_max max [vulnerability_F] of alternatives_CDMX
-  set densidad_pop_max max [densidad_pop] of alternatives_CDMX
+  set d_Compra_agua_max max [d_Compra_agua] of census_blocks_CDMX
+  set d_Captacion_agua_max max [d_Captacion_agua] of census_blocks_CDMX
+  set d_Movilizaciones_max max [d_Movilizaciones] of census_blocks_CDMX
+  set d_Modificacion_vivienda_max max [d_Modificacion_vivienda] of census_blocks_CDMX
+  set d_Accion_colectiva_max max [d_Accion_colectiva] of census_blocks_CDMX
+  set d_water_extraction_max max [d_water_extraction] of census_blocks_CDMX
+  set d_mantenimiento_D_max max [d_mantenimiento_D] of census_blocks_CDMX
+  set d_mantenimiento_max max [d_mantenimiento_Ab] of census_blocks_CDMX
+  set d_new_max max [d_new_Ab] of census_blocks_CDMX
+  set d_water_distribution_max max [d_water_distribution] of census_blocks_CDMX
+  set d_water_importacion_max max [d_water_importacion] of census_blocks_CDMX
+  set Y_F_Max  max [Y_F] of census_blocks_CDMX    ;max level of changes made to houses
+  set Y_S_Max  max [Y_S] of census_blocks_CDMX   ;max level of changes made to houses
+  set Vulnerability_S_max max [vulnerability_S] of census_blocks_CDMX
+  set Vulnerability_F_max max [vulnerability_F] of census_blocks_CDMX
+  set densidad_pop_max max [densidad_pop] of census_blocks_CDMX
 end
 
 
@@ -1346,7 +1376,7 @@ to setup-genome
     let i 0
   let n_loc n-values N_neighborhoods [random 4]
 
-    while [i < budget_M] [
+    while [i < Budget_CDMX] [
     let nloc item i n_loc
      if nloc = 0 [set gg1 replace-item i gg1 1]
      if nloc = 1 [set gg2 replace-item i gg2 1]
@@ -1639,10 +1669,10 @@ NIL
 1
 
 SLIDER
-35
-320
-240
-353
+38
+251
+243
+284
 Requerimiento_deAgua
 Requerimiento_deAgua
 0.007
@@ -1655,11 +1685,11 @@ HORIZONTAL
 
 SLIDER
 36
-102
+66
 236
-135
-Budget_M
-Budget_M
+99
+Budget_CDMX
+Budget_CDMX
 1
 2400
 325.0
@@ -1669,10 +1699,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-35
-250
-238
-283
+36
+139
+239
+172
 Eficiencia_NuevaInfra
 Eficiencia_NuevaInfra
 0
@@ -1739,10 +1769,10 @@ export-to-postgres
 -1000
 
 SLIDER
-35
-285
-238
-318
+36
+174
+239
+207
 Eficiencia_Mantenimiento
 Eficiencia_Mantenimiento
 0
@@ -1754,70 +1784,25 @@ NIL
 HORIZONTAL
 
 SLIDER
-36
-142
-237
-175
-recursos_nuevaInfrastructura
-recursos_nuevaInfrastructura
-0
-2400
-460.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-35
-179
-237
+40
 212
-Budget_D
-Budget_D
+241
+245
+lambda
+lambda
 0
-2400
-911.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-258
-402
-435
-435
-cut-off_priorities
-cut-off_priorities
-0
-1
-0.0
+0.1
 0.01
+1 / (1000)
 1
 NIL
 HORIZONTAL
 
 SLIDER
-35
-358
-236
-391
-lambda
-lambda
-0
-0.001
-5.479452054794521E-5
-1 / (100 * 54)
-1
-NIL
-HORIZONTAL
-
-SLIDER
-258
-330
-435
-363
+249
+229
+426
+262
 factor_subsidencia
 factor_subsidencia
 0
@@ -1827,16 +1812,6 @@ factor_subsidencia
 1
 NIL
 HORIZONTAL
-
-CHOOSER
-255
-225
-409
-270
-actions_per_agebs
-actions_per_agebs
-"single-action" "multiple-actions"
-0
 
 SLIDER
 275
@@ -1854,10 +1829,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-258
-365
-435
-398
+249
+264
+426
+297
 factor_scale
 factor_scale
 0.000000000000000001
@@ -1896,36 +1871,6 @@ NIL
 NIL
 1
 
-SLIDER
-35
-398
-236
-431
-alt
-alt
-0
-3
-2.12
-0.01
-1
-NIL
-HORIZONTAL
-
-SLIDER
-35
-433
-238
-466
-a_failure
-a_failure
-0
-1
-1.0
-0.1
-1
-NIL
-HORIZONTAL
-
 PLOT
 1125
 247
@@ -1942,13 +1887,13 @@ true
 false
 "" ""
 PENS
-"default" 1.0 1 -16777216 true "" "histogram [ponding] of alternatives_CDMX"
+"default" 1.0 1 -16777216 true "" "histogram [ponding] of census_blocks_CDMX"
 
 PLOT
 895
 385
-1115
-530
+1116
+525
 Agua disponible
 NIL
 NIL
@@ -1963,10 +1908,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot weekly_water_available"
 
 SLIDER
-262
-298
-434
-331
+39
+358
+239
+391
 decay_capacity
 decay_capacity
 0
@@ -1993,13 +1938,13 @@ true
 false
 "" ""
 PENS
-"CDMX" 1.0 0 -16777216 true "" "plot mean [capacidad_D] of alternatives_CDMX"
+"CDMX" 1.0 0 -16777216 true "" "plot mean [capacidad_D] of census_blocks_CDMX"
 
 SLIDER
-35
-216
-236
-249
+36
+103
+237
+136
 recursos_extraccion
 recursos_extraccion
 0
@@ -2011,10 +1956,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-34
-474
-238
-507
+37
+289
+241
+322
 hsc_s
 hsc_s
 0
@@ -2026,10 +1971,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-35
-509
-239
-542
+38
+324
+242
+357
 hsc_f
 hsc_f
 0
@@ -2085,10 +2030,10 @@ list round ((min [Antiguedad-infra_Ab] of agebs) / (12 * 4 * 7)) round ((max [An
 11
 
 INPUTBOX
-63
-675
-218
-735
+35
+396
+190
+456
 particles-population-size
 50.0
 1
@@ -2096,10 +2041,10 @@ particles-population-size
 Number
 
 INPUTBOX
-63
-735
-218
-795
+35
+456
+190
+516
 mutant-size
 20.0
 1
@@ -2112,16 +2057,16 @@ MONITOR
 865
 844
 annual scarcity [days w/n water ina year]
-max [scarcity_annual] of alternatives_CDMX
+max [scarcity_annual] of census_blocks_CDMX
 0
 1
 11
 
 SLIDER
-278
-459
-451
-492
+192
+476
+365
+509
 tau_ndom
 tau_ndom
 0
@@ -2132,25 +2077,42 @@ tau_ndom
 NIL
 HORIZONTAL
 
+PLOT
+1123
+393
+1346
+524
+Income
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot mean [income-W] of census_blocks_CDMX"
+
 @#$#@#$#@
 ## WHAT IS IT?
 
-The model simulates the spatial distribution of hydrological vulnerability in Mexico City due to the actions of the water authority of sewer, potable water systems and the residents of MC neighborhoods.
+The model simulates the spatial distribution of socio-hydrological vulnerability in the neighborhoods of Mexico City. The model simulates the actions of important socio-institutional and socio-political agents that with their actions can influence the risk of flooding, water scarcity and waterborne infectious diseases.
 
-The model represents the decision-making process of the water authorities based on evaluating the condition of the landscape across the neighborhoods, and take actions in selected neighborhoods according to the particular policy of the water operator.
+The current version of the model simualtes the decision-making process of the water authority of Mexico City (SACMEX) based on evaluating the condition of the landscape across the neighborhoods, and take actions in selected neighborhoods according to the particular policy defined by a multi-criteria model.
 
-The actions of the residents modify their local environment to adapt to and cope with water supply shortage and recurrent flood events. These decisions were obtained from translating interviews to mental models and then to a multi-criteria framework. 
+The version includes the residents of Mexico City as the only socio-political actors. Residents modify their local neighborhood by adapting to and cope with water supply shortage and recurrent flood events. 
 
 ## HOW IT WORKS
 
-Water authority agents:
+The model is compose of three modules. The first module is the socio-institutional module. Here, the socio-institutional agents (,in the current version the water authority,) evaluates the state of each neighborhood and makes decisons on where to allocate resources to invest in the matainance of or building new infrastructure for two infrastructure systems: sewer and potable water systems. The socio-intitutional agent calculates the suitability of each census block based on the concept of distance to the ideal point. Then the agents calcualte a site selection where alternative of action in the suitable neighborhood are estimated using an optimization procedure. The decitions of the water authority chagens the condition of attributes of the landscape associated to the infrastructure systems. Specifically, it age, capasity, and extention.
 
-Each tick, water authority evaluates the state of each neighborhood and makes decisons, this decisions are escentially wich alternative of action and in wich neighborhoods.
-In the model this is implemented in as many "moving agents" as alternatives of action water authority has, for instance (Maintenance, new_infrastructure, water_distribution, water_extraction, water_imports, water_extraction), and each of this agents calculates de distance to ideal for each neighborhood property. With all distances to ideal situations for all properties and for all neighborhoods calculated, the water authority agent makes decisions depending on the type of policy selected by the user.
+The second module is the socio-political module. In this module socio-political agent are simualted, These agent make decisions that influence the decision of socio-institutional agents. In this version socio-political agents are represented by residents of Mexico City. Thus in any urban spatial unit a resident agent is included. The resident can make decisions to modify their neighborhood or they can tak poticial action to influence the decision. A procedure labeled as "protest" in the model.
 
-The decision taken transforms the properties of neighborhoods for example the "lack of water distribution infrastructure" for selected neighborhoods  
+The final module is the risk module. Here the frequency of hazard events is simulated. The current version simulates thee risk models: the risk of water shortage, the risk of flooding and the risk waterborned infectious diseases.   
 
-Residents agents:
+
 
 
 ## HOW TO USE IT

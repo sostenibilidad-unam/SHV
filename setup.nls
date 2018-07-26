@@ -7,6 +7,10 @@ globals [
   water_imported               ;;Water imported from external watersheds
   weekly_water_available        ;;total water in a day
   truck_capasity               ;;capasity for each truck (pipas) to deliver water [mt3]
+  C_AF
+  C_AW
+  C_AWS
+  C_P
   capacidad_cisterna           ;;capasity of an individual water storage devide based on information from residents (compendio de datos funcion de valor)
   zonas_aquiferas              ;;ID de las zonas aquiferas en MXC
   count_pozos_initial          ;;number of wells at timestep 1
@@ -105,8 +109,8 @@ globals [
   Agebs_map_full
   Agebs_map_full_csv
   Agebs_map_full_csv_list
-  alternatives_CDMX                                                  ;census blocks inside CDMX
-  alternatives_noCDMX
+  census_blocks_CDMX                                                  ;census blocks inside CDMX
+  census_blocks_noCDMX
   sort_AG                                                            ;list of agens sorted by ID
   sort_AG_noCDMX
   Limites_delegacionales                                             ;limits of borrows
@@ -114,7 +118,7 @@ globals [
   LHland                                                             ;low and highland division of waters based on runoff
   mascara                                                            ;mask of the area of the work showing in the plot
   city_image                                                         ;a google image with the terrain
-  pozos_WaterOperator                                                       ;weels for the water supply (piece of infratructure)
+  pozos_WaterOperator                                                ;weels for the water supply (piece of infratructure)
   PozosCMZM_Project
   PozosPachuca_Project
   PozosTexcoco_Project
@@ -152,8 +156,8 @@ globals [
   ;read_data_waterscarcity
   average_day_nowater_perweek
   IDD  
-  ;optimization variables
-  
+
+;###;optimization variables;###
   gg1 ;global genome list for action 1
   gg2 ;global genome list for action 2
   gg3 ;global genome list for action 3
@@ -250,6 +254,7 @@ Agebs-own[
   uso_suelo
   urban_growth                   ;; Population growth
   Income-index                 ;; Actual income
+  Income-W                     ;;accumulated income for resident decitions
   Escurri
   protest_here              ;;social pressure index per ageb (e.g. %pop. involved in the protests?)
   Presion_social_annual               ;;social pressure index per ageb (e.g. %pop. involved in the protests?)
@@ -273,7 +278,7 @@ Agebs-own[
   water_in                     ;; 1 if water enters to the ageb by any mean (truck pipes storage)
   days_water_in                  ;; water that get to the ageb in metter cubics
   water_distributed_pipes      ;; Water imported (not produced in) to the colonia
-  NOWater_week_pois            ;; days in aweek with no water based on data and a poisson model fitting
+  NOWater_month_pois            ;; days in aweek with no water based on data and a poisson model fitting
   water_distributed_trucks     ;; Water distributed by trucks
   water_in_buying              ;; Water bought from private sources
   mean_days_withNo_water                       ;; days a week with water distributed by pipes
@@ -360,11 +365,8 @@ Agebs-own[
   contiguous_agebs  ;
   neighboor_weights  ;weight of each neighbor acording to contiguity matrix W (Baeza etal in review)
 ]
-
 rain_Stations-own[name p_rain shp_gamma rate_gamma Rain_t]
-
 sewage_nodes-own[ID age from_node to_node Betweeness new-val]
-
 D_pipes-own [current-flow]
 
 Pozos-own[
@@ -416,11 +418,12 @@ to SETUP
   clear-all
   profiler:start
   set timestep 0
+;##############################################################################
+;risk module setup
 ;r:eval "setwd('/srv/home/rgarcia/SHV/')"
  ; r:eval ".libPaths(c(.libPaths(), 'packrat/lib/x86_64-debian-linux-gnu/3.3.1'))"
  ; r:eval ".libPaths(c(.libPaths(), 'packrat/lib-ext/x86_64-debian-linux-gnu/3.3.1'))"
  ; r:eval ".libPaths(c(.libPaths(), 'packrat/lib-R/x86_64-debian-linux-gnu/3.3.1'))"
-  
   r:eval "require(glmmADMB)"
   r:eval "require(maptools)"
   r:eval "require(ecr)"
@@ -446,6 +449,13 @@ to SETUP
   ;  r:eval "p <- predict(glm_ponds_zip, type = 'zero')"
  ; r:eval "lambda <- predict(glm_ponds_zip, type = 'count')"
 
+;##########################################################################  
+;models of water disruption M1 effect of age; M2 lack of connections to the pipes
+  ;reval "load('modelo_glm_conexion')";   modelo_glm_completo 
+  ;reval "load('modelo_zip_disrupcion')";   modelo_glm_completo 
+ ;reval "load('modelo_glm_completo')";   modelo_glm_completo 
+ 
+  
 ;4)#################################################################################################################################
   load-GIS-data
 ;5)#################################################################################################################################
@@ -519,7 +529,7 @@ to define-infrastructuresystems
       [ create-pozos 1
         [ set xcor item 0 centroid
           set ycor item 1 centroid
-          set CVEGEO [CVEGEO] of min-one-of alternatives_CDMX [distance myself]
+          set CVEGEO [CVEGEO] of min-one-of census_blocks_CDMX [distance myself]
           if CVEGEO != 0 [
             set CV_estado (substring CVEGEO 0 2)
             set CV_municipio (substring CVEGEO 2 5)
@@ -652,7 +662,7 @@ to define-infrastructuresystems
 ;      ask mm [create-D_pipes-to nn[]]
 ;    ])
 ;    
-  ask alternatives_CDMX [
+  ask census_blocks_CDMX [
     set pozos_agebs turtle-set pozos with [CVEGEO = [CVEGEO] of myself]
     set count_pozos_tot count pozos_agebs 
     ;ask pozos_agebs [
@@ -717,8 +727,6 @@ to load-GIS-data
 end
   to define_neighborhoods
   ;  define_neighborhoods_full ;;REFERS TO THE FULL AREA OF STUDY. THAT IS THE ENTIRE WATERSHED OF MEXICO CITY VALEY  (need to complete information for other areas)
-  
-
 
   let gis_f (gis:feature-list-of Agebs_map_full)
   let ly_IDB r:get "studyArea_CVG_B@data$AGEB_ID"
@@ -772,8 +780,8 @@ end
           if CV_estado = "09"[
             set group_kmean (item iid ly_kmg); ifelse-value (gis:property-value ? "KMEANS5" = nobody)[0][gis:property-value ? "KMEANS5"]
             set Abastecimiento (item iid ly_ab);gis:property-value ?  "abastecimi"; poblacion * Requerimiento_deAgua
-            set Antiguedad-infra_Ab 365 * (item iid lya);gis:property-value ?2 "antiguedad"
-            set Antiguedad-infra_D 365 * (item iid lya);gis:property-value ?2 "antiguedad"
+            set Antiguedad-infra_Ab (item iid lya);gis:property-value ?2 "antiguedad"
+            set Antiguedad-infra_D (item iid lya);gis:property-value ?2 "antiguedad"
             set altitude (item iid lyel);gis:property-value ?2 "ELEVACION"
                                         ;set aquifer (item iid ly_ID);gis:property-value (gis:find-one-feature zonas_aquif_map "CVEGEO" CVEGEO) "ACUIF"
                                         ;set low_high-land (item iid ly_ID); gis:property-value (gis:find-one-feature LHland "AGEB_ID" (word ID)) "LOW_HIG"
@@ -803,6 +811,7 @@ end
                                                         ;      
             set poblacion (item iid ly_p); gis:property-value ? "poblacion"
             set Income-index ifelse-value ((item iid ly_i) >= 0)[(item iid ly_i)][0]; ifelse-value(gis:property-value ?2 "ingreso" != nobody)[gis:property-value ?2 "ingreso"][random-float 1]
+            set Income-W  Income-index * 10
             set health ifelse-value ((item iid lyh) > 0)[(item iid lyh)][0]; ifelse-value(gis:property-value ?2 "ENF_14" != nobody)[gis:property-value ?2  "ENF_14"][random-float 0]
             set Ponding (item iid lyp) ;ifelse-value(gis:property-value ?2 "PONDING" != nobody)[gis:property-value ?2  "PONDING"][0]
             set flooding (item iid lyp); ifelse-value(gis:property-value ?2 "PONDING" != nobody)[gis:property-value ?2  "PONDING"][0]
@@ -832,16 +841,16 @@ end
       
       
 
-  set alternatives_CDMX agebs with [CV_estado = "09"]
-  set sort_AG sort-on [ID] alternatives_CDMX ;each census block sorted by ID
-  set ID_sort sort [ID] of alternatives_CDMX 
-  set N_neighborhoods count alternatives_CDMX 
+  set census_blocks_CDMX agebs with [CV_estado = "09"]
+  set sort_AG sort-on [ID] census_blocks_CDMX ;each census block sorted by ID
+  set ID_sort sort [ID] of census_blocks_CDMX 
+  set N_neighborhoods count census_blocks_CDMX 
 
   if escala = "cuenca" [
     
-    set alternatives_noCDMX agebs with [CV_estado = "15"]
-    set sort_AG_noCDMX sort-on [ageb_ID] alternatives_noCDMX  ;each census block sorted by ID
-  set N_neighborhoods count alternatives_CDMX + count alternatives_noCDMX 
+    set census_blocks_noCDMX agebs with [CV_estado = "15"]
+    set sort_AG_noCDMX sort-on [ageb_ID] census_blocks_noCDMX  ;each census block sorted by ID
+  set N_neighborhoods count census_blocks_CDMX + count census_blocks_noCDMX 
   
   ]  
  
@@ -1779,56 +1788,60 @@ end
   set densidad_pop_max 1
  ;names and CVEGEO of municipalities inside DF
   set scarcity_scale [1 3 7 20]
+  set C_AW 5
+  set C_AF 10
+  set C_P 3
+  set C_AWS 1
 end
 
 ;#############################################################################################################################################
 to set_maximum   ;; update the maximum or minimum of values use by the model to calculate range of the value functions this time relative to the domain of the agent who needs the inforamtion to take decition
-  set Antiguedad-infra_Ab_max 120 * 365
-  set Antiguedad-infra_D_max 120 * 365
+  set Antiguedad-infra_Ab_max 120
+  set Antiguedad-infra_D_max 120 
   set desperdicio_agua_max 100;max [desperdicio_agua] of agebs with [CV_estado = estado];;max level of perception of deviation
-  set days_wno_water_max 28
-  set Gasto_hidraulico_max max [Gasto_hidraulico] of alternatives_CDMX
-  set presion_hidraulica_max max [presion_hidraulica] of alternatives_CDMX
-  set desviacion_agua_max max [desviacion_agua] of alternatives_CDMX
-  set Capacidad_Ab_max max [Capacidad_Ab] of alternatives_CDMX
-  set Capacidad_d_max max [Capacidad_d] of alternatives_CDMX
-  set garbage_max max [garbage] of alternatives_CDMX
-  set Obstruccion_dren_max max[Obstruccion_dren] of alternatives_CDMX
-  set hundimiento_max max [hundimiento] of alternatives_CDMX
-  set poblacion_max max [poblacion] of alternatives_CDMX
+  set days_wno_water_max 365
+  set Gasto_hidraulico_max max [Gasto_hidraulico] of census_blocks_CDMX
+  set presion_hidraulica_max max [presion_hidraulica] of census_blocks_CDMX
+  set desviacion_agua_max max [desviacion_agua] of census_blocks_CDMX
+  set Capacidad_Ab_max max [Capacidad_Ab] of census_blocks_CDMX
+  set Capacidad_d_max max [Capacidad_d] of census_blocks_CDMX
+  set garbage_max max [garbage] of census_blocks_CDMX
+  set Obstruccion_dren_max max[Obstruccion_dren] of census_blocks_CDMX
+  set hundimiento_max max [hundimiento] of census_blocks_CDMX
+  set poblacion_max max [poblacion] of census_blocks_CDMX
   set water_quality_max 1
-  set max_water_in_mc max [days_water_in] of alternatives_CDMX
-  set infra_abast_max max [houses_with_abastecimiento] of alternatives_CDMX
-  set infra_dranage_max max [houses_with_dranage] of alternatives_CDMX
-  set flooding_max max [flooding] of alternatives_CDMX;;max level of flooding (encharcamientos) recored over the last 10 years
-  set ponding_max max [ponding] of alternatives_CDMX;;max level of flooding (encharcamientos) recored over the last 10 years
-  set precipitation_max max [precipitation] of alternatives_CDMX
-  set falla_ab_max max [Falla_ab] of alternatives_CDMX
-  set falla_d_max max [Falla_d] of alternatives_CDMX
-  set Abastecimiento_max max [Abastecimiento] of alternatives_CDMX
-  set health_max max [health] of alternatives_CDMX
-  set monto_max max [monto] of alternatives_CDMX
-  set scarcity_max max [scarcity] of alternatives_CDMX
+  set max_water_in_mc max [days_water_in] of census_blocks_CDMX
+  set infra_abast_max max [houses_with_abastecimiento] of census_blocks_CDMX
+  set infra_dranage_max max [houses_with_dranage] of census_blocks_CDMX
+  set flooding_max max [flooding] of census_blocks_CDMX;;max level of flooding (encharcamientos) recored over the last 10 years
+  set ponding_max max [ponding] of census_blocks_CDMX;;max level of flooding (encharcamientos) recored over the last 10 years
+  set precipitation_max max [precipitation] of census_blocks_CDMX
+  set falla_ab_max max [Falla_ab] of census_blocks_CDMX
+  set falla_d_max max [Falla_d] of census_blocks_CDMX
+  set Abastecimiento_max max [Abastecimiento] of census_blocks_CDMX
+  set health_max max [health] of census_blocks_CDMX
+  set monto_max max [monto] of census_blocks_CDMX
+  set scarcity_max max [scarcity] of census_blocks_CDMX
   set Presion_social_annual_max 54
   set falta_d_max 1
   set falta_Ab_max 1
-   set peticion_usuarios_max max [peticion_usuarios] of alternatives_CDMX
-  set d_Compra_agua_max max [d_Compra_agua] of alternatives_CDMX
-  set d_Captacion_agua_max max [d_Captacion_agua] of alternatives_CDMX
-  set d_Movilizaciones_max max [d_Movilizaciones] of alternatives_CDMX
-  set d_Modificacion_vivienda_max max [d_Modificacion_vivienda] of alternatives_CDMX
-  set d_Accion_colectiva_max max [d_Accion_colectiva] of alternatives_CDMX
-  set d_water_extraction_max max [d_water_extraction] of alternatives_CDMX
-  set d_mantenimiento_D_max max [d_mantenimiento_D] of alternatives_CDMX
-  set d_mantenimiento_max max [d_mantenimiento_Ab] of alternatives_CDMX
-  set d_new_max max [d_new_Ab] of alternatives_CDMX
-  set d_water_distribution_max max [d_water_distribution] of alternatives_CDMX
-  set d_water_importacion_max max [d_water_importacion] of alternatives_CDMX
-  set Y_F_Max max [Y_F] of alternatives_CDMX    ;max level of changes made to houses
-  set Y_S_Max max [Y_S] of alternatives_CDMX   ;max level of changes made to houses
-  set Vulnerability_S_max max [vulnerability_S] of alternatives_CDMX
-  set Vulnerability_F_max max [vulnerability_F] of alternatives_CDMX
-  set densidad_pop_max max [densidad_pop] of alternatives_CDMX
+   set peticion_usuarios_max max [peticion_usuarios] of census_blocks_CDMX
+  set d_Compra_agua_max max [d_Compra_agua] of census_blocks_CDMX
+  set d_Captacion_agua_max max [d_Captacion_agua] of census_blocks_CDMX
+  set d_Movilizaciones_max max [d_Movilizaciones] of census_blocks_CDMX
+  set d_Modificacion_vivienda_max max [d_Modificacion_vivienda] of census_blocks_CDMX
+  set d_Accion_colectiva_max max [d_Accion_colectiva] of census_blocks_CDMX
+  set d_water_extraction_max max [d_water_extraction] of census_blocks_CDMX
+  set d_mantenimiento_D_max max [d_mantenimiento_D] of census_blocks_CDMX
+  set d_mantenimiento_max max [d_mantenimiento_Ab] of census_blocks_CDMX
+  set d_new_max max [d_new_Ab] of census_blocks_CDMX
+  set d_water_distribution_max max [d_water_distribution] of census_blocks_CDMX
+  set d_water_importacion_max max [d_water_importacion] of census_blocks_CDMX
+  set Y_F_Max max [Y_F] of census_blocks_CDMX    ;max level of changes made to houses
+  set Y_S_Max max [Y_S] of census_blocks_CDMX   ;max level of changes made to houses
+  set Vulnerability_S_max max [vulnerability_S] of census_blocks_CDMX
+  set Vulnerability_F_max max [vulnerability_F] of census_blocks_CDMX
+  set densidad_pop_max max [densidad_pop] of census_blocks_CDMX
   set max-elevation max [altitude] of agebs           ;;to visualize elevation
   set min-elevation min [altitude] of agebs           ;;to visualize elevation 
 
@@ -1842,7 +1855,7 @@ to set-matrix-contj
       [ [ag_vec w_vec] ->
         let l 0
         if w_vec > 0[
-          ask alternatives_CDMX with [ID = ag_id][
+          ask census_blocks_CDMX with [ID = ag_id][
             set contiguous_agebs (turtle-set contiguous_agebs agebs with [ID = ag_vec])
             set neighboor_weights lput w_vec neighboor_weights
           ]
@@ -1855,60 +1868,60 @@ end
 to define_initial-contitions_PipedwaterDistribution
   ;to define areas with irregular water supply by pipes (e.g. mean_days_withNo_water)[days per week]
   ;crear csv table and read the values from it
-  ask alternatives_CDMX [
+  ask census_blocks_CDMX [
     if CV_municipio = "002" [
-    set alt_mean_Delegation mean [altitude] of alternatives_CDMX with [CV_municipio = "002"]
+    set alt_mean_Delegation mean [altitude] of census_blocks_CDMX with [CV_municipio = "002"]
     set mean_days_withNo_water item 3 item 2 average_day_nowater_perweek
     ];"Azcapotzalco"
      if CV_municipio = "003"[
-    set alt_mean_Delegation mean [altitude] of alternatives_CDMX with [CV_municipio = "003"]
+    set alt_mean_Delegation mean [altitude] of census_blocks_CDMX with [CV_municipio = "003"]
     set mean_days_withNo_water item 3 item 4 average_day_nowater_perweek];"Coyoacan"
     if CV_municipio = "004"[
-    set alt_mean_Delegation mean [altitude] of alternatives_CDMX with [CV_municipio = "004"]
+    set alt_mean_Delegation mean [altitude] of census_blocks_CDMX with [CV_municipio = "004"]
     set mean_days_withNo_water item 3 item 5 average_day_nowater_perweek];"Cuajimalpa"
 
     if CV_municipio = "005"[
-    set alt_mean_Delegation mean [altitude] of alternatives_CDMX with [CV_municipio = "005"]
+    set alt_mean_Delegation mean [altitude] of census_blocks_CDMX with [CV_municipio = "005"]
     set mean_days_withNo_water item 3 item 7 average_day_nowater_perweek];"Gustavo A. Madero"
 
      if CV_municipio = "006"[
-      set alt_mean_Delegation mean [altitude] of alternatives_CDMX with [CV_municipio = "006"]
+      set alt_mean_Delegation mean [altitude] of census_blocks_CDMX with [CV_municipio = "006"]
       set mean_days_withNo_water item 3 item 8 average_day_nowater_perweek];"Iztacalco"
    if CV_municipio = "007"[
-    set alt_mean_Delegation mean [altitude] of alternatives_CDMX with [CV_municipio = "007"]
+    set alt_mean_Delegation mean [altitude] of census_blocks_CDMX with [CV_municipio = "007"]
     set mean_days_withNo_water item 3 item 9 average_day_nowater_perweek];"Iztapalapa"
   if CV_municipio = "008"[
-    set alt_mean_Delegation mean [altitude] of alternatives_CDMX with [CV_municipio = "008"]
+    set alt_mean_Delegation mean [altitude] of census_blocks_CDMX with [CV_municipio = "008"]
     set mean_days_withNo_water item 3 item 10 average_day_nowater_perweek];"La Magdalena Contreras"
   if CV_municipio = "009"[
-    set alt_mean_Delegation mean [altitude] of alternatives_CDMX with [CV_municipio = "009"]
+    set alt_mean_Delegation mean [altitude] of census_blocks_CDMX with [CV_municipio = "009"]
     set mean_days_withNo_water item 3 item 11 average_day_nowater_perweek];"Milpa Alta"
   if CV_municipio = "010"[
-    set alt_mean_Delegation mean [altitude] of alternatives_CDMX with [CV_municipio = "010"]
+    set alt_mean_Delegation mean [altitude] of census_blocks_CDMX with [CV_municipio = "010"]
     set mean_days_withNo_water item 3 item 1 average_day_nowater_perweek];"Álvaro Obregón"
   if CV_municipio = "011"[
-    set alt_mean_Delegation mean [altitude] of alternatives_CDMX with [CV_municipio = "011"]
+    set alt_mean_Delegation mean [altitude] of census_blocks_CDMX with [CV_municipio = "011"]
     set mean_days_withNo_water item 3 item 13 average_day_nowater_perweek];"Tláhuac"
   if CV_municipio = "012"[
-    set alt_mean_Delegation mean [altitude] of alternatives_CDMX with [CV_municipio = "012"]
+    set alt_mean_Delegation mean [altitude] of census_blocks_CDMX with [CV_municipio = "012"]
     set mean_days_withNo_water item 3 item 14 average_day_nowater_perweek];"Tlalpan"
   if CV_municipio = "013"[
-    set alt_mean_Delegation mean [altitude] of alternatives_CDMX with [CV_municipio = "013"]
+    set alt_mean_Delegation mean [altitude] of census_blocks_CDMX with [CV_municipio = "013"]
     set mean_days_withNo_water item 3 item 16 average_day_nowater_perweek];"Xochimilco"
   if CV_municipio = "014"[
-    set alt_mean_Delegation mean [altitude] of alternatives_CDMX with [CV_municipio = "014"]
+    set alt_mean_Delegation mean [altitude] of census_blocks_CDMX with [CV_municipio = "014"]
     set mean_days_withNo_water item 3 item 3 average_day_nowater_perweek
     ];"Benito Juárez"
   if CV_municipio = "015"[
-    set alt_mean_Delegation mean [altitude] of alternatives_CDMX with [CV_municipio = "015"]
+    set alt_mean_Delegation mean [altitude] of census_blocks_CDMX with [CV_municipio = "015"]
     set mean_days_withNo_water item 3 item 6 average_day_nowater_perweek
     ];"Cuauhtémoc"
   if CV_municipio = "016"[
-    set alt_mean_Delegation mean [altitude] of alternatives_CDMX with [CV_municipio = "016"]
+    set alt_mean_Delegation mean [altitude] of census_blocks_CDMX with [CV_municipio = "016"]
     set mean_days_withNo_water item 3 item 12 average_day_nowater_perweek
     ];"Miguel Hidalgo"
   if CV_municipio = "017"[
-    set alt_mean_Delegation mean [altitude] of alternatives_CDMX with [CV_municipio = "017"]
+    set alt_mean_Delegation mean [altitude] of census_blocks_CDMX with [CV_municipio = "017"]
     set mean_days_withNo_water item 3 item 15 average_day_nowater_perweek];"Venustiano Carranza"
   ]
 end
