@@ -155,9 +155,18 @@ globals [
   flood_capacity_riskNewCity
   ;read_data_waterscarcity
   average_day_nowater_perweek
-  IDD  
-
-;###;optimization variables;###
+  IDD   ;variable to store the ID of census blocks from R
+  
+  ;;parameters_valueFunctions
+  fv_antiguedad_drenaje
+  fv_antiguedad_escasez
+  fv_calidad_agua_sodio_escasez
+  fv_falla_escasez
+  fv_horas_servicio_escasez
+  fv_presion_hidraulica_escasez
+  fv_subsidencia
+  
+  ;;optimization variables;###
   gg1 ;global genome list for action 1
   gg2 ;global genome list for action 2
   gg3 ;global genome list for action 3
@@ -471,6 +480,7 @@ to SETUP
  ; set flood_capacity_riskNewCity csv:from-file "data/ABMtable_Flood_risk_capacity_newCityB.csv"
   set average_day_nowater_perweek csv:from-file "data/Prueba_Poisson_3.csv"
  ; set contiguous_matrix csv:from-file "data/W_matrix_low.csv"
+  
 ;9)#############################################################################################################################################
   set-initial-values-globals
 
@@ -484,7 +494,9 @@ to SETUP
 define_initial-contitions_PipedwaterDistribution
 
 ;13)#############################################################################################################################################
- show_sewer
+; read value functions
+  read_value_functions  
+  show_sewer
 profiler:stop          ;; stop profiling
 print profiler:report  ;; view the results
 profiler:reset         ;; clear the data
@@ -855,6 +867,18 @@ end
   ]  
  
 end
+;####################################################################################################### 
+;####################################################################################################### 
+to read_value_functions
+  set fv_antiguedad_drenaje csv:from-file  "funciones_valor/csvs/fv_antiguedad_drenaje.csv"
+  set  fv_antiguedad_escasez csv:from-file  "funciones_valor/csvs/fv_antiguedad_escasez.csv"
+  set fv_calidad_agua_sodio_escasez csv:from-file  "funciones_valor/csvs/fv_calidad_agua_sodio_escasez.csv"
+  set fv_falla_escasez csv:from-file  "funciones_valor/csvs/fv_falla_escasez.csv"
+  set fv_horas_servicio_escasez csv:from-file  "funciones_valor/csvs/fv_horas_servicio_escasez.csv"
+  set fv_presion_hidraulica_escasez csv:from-file  "funciones_valor/csvs/fv_presion_hidraulica_escasez.csv"
+  set fv_subsidencia csv:from-file  "funciones_valor/csvs/fv_subsidencia.csv"
+end
+;####################################################################################################### 
 ;####################################################################################################### 
    to define_ActionsCriteria
   ;This procedure defines each alternative as a object, with atributes defined by:

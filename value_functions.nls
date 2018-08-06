@@ -60,24 +60,31 @@ to update_criteria_and_valueFunctions_WaterOperator    ;;update the biphisical v
       if ? = "Antiguedad"[
         if breed = alternatives_WaterOperator_AB[
           let attribute ([Antiguedad-infra_Ab] of myself)
-         let min_x 120
-          let alpha_vf 80
-          let y_vf exp ( - ((0 - min_x) / alpha_vf) ^ 2)
-          let yy_vf exp ( - ((120 - min_x) / alpha_vf) ^ 2)
-          let svf 1 - ((exp ( - ((attribute - min_x) / alpha_vf) ^ 2) - y_vf) / (yy_vf - y_vf))
+          ;let min_x 120
+         ; let alpha_vf 80
+          ;let y_vf exp ( - ((0 - min_x) / alpha_vf) ^ 2)
+          ;let yy_vf exp ( - ((120 - min_x) / alpha_vf) ^ 2)
+          ;let svf 1 - ((exp ( - ((attribute - min_x) / alpha_vf) ^ 2) - y_vf) / (yy_vf - y_vf))
+        
+          let svf campana_invertida attribute (item 1 item 0 fv_antiguedad_escasez) (item 1 item 2 fv_antiguedad_escasez) (item 1 item 4 fv_antiguedad_escasez) (item 1 item 3 fv_antiguedad_escasez)
+        
           set rescaled_criteria_values replace-item i rescaled_criteria_values svf
+        
         ]
         if breed = alternatives_WaterOperator_d[
           let attribute [Antiguedad-infra_d] of myself
-          let min_x 120
-          let alpha_vf 80
-          let y_vf exp ( - ((0 - min_x) / alpha_vf) ^ 2)
-          let yy_vf exp ( - ((120 - min_x) / alpha_vf) ^ 2)
-          let svf 1 - ((exp ( - ((attribute - min_x) / alpha_vf) ^ 2) - y_vf) / (yy_vf - y_vf))
-          if attribute > 120 [set svf 0]
-          if attribute < 0 [set svf 1]    
-          set rescaled_criteria_values replace-item i rescaled_criteria_values svf
+        ;  let min_x 120
+        ;  let alpha_vf 80
+        ;  let y_vf exp ( - ((0 - min_x) / alpha_vf) ^ 2)
+         ; let yy_vf exp ( - ((120 - min_x) / alpha_vf) ^ 2)
+        ;  let svf 1 - ((exp ( - ((attribute - min_x) / alpha_vf) ^ 2) - y_vf) / (yy_vf - y_vf))
+        ;  if attribute > 120 [set svf 0]
+       ;   if attribute < 0 [set svf 1]    
+       ;   set rescaled_criteria_values replace-item i rescaled_criteria_values svf
           
+          
+          let svf logistica_invertida attribute (item 1 item 4 fv_antiguedad_drenaje) (item 1 item 1 fv_antiguedad_drenaje) (item 1 item 3 fv_antiguedad_drenaje) (item 1 item 2 fv_antiguedad_drenaje)
+         set rescaled_criteria_values replace-item i rescaled_criteria_values svf 
         ]
        ]
       ;###########################################################
@@ -123,9 +130,9 @@ to update_criteria_and_valueFunctions_WaterOperator    ;;update the biphisical v
       ;###########################################################
       if ? = "Falla" [
         if breed = alternatives_WaterOperator_AB[
-          let attribute [Falla_Ab] of myself
+          let attribute 100 * [Falla_Ab] of myself
+          let svf  convexa_creciente attribute (item 1 item 3 fv_falla_escasez) (item 1 item 2 fv_falla_escasez) (item 1 item 1 fv_falla_escasez) ;[x gama xmax xmin]
           set rescaled_criteria_values replace-item i rescaled_criteria_values (1 - attribute) 
-        
         ]
         if breed = Alternatives_WaterOperator_D[
           let attribute [Falla_d] of myself  
@@ -175,11 +182,13 @@ to update_criteria_and_valueFunctions_WaterOperator    ;;update the biphisical v
       ;###########################################################
       if ? = "Hundimientos"[
         let attribute [hundimiento] of myself
-        let p1 26.06766112					
-        let y_vf 1 - exp ((35 - 10) / p1 )
-        let yy_vf 1 - exp ((0 - 10) / p1 )
-        let svf ((1 - exp ((attribute - 10) / p1 )) - y_vf) / (yy_vf - y_vf)
-        if attribute > 35 [set svf 0]  
+;        let p1 26.06766112					
+;        let y_vf 1 - exp ((35 - 10) / p1 )
+;        let yy_vf 1 - exp ((0 - 10) / p1 )
+;        let svf ((1 - exp ((attribute - 10) / p1 )) - y_vf) / (yy_vf - y_vf)
+ ;       if attribute > 35 [set svf 0]  
+        
+        let svf logistica_invertida attribute (item 1 item 4 fv_subsidencia) (item 1 item 1 fv_subsidencia) (item 1 item 3 fv_subsidencia) (item 1 item 2 fv_subsidencia)  ;[x k center xmax xmin]  
         set rescaled_criteria_values replace-item i rescaled_criteria_values svf 
       ]
       ;###########################################################
@@ -215,7 +224,8 @@ to update_criteria_and_valueFunctions_WaterOperator    ;;update the biphisical v
         
         if ? = "Presion_hidraulica"[
           let attribute [Presion_hidraulica] of myself
-          set rescaled_criteria_values replace-item i rescaled_criteria_values (Value-Function attribute [0.5 0.75 0.875 0.937] ["" "" "" ""] Presion_hidraulica_max [1 0.8 0.6 0.4 0.2])
+        let svf logistic attribute (item 1 item 4 fv_presion_hidraulica_escasez) (item 1 item 1 fv_presion_hidraulica_escasez) (item 1 item 3 fv_presion_hidraulica_escasez) (item 1 item 2 fv_presion_hidraulica_escasez);[x k center xmax xmin] 
+        set rescaled_criteria_values replace-item i rescaled_criteria_values svf
         ]
         
         ;###########################################################
@@ -494,57 +504,58 @@ end
 ;#############################################################################################################################################
 ;Implementation of different value functions
 
+;#############################################################################################################################################
+;from sacmex workshop
+;#############################################################################################################################################
+
 to-report logistic [x k center xmax xmin]
-    set x  min list xmax x
-    set x  max list xmin x
-    report 1 / (1.0 + exp(- k * (   (100 * ( x - xmin ) / ( xmax - xmin ) )  - ( 100 * ( center - xmin ) / ( xmax - xmin ) ) )) )
-
+  set x  min list xmax x
+  set x  max list xmin x
+  report 1 / (1.0 + exp(- k * (   (100 * ( x - xmin ) / ( xmax - xmin ) )  - ( 100 * ( center - xmin ) / ( xmax - xmin ) ) )) )
 end
-
 ;#########################################################
 to-report logistica_invertida [x k center xmax xmin]   
-    set x  min list xmax x
-    set x  max list xmin x
-    report 1.0 - logistic x k center xmax xmin
+  set x  min list xmax x
+  set x  max list xmin x
+  report 1.0 - logistic x k center xmax xmin
 end
 ;#########################################################
 to-report gaussian [x a center xmax xmin]
-    set x  min list xmax x
-    set x  max list xmin x
+  set x  min list xmax x
+  set x  max list xmin x
   report exp(0.0 - ((( (100 * ( x - xmin ) / ( xmax - xmin ) ) - (100 * ( x - xmin ) / ( xmax - xmin ) )) / (  a  ) ) * 2))
 end
-  
 ;#########################################################
 to-report campana_invertida [x a center xmax xmin]
-    set x  min list xmax x
-    set x  max list xmin x
+  set x  min list xmax x
+  set x  max list xmin x
   report 1.0 - gaussian x a center xmax xmin
 end
  ;#########################################################
 to-report concava_decreciente [x gama xmax xmin]
-    set x  min list xmax x
-    set x  max list xmin x
-  report ( ( exp(gama * (100.0 - (100.0 * (x - xmin) / (xmax - xmin) ) ) ) ) - 1 )  / ( exp(gama * 100) - 1)
+  set x  min list xmax x
+  set x  max list xmin x
+  report ( ( exp(gama * (100.0 - (100.0 * (x - xmin) / (xmax - xmin) ) ) ) ) - 1 )  / ( exp (gama * 100) - 1)
 end
 ;#########################################################
 to-report concava_creciente [x gama xmax xmin]
-    set x  min list xmax x
-    set x  max list xmin x
+  set x  min list xmax x
+  set x  max list xmin x
   report ((exp(gama * (100 * (x - xmin) / (xmax - xmin) ) ) ) - 1) / (exp(gama * 100) - 1)
 end
 ;#########################################################
 to-report convexa_decreciente [x gama xmax xmin]
-    set x  min list xmax x
-    set x  max list xmin x
+  set x  min list xmax x
+  set x  max list xmin x
   report 1.0 - concava_creciente x gama xmax xmin
 end
 ;#########################################################
 to-report convexa_creciente [x gama xmax xmin]
-    set x  min list xmax x
-    set x  max list xmin x
+  set x  min list xmax x
+  set x  max list xmin x
   report 1.0 - concava_decreciente x gama xmax xmin
 end
-
+;#########################################################
 ;#########################################################
 to-report VF9 [attribute] ;value function criterium: garbage or "drainages-clogged"
   let p1 12546
@@ -552,7 +563,6 @@ to-report VF9 [attribute] ;value function criterium: garbage or "drainages-clogg
   let y_vf (exp (- ((0 - p1) / p2) ^ 2))
   let yy_vf (exp (- ((12546 - p1) / p2) ^ 2))
   let svf ((exp (- ((attribute - p1) / p2) ^ 2))  - y_vf) / (yy_vf - y_vf)
-
   report svf
 end
 ;#########################################################

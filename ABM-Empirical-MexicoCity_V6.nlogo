@@ -1701,13 +1701,13 @@ HORIZONTAL
 SLIDER
 36
 139
-239
+240
 172
 Eficiencia_NuevaInfra
 Eficiencia_NuevaInfra
 0
-0.001
-0.02
+0.005
+0.002
 0.0005
 1
 NIL
