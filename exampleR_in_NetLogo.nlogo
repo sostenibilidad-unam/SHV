@@ -2,6 +2,8 @@ extensions[R]
 
 
 to setup
+  r:eval "require(glmmADMB)"
+  r:eval "require(maptools)"
 r:eval "x <- seq(1,10)"
 show r:get "x"
 end
