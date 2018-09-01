@@ -11,6 +11,8 @@ to GO
   counter_weeks
   ;#############################################################################################################################################
 ;Risk Module
+;weekly water scarcity model
+  scarcity_model
   if weeks = 1 and months = 1[
     water_production_importation    ;;calculate total water available in a day
                                     ;flood_risk
@@ -45,7 +47,7 @@ to GO
   if weeks = 4 [
 
     ask census_blocks_CDMX[
-      water_by_pipe  ;define if an ageb will receive water by pipe. It depends on mean_days_withNo_water and the probability of failure, CHANGe with NEw scarcity model developed by Yosune y ALe
+  ;    water_by_pipe  ;define if an ageb will receive water by pipe. It depends on mean_days_withNo_water and the probability of failure, CHANGe with NEw scarcity model developed by Yosune y ALe
       update_income_W
       residents_action_suitability
       take_action_residents
@@ -274,7 +276,6 @@ to rain-waterCapture
   set Y_S Y_S + 1
   set Sensitivity_S 1 - (Y_S / (Y_S + hsc_s))
   set Income-W Income-W - C_AW
-
   ]
 end
 ;#############################################################################################################################################
@@ -422,7 +423,6 @@ end
        set ycor item 1 centroid
        set name_delegacion gis:property-value ? "NOM_MUN"
        set Peticion_Delegaciones 1
-
      ]
    ]
  ]
@@ -475,7 +475,6 @@ to Site_Suitability
       ;#action Extraccion agua
       if name_action = "Extraccion_agua"[
         ask myself[set d_water_extraction ddd]
-
       ]
     ]
 
@@ -553,12 +552,12 @@ to site_selection
     set pd5 lput [d_water_extraction] of a pd5
     set pd6 lput [d_water_distribution] of a pd6
   ]
-;  profiler:start
+  profiler:start
   doNondominatedSorting
   optimization
-; profiler:stop          ;; stop profiling
-;  print profiler:report
-;  profiler:reset         ;; clear the data
+ profiler:stop          ;; stop profiling
+  print profiler:report
+  profiler:reset         ;; clear the data
 end
 ;/site-selection;
 ;site-selection;
@@ -677,11 +676,39 @@ end
 ;water-supply-simulation;
 to scarcity_model
 
+ let NE []
+ set NE map [i -> item 0 [Antiguedad-infra_D] of census_blocks_CDMX with [ID = i]] IDD
+     r:put "new_Edad" NE
+   ; r:put "new_garbage" BA
+    r:eval "dat_fugas$ANTIGUEDAD<-new_Edad" ;new age of infrastructure will update the regresion to update the level of flooding. Same can be done to the other variables
+  r:eval "pred_scarcity<-predict(modelo_zip_escasez,newdata=dat_fugas,type='response')"
+  r:eval "prob_water<-predict(modelo_zip_escasez,newdata=dat_fugas,type='prob')"
+  r:eval "water_yes<-rbinom(n=length(prob_water[,7]),size=1,prob=prob_water[,7]) * 7"
+r:eval "water_yes[which(water_yes==0)]<-rbinom(n=length(prob_water[which(water_yes==0),6]),size=1,prob=prob_water[which(water_yes==0),6])*6"
+r:eval "water_yes[which(water_yes==0)]<-rbinom(n=length(prob_water[which(water_yes==0),5]),size=1,prob=prob_water[which(water_yes==0),5])*5"
+r:eval "water_yes[which(water_yes==0)]<-rbinom(n=length(prob_water[which(water_yes==0),4]),size=1,prob=prob_water[which(water_yes==0),4])*4"
+r:eval "water_yes[which(water_yes==0)]<-rbinom(n=length(prob_water[which(water_yes==0),3]),size=1,prob=prob_water[which(water_yes==0),3])*3"
+r:eval "water_yes[which(water_yes==0)]<-rbinom(n=length(prob_water[which(water_yes==0),2]),size=1,prob=prob_water[which(water_yes==0),2])*2"
+r:eval "water_yes[which(water_yes==0)]<-rbinom(n=length(prob_water[which(water_yes==0),1]),size=1,prob=prob_water[which(water_yes==0),1])*1"
+
+  let sc r:get "pred_scarcity"
+  let wy r:get "water_yes"
+  ;print length sc
+  ;print length wy
+  ;print length IDD
+   (foreach IDD wy
+  [ [a b] ->
+      ask census_blocks_CDMX with [ID = a][
+        set NOWater_month_pois b
+      ]
+  ])
 ;r:get disruption "exp(fitted(modelo_zip_disrupcion,data=?age_infra_Ab))"   ;;;consultation with yosune
 ;r:get connection "exp(fitted(modelo_glm_conexion,newdata=(1-house_h)))
 ;r:eval "new_data_lambda=cbind(disruption, connection)"
 ;r:get lambda_est " exp(fitted(modelo_glm_completo,newdata=new_data_lambda))
 ;  set days_wno_water lambda_est
+  ask census_blocks_CDMX[ set days_wno_water days_wno_water + NOWater_month_pois]
+
 end
 
 
@@ -1997,21 +2024,10 @@ Simulation_time
 Number
 
 MONITOR
-276
-797
-401
-842
-hundimiento maximo
-max [hundimiento] of agebs
-17
-1
-11
-
-MONITOR
-409
-798
-534
-843
+459
+541
+584
+586
 capasity
 list (max [Capacidad_d] of agebs) (min [Capacidad_d] of agebs)
 4
@@ -2019,10 +2035,10 @@ list (max [Capacidad_d] of agebs) (min [Capacidad_d] of agebs)
 11
 
 MONITOR
-535
-798
-715
-843
+585
+541
+765
+586
 Age Water distribution system
 list round ((min [Antiguedad-infra_Ab] of agebs) / (12 * 4 * 7)) round ((max [Antiguedad-infra_Ab] of agebs) / (12 * 4 * 7))
 4
@@ -2052,10 +2068,10 @@ mutant-size
 Number
 
 MONITOR
-716
-799
-865
-844
+766
+542
+915
+587
 annual scarcity [days w/n water ina year]
 max [scarcity_annual] of census_blocks_CDMX
 0
@@ -2536,13 +2552,7 @@ NetLogo 6.0.1
     <enumeratedValueSet variable="Eficiencia_NuevaInfra">
       <value value="0.02"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="Budget_M">
-      <value value="750"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="Budget_D">
-      <value value="125"/>
-      <value value="250"/>
-      <value value="500"/>
+    <enumeratedValueSet variable="Budget_CDMX">
       <value value="750"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="Eficiencia_Mantenimiento">
@@ -2625,14 +2635,11 @@ NetLogo 6.0.1
     <enumeratedValueSet variable="Eficiencia_NuevaInfra">
       <value value="0.02"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="Budget_M">
+    <enumeratedValueSet variable="Budget_CDMX">
       <value value="125"/>
       <value value="250"/>
       <value value="500"/>
       <value value="750"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="Budget_D">
-      <value value="500"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="Eficiencia_Mantenimiento">
       <value value="0.02"/>

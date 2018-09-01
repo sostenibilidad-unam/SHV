@@ -212,7 +212,6 @@ breed [Alternatives_DELEGATIONS alternative_DELEGATION]
 ;#############################################################################################################################################
 ;define-agents-attributes
 ;#############################################################################################################################################
-
 patches-own[
   altitude          ;; real altitude
   Ageb_ID           ;; AGEB in
@@ -429,22 +428,32 @@ to SETUP
   set timestep 0
 ;##############################################################################
 ;risk module setup
-;r:eval "setwd('/srv/home/rgarcia/SHV/')"
- ; r:eval ".libPaths(c(.libPaths(), 'packrat/lib/x86_64-debian-linux-gnu/3.3.1'))"
- ; r:eval ".libPaths(c(.libPaths(), 'packrat/lib-ext/x86_64-debian-linux-gnu/3.3.1'))"
+ ;r:eval "setwd('/srv/home/rgarcia/SHV/')"
+ ;r:eval ".libPaths(c(.libPaths(), 'packrat/lib/x86_64-debian-linux-gnu/3.3.1'))"
+ ;r:eval ".libPaths(c(.libPaths(), 'packrat/lib-ext/x86_64-debian-linux-gnu/3.3.1'))"
  ; r:eval ".libPaths(c(.libPaths(), 'packrat/lib-R/x86_64-debian-linux-gnu/3.3.1'))"
+
+  ;data scarcity model 
+ ; r:eval "setwd('c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/data/')"
+  
+  r:eval "load('c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/data/data_fugas')"
+ ; r:eval "load('c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/Statistical_Models/zero_inflated_negbinomial_scarcity')"
+ ; r:eval "require(brms)"
+ ; r:eval "require(ggmcmc)"
+ ; r:eval "require(tidyverse)"
   r:eval "require(glmmADMB)"
   r:eval "require(maptools)"
   r:eval "require(ecr)"
-  r:eval "studyArea_CVG<-readShapeSpatial('C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/data/agebs_abm')"
-  r:eval "studyArea_CVG_B<-readShapeSpatial('C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/data/agebs_abm_old')"
-  r:eval "studyArea_CVG_C<-readShapeSpatial('C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/data/ageb_abm_full')"
-  ;r:eval "studyArea_CVG<-readShapeSpatial('~/data/agebs_abm')"
+  r:eval "require(pscl)"
+  r:eval "studyArea_CVG<-readShapeSpatial('c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/data/agebs_abm')"
+  r:eval "studyArea_CVG_B<-readShapeSpatial('c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/data/agebs_abm_old')"
+  r:eval "studyArea_CVG_C<-readShapeSpatial('c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/data/ageb_abm_full')"
+  ;r:eval "studyArea_CVG<-readShapeSpatial('c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/data/agebs_abm')"
   
 ;  r:eval "studyArea_CVG<-readShapeSpatial('C:/Users/abaezaca/Dropbox (Personal)/Layers/sesmo/agebs_abm')"
  ; r:eval "studyArea_CVG<-readShapeSpatial('/SHV/data/agebs_abm')"
 
-  ;
+  ;flooding model
   r:eval "studyArea_CVG@data$estado<-as.factor(substring(studyArea_CVG@data$cvgeo,1,2))"
   set IDD r:get "studyArea_CVG@data$AGEB_ID[which(studyArea_CVG@data$estado=='09')]"
   ;r:eval "studyArea_CVG@data$municipio<-as.factor(substring(studyArea_CVG@data$cvgeo,3,5))"
@@ -455,6 +464,8 @@ to SETUP
  ; r:eval "glm_ponds_zip<-zeroinfl(encharca~1+antiguedad+subsidenci+PR_2014, data=studyArea_CVG@data)"
   ;r:eval "glm_ponds_qp<-glm(formula = encharca~antiguedad+subsidenci+PR_2014,data =studyArea_CVG@data ,family = quasipoisson(link=log))"
   r:eval "fit_zinbinom <- glmmadmb(encharca~antiguedad+subsidenci+PR_2014+escurri+BASURA,data =studyArea_CVG@data,zeroInflation=TRUE, family='nbinom1')"
+  r:eval "fit_zinbinom_scarcity <- glmmadmb(lambdas ~ CRITICO + FUGAS + FALTAS+ ANTIGUEDAD + V_SAGUA + SUBSID + FUGAS*SUBSID,data =dat_fugas,zeroInflation=TRUE, family='nbinom1')"
+  r:eval "modelo_zip_escasez <- zeroinfl(lambdas ~   CRITICO + ANTIGUEDAD + SUBSID | V_SAGUA , dist = 'negbin', data = dat_fugas)"
   ;  r:eval "p <- predict(glm_ponds_zip, type = 'zero')"
  ; r:eval "lambda <- predict(glm_ponds_zip, type = 'count')"
 
@@ -704,7 +715,7 @@ to load-GIS-data
     set PozosTexcoco_Project gis:load-dataset  "data/PozosTexcoco_Project.shp"
     set PozosChalco_Project gis:load-dataset  "data/PozosChalco_Project.shp"
   ]
-    set Limites_delegacionales gis:load-dataset  "data/limites_deleg_DF_2013.shp"
+  set Limites_delegacionales gis:load-dataset  "data/limites_deleg_DF_2013.shp"
   set zonas_aquif_map gis:load-dataset  "data/AGEB_Zona_Project.shp"
   set Agebs_map_full gis:load-dataset "data/ageb_abm_full.shp"
   set Agebs_map gis:load-dataset "data/agebs_abm_old.shp";"data/agebs_abm.shp"
