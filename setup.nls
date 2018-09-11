@@ -464,8 +464,8 @@ to SETUP
  ; r:eval "glm_ponds_zip<-zeroinfl(encharca~1+antiguedad+subsidenci+PR_2014, data=studyArea_CVG@data)"
   ;r:eval "glm_ponds_qp<-glm(formula = encharca~antiguedad+subsidenci+PR_2014,data =studyArea_CVG@data ,family = quasipoisson(link=log))"
   r:eval "fit_zinbinom <- glmmadmb(encharca~antiguedad+subsidenci+PR_2014+escurri+BASURA,data =studyArea_CVG@data,zeroInflation=TRUE, family='nbinom1')"
-  r:eval "fit_zinbinom_scarcity <- glmmadmb(lambdas ~ CRITICO + FUGAS + FALTAS+ ANTIGUEDAD + V_SAGUA + SUBSID + FUGAS*SUBSID,data =dat_fugas,zeroInflation=TRUE, family='nbinom1')"
-  r:eval "modelo_zip_escasez <- zeroinfl(lambdas ~   CRITICO + ANTIGUEDAD + SUBSID | V_SAGUA , dist = 'negbin', data = dat_fugas)"
+  ;r:eval "fit_zinbinom_scarcity <- glmmadmb(lambdas ~ CRITICO + FUGAS + FALTAS+ ANTIGUEDAD + V_SAGUA + SUBSID + FUGAS*SUBSID,data =dat_fugas,zeroInflation=TRUE, family='nbinom1')"
+  r:eval "modelo_zip_escasez <- zeroinfl(lambdas ~   CRITICO + ANTIGUEDAD | V_SAGUA , dist = 'negbin', data = dat_fugas)"
   ;  r:eval "p <- predict(glm_ponds_zip, type = 'zero')"
  ; r:eval "lambda <- predict(glm_ponds_zip, type = 'count')"
 

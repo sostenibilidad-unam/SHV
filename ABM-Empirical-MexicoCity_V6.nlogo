@@ -676,11 +676,15 @@ end
 ;water-supply-simulation;
 to scarcity_model
 
- let NE []
- set NE map [i -> item 0 [Antiguedad-infra_D] of census_blocks_CDMX with [ID = i]] IDD
-     r:put "new_Edad" NE
-   ; r:put "new_garbage" BA
-    r:eval "dat_fugas$ANTIGUEDAD<-new_Edad" ;new age of infrastructure will update the regresion to update the level of flooding. Same can be done to the other variables
+  let Edad []
+  let connections []
+  set Edad map [i -> item 0 [Antiguedad-infra_ab] of census_blocks_CDMX with [ID = i]] IDD
+  set connections map [i -> item 0 [FALTA_ab] of census_blocks_CDMX with [ID = i]] IDD
+  r:put "new_Edad" Edad
+  r:put "new_connections" connections
+
+  r:eval "dat_fugas$ANTIGUEDAD<-new_Edad" ;new age of infrastructure will update the regresion to update the level of flooding. Same can be done to the other variables
+  r:eval "dat_fugas$V_SAGUA<-new_connections" ;new age of infrastructure will update the regresion to update the level of flooding. Same can be done to the other variable
   r:eval "pred_scarcity<-predict(modelo_zip_escasez,newdata=dat_fugas,type='response')"
   r:eval "prob_water<-predict(modelo_zip_escasez,newdata=dat_fugas,type='prob')"
   r:eval "water_yes<-rbinom(n=length(prob_water[,7]),size=1,prob=prob_water[,7]) * 7"
@@ -907,9 +911,11 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
       ;############################################################################################
     if visualization = "Escasez" and ticks > 1 [
       ;set shape "drop"
-;      print days_wno_water
-      set size days_wno_water
-      set color scale-color red days_wno_water days_wno_water_max 0
+      ;print scarcity_annual
+      set size factor_scale * scarcity_annual / 150
+
+;     set color scale-color red days_wno_water days_wno_water_max 0
+      set color scale-color red scarcity_annual 360 0
     ]
     ;############################################################################################
     if visualization = "Edad Infraestructura Ab." and ticks > 1 [
@@ -1488,6 +1494,7 @@ to mutate_horizontalstrategies ;horizontal swapping of genome items
   set sf4 sum(f4)
   set tf sf1 + sf2 + sf3 + sf4
 end
+
 to mutate_verticalstrategies ;vertical swapping of genome items between patches
   let nloc n-of 2 [1 2 3 4]
   let ng1 random (N_neighborhoods - 1)
@@ -1864,7 +1871,7 @@ factor_scale
 factor_scale
 0.000000000000000001
 4
-3.827
+3.8770000000000002
 0.001
 1
 NIL
