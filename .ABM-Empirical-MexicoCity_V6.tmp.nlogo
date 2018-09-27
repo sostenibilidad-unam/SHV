@@ -1418,7 +1418,7 @@ to setup-genome
  ; print gg1
  ; print gg2
  ; print gg3
- ; print gg4
+  print gg4
 end
 
 to setup-Particles

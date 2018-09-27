@@ -63,7 +63,6 @@ globals [
   Presion_social_max
   Presion_social_annual_max
   Presion_de_medios_max
-  
   water_quality_max
   health_max
   monto_max
@@ -428,15 +427,17 @@ to SETUP
   set timestep 0
 ;##############################################################################
 ;risk module setup
+;read data and statistical R objects to run biophisical models connecting R and Netlogo
+;##############################################################################
+;##############################################################################  
  ;r:eval "setwd('/srv/home/rgarcia/SHV/')"
- ;r:eval ".libPaths(c(.libPaths(), 'packrat/lib/x86_64-debian-linux-gnu/3.3.1'))"
+ r:eval "setwd('c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/data')"
+  ;r:eval ".libPaths(c(.libPaths(), 'packrat/lib/x86_64-debian-linux-gnu/3.3.1'))"
  ;r:eval ".libPaths(c(.libPaths(), 'packrat/lib-ext/x86_64-debian-linux-gnu/3.3.1'))"
  ; r:eval ".libPaths(c(.libPaths(), 'packrat/lib-R/x86_64-debian-linux-gnu/3.3.1'))"
 
   ;data scarcity model 
- ; r:eval "setwd('c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/data/')"
-  
-  r:eval "load('c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/data/data_fugas')"
+  r:eval "load('data_fugas')"
  ; r:eval "load('c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/Statistical_Models/zero_inflated_negbinomial_scarcity')"
  ; r:eval "require(brms)"
  ; r:eval "require(ggmcmc)"
@@ -445,15 +446,20 @@ to SETUP
   r:eval "require(maptools)"
   r:eval "require(ecr)"
   r:eval "require(pscl)"
-  r:eval "studyArea_CVG<-readShapeSpatial('c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/data/agebs_abm')"
-  r:eval "studyArea_CVG_B<-readShapeSpatial('c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/data/agebs_abm_old')"
-  r:eval "studyArea_CVG_C<-readShapeSpatial('c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/data/ageb_abm_full')"
+  r:eval "studyArea_CVG<-readShapeSpatial('agebs_abm')"
+  r:eval "studyArea_CVG_B<-readShapeSpatial('agebs_abm_old')"
+  r:eval "studyArea_CVG_C<-readShapeSpatial('ageb_abm_full')"
+;scarcity model
+  r:eval "modelo_zip_escasez <- zeroinfl(lambdas ~   CRITICO + ANTIGUEDAD | V_SAGUA , dist = 'negbin', data = dat_fugas)"
+  ;  r:eval "p <- predict(glm_ponds_zip, type = 'zero')"
+ ; r:eval "lambda <- predict(glm_ponds_zip, type = 'count')"
+
   ;r:eval "studyArea_CVG<-readShapeSpatial('c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/data/agebs_abm')"
   
 ;  r:eval "studyArea_CVG<-readShapeSpatial('C:/Users/abaezaca/Dropbox (Personal)/Layers/sesmo/agebs_abm')"
- ; r:eval "studyArea_CVG<-readShapeSpatial('/SHV/data/agebs_abm')"
+; r:eval "studyArea_CVG<-readShapeSpatial('/SHV/data/agebs_abm')"
 
-  ;flooding model
+ ;flooding model
   r:eval "studyArea_CVG@data$estado<-as.factor(substring(studyArea_CVG@data$cvgeo,1,2))"
   set IDD r:get "studyArea_CVG@data$AGEB_ID[which(studyArea_CVG@data$estado=='09')]"
   ;r:eval "studyArea_CVG@data$municipio<-as.factor(substring(studyArea_CVG@data$cvgeo,3,5))"
@@ -463,11 +469,8 @@ to SETUP
   r:eval "studyArea_CVG@data$escurri<-studyArea_CVG@data$escurri/1000"
  ; r:eval "glm_ponds_zip<-zeroinfl(encharca~1+antiguedad+subsidenci+PR_2014, data=studyArea_CVG@data)"
   ;r:eval "glm_ponds_qp<-glm(formula = encharca~antiguedad+subsidenci+PR_2014,data =studyArea_CVG@data ,family = quasipoisson(link=log))"
+ 
   r:eval "fit_zinbinom <- glmmadmb(encharca~antiguedad+subsidenci+PR_2014+escurri+BASURA,data =studyArea_CVG@data,zeroInflation=TRUE, family='nbinom1')"
-  ;r:eval "fit_zinbinom_scarcity <- glmmadmb(lambdas ~ CRITICO + FUGAS + FALTAS+ ANTIGUEDAD + V_SAGUA + SUBSID + FUGAS*SUBSID,data =dat_fugas,zeroInflation=TRUE, family='nbinom1')"
-  r:eval "modelo_zip_escasez <- zeroinfl(lambdas ~   CRITICO + ANTIGUEDAD | V_SAGUA , dist = 'negbin', data = dat_fugas)"
-  ;  r:eval "p <- predict(glm_ponds_zip, type = 'zero')"
- ; r:eval "lambda <- predict(glm_ponds_zip, type = 'count')"
 
 ;##########################################################################  
 ;models of water disruption M1 effect of age; M2 lack of connections to the pipes
@@ -490,7 +493,7 @@ to SETUP
 ;  set flood_capacity_riskOldCity csv:from-file "data/ABMtable_Flood_risk_capacity_oldCity.csv"
  ; set flood_capacity_riskNewCity csv:from-file "data/ABMtable_Flood_risk_capacity_newCityB.csv"
   set average_day_nowater_perweek csv:from-file "data/Prueba_Poisson_3.csv"
- ; set contiguous_matrix csv:from-file "data/W_matrix_low.csv"
+  set contiguous_matrix csv:from-file "data/W_matrix_low.csv"
   
 ;9)#############################################################################################################################################
   set-initial-values-globals
@@ -498,7 +501,7 @@ to SETUP
 ;10)#############################################################################################################################################
   set_maximum 
 ;11)#############################################################################################################################################
- ; set-matrix-contj
+  set-matrix-contj
 
   
 ;12)#############################################################################################################################################
@@ -545,116 +548,116 @@ to define-infrastructuresystems
  ;#################################################################################################################################################  
  
   ;CMZM
-  foreach gis:feature-list-of PozosCMZM_Project [
-    ? ->
-    let centroid gis:location-of gis:centroid-of ?
-    if not empty? centroid
-      [ create-pozos 1
-        [ set xcor item 0 centroid
-          set ycor item 1 centroid
-          set CVEGEO [CVEGEO] of min-one-of census_blocks_CDMX [distance myself]
-          if CVEGEO != 0 [
-            set CV_estado (substring CVEGEO 0 2)
-            set CV_municipio (substring CVEGEO 2 5)
-            set Localidad (substring CVEGEO 5 9)
-            set AGEB_key (substring CVEGEO 9 13)
-          ]
-          set shape "circle 2"
-          set size 2
-          set color sky
-          set hidden? FALSE
-          set age_pozo (1 + random 20) * 365
-          set extraction_rate 87225 ;m3/dia
-          set aquifer "2"
-        ]
-    ]
-  ]
-  if escala = "cuenca"[  
-  ; chalco
-    foreach gis:feature-list-of PozosChalco_Project [
-      ? ->
-      let centroid gis:location-of gis:centroid-of ?
-      if not empty? centroid
-      [ create-pozos 1
-        [ set xcor item 0 centroid
-          set ycor item 1 centroid
-          set CVEGEO [CVEGEO] of min-one-of agebs [distance myself]
-          if CVEGEO != 0 [
-            set CV_estado (substring CVEGEO 0 2)
-            set CV_municipio (substring CVEGEO 2 5)
-            set Localidad (substring CVEGEO 5 9)
-            set AGEB_key (substring CVEGEO 9 13)
-          ]
-          set shape "circle 2"
-          set size 2
-          set color magenta
-          set hidden? TRUE
-          set age_pozo (1 + random 20) * 365
-          set extraction_rate 87225 ;m3/dia
-                                    ;  set aquifer "Chalco"
-        ]
-      ]
-    ]
-    
-    ;pachuca
-    foreach gis:feature-list-of PozosPachuca_Project [
-      ? ->
-      let centroid gis:location-of gis:centroid-of ?
-      if not empty? centroid
-      [ create-pozos 1
-        [ set xcor item 0 centroid
-          set ycor item 1 centroid
-          set CVEGEO [CVEGEO] of min-one-of agebs [distance myself]
-          if CVEGEO != 0 [
-            set CV_estado (substring CVEGEO 0 2)
-            set CV_municipio (substring CVEGEO 2 5)
-            set Localidad (substring CVEGEO 5 9)
-            set AGEB_key (substring CVEGEO 9 13)
-          ]
-          set shape "circle 2"
-          set size 2
-          set color green
-          set hidden? TRUE
-          set age_pozo (1 + random 20) * 365
-          set extraction_rate 87225 ;m3/dia
-                                    ;  set aquifer "Pachuca"
-        ]
-      ]
-    ]
-    
-    ;Texcoco
-    
-    foreach gis:feature-list-of PozosTexcoco_Project [
-      ? ->
-      let centroid gis:location-of gis:centroid-of ?
-      if not empty? centroid
-      [ create-pozos 1
-        [ set xcor item 0 centroid
-          set ycor item 1 centroid
-          set CVEGEO [CVEGEO] of min-one-of agebs [distance myself]
-          if CVEGEO != 0 [
-            set CV_estado (substring CVEGEO 0 2)
-            set CV_municipio (substring CVEGEO 2 5)
-            set Localidad (substring CVEGEO 5 9)
-            set AGEB_key (substring CVEGEO 9 13)
-          ]
-          set shape "circle 2"
-          set size 2
-          set color white
-          set hidden? TRUE
-          set age_pozo (1 + random 20) * 365
-          set extraction_rate 87225 ;m3/dia
-                                    ;set aquifer "Texcoco"
-        ]
-      ]
-    ]
-  ]  
-    
-  ask pozos [
-      set production extraction_rate * (1 / count pozos) 
-    ] ; set daily production of water in [mts^3/s]*[s/min]*[min/hour]*[hours/day]*[1/tot pozos]=[mts^3/(day*pozo)]
-    
-    
+;  foreach gis:feature-list-of PozosCMZM_Project [
+;    ? ->
+;    let centroid gis:location-of gis:centroid-of ?
+;    if not empty? centroid
+;      [ create-pozos 1
+;        [ set xcor item 0 centroid
+;          set ycor item 1 centroid
+;          set CVEGEO [CVEGEO] of min-one-of census_blocks_CDMX [distance myself]
+;          if CVEGEO != 0 [
+;            set CV_estado (substring CVEGEO 0 2)
+;            set CV_municipio (substring CVEGEO 2 5)
+;            set Localidad (substring CVEGEO 5 9)
+;            set AGEB_key (substring CVEGEO 9 13)
+;          ]
+;          set shape "circle 2"
+;          set size 2
+;          set color sky
+;          set hidden? FALSE
+;          set age_pozo (1 + random 20) * 365
+;          set extraction_rate 87225 ;m3/dia
+;          set aquifer "2"
+;        ]
+;    ]
+;  ]
+;  if escala = "cuenca"[  
+;  ; chalco
+;    foreach gis:feature-list-of PozosChalco_Project [
+;      ? ->
+;      let centroid gis:location-of gis:centroid-of ?
+;      if not empty? centroid
+;      [ create-pozos 1
+;        [ set xcor item 0 centroid
+;          set ycor item 1 centroid
+;          set CVEGEO [CVEGEO] of min-one-of agebs [distance myself]
+;          if CVEGEO != 0 [
+;            set CV_estado (substring CVEGEO 0 2)
+;            set CV_municipio (substring CVEGEO 2 5)
+;            set Localidad (substring CVEGEO 5 9)
+;            set AGEB_key (substring CVEGEO 9 13)
+;          ]
+;          set shape "circle 2"
+;          set size 2
+;          set color magenta
+;          set hidden? TRUE
+;          set age_pozo (1 + random 20) * 365
+;          set extraction_rate 87225 ;m3/dia
+;                                    ;  set aquifer "Chalco"
+;        ]
+;      ]
+;    ]
+;    
+;    ;pachuca
+;    foreach gis:feature-list-of PozosPachuca_Project [
+;      ? ->
+;      let centroid gis:location-of gis:centroid-of ?
+;      if not empty? centroid
+;      [ create-pozos 1
+;        [ set xcor item 0 centroid
+;          set ycor item 1 centroid
+;          set CVEGEO [CVEGEO] of min-one-of agebs [distance myself]
+;          if CVEGEO != 0 [
+;            set CV_estado (substring CVEGEO 0 2)
+;            set CV_municipio (substring CVEGEO 2 5)
+;            set Localidad (substring CVEGEO 5 9)
+;            set AGEB_key (substring CVEGEO 9 13)
+;          ]
+;          set shape "circle 2"
+;          set size 2
+;          set color green
+;          set hidden? TRUE
+;          set age_pozo (1 + random 20) * 365
+;          set extraction_rate 87225 ;m3/dia
+;                                    ;  set aquifer "Pachuca"
+;        ]
+;      ]
+;    ]
+;    
+;    ;Texcoco
+;    
+;    foreach gis:feature-list-of PozosTexcoco_Project [
+;      ? ->
+;      let centroid gis:location-of gis:centroid-of ?
+;      if not empty? centroid
+;      [ create-pozos 1
+;        [ set xcor item 0 centroid
+;          set ycor item 1 centroid
+;          set CVEGEO [CVEGEO] of min-one-of agebs [distance myself]
+;          if CVEGEO != 0 [
+;            set CV_estado (substring CVEGEO 0 2)
+;            set CV_municipio (substring CVEGEO 2 5)
+;            set Localidad (substring CVEGEO 5 9)
+;            set AGEB_key (substring CVEGEO 9 13)
+;          ]
+;          set shape "circle 2"
+;          set size 2
+;          set color white
+;          set hidden? TRUE
+;          set age_pozo (1 + random 20) * 365
+;          set extraction_rate 87225 ;m3/dia
+;                                    ;set aquifer "Texcoco"
+;        ]
+;      ]
+;    ]
+;  ]  
+;    
+;  ask pozos [
+;      set production extraction_rate * (1 / count pozos) 
+;    ] ; set daily production of water in [mts^3/s]*[s/min]*[min/hour]*[hours/day]*[1/tot pozos]=[mts^3/(day*pozo)]
+;    
+;    
 ;    ;;read nodes secondary sewer
 ;    foreach gis:feature-list-of desalojo_primario [
 ;      ? ->
@@ -807,7 +810,7 @@ end
             set Antiguedad-infra_D (item iid lya);gis:property-value ?2 "antiguedad"
             set altitude (item iid lyel);gis:property-value ?2 "ELEVACION"
                                         ;set aquifer (item iid ly_ID);gis:property-value (gis:find-one-feature zonas_aquif_map "CVEGEO" CVEGEO) "ACUIF"
-                                        ;set low_high-land (item iid ly_ID); gis:property-value (gis:find-one-feature LHland "AGEB_ID" (word ID)) "LOW_HIG"
+            set low_high-land 0;(item iid ly_ID); gis:property-value (gis:find-one-feature LHland "AGEB_ID" (word ID)) "LOW_HIG"
                                         ; set group_kmean gis:property-value (gis:find-one-feature  "CVEGEO" CVEGEO) "KMEANS5"
                                         ; set precipitation gis:property-value (gis:find-one-feature  "CVEGEO" CVEGEO) "PRECIP"        
             
