@@ -146,6 +146,8 @@ globals [
   MMWaterOperator_D
   MMWaterOperator_D_limit
   MMWaterOperator_weighted_D
+  temp_weight_matrix
+  
   ;;tables
   contiguous_matrix
   ;read_data_flooding
@@ -415,8 +417,8 @@ Alternatives_Xo-own[location ID name_action criteria_names criteria_values crite
 Alternatives_MC-own[location ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights W_matrix ageb_pt]
 Alternatives_MCb-own[location ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights W_matrix ageb_pt]
 Alternatives_MCc-own[location ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights W_matrix ageb_pt]
-alternatives_WaterOperator_AB-own[ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights domain]  ;value obtained for the action when calcualting the limiting matrix in super decition
-Alternatives_WaterOperator_D-own[ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights domain]  ;value obtained for the action when calcualting the limiting matrix in super decition
+alternatives_WaterOperator_AB-own[ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights domain W_matrix]  ;value obtained for the action when calcualting the limiting matrix in super decition
+Alternatives_WaterOperator_D-own[ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights domain W_matrix]  ;value obtained for the action when calcualting the limiting matrix in super decition
 Alternatives_OCVAM-own[ID CLUSTER name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale v_scale_F alternative_weights]   ;value obtained for the action when calcualting the limiting matrix in super decition
 
 ;############################################################################################################################################################################################
@@ -501,7 +503,7 @@ to SETUP
 ;10)#############################################################################################################################################
   set_maximum 
 ;11)#############################################################################################################################################
-  set-matrix-contj
+;  set-matrix-contj
 
   
 ;12)#############################################################################################################################################
@@ -700,7 +702,7 @@ to define-infrastructuresystems
      ; ]
     ]
     
-    set count_pozos_initial count pozos
+  ;  set count_pozos_initial count pozos
 end
 
 to load-GIS-data
@@ -1630,8 +1632,10 @@ end
   foreach alternative_names[
     ? ->
     create-alternatives_WaterOperator_AB 1[    ;create an alternative, the criteria and the weights. Also in the case of HNP network the weight of each alternative in the limit matrix
+      
       set ID "DF101215_GOV"
       set name_action ?
+      set W_matrix MMWaterOperator_weighed_S
       set label name_action
       set criteria_values (list 0 0 0 0 0 0 0 0 0 0 0 0)
       set criteria_max (list 0 0 0 0 0 0 0 0 0 0 0 0)

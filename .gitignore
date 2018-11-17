@@ -26,3 +26,4 @@ value_function_images
 *.pyc
 packrat/lib*/
 .ABM-Empirical-MexicoCity_V6.tmp.nlogo
+.Rprofile

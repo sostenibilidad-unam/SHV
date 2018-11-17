@@ -142,25 +142,12 @@ to update_criteria_and_valueFunctions_WaterOperator    ;;update the biphisical v
 
       ;###########################################################
       if ? = "Escasez de agua"[
-
-        ;      ;set criteria_values replace-item i criteria_values [scarcity] of myself
-        if-else name_action = "Distribucion_agua"[
-        let attribute [days_wno_water] of myself
-           let p1 0.06233948
-          let y_vf exp (-(28 * p1))
-          let yy_vf exp (-(0 * p1))
-          let svf (exp (-(attribute * p1))  - y_vf) / (yy_vf - y_vf)
-          set rescaled_criteria_values replace-item i rescaled_criteria_values svf
-          ask myself [set value_function_scarcity [item i rescaled_criteria_values] of myself]
-        ]
-        [
-          let attribute [scarcity_annual] of myself
-          let p1 0.020455577
-          let y_vf exp (-(336 * p1))
-          let yy_vf exp (-(0 * p1))
-          let svf (exp (-(attribute * p1))  - y_vf) / (yy_vf - y_vf)
-          set rescaled_criteria_values replace-item i rescaled_criteria_values svf
-        ]
+        let attribute [scarcity_annual] of myself
+        let p1 0.020455577
+        let y_vf exp (-(336 * p1))
+        let yy_vf exp (-(0 * p1))
+        let svf (exp (-(attribute * p1))  - y_vf) / (yy_vf - y_vf)
+        set rescaled_criteria_values replace-item i rescaled_criteria_values svf
       ]
       ;###########################################################
       if ? = "Inundaciones" and (months = 12 or ticks < 10) [  ;grandes inundaciones !!need to change variable for criteria
@@ -265,10 +252,10 @@ to update_criteria_and_valueFunctions_WaterOperator    ;;update the biphisical v
           set rescaled_criteria_values replace-item i rescaled_criteria_values svf
         ]
         ;###########################################################
-        if ? = "Peticiones de usuarios"[
-         let attribute [peticion_usuarios] of myself
-          let svf 1 - (attribute / peticion_usuarios_max)   
-          set rescaled_criteria_values replace-item i rescaled_criteria_values  svf   ;(Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
+      if ? = "Peticiones de usuarios"[
+        let attribute [peticion_usuarios] of myself
+        let svf 1 - (attribute / peticion_usuarios_max)   
+        set rescaled_criteria_values replace-item i rescaled_criteria_values  svf   ;(Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
         ]
         ;###########################################################
         if ? = "Presion de medios"[
@@ -276,7 +263,7 @@ to update_criteria_and_valueFunctions_WaterOperator    ;;update the biphisical v
           let p1 0.005268212					
           let y_vf (exp (- 0 * p1))
           let yy_vf (exp (- 600 * p1))
-          let svf ((exp (- attribute * p1))  - y_vf) / (yy_vf - y_vf)
+          let svf 1 - ((exp (- attribute * p1))  - y_vf) / (yy_vf - y_vf)
           if attribute > 600 [set svf 0]
           set rescaled_criteria_values replace-item i rescaled_criteria_values svf  
         ]
@@ -324,21 +311,20 @@ to update_criteria_and_valueFunctions_residentes
         let svf ((1 - exp ((attribute - 10) / p1)) - y_vf) / (yy_vf - y_vf)
         
         set rescaled_criteria_values replace-item i rescaled_criteria_values svf
-        
       ]
       ;###########################################################
       if a = "Escasez de agua"[
-        let attribute [NOWater_month_pois / 4] of myself     
+        let attribute [NOWater_month_pois] of myself     
         if name_action = "Compra de agua" or name_action = "Movilizaciones"[
           set rescaled_criteria_values ifelse-value (attribute > 12) [replace-item i rescaled_criteria_values 1][replace-item i rescaled_criteria_values 0]
         ]  
-        if name_action = "Captacion de agua" [
+        if name_action = "Captacion de agua"[
           set rescaled_criteria_values ifelse-value (attribute > 6) [replace-item i rescaled_criteria_values 1][replace-item i rescaled_criteria_values 0]
         ]   
-        if name_action = "Compra de agua" [
+        if name_action = "Compra de agua"[
           set rescaled_criteria_values ifelse-value (attribute > 2) [replace-item i rescaled_criteria_values 1][replace-item i rescaled_criteria_values 0]
         ]
-        if name_action = "Modificacion vivienda" [
+        if name_action = "Modificacion vivienda"[
           set rescaled_criteria_values replace-item i rescaled_criteria_values 0
         ]
       ]
@@ -357,7 +343,7 @@ to update_criteria_and_valueFunctions_residentes
       ]
       ;###########################################################
       if a = "agua insuficiente" [
-        let attribute [NOWater_month_pois / 4] of myself
+        let attribute [NOWater_month_pois] of myself
         set rescaled_criteria_values ifelse-value(attribute > 12) [replace-item i rescaled_criteria_values 1][replace-item i rescaled_criteria_values 0]
         if name_action = "Modificacion vivienda" [
           set rescaled_criteria_values replace-item i rescaled_criteria_values 0
@@ -512,6 +498,7 @@ to-report logistic [x k center xmax xmin]
   set x  min list xmax x
   set x  max list xmin x
   report 1 / (1.0 + exp(- k * (   (100 * ( x - xmin ) / ( xmax - xmin ) )  - ( 100 * ( center - xmin ) / ( xmax - xmin ) ) )) )
+
 end
 ;#########################################################
 to-report logistica_invertida [x k center xmax xmin]   
@@ -589,7 +576,7 @@ end
 ;#########################################################
 to-report VF12 [attribute] ;value function criterium: falta (lack of infrastructure)
   let p1 0.3457691
-								  let y_vf exp (0 * p1)
+	let y_vf exp (0 * p1)
   let yy_vf exp (100 * p1)
   let svf ((exp (attribute * p1 )) - y_vf) / (yy_vf - y_vf)
 

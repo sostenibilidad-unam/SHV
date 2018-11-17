@@ -105,13 +105,13 @@ p6
 v_c=seq(0,100,1)
 p_1=(-log(log(1.1+0.88*(10-10),base = 10),base = 10))/((log(100,base = 10))^2)
 
-y_menos =exp(p_1*100)
-y_mas=exp(p_1*0)
+y_mas =exp(p_1*100)
+y_menos=exp(p_1*0)
 
-standardized_value=(exp(p_1*v_c)-y_menos)/(y_mas+y_menos)
+standardized_value=(exp(p_1*v_c)-y_menos)/(y_mas-y_menos)
 
 dd<-data.frame(Deficiency=seq(0,100,1),
-standardized_value=(exp(p_1*v_c)-y_menos)/(y_mas+y_menos))
+standardized_value=(exp(p_1*v_c)-y_menos)/(y_mas-y_menos))
 
 p7=ggplot(data=dd,aes(x=Deficiency,y=standardized_value))+geom_line()
 

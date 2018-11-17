@@ -15,125 +15,97 @@ read packages
 ```{r}
 library(maptools)
 require(sp) 
-require("rgdal") # requires sp, will use proj.4 if installed
-require("plyr")
+require(rgdal) # requires sp, will use proj.4 if installed
+require(plyr)
 require(foreign)
 ```
 
 #read csv
 ```{r, echo=FALSE}
-ABAST<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/01febrero2017/ABASTECLCS17a")
-CALAGUA<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/01febrero2017/CALAGUALCS17a")
-ESCASEZ<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/01febrero2017/ESCASEZLCS17a")
-FALTA<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/01febrero2017/FALTAINLCS17a")
-FALLA<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/01febrero2017/FALLAINLCS17a")
-INFILT<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/01febrero2017/INFILTRLCS17a")
-PETDE<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/01febrero2017/PETDELSLCS17a")
-PRESHDRL<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/01febrero2017/PRESHDRLCS17a")
-SUBSIDE<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/01febrero2017/SUBSIDELCS17a")
-USOSUEL<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/01febrero2017/USOSUELLCS17a")
-PRESME<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/01febrero2017/PRESMEDLCS17a")
-dev_agua<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/13abril2017/desv_agua")
-FALTA_D<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/13abril2017/falta_dren")
-gasto<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/13abril2017/gasto")
-Pet_del_dren<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/13abril2017/Pet_del_dren")
-pet_usr_dren<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/13abril2017/pet_usr_dren")
-abastecimiento<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/13abril2017/abastecimiento")
-antiguedad<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT_Integracion/Procesamiento/InputModelos/MBA/13abril2017/antiguedad")
+
+ABAST<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/Layers (1)/final/abastecimiento_v1")
+CALAGUA<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/Layers (1)/final/cal_agua_v1")
+ESCASEZ<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/Layers (1)/final/escasez_v1")
+FALTA_D<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/Layers (1)/final/falta_dren_v1")
+FALLA<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/Layers (1)/final/falla_in_v1")
+low_land<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/Layers (1)/final/low_hig_v1")
+capacity<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/Layers (1)/final/capacidad_v1")
+PETDE<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/Layers (1)/final/PETDELSLCS17a")
+PRESHDRL<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/Layers (1)/final/PRESHDRLCS17a")
+SUBSIDE<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/Layers (1)/final/SUBSIDELCS17a")
+USOSUEL<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/Layers (1)/final/USOSUELLCS17a")
+PRESME<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/Layers (1)/final/PRESMEDLCS17a")
+dev_agua<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/Layers (1)/final/desv_agua")
+FALTA_D<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/Layers (1)/final/falta_dren")
+gasto<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/Layers (1)/final/gasto")
+Pet_del_dren<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/Layers (1)/final/Pet_del_dren")
+pet_usr_dren<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/Layers (1)/final/pet_usr_dren")
+abastecimiento<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/Layers (1)/final/abastecimiento")
+antiguedad<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/Layers (1)/final/antiguedad")
+Pop_ageb<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/Layers (1)/final/AGEB_pob")
+income_index<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/Layers (1)/final/AGEB_ingreso")
+
+ageb14<-readShapeSpatial("C:/Users/abaezaca/Documents/MEGADAPT/SHV/data/ageb14")
+ageb_city<-readShapeSpatial("C:/Users/abaezaca/Documents/MEGADAPT/SHV/data/DF_ageb_N_escalante_Project_withEncharcamientos")
+studyArea<-readShapeSpatial("C:/Users/abaezaca/Documents/MEGADAPT/SHV/data/agebs_studyArea")
+Salud_Cuenca<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/Layers (1)/final/health_v1")
+Flooding<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/Layers (1)/final/ponding_v1")
+
+
+income_index@data$VALUE[which(is.na(income_index@data$VALUE))]<-0
+
+Flooding@data$VAL_MEAN[which(is.na(Flooding@data$VAL_MEAN))]<-0
+Flooding@data$VAL_SD[which(is.na(Flooding@data$VAL_SD))]<-0
+
+Salud_Cuenca@data$VAL_MEAN[which(is.na(Salud_Cuenca@data$VAL_MEAN))]<-0
+Salud_Cuenca@data$VAL_SD[which(is.na(Salud_Cuenca@data$VAL_SD))]<-0
 ```
 
 
 ```{r, echo=FALSE}
+tot=matrix(ncol=22,nrow=length(studyArea@data$AGEB_ID))
 
-for (i in 1: length(dev_agua@data$AGEB_ID)){
- if (i ==1){
-   aba=c(ABAST@data$AGEB_ID[i],ABAST@data$VALUE[i])
-   cal=c(CALAGUA@data$AGEB_ID[i],CALAGUA@data$VALUE[i])
-   esc=c(ESCASEZ@data$AGEB_ID[i],ESCASEZ@data$VALUE[i])
-   falt=c(FALTA@data$AGEB_ID[i],FALTA@data$VALUE[i])
-   fall=c(FALLA@data$AGEB_ID[i],FALLA@data$VALUE[i])
-   inf=c(INFILT@data$AGEB_ID[i],INFILT@data$VALUE[i])
-   ph=c(PRESHDRL@data$AGEB_ID[i],PRESHDRL@data$VALUE[i])
-   hund=c(SUBSIDE@data$AGEB_ID[i],SUBSIDE@data$VALUE[i])
-   usos=c(USOSUEL@data$AGEB_ID[i],USOSUEL@data$VALUE[i])
-   PREE=c(PRESME@data$AGEB_ID[i],PRESME@data$VALUE[i])
-   dev_ag=c(dev_agua@data$AGEB_ID[i],dev_agua@data$VALUE[i])
-   FAL_D=c(FALTA_D@data$AGEB_ID[i],FALTA_D@data$VALUE[i])
-   gas=c(gasto@data$AGEB_ID[i],gasto@data$VALUE[i])
-   Pet_del_d=c(Pet_del_dren@data$AGEB_ID[i],Pet_del_dren@data$VALUE[i])
-   aba_B=c(abastecimiento@data$AGEB_ID[i],abastecimiento@data$POB_S_AGUA[i])
-   age=c(antiguedad@data$AGEB_ID[i],antiguedad@data$ANTIG[i])
-   
-   tot=c(CALAGUA@data$VALUE[i],ESCASEZ@data$VALUE[i],FALTA@data$VALUE[i],FALLA@data$VALUE[i],INFILT@data$VALUE[i],PRESHDRL@data$VALUE[i],SUBSIDE@data$VALUE[i],USOSUEL@data$VALUE[i],PRESME@data$VALUE[i],dev_agua@data$VALUE[i],FALTA_D@data$VALUE[i],gasto@data$VALUE[i],Pet_del_dren@data$VALUE[i],abastecimiento@data$POB_S_AGUA[i],antiguedad@data$ANTIG[i])
-   
-   print(length(tot))
-   browser()
- }
- else{
-   aba=c(aba,ABAST@data$AGEB_ID[i])
-   aba=c(aba,ABAST@data$VALUE[i])
-   
-   cal=c(cal,CALAGUA@data$AGEB_ID[i])
-   cal=c(cal,CALAGUA@data$VALUE[i])
-   
-   esc=c(esc,ESCASEZ@data$AGEB_ID[i])
-   esc=c(esc,ESCASEZ@data$VALUE[i])
-   
-   falt=c(falt,FALTA@data$AGEB_ID[i])
-   falt=c(falt,FALTA@data$VALUE[i])
-   
-   fall=c(fall,FALLA@data$AGEB_ID[i])
-   fall=c(fall,FALLA@data$VALUE[i])
-   
-   inf=c(inf,INFILT@data$AGEB_ID[i])
-   inf=c(inf,INFILT@data$VALUE[i])
-   
-   ph=c(ph,PRESHDRL@data$AGEB_ID[i])
-   ph=c(ph,PRESHDRL@data$VALUE[i])
-   
-   hund=c(hund,SUBSIDE@data$AGEB_ID[i])
-   hund=c(hund,SUBSIDE@data$VALUE[i])
-   
-   usos=c(usos,USOSUEL@data$AGEB_ID[i])
-   usos=c(usos,USOSUEL@data$VALUE[i])
-   
-   
-  PREE=c(PREE,PRESME@data$AGEB_ID[i])
-  PREE=c(PREE,PRESME@data$VALUE[i])
-  
-  dev_ag=c(dev_ag,dev_agua@data$AGEB_ID[i])
-  dev_ag=c(dev_ag,dev_agua@data$VALUE[i])
-  
-  FAL_D=c(FAL_D,FALTA_D@data$AGEB_ID[i])
-  FAL_D=c(FAL_D,FALTA_D@data$VALUE[i])
-  
-  gas=c(gas,gasto@data$AGEB_ID[i])
-  gas=c(gas,gasto@data$VALUE[i])
-  
-  Pet_del_d=c(Pet_del_d,Pet_del_dren@data$AGEB_ID[i])
-  Pet_del_d=c(Pet_del_d,Pet_del_dren@data$VALUE[i])
-
-  aba_B=c(aba_B,abastecimiento@data$AGEB_ID[i])
-  aba_B=c(aba_B,abastecimiento@data$VALUE[i])
-  
-  age=c(age,antiguedad@data$AGEB_ID[i])
-  age=c(age,antiguedad@data$VALUE[i])
-   
-   
-   tot=c(tot,CALAGUA@data$VALUE[i],ESCASEZ@data$VALUE[i],FALTA@data$VALUE[i],FALLA@data$VALUE[i],INFILT@data$VALUE[i],PRESHDRL@data$VALUE[i],SUBSIDE@data$VALUE[i],USOSUEL@data$VALUE[i], PRESME@data$VALUE[i],dev_agua@data$VALUE[i],FALTA_D@data$VALUE[i],gasto@data$VALUE[i],Pet_del_dren@data$VALUE[i],abastecimiento@data$POB_S_AGUA[i],antiguedad@data$ANTIG[i])
-   }
+clave<-CALAGUA@data$CVEGEO
+count =0
+for (i in studyArea@data$AGEB_ID){
+count =count +1
+  tot[count,]=c(CALAGUA@data$AGEB_ID[i],
+            CALAGUA@data$VALUE[i],
+          ESCASEZ@data$VALUE[i],
+          FALTA@data$VALUE[i],
+          FALLA@data$VALUE[i],
+          INFILT@data$VALUE[i],
+          PRESHDRL@data$VALUE[i],
+          SUBSIDE@data$VALUE[i],
+          USOSUEL@data$VALUE[i],
+          PRESME@data$VALUE[count],
+          dev_agua@data$VALUE[count],
+          FALTA_D@data$VALUE[count],
+          gasto@data$VALUE[count],
+          Pet_del_dren@data$VALUE[count],
+          abastecimiento@data$VALUE[count],
+          antiguedad@data$VALUE[count],
+          Pop_ageb@data$VALUE[count],
+          income_index@data$VALUE[count],
+          Salud_Cuenca@data$VAL_MEAN[count],
+          Salud_Cuenca@data$VAL_SD[count],
+          Flooding@data$VAL_MEAN[count],
+          Flooding@data$VAL_SD[count])
 }
-write(aba,file="C:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/text_abast.txt")
-write(cal,file="C:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/text_cal.txt")
-write(esc,file="C:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/text_esc.txt")
-write(falt,file="C:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/text_falt.txt")
-write(fall,file="C:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/text_fall.txt")
-write(inf,file="C:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/text_inf.txt")
-write(ph,file="C:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/text_ph.txt")
-write(hund,file="C:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/text_hund.txt")
-write(usos,file="C:/Users/abaezaca/Documents/MEGADAPT/GIS_layers/text_usos.txt")
 
 
-write(tot,file="C:/Users/abaezaca/Documents/MEGADAPT/SHV/data/text_alllayers.txt")
+colnames(tot)<-c("ID","CALAGUA","ESCASEZ","Falta_ab","falla_AB","inf","PRESHDRL","SUBSIDE","USOSUEL","PRESME","dev_agua","FALTA_D","gasto","Pet_del_dren","abast","edad","Pop_ageb","I_ix","S_M","S_sd","F_M","F_sd")
 
+
+studyArea@data<-cbind(studyArea@data,as.data.frame(tot))
+writeSpatialShape(studyArea,fn = "C:/Users/abaezaca/Documents/MEGADAPT/SHV/data/studyArea2")
+write.csv(x = as.matrix(tot),file="C:/Users/abaezaca/Documents/MEGADAPT/SHV/data/text_alllayers.csv")
+```
+
+
+
+```{r, echo=FALSE}
+ass<-readShapeSpatial("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/data/agebs_abm")
+long<-gCentroid(studyArea_CVG_B, byid=TRUE)@coords[,1]
+lat<-gCentroid(studyArea_CVG_B, byid=TRUE)@coords[,2]
 ```

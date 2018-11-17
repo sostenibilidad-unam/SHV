@@ -94,12 +94,12 @@ G4<-ggplot(subset(l,Recursos_para_distribucion == 2250),aes(x=Delegation,y=Scarc
    annotate("rect", xmin=0, xmax=18, ymin=20 , ymax=40, alpha=0.1,  fill="blue")+
    annotate("rect", xmin=0, xmax=18, ymin=40 , ymax=60, alpha=0.1,  fill="yellow")+   
    annotate("rect", xmin=0, xmax=18, ymin=60 , ymax=80, alpha=0.1, fill="red")
-png(filename = "ranking_escasez.png",width = 18,height = 12,units = "in",res=300)
+#png(filename = "ranking_escasez.png",width = 18,height = 12,units = "in",res=300)
 #multiplot(G4,G3 ,G2,G1, cols = 2)
 grid.arrange(G4,G3 ,G2,G1,ncol=2)#ncol=2)
 
 #multiplot(G4,G3 ,G2,G1, cols = 2)
-dev.off()
+##dev.off()
 ```
 
 # plot antiguedad results
@@ -273,42 +273,39 @@ studyArea@data<-transform(studyArea@data, z.D_m_H=cut(studyArea@data$D_m_H, brea
 studyArea@data<-transform(studyArea@data, z.D_n_H=cut(studyArea@data$D_n_H, breaks=c(0,1,25,50,100,250)))
 
 writePolyShape(studyArea,"C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/outputs/CDMX_vulnerability")
-writeOGR(studyArea,layer="CDMX_vulnerability_prj",dsn = "C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/outputs",driver="ESRI Shapefile")
-studyArea@data$antiguedad_diff_M=(studyArea@data$antiguedad_final_M-studyArea@data$antiguedad_inicial)
+#writeOGR(studyArea,layer="CDMX_vulnerability_prj",dsn = "C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/outputs",driver="ESRI Shapefile")
+#studyArea@data$antiguedad_diff_M=(studyArea@data$antiguedad_final_M-studyArea@data$antiguedad_inicial)
 
 
 
 #cut-offs
-studyArea@data<-transform(studyArea@data, z.cut3=cut(antiguedad_diff_M, breaks=c(-32,-15,0,20),labels = c("high","medium","low")))
-studyArea@data<-transform(studyArea@data, z.cut5=cut(antiguedad_diff_M, breaks=c(-32,-15,-4,0,6,20),labels = c("very-high","high","medium","low","very-low")))
-
 #here we reate new variables to define threshold of based on actions and issue (scarcity or flooding)
-studyArea@data<-transform(studyArea@data, z.AB_m_L=cut(studyArea@data$AB_m_L, breaks=c(-10,1,25,50,100,250)))
-studyArea@data<-transform(studyArea@data, z.AB_n_L=cut(studyArea@data$AB_n_L, breaks=c(-10,1,25,50,100,250)))
+studyArea@data<-transform(studyArea@data, z.AB_m_L=cut(studyArea@data$AB_m_L, breaks=c(-10,1,25,50,100,250),labels = c("Very low","Low","Medium","High","Very high")))
+studyArea@data<-transform(studyArea@data, z.AB_n_L=cut(studyArea@data$AB_n_L, breaks=c(-10,1,25,50,100,250),labels = c("Very low","Low","Medium","High","Very high")))
 
-studyArea@data<-transform(studyArea@data, z.D_m_L=cut(studyArea@data$D_m_L, breaks=c(-10,1,25,50,100,250)))
-studyArea@data<-transform(studyArea@data, z.D_n_L=cut(studyArea@data$D_n_L, breaks=c(-10,1,25,50,100,250)))
-
-
-studyArea@data<-transform(studyArea@data, z.AB_m_M=cut(studyArea@data$AB_m_M, breaks=c(-10,1,25,50,100,250)))
-studyArea@data<-transform(studyArea@data, z.AB_n_M=cut(studyArea@data$AB_n_M, breaks=c(-10,1,25,50,100,250)))
-
-studyArea@data<-transform(studyArea@data, z.D_m_M=cut(studyArea@data$D_m_M, breaks=c(-10,1,25,50,100,250)))
-studyArea@data<-transform(studyArea@data, z.D_n_M=cut(studyArea@data$D_n_M, breaks=c(-10,1,25,50,100,250)))
+studyArea@data<-transform(studyArea@data, z.D_m_L=cut(studyArea@data$D_m_L, breaks=c(-10,1,25,50,100,250),labels = c("Very low","Low","Medium","High","Very high")))
+studyArea@data<-transform(studyArea@data, z.D_n_L=cut(studyArea@data$D_n_L, breaks=c(-10,1,25,50,100,250),labels = c("Very low","Low","Medium","High","Very high")))
 
 
-studyArea@data<-transform(studyArea@data, z.AB_m_H=cut(studyArea@data$AB_m_H, breaks=c(-10,1,25,50,100,250)))
-studyArea@data<-transform(studyArea@data, z.AB_n_H=cut(studyArea@data$AB_n_H, breaks=c(-10,1,25,50,100,250)))
+studyArea@data<-transform(studyArea@data, z.AB_m_M=cut(studyArea@data$AB_m_M, breaks=c(-10,1,25,50,100,250),labels = c("Very low","Low","Medium","High","Very high")))
+studyArea@data<-transform(studyArea@data, z.AB_n_M=cut(studyArea@data$AB_n_M, breaks=c(-10,1,25,50,100,250),labels = c("Very low","Low","Medium","High","Very high")))
 
-studyArea@data<-transform(studyArea@data, z.D_m_H=cut(studyArea@data$D_m_H, breaks=c(-10,1,25,50,100,250)))
-studyArea@data<-transform(studyArea@data, z.D_n_H=cut(studyArea@data$D_n_H, breaks=c(-10,1,25,50,100,250)))
+studyArea@data<-transform(studyArea@data, z.D_m_M=cut(studyArea@data$D_m_M, breaks=c(-10,1,25,50,100,250),labels = c("Very low","Low","Medium","High","Very high")))
+studyArea@data<-transform(studyArea@data, z.D_n_M=cut(studyArea@data$D_n_M, breaks=c(-10,1,25,50,100,250),labels = c("Very low","Low","Medium","High","Very high")))
+
+
+studyArea@data<-transform(studyArea@data, z.AB_m_H=cut(studyArea@data$AB_m_H, breaks=c(-10,1,25,50,100,250),labels = c("Very low","Low","Medium","High","Very high")))
+studyArea@data<-transform(studyArea@data, z.AB_n_H=cut(studyArea@data$AB_n_H, breaks=c(-10,1,25,50,100,250),labels = c("Very low","Low","Medium","High","Very high")))
+
+studyArea@data<-transform(studyArea@data, z.D_m_H=cut(studyArea@data$D_m_H, breaks=c(-10,1,25,50,100,250),labels = c("Very low","Low","Medium","High","Very high")))
+studyArea@data<-transform(studyArea@data, z.D_n_H=cut(studyArea@data$D_n_H, breaks=c(-10,1,25,50,100,250),labels = c("Very low","Low","Medium","High","Very high")))
 
 
 
 
 colors1 <- colorRampPalette(c( "red","yellow","green","blue","lightblue"))(length(levels(studyArea@data$z.cut5)))
 colors2 <- colorRampPalette(c( "red","yellow","blue"))(length(levels(studyArea@data$z.cut3)))
-colors4 <- colorRampPalette(c( "lightblue","blue","green","yellow","red"))(length(levels(studyArea@data$z.AB_m_L)))
+colors4 <- colorRampPalette(c( "lightyellow","yellow","orange","red","darkred"))(length(levels(studyArea@data$z.AB_m_L)))
 
 #fortify data
 studyArea@data$id = rownames(studyArea@data)
@@ -324,165 +321,144 @@ xl=c(-98.9, -99.3)
 yl=c(19, 19.6)
 ll<-c(-98.9,19,-99.3,19.6)
 
-map<-get_map(location = c(mean(xl),mean(yl)) , maptype = "satellite",source='google',zoom = 1) #location="Mexico City"
-map<-get_map(location = ll , maptype = "satellite",source='google',zoom = 10) #location="Mexico 
-
-AI <- ggmap(map, base_layer=ggplot(data=gor_df, aes(x=long,y=lat)),extent = "normal", maprange=FALSE) 
-AI <- AI+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=antiguedad_inicial))+
-  geom_path(data=studyArea.df,  aes(x=long,y=lat,group=id),color="white",size=0.05)+
-   geom_path(aes(x = long, y = lat, group=id), data = fortify(Munic),colour = 'black', size = .8) +
-  scale_fill_continuous("Age Water supply Infrastructure",low="blue",high="red",limits=c(0,65))
-  
-
-
-AF <- ggmap(map, base_layer=ggplot(data=gor_df, aes(x=long,y=lat)),extent = "normal", maprange=FALSE) 
-AF <- AF+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=antiguedad_final_M))+
-  geom_path(data=studyArea.df,  aes(x=long,y=lat,group=id),color="white",size=0.05)+
-   geom_path(aes(x = long, y = lat, group=id), data = fortify(Munic),colour = 'black', size = .8) +
-  scale_fill_continuous("Age Water supply Infrastructure",low="blue",high="red",limits=c(0,65))
-  
-ADiff <- ggmap(map, base_layer=ggplot(data=gor_df, aes(x=long,y=lat)),extent = "normal", maprange=FALSE) 
-ADiff <- ADiff+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.cut3, alpha = 0.2))+
-  geom_path(data=studyArea.df,  aes(x=long,y=lat,group=id),color="white",size=0.05)+
-   geom_path(aes(x = long, y = lat, group=id), data = fortify(Munic),colour = 'black', size = .8) +
-  scale_fill_manual(name="Level of investment",values=setNames(colors2, levels(studyArea@data$z.cut3)))+labs(title="Expected level of investment")
-
-
+map<-get_map(location = c(mean(xl),mean(yl)) , maptype = "hybrid",source='google',zoom = 1) #location="Mexico City"
+map<-get_map(location = ll , maptype = "hybrid",source='google',zoom = 10) #location="Mexico 
 
 #number of time investment made per ageb (map)
 INv_AB_M <- ggmap(map, base_layer=ggplot(data=gor_df, aes(x=long,y=lat)),extent = "normal", maprange=FALSE) 
+
 INv_AB_M <- INv_AB_M+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=AB_m_M, alpha = 0.2))+
   geom_path(data=studyArea.df,  aes(x=long,y=lat,group=id),color="white",size=0.05)+
    geom_path(aes(x = long, y = lat, group=id), data = fortify(Munic),colour = 'black', size = .8) +
-  scale_fill_continuous("investments",low="blue",high="red",limits=c(1,241))
+  scale_fill_continuous("Vulnerability",low="blue",high="red",limits=c(1,241))
 
 
 INv_AB_N <- ggmap(map, base_layer=ggplot(data=gor_df, aes(x=long,y=lat)),extent = "normal", maprange=FALSE) 
 INv_AB_N <- INv_AB_N+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=IAB_new), alpha = 0.2)+
   geom_path(data=studyArea.df,  aes(x=long,y=lat,group=id),color="white",size=0.05)+
    geom_path(aes(x = long, y = lat, group=id), data = fortify(Munic),colour = 'black', size = .8) +
-  scale_fill_continuous("investments",low="blue",high="red",limits=c(0,241))
+  scale_fill_continuous("Vulnerability",low="blue",high="red",limits=c(0,241))
 
 
 #################
 #cut-off plots
 INv_AB_M_cut_L <- ggmap(map, base_layer=ggplot(data=gor_df, aes(x=long,y=lat)),extent = "normal", maprange=FALSE) 
-INv_AB_M_cut_L <- INv_AB_M_cut_L+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.AB_m_L), alpha = 0.5)+
+INv_AB_M_cut_L <- INv_AB_M_cut_L+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.AB_m_L), alpha = 0.3)+
   geom_path(data=studyArea.df,  aes(x=long,y=lat,group=id),color="white",size=0.05)+
    geom_path(aes(x = long, y = lat, group=id), data = fortify(Munic),colour = 'black', size = .8) +
-  scale_fill_manual(name="# of actions",values=setNames(colors4, levels(studyArea@data$z.AB_m_L)))+labs(title="Maintenance   -   S1: Low Budget")
+  scale_fill_manual(name="Vulnerability",values=setNames(colors4, levels(studyArea@data$z.AB_m_L)))+labs(title="Maintenance   -   S1: Low Budget")
 
 
 INv_AB_N_cut_L <- ggmap(map, base_layer=ggplot(data=gor_df, aes(x=long,y=lat)),extent = "normal", maprange=FALSE) 
-INv_AB_N_cut_L <- INv_AB_N_cut_L+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.AB_n_L), alpha = 0.5)+
+INv_AB_N_cut_L <- INv_AB_N_cut_L+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.AB_n_L), alpha = 0.3)+
   geom_path(data=studyArea.df,  aes(x=long,y=lat,group=id),color="white",size=0.05)+
    geom_path(aes(x = long, y = lat, group=id), data = fortify(Munic),colour = 'black', size = .8) +
-  scale_fill_manual(name="# of actions",values=setNames(colors4, levels(studyArea@data$z.AB_n_L)))+labs(title="New infra   -   S1: Low Budget")
+  scale_fill_manual(name="Vulnerability",values=setNames(colors4, levels(studyArea@data$z.AB_n_L)))+labs(title="New infra   -   S1: Low Budget")
 
 INv_D_M_cut_L <- ggmap(map, base_layer=ggplot(data=gor_df, aes(x=long,y=lat)),extent = "normal", maprange=FALSE) 
-INv_D_M_cut_L <- INv_D_M_cut_L+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.D_m_L), alpha = 0.5)+
+INv_D_M_cut_L <- INv_D_M_cut_L+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.D_m_L), alpha = 0.3)+
   geom_path(data=studyArea.df,  aes(x=long,y=lat,group=id),color="white",size=0.05)+
    geom_path(aes(x = long, y = lat, group=id), data = fortify(Munic),colour = 'black', size = .8) +
-  scale_fill_manual(name="# of actions",values=setNames(colors4, levels(studyArea@data$z.D_m_L)))+labs(title="Maintenance   -   S1: Low Budget")
+  scale_fill_manual(name="Vulnerability",values=setNames(colors4, levels(studyArea@data$z.D_m_L)))+labs(title="Maintenance   -   S1: Low Budget")
 
 
 INv_D_N_cut_L <- ggmap(map, base_layer=ggplot(data=gor_df, aes(x=long,y=lat)),extent = "normal", maprange=FALSE) 
-INv_D_N_cut_L <- INv_D_N_cut_L+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.D_n_L), alpha = 0.5)+
+INv_D_N_cut_L <- INv_D_N_cut_L+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.D_n_L), alpha = 0.3)+
   geom_path(data=studyArea.df,  aes(x=long,y=lat,group=id),color="white",size=0.05)+
    geom_path(aes(x = long, y = lat, group=id), data = fortify(Munic),colour = 'black', size = .8) +
-  scale_fill_manual(name="# of actions",values=setNames(colors4, levels(studyArea@data$z.D_n_L)))+labs(title="New infra    -    S1: Low Budget")
+  scale_fill_manual(name="Vulnerability",values=setNames(colors4, levels(studyArea@data$z.D_n_L)))+labs(title="New infra    -    S1: Low Budget")
 
 
 ######
 #medium resources
 INv_AB_M_cut_M <- ggmap(map, base_layer=ggplot(data=gor_df, aes(x=long,y=lat)),extent = "normal", maprange=FALSE) 
-INv_AB_M_cut_M <- INv_AB_M_cut_M+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.AB_m_M), alpha = 0.5)+
+INv_AB_M_cut_M <- INv_AB_M_cut_M+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.AB_m_M), alpha = 0.3)+
   geom_path(data=studyArea.df,  aes(x=long,y=lat,group=id),color="white",size=0.05)+
    geom_path(aes(x = long, y = lat, group=id), data = fortify(Munic),colour = 'black', size = .8) +
-  scale_fill_manual(name="# of actions",values=setNames(colors4, levels(studyArea@data$z.AB_m_M)))+labs(title="S2: Medium")
+  scale_fill_manual(name="Vulnerability",values=setNames(colors4, levels(studyArea@data$z.AB_m_M)))+labs(title="S2: Medium")
 
 
 INv_AB_N_cut_M <- ggmap(map, base_layer=ggplot(data=gor_df, aes(x=long,y=lat)),extent = "normal", maprange=FALSE) 
-INv_AB_N_cut_M <- INv_AB_N_cut_M+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.AB_n_M), alpha = 0.5)+
+INv_AB_N_cut_M <- INv_AB_N_cut_M+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.AB_n_M), alpha = 0.3)+
   geom_path(data=studyArea.df,  aes(x=long,y=lat,group=id),color="white",size=0.05)+
    geom_path(aes(x = long, y = lat, group=id), data = fortify(Munic),colour = 'black', size = .8) +
-  scale_fill_manual(name="# of actions",values=setNames(colors4, levels(studyArea@data$z.AB_n_M)))+labs(title="S2: Medium")
+  scale_fill_manual(name="Vulnerability",values=setNames(colors4, levels(studyArea@data$z.AB_n_M)))+labs(title="S2: Medium")
 
 INv_D_M_cut_M <- ggmap(map, base_layer=ggplot(data=gor_df, aes(x=long,y=lat)),extent = "normal", maprange=FALSE) 
-INv_D_M_cut_M <- INv_D_M_cut_M+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.D_m_M), alpha = 0.5)+
+INv_D_M_cut_M <- INv_D_M_cut_M+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.D_m_M), alpha = 0.3)+
   geom_path(data=studyArea.df,  aes(x=long,y=lat,group=id),color="white",size=0.05)+
    geom_path(aes(x = long, y = lat, group=id), data = fortify(Munic),colour = 'black', size = .8) +
-  scale_fill_manual(name="# of actions",values=setNames(colors4, levels(studyArea@data$z.D_m_M)))+labs(title="S2: Medium")
+  scale_fill_manual(name="Vulnerability",values=setNames(colors4, levels(studyArea@data$z.D_m_M)))+labs(title="S2: Medium")
 
 
 INv_D_N_cut_M <- ggmap(map, base_layer=ggplot(data=gor_df, aes(x=long,y=lat)),extent = "normal", maprange=FALSE) 
-INv_D_N_cut_M <- INv_D_N_cut_M+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.D_n_M), alpha = 0.5)+
+INv_D_N_cut_M <- INv_D_N_cut_M+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.D_n_M), alpha = 0.3)+
   geom_path(data=studyArea.df,  aes(x=long,y=lat,group=id),color="white",size=0.05)+
    geom_path(aes(x = long, y = lat, group=id), data = fortify(Munic),colour = 'black', size = .8) +
-  scale_fill_manual(name="# of actions",values=setNames(colors4, levels(studyArea@data$z.D_n_M)))+labs(title="S2: Medium")
+  scale_fill_manual(name="Vulnerability",values=setNames(colors4, levels(studyArea@data$z.D_n_M)))+labs(title="S2: Medium")
 
 
 ######
 #High resources
 INv_AB_M_cut_H <- ggmap(map, base_layer=ggplot(data=gor_df, aes(x=long,y=lat)),extent = "normal", maprange=FALSE) 
-INv_AB_M_cut_H <- INv_AB_M_cut_H+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.AB_m_H), alpha = 0.5)+
+INv_AB_M_cut_H <- INv_AB_M_cut_H+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.AB_m_H), alpha = 0.3)+
   geom_path(data=studyArea.df,  aes(x=long,y=lat,group=id),color="white",size=0.05)+
    geom_path(aes(x = long, y = lat, group=id), data = fortify(Munic),colour = 'black', size = .8) +
-  scale_fill_manual(name="# of actions",values=setNames(colors4, levels(studyArea@data$z.AB_m_H)))+labs(title="S3: High")
+  scale_fill_manual(name="Vulnerability",values=setNames(colors4, levels(studyArea@data$z.AB_m_H)))+labs(title="S3: High")
 
 
 INv_AB_N_cut_H <- ggmap(map, base_layer=ggplot(data=gor_df, aes(x=long,y=lat)),extent = "normal", maprange=FALSE) 
-INv_AB_N_cut_H <- INv_AB_N_cut_H+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.AB_n_H), alpha = 0.5)+
+INv_AB_N_cut_H <- INv_AB_N_cut_H+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.AB_n_H), alpha = 0.3)+
   geom_path(data=studyArea.df,  aes(x=long,y=lat,group=id),color="white",size=0.05)+
    geom_path(aes(x = long, y = lat, group=id), data = fortify(Munic),colour = 'black', size = .8) +
-  scale_fill_manual(name="# of actions",values=setNames(colors4, levels(studyArea@data$z.AB_n_H)))+labs(title="S3: High")
+  scale_fill_manual(name="Vulnerability",values=setNames(colors4, levels(studyArea@data$z.AB_n_H)))+labs(title="S3: High")
 
 INv_D_M_cut_H <- ggmap(map, base_layer=ggplot(data=gor_df, aes(x=long,y=lat)),extent = "normal", maprange=FALSE) 
-INv_D_M_cut_H <- INv_D_M_cut_H+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.D_m_H), alpha = 0.5)+
+INv_D_M_cut_H <- INv_D_M_cut_H+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.D_m_H), alpha = 0.3)+
   geom_path(data=studyArea.df,  aes(x=long,y=lat,group=id),color="white",size=0.05)+
    geom_path(aes(x = long, y = lat, group=id), data = fortify(Munic),colour = 'black', size = .8) +
-  scale_fill_manual(name="# of actions",values=setNames(colors4, levels(studyArea@data$z.D_m_H)))+labs(title="S3: High")
+  scale_fill_manual(name="Vulnerability",values=setNames(colors4, levels(studyArea@data$z.D_m_H)))+labs(title="S3: High")
 
 
 INv_D_N_cut_H <- ggmap(map, base_layer=ggplot(data=gor_df, aes(x=long,y=lat)),extent = "normal", maprange=FALSE) 
-INv_D_N_cut_H <- INv_D_N_cut_H+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.D_n_H), alpha = 0.5)+
+INv_D_N_cut_H <- INv_D_N_cut_H+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.D_n_H), alpha = 0.3)+
   geom_path(data=studyArea.df,  aes(x=long,y=lat,group=id),color="white",size=0.05)+
    geom_path(aes(x = long, y = lat, group=id), data = fortify(Munic),colour = 'black', size = .8) +
-  scale_fill_manual(name="# of actions",values=setNames(colors4, levels(studyArea@data$z.D_n_H)))+labs(title="S3: High")
+  scale_fill_manual(name="Vulnerability",values=setNames(colors4, levels(studyArea@data$z.D_n_H)))+labs(title="S3: High")
 
-png(filename = "investments_INv_D_M_cut_L.png",width = 8,height = 8,units = "in",res=500)
+#png(filename = "Vulnerability_INv_D_M_cut_L.png",width = 8,height = 8,units = "in",res=500)
 
 INv_D_M_cut_L
-dev.off()
+#dev.off()
 
-png(filename = "investments_INv_D_M_cut_M.png",width = 8,height = 8,units = "in",res=500)
+#png(filename = "Vulnerability_INv_D_M_cut_M.png",width = 8,height = 8,units = "in",res=500)
 
 INv_D_M_cut_M
-dev.off()
+#dev.off()
 
 
-png(filename = "investments_INv_AB_M_cut_L.png",width = 8,height = 8,units = "in",res=500)
+#png(filename = "Vulnerability_INv_AB_M_cut_L.png",width = 8,height = 8,units = "in",res=500)
 
 INv_AB_M_cut_L
-dev.off()
+#dev.off()
 
-png(filename = "investments_INv_AB_M_cut_M.png",width = 8,height = 8,units = "in",res=500)
+#png(filename = "Vulnerability_INv_AB_M_cut_M.png",width = 8,height = 8,units = "in",res=500)
 
 INv_AB_M_cut_M
-dev.off()
-
-#png(filename = "expected_level_of_investments_10-50per_resources.png",width = 18,height = 8,units = "in",res=500)
-#multiplot(INv_AB_M_cut_L, INv_AB_N_cut_L,INv_AB_M_cut_M ,INv_AB_N_cut_M, cols = 2)
 #dev.off()
+
+##png(filename = "expected_level_of_Vulnerability_10-50per_resources.png",width = 18,height = 8,units = "in",res=500)
+#multiplot(INv_AB_M_cut_L, INv_AB_N_cut_L,INv_AB_M_cut_M ,INv_AB_N_cut_M, cols = 2)
+##dev.off()
 
 #writeSpatialShape(x = studyArea,fn = "ABM-FR")
 
-#png(filename = "expected_level_of_investments_10-50per_resources_D.png",width = 18,height = 8,units = "in",res=500)
+##png(filename = "expected_level_of_Vulnerability_10-50per_resources_D.png",width = 18,height = 8,units = "in",res=500)
 #multiplot(INv_D_M_cut_L, INv_D_N_cut_L,INv_D_M_cut_M ,INv_D_N_cut_M, cols = 2)
-#dev.off()
-#png(filename = "expected_level_of_investments.png",width = 12,height = 12,units = "in",res=300)
+##dev.off()
+##png(filename = "expected_level_of_Vulnerability.png",width = 12,height = 12,units = "in",res=300)
 #ADiff
-#dev.off()
+##dev.off()
 
 #proposal
 
@@ -491,26 +467,26 @@ xl=c(-98.9, -99.3)
 yl=c(19, 19.6)
 ll<-c(-98.9,19,-99.3,19.6)
 
-map<-get_map(location = c(mean(xl),mean(yl)) , maptype = "satellite",source='google',zoom = 11) #location="Mexico City"
-map<-get_map(location = ll , maptype = "satellite",source='google',zoom = 10) #location="Mexico 
+map<-get_map(location = c(mean(xl),mean(yl)) , maptype = "hybrid",source='google',zoom = 11) #location="Mexico City"
+map<-get_map(location = ll , maptype = "hybrid",source='google',zoom = 10) #location="Mexico 
 #create ggplot objects
 
 INv_D_N_cut_L <- ggmap(map, base_layer=ggplot(data=gor_df, aes(x=long,y=lat)),extent = "normal", maprange=FALSE) 
-INv_D_M_cut_M <- INv_D_M_cut_M+geom_polygon(data=subset(studyArea.df,estado==levels(studyArea.df$estado)[1]),  aes(x=long,y=lat,group=group,fill=z.D_m_M), alpha = 0.5)+
+INv_D_M_cut_M <- INv_D_M_cut_M+geom_polygon(data=subset(studyArea.df,estado==levels(studyArea.df$estado)[1]),  aes(x=long,y=lat,group=group,fill=z.D_m_M), alpha = 0.3)+
   geom_path(data=subset(studyArea.df,estado==levels(studyArea.df$estado)[1]),  aes(x=long,y=lat,group=id),color="white",size=0.05)+
    geom_path(aes(x = long, y = lat, group=id), data = fortify(Munic),colour = 'black', size = .4) +
-  scale_fill_manual(name="Investments",values=setNames(colors4, levels(studyArea@data$z.D_m_M)))+labs(title="Maintenance")
+  scale_fill_manual(name="Vulnerability",values=setNames(colors4, levels(studyArea@data$z.D_m_M)))+labs(title="Maintenance")
 
 
 INv_D_N_cut_M <- ggmap(map, base_layer=ggplot(data=gor_df, aes(x=long,y=lat)),extent = "normal", maprange=FALSE) 
-INv_D_N_cut_M <- INv_D_N_cut_M+geom_polygon(data=subset(studyArea.df,estado==levels(studyArea.df$estado)[1]),  aes(x=long,y=lat,group=group,fill=z.D_n_M), alpha = 0.5)+
+INv_D_N_cut_M <- INv_D_N_cut_M+geom_polygon(data=subset(studyArea.df,estado==levels(studyArea.df$estado)[1]),  aes(x=long,y=lat,group=group,fill=z.D_n_M), alpha = 0.3)+
   geom_path(data=subset(studyArea.df,estado==levels(studyArea.df$estado)[1]),  aes(x=long,y=lat,group=id),color="white",size=0.05)+
    geom_path(aes(x = long, y = lat, group=id), data = fortify(Munic),colour = 'black', size = .4) +
-  scale_fill_manual(name="Investments",values=setNames(colors4, levels(studyArea@data$z.D_n_M)))+labs(title="New Infrastructure")
+  scale_fill_manual(name="Vulnerability",values=setNames(colors4, levels(studyArea@data$z.D_n_M)))+labs(title="New Infrastructure")
 
-png(filename = "C:/Users/abaezaca/Dropbox (ASU)/poposals/expected_level_of_investments.png",width = 8,height = 4,units = "in",res=400)
+#png(filename = "C:/Users/abaezaca/Dropbox (ASU)/poposals/expected_level_of_Vulnerability.png",width = 8,height = 4,units = "in",res=400)
 multiplot(INv_D_M_cut_M,INv_D_N_cut_M,cols = 2)
-dev.off()
+#dev.off()
 INv_D_M_cut_M
 ```
 
@@ -529,10 +505,10 @@ H3<-ggplot(data=subset(studyArea@data, estado ==levels(studyArea@data$estado)[1]
 
 H4<-ggplot(data=subset(studyArea@data,estado ==levels(studyArea@data$estado)[1]))+geom_histogram(data=subset(studyArea@data,D_m_L>0),aes(x=D_m_L),bins = 80,fill="red",alpha=0.8)+geom_histogram(data=subset(studyArea@data,D_m_M>0),aes(x=D_m_M),fill="green",bins = 80,alpha=0.4)+scale_colour_manual(name="Error Bars",labels=c("V1","V2"))+labs(title="Drainage Maintenance",x="# of actions per census block")+theme(text=element_text(size=20),plot.title=element_text())
 
-png(filename = "histogram_actions.png",width = 15,height = 8,units = "in",res=300)
+#png(filename = "histogram_actions.png",width = 15,height = 8,units = "in",res=300)
 
 multiplot(H1,H2,H3,H4,cols = 2)
-dev.off()
+#dev.off()
 ```
 
 
@@ -662,7 +638,7 @@ studyArea.df = join(studyArea.points, studyArea@data, by="id")
 #read google map
 xl=c(-98.8, -99.4)
 yl=c(19, 19.8)
-map<-get_map(location = c(mean(xl),mean(yl)) , maptype = "satellite",source='google') #location="Mexico City"
+map<-get_map(location = c(mean(xl),mean(yl)) , maptype = "hybrid",source='google') #location="Mexico City"
 
 
 
@@ -671,27 +647,27 @@ map<-get_map(location = c(mean(xl),mean(yl)) , maptype = "satellite",source='goo
 #################
 #cut-off plots
 INv_AB_M_cut_L <- ggmap(map, base_layer=ggplot(data=gor_df, aes(x=long,y=lat)),extent = "normal", maprange=FALSE) 
-INv_AB_M_cut_L <- INv_AB_M_cut_L+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.AB_m_L), alpha = 0.5)+
+INv_AB_M_cut_L <- INv_AB_M_cut_L+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.AB_m_L), alpha = 0.3)+
   geom_path(data=studyArea.df,  aes(x=long,y=lat,group=id),color="white",size=0.05)+
    geom_path(aes(x = long, y = lat, group=id), data = fortify(Munic),colour = 'black', size = .8) +
   scale_fill_manual(name="# of actions",values=setNames(colors4, levels(studyArea@data$z.AB_m_L)))+labs(title="Maintenance   -   S1: Low Budget")
 
 
 INv_AB_N_cut_L <- ggmap(map, base_layer=ggplot(data=gor_df, aes(x=long,y=lat)),extent = "normal", maprange=FALSE) 
-INv_AB_N_cut_L <- INv_AB_N_cut_L+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.AB_n_L), alpha = 0.5)+
+INv_AB_N_cut_L <- INv_AB_N_cut_L+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.AB_n_L), alpha = 0.3)+
   geom_path(data=studyArea.df,  aes(x=long,y=lat,group=id),color="white",size=0.05)+
    geom_path(aes(x = long, y = lat, group=id), data = fortify(Munic),colour = 'black', size = .8) +
   scale_fill_manual(name="# of actions",values=setNames(colors4, levels(studyArea@data$z.AB_n_L)))+labs(title="New infra   -   S1: Low Budget")
 
 INv_D_M_cut_L <- ggmap(map, base_layer=ggplot(data=gor_df, aes(x=long,y=lat)),extent = "normal", maprange=FALSE) 
-INv_D_M_cut_L <- INv_D_M_cut_L+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.D_m_L), alpha = 0.5)+
+INv_D_M_cut_L <- INv_D_M_cut_L+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.D_m_L), alpha = 0.3)+
   geom_path(data=studyArea.df,  aes(x=long,y=lat,group=id),color="white",size=0.05)+
    geom_path(aes(x = long, y = lat, group=id), data = fortify(Munic),colour = 'black', size = .8) +
   scale_fill_manual(name="# of actions",values=setNames(colors4, levels(studyArea@data$z.D_m_L)))+labs(title="Maintenance   -   S1: Low Budget")
 
 
 INv_D_N_cut_L <- ggmap(map, base_layer=ggplot(data=gor_df, aes(x=long,y=lat)),extent = "normal", maprange=FALSE) 
-INv_D_N_cut_L <- INv_D_N_cut_L+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.D_n_L), alpha = 0.5)+
+INv_D_N_cut_L <- INv_D_N_cut_L+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.D_n_L), alpha = 0.3)+
   geom_path(data=studyArea.df,  aes(x=long,y=lat,group=id),color="white",size=0.05)+
    geom_path(aes(x = long, y = lat, group=id), data = fortify(Munic),colour = 'black', size = .8) +
   scale_fill_manual(name="# of actions",values=setNames(colors4, levels(studyArea@data$z.D_n_L)))+labs(title="New infra    -    S1: Low Budget")
@@ -700,27 +676,27 @@ INv_D_N_cut_L <- INv_D_N_cut_L+geom_polygon(data=studyArea.df,  aes(x=long,y=lat
 ######
 #medium resources
 INv_AB_M_cut_M <- ggmap(map, base_layer=ggplot(data=gor_df, aes(x=long,y=lat)),extent = "normal", maprange=FALSE) 
-INv_AB_M_cut_M <- INv_AB_M_cut_M+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.AB_m_M), alpha = 0.5)+
+INv_AB_M_cut_M <- INv_AB_M_cut_M+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.AB_m_M), alpha = 0.3)+
   geom_path(data=studyArea.df,  aes(x=long,y=lat,group=id),color="white",size=0.05)+
    geom_path(aes(x = long, y = lat, group=id), data = fortify(Munic),colour = 'black', size = .8) +
   scale_fill_manual(name="# of actions",values=setNames(colors4, levels(studyArea@data$z.AB_m_M)))+labs(title="S2: Medium")
 
 
 INv_AB_N_cut_M <- ggmap(map, base_layer=ggplot(data=gor_df, aes(x=long,y=lat)),extent = "normal", maprange=FALSE) 
-INv_AB_N_cut_M <- INv_AB_N_cut_M+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.AB_n_M), alpha = 0.5)+
+INv_AB_N_cut_M <- INv_AB_N_cut_M+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.AB_n_M), alpha = 0.3)+
   geom_path(data=studyArea.df,  aes(x=long,y=lat,group=id),color="white",size=0.05)+
    geom_path(aes(x = long, y = lat, group=id), data = fortify(Munic),colour = 'black', size = .8) +
   scale_fill_manual(name="# of actions",values=setNames(colors4, levels(studyArea@data$z.AB_n_M)))+labs(title="S2: Medium")
 
 INv_D_M_cut_M <- ggmap(map, base_layer=ggplot(data=gor_df, aes(x=long,y=lat)),extent = "normal", maprange=FALSE) 
-INv_D_M_cut_M <- INv_D_M_cut_M+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.D_m_M), alpha = 0.5)+
+INv_D_M_cut_M <- INv_D_M_cut_M+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.D_m_M), alpha = 0.3)+
   geom_path(data=studyArea.df,  aes(x=long,y=lat,group=id),color="white",size=0.05)+
    geom_path(aes(x = long, y = lat, group=id), data = fortify(Munic),colour = 'black', size = .8) +
   scale_fill_manual(name="# of actions",values=setNames(colors4, levels(studyArea@data$z.D_m_M)))+labs(title="S2: Medium")
 
 
 INv_D_N_cut_M <- ggmap(map, base_layer=ggplot(data=gor_df, aes(x=long,y=lat)),extent = "normal", maprange=FALSE) 
-INv_D_N_cut_M <- INv_D_N_cut_M+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.D_n_M), alpha = 0.5)+
+INv_D_N_cut_M <- INv_D_N_cut_M+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.D_n_M), alpha = 0.3)+
   geom_path(data=studyArea.df,  aes(x=long,y=lat,group=id),color="white",size=0.05)+
    geom_path(aes(x = long, y = lat, group=id), data = fortify(Munic),colour = 'black', size = .8) +
   scale_fill_manual(name="# of actions",values=setNames(colors4, levels(studyArea@data$z.D_n_M)))+labs(title="S2: Medium")
@@ -729,51 +705,51 @@ INv_D_N_cut_M <- INv_D_N_cut_M+geom_polygon(data=studyArea.df,  aes(x=long,y=lat
 ######
 #High resources
 INv_AB_M_cut_H <- ggmap(map, base_layer=ggplot(data=gor_df, aes(x=long,y=lat)),extent = "normal", maprange=FALSE) 
-INv_AB_M_cut_H <- INv_AB_M_cut_H+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.AB_m_H), alpha = 0.5)+
+INv_AB_M_cut_H <- INv_AB_M_cut_H+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.AB_m_H), alpha = 0.3)+
   geom_path(data=studyArea.df,  aes(x=long,y=lat,group=id),color="white",size=0.05)+
    geom_path(aes(x = long, y = lat, group=id), data = fortify(Munic),colour = 'black', size = .8) +
   scale_fill_manual(name="# of actions",values=setNames(colors4, levels(studyArea@data$z.AB_m_H)))+labs(title="S3: High")
 
 
 INv_AB_N_cut_H <- ggmap(map, base_layer=ggplot(data=gor_df, aes(x=long,y=lat)),extent = "normal", maprange=FALSE) 
-INv_AB_N_cut_H <- INv_AB_N_cut_H+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.AB_n_H), alpha = 0.5)+
+INv_AB_N_cut_H <- INv_AB_N_cut_H+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.AB_n_H), alpha = 0.3)+
   geom_path(data=studyArea.df,  aes(x=long,y=lat,group=id),color="white",size=0.05)+
    geom_path(aes(x = long, y = lat, group=id), data = fortify(Munic),colour = 'black', size = .8) +
   scale_fill_manual(name="# of actions",values=setNames(colors4, levels(studyArea@data$z.AB_n_H)))+labs(title="S3: High")
 
 INv_D_M_cut_H <- ggmap(map, base_layer=ggplot(data=gor_df, aes(x=long,y=lat)),extent = "normal", maprange=FALSE) 
-INv_D_M_cut_H <- INv_D_M_cut_H+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.D_m_H), alpha = 0.5)+
+INv_D_M_cut_H <- INv_D_M_cut_H+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.D_m_H), alpha = 0.3)+
   geom_path(data=studyArea.df,  aes(x=long,y=lat,group=id),color="white",size=0.05)+
    geom_path(aes(x = long, y = lat, group=id), data = fortify(Munic),colour = 'black', size = .8) +
   scale_fill_manual(name="# of actions",values=setNames(colors4, levels(studyArea@data$z.D_m_H)))+labs(title="S3: High")
 
 
 INv_D_N_cut_H <- ggmap(map, base_layer=ggplot(data=gor_df, aes(x=long,y=lat)),extent = "normal", maprange=FALSE) 
-INv_D_N_cut_H <- INv_D_N_cut_H+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.D_n_H), alpha = 0.5)+
+INv_D_N_cut_H <- INv_D_N_cut_H+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.D_n_H), alpha = 0.3)+
   geom_path(data=studyArea.df,  aes(x=long,y=lat,group=id),color="white",size=0.05)+
    geom_path(aes(x = long, y = lat, group=id), data = fortify(Munic),colour = 'black', size = .8) +
   scale_fill_manual(name="# of actions",values=setNames(colors4, levels(studyArea@data$z.D_n_H)))+labs(title="S3: High")
 
-png(filename = "investments_INv_D_M_cut_L.png",width = 8,height = 8,units = "in",res=500)
+#png(filename = "Vulnerability_INv_D_M_cut_L.png",width = 8,height = 8,units = "in",res=500)
 
 INv_D_M_cut_L
-dev.off()
+#dev.off()
 
-png(filename = "investments_INv_D_M_cut_M.png",width = 8,height = 8,units = "in",res=500)
+#png(filename = "Vulnerability_INv_D_M_cut_M.png",width = 8,height = 8,units = "in",res=500)
 
 INv_D_M_cut_M
-dev.off()
+#dev.off()
 
 
-png(filename = "investments_INv_AB_M_cut_L.png",width = 8,height = 8,units = "in",res=500)
+#png(filename = "Vulnerability_INv_AB_M_cut_L.png",width = 8,height = 8,units = "in",res=500)
 
 INv_AB_M_cut_L
-dev.off()
+#dev.off()
 
-png(filename = "investments_INv_AB_M_cut_M.png",width = 8,height = 8,units = "in",res=500)
+#png(filename = "Vulnerability_INv_AB_M_cut_M.png",width = 8,height = 8,units = "in",res=500)
 
 INv_AB_M_cut_M
-dev.off()
+#dev.off()
 
 ```
 
@@ -791,7 +767,7 @@ colors3 <- colorRampPalette(c("lightblue","blue","green", "yellow", "red"))(leng
 
 
 WSI_M<-ggmap(map, base_layer=ggplot(data=gor_df, aes(x=long,y=lat)),extent = "normal", maprange=FALSE) + 
-  geom_polygon(data=studyArea.df,aes(long,lat,group=group,fill=escazes_final_M),alpha = 0.5)+
+  geom_polygon(data=studyArea.df,aes(long,lat,group=group,fill=escazes_final_M),alpha = 0.3)+
   geom_path(data=studyArea.df,  aes(x=long,y=lat,group=id),color="white",size=0.05)+
    geom_path(aes(x = long, y = lat, group=id), data = fortify(Munic),colour = 'black', size = .8)  +
   coord_equal() +
@@ -810,12 +786,12 @@ ADiff_scarcity <- ADiff_scarcity+geom_polygon(data=studyArea.df,  aes(x=long,y=l
 
 #+ scale_fill_continuous("Age Water supply Infrastructure",low="blue",high="red",limits=c(-32,20))
 
-png(filename = "scarcity_vs_investments.png",width = 18,height = 12,units = "in",res=500)
+#png(filename = "scarcity_vs_Vulnerability.png",width = 18,height = 12,units = "in",res=500)
 multiplot(ADiff,ADiff_scarcity, cols = 2)
-dev.off()
-png(filename = "expected_level_of_scarcity.png",width = 12,height = 12,units = "in",res=300)
+#dev.off()
+#png(filename = "expected_level_of_scarcity.png",width = 12,height = 12,units = "in",res=300)
 ADiff_scarcity
-dev.off()
+#dev.off()
 ```
 #comparison intervention income
 ```{r, echo=FALSE,fig.height=10,fig.width=20}
@@ -831,13 +807,13 @@ P1<-ggplot(data=DD)+geom_point(aes(x=AB_m_M,y=Indx,colour=municipio))+geom_smoot
 P2<-ggplot(data=subset(studyArea@data,estado==levels(studyArea@data$estado)[1] & Indx > 0))+geom_point(aes(x=AB_m_M,y=Indx,colour=municipio),size=2)+geom_smooth(aes(x=AB_m_M,y=Indx),span=1.5,method = "lm")+scale_color_discrete(labels=names)+labs(x="# of actions",y="Income Index",size=20)+theme(text=element_text(size=20))
 
 
-png(filename = "incomeIndex_vs_investments.png",width = 15,height = 8,units = "in",res=500)
+#png(filename = "incomeIndex_vs_Vulnerability.png",width = 15,height = 8,units = "in",res=500)
 P2
-dev.off()
+#dev.off()
 
-png(filename = "incomeIndex_vs_investments_bydelegation.png",width = 18,height = 8,units = "in",res=500)
+#png(filename = "incomeIndex_vs_Vulnerability_bydelegation.png",width = 18,height = 8,units = "in",res=500)
 P1
-dev.off()
+#dev.off()
 
 ```
 
@@ -925,7 +901,7 @@ studyArea.df = join(studyArea.points, studyArea@data, by="id")
 #read google map
 xl=c(-98.8, -99.4)
 yl=c(19, 19.8)
-map<-get_map(location = c(mean(xl),mean(yl)) , maptype = "satellite",source='google') #location="Mexico City"
+map<-get_map(location = c(mean(xl),mean(yl)) , maptype = "hybrid",source='google') #location="Mexico City"
 
 
 
@@ -933,7 +909,7 @@ d_R_Mov <- ggmap(map, base_layer=ggplot(data=gor_df, aes(x=long,y=lat)),extent =
 d_R_Mov <- d_R_Mov+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=d_R_Mov), alpha = 0.2)+
   geom_path(data=studyArea.df,  aes(x=long,y=lat,group=id),color="white",size=0.05)+
    geom_path(aes(x = long, y = lat, group=id), data = fortify(Munic),colour = 'black', size = .8) +
-  scale_fill_continuous("investments",low="blue",high="red",limits=range(studyArea@data$d_R_Mov))
+  scale_fill_continuous("Vulnerability",low="blue",high="red",limits=range(studyArea@data$d_R_Mov))
 
 SP<-ggplot(studyArea.df) + 
   aes(long,lat,group=group,fill=z.d_R_M) + 
@@ -948,14 +924,14 @@ d_R_AC <- ggmap(map, base_layer=ggplot(data=gor_df, aes(x=long,y=lat)),extent = 
 d_R_AC <- d_R_AC+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=d_R_AC), alpha = 0.2)+
   geom_path(data=studyArea.df,  aes(x=long,y=lat,group=id),color="white",size=0.05)+
    geom_path(aes(x = long, y = lat, group=id), data = fortify(Munic),colour = 'black', size = .8) +
-  scale_fill_continuous("investments",low="blue",high="red",limits=c(0.00001,max(studyArea@data$d_R_AC,na.rm = T)))
+  scale_fill_continuous("Vulnerability",low="blue",high="red",limits=c(0.00001,max(studyArea@data$d_R_AC,na.rm = T)))
 
 
 
-png(filename = "social_pressure.png",width = 12,height = 12,units = "in",res=300)
+#png(filename = "social_pressure.png",width = 12,height = 12,units = "in",res=300)
 
 SP
-dev.off()
+#dev.off()
 
 
 d_R_AC
@@ -1063,45 +1039,45 @@ studyArea.df = join(studyArea.points, studyArea@data, by="id")
 #read google map
 xl=c(-98.8, -99.4)
 yl=c(19, 19.8)
-map<-get_map(location = c(mean(xl),mean(yl)) , maptype = "satellite",source='google') #location="Mexico City"
+map<-get_map(location = c(mean(xl),mean(yl)) , maptype = "hybrid",source='google') #location="Mexico City"
 
 #create ggplot objects
 #cut-off plots
 scarcity_cut_L <- ggmap(map, base_layer=ggplot(data=gor_df, aes(x=long,y=lat)),extent = "normal", maprange=FALSE) 
-scarcity_cut_L <- scarcity_cut_L+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.scarcity_L), alpha = 0.5)+
+scarcity_cut_L <- scarcity_cut_L+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.scarcity_L), alpha = 0.3)+
   geom_path(data=studyArea.df,  aes(x=long,y=lat,group=id),color="white",size=0.05)+
    geom_path(aes(x = long, y = lat, group=id), data = fortify(Munic),colour = 'black', size = .8) +
   scale_fill_manual(name="days w/n water",values=setNames(colors4, levels(studyArea@data$z.scarcity_cut_L)))+labs(title="Water Scarcity   -   S1: Budget  [10% CB]")
 
 scarcity_cut_M <- ggmap(map, base_layer=ggplot(data=gor_df, aes(x=long,y=lat)),extent = "normal", maprange=FALSE) 
-scarcity_cut_M <- scarcity_cut_M+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.scarcity_M), alpha = 0.5)+
+scarcity_cut_M <- scarcity_cut_M+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.scarcity_M), alpha = 0.3)+
   geom_path(data=studyArea.df,  aes(x=long,y=lat,group=id),color="white",size=0.05)+
    geom_path(aes(x = long, y = lat, group=id), data = fortify(Munic),colour = 'black', size = .8) +
   scale_fill_manual(name="days w/n water",values=setNames(colors4, levels(studyArea@data$z.scarcity_cut_M)))+labs(title="Water Scarcity   -   S2: Budget [25% CB] ")
 
 
 scarcity_cut_H <- ggmap(map, base_layer=ggplot(data=gor_df, aes(x=long,y=lat)),extent = "normal", maprange=FALSE) 
-scarcity_cut_H <- scarcity_cut_H+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.scarcity_H), alpha = 0.5)+
+scarcity_cut_H <- scarcity_cut_H+geom_polygon(data=studyArea.df,  aes(x=long,y=lat,group=group,fill=z.scarcity_H), alpha = 0.3)+
   geom_path(data=studyArea.df,  aes(x=long,y=lat,group=id),color="white",size=0.05)+
    geom_path(aes(x = long, y = lat, group=id), data = fortify(Munic),colour = 'black', size = .8) +
   scale_fill_manual(name="days w/n water",values=setNames(colors4, levels(studyArea@data$z.scarcity_cut_H)))+labs(title="Water Scarcity   -   S3: Budget [50% CB] ")
 
 
 
-png(filename = "scarcity_cut_L.png",width = 8,height = 8,units = "in",res=500)
+#png(filename = "scarcity_cut_L.png",width = 8,height = 8,units = "in",res=500)
 
 scarcity_cut_L
-dev.off()
+#dev.off()
 
-png(filename = "scarcity_cut_M.png",width = 8,height = 8,units = "in",res=500)
+#png(filename = "scarcity_cut_M.png",width = 8,height = 8,units = "in",res=500)
 
 scarcity_cut_M
-dev.off()
+#dev.off()
 
-png(filename = "scarcity_cut_H.png",width = 8,height = 8,units = "in",res=500)
+#png(filename = "scarcity_cut_H.png",width = 8,height = 8,units = "in",res=500)
 
 scarcity_cut_H
-dev.off()
+#dev.off()
 
 
 H1<-ggplot(data=subset(studyArea@data, estado ==levels(studyArea@data$estado)[1]))+
@@ -1111,17 +1087,17 @@ H1<-ggplot(data=subset(studyArea@data, estado ==levels(studyArea@data$estado)[1]
              labs(title="Water supply",x="days w/n water")+theme(text=element_text(size=20))
 
 
-png(filename = "ewater_scarcity_histograms.png",width = 12,height = 8,units = "in",res=500)
+#png(filename = "ewater_scarcity_histograms.png",width = 12,height = 8,units = "in",res=500)
 H1
-dev.off()
+#dev.off()
 
 #writeSpatialShape(x = studyArea,fn = "ABM-FR")
 
-#png(filename = "expected_level_of_investments_10-50per_resources_D.png",width = 18,height = 8,units = "in",res=500)
+##png(filename = "expected_level_of_Vulnerability_10-50per_resources_D.png",width = 18,height = 8,units = "in",res=500)
 #multiplot(INv_D_M_cut_L, INv_D_N_cut_L,INv_D_M_cut_M ,INv_D_N_cut_M, cols = 2)
-#dev.off()
-#png(filename = "expected_level_of_investments.png",width = 12,height = 12,units = "in",res=300)
+##dev.off()
+##png(filename = "expected_level_of_Vulnerability.png",width = 12,height = 12,units = "in",res=300)
 #ADiff
-#dev.off()
+##dev.off()
 INv_D_M_cut_M
 ```

@@ -8,6 +8,7 @@
     <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_estado = "09"]</metric>
     <metric>mean [Antiguedad-infra_D] of agebs with [CV_estado = "09"]</metric>
     <metric>mean [scarcity_index] of agebs with [CV_estado = "09"]</metric>
+    <metric>mean [Presion_social_year] of agebs with [CV_estado = "09"]</metric>
     <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_municipio = "002"]</metric>
     <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_municipio = "003"]</metric>
     <metric>mean [Antiguedad-infra_Ab] of agebs with [CV_municipio = "004"]</metric>
@@ -40,6 +41,22 @@
     <metric>mean [scarcity_index] of agebs with [CV_municipio = "015"]</metric>
     <metric>mean [scarcity_index] of agebs with [CV_municipio = "016"]</metric>
     <metric>mean [scarcity_index] of agebs with [CV_municipio = "017"]</metric>
+    <metric>mean [Presion_social_year] of agebs with [CV_municipio = "002"]</metric>
+    <metric>mean [Presion_social_year] of agebs with [CV_municipio = "003"]</metric>
+    <metric>mean [Presion_social_year] of agebs with [CV_municipio = "004"]</metric>
+    <metric>mean [Presion_social_year] of agebs with [CV_municipio = "005"]</metric>
+    <metric>mean [Presion_social_year] of agebs with [CV_municipio = "006"]</metric>
+    <metric>mean [Presion_social_year] of agebs with [CV_municipio = "007"]</metric>
+    <metric>mean [Presion_social_year] of agebs with [CV_municipio = "008"]</metric>
+    <metric>mean [Presion_social_year] of agebs with [CV_municipio = "009"]</metric>
+    <metric>mean [Presion_social_year] of agebs with [CV_municipio = "010"]</metric>
+    <metric>mean [Presion_social_year] of agebs with [CV_municipio = "011"]</metric>
+    <metric>mean [Presion_social_year] of agebs with [CV_municipio = "012"]</metric>
+    <metric>mean [Presion_social_year] of agebs with [CV_municipio = "013"]</metric>
+    <metric>mean [Presion_social_year] of agebs with [CV_municipio = "014"]</metric>
+    <metric>mean [Presion_social_year] of agebs with [CV_municipio = "015"]</metric>
+    <metric>mean [Presion_social_year] of agebs with [CV_municipio = "016"]</metric>
+    <metric>mean [Presion_social_year] of agebs with [CV_municipio = "017"]</metric>
     <enumeratedValueSet variable="Eficiencia_NuevaInfra">
       <value value="{eficiencia_nuevainfra}"/>
     </enumeratedValueSet>
