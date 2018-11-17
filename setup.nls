@@ -432,15 +432,11 @@ to SETUP
 ;read data and statistical R objects to run biophisical models connecting R and Netlogo
 ;##############################################################################
 ;##############################################################################  
- ;r:eval "setwd('/srv/home/rgarcia/SHV/')"
- r:eval "setwd('c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/data')"
-  ;r:eval ".libPaths(c(.libPaths(), 'packrat/lib/x86_64-debian-linux-gnu/3.3.1'))"
- ;r:eval ".libPaths(c(.libPaths(), 'packrat/lib-ext/x86_64-debian-linux-gnu/3.3.1'))"
- ; r:eval ".libPaths(c(.libPaths(), 'packrat/lib-R/x86_64-debian-linux-gnu/3.3.1'))"
+ r:eval "setwd('/srv/home/abaezacastro/SHV/data')"
+ r:eval ".libPaths(\"/srv/home/abaezacastro/R/x86_64-pc-linux-gnu-library/3.5\")"
 
-  ;data scarcity model 
-  r:eval "load('data_fugas')"
- ; r:eval "load('c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/Statistical_Models/zero_inflated_negbinomial_scarcity')"
+ ;data scarcity model 
+ r:eval "load('data_fugas')"
  ; r:eval "require(brms)"
  ; r:eval "require(ggmcmc)"
  ; r:eval "require(tidyverse)"
