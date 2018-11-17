@@ -10,7 +10,7 @@ to GO
 
   counter_weeks
   ;#############################################################################################################################################
-;Risk Module
+;Biophisical and Risk Models
 ;weekly water scarcity model
   scarcity_model
   if weeks = 1 and months = 1[
@@ -18,7 +18,7 @@ to GO
                                     ;flood_risk
                                     ;flood_risk_capacitysewer
     flooding_zinbinom   ;risk of flooding
-    health_risk  ;# Risk of waterborne infectious diseases incidence ##############commented for now until highland is implemented
+    ;health_risk  ;# Risk of waterborne infectious diseases incidence ##############commented for now until highland is implemented
                         ; flooding_glm
 
     ;    change_subsidence_rate  #commented until a better model is provided
@@ -42,18 +42,19 @@ to GO
   ]
   ;##########################################################
   ;distribute water to Mexico City using resources by WaterOperator
-  ; water_distribution
+
   if weeks = 4 [
 
     ask census_blocks_CDMX[
   ;    water_by_pipe  ;define if an ageb will receive water by pipe. It depends on mean_days_withNo_water and the probability of failure, CHANGe with NEw scarcity model developed by Yosune y ALe
-      update_income_W
+      update_income_W ;income receved by residents relative to purchase index
       residents_action_suitability
       take_action_residents
       set scarcity_annual scarcity_annual + days_wno_water
       set days_wno_water 0
     ]
   ]
+  if years = 20 [supermatrix [W_matrix] of one-of alternatives_WaterOperator_AB 2 4 12 0.4]
   Landscape_visualization          ;;visualization of social and physical processes
   ;##########################################################
   ;update indicators of flood and scaricty at the end of the simulation
@@ -558,6 +559,7 @@ end
 ;#############################################################################################################################################
 ;#############################################################################################################################################
 to take_action_WM ;Action New infrastructure
+
   let kk 0
   let max_part max-one-of Particles [tf]
 
@@ -678,17 +680,18 @@ to scarcity_model
 
   r:eval "dat_fugas$ANTIGUEDAD<-new_Edad" ;new age of infrastructure will update the regresion to update the level of flooding. Same can be done to the other variables
   r:eval "dat_fugas$V_SAGUA<-new_connections" ;new age of infrastructure will update the regresion to update the level of flooding. Same can be done to the other variable
-  r:eval "pred_scarcity<-predict(modelo_zip_escasez,newdata=dat_fugas,type='response')"
+  ;r:eval "pred_scarcity<-predict(modelo_zip_escasez,newdata=dat_fugas,type='response')"
   r:eval "prob_water<-predict(modelo_zip_escasez,newdata=dat_fugas,type='prob')"
-  r:eval "water_yes<-rbinom(n=length(prob_water[,7]),size=1,prob=prob_water[,7]) * 7"
-r:eval "water_yes[which(water_yes==0)]<-rbinom(n=length(prob_water[which(water_yes==0),6]),size=1,prob=prob_water[which(water_yes==0),6])*6"
-r:eval "water_yes[which(water_yes==0)]<-rbinom(n=length(prob_water[which(water_yes==0),5]),size=1,prob=prob_water[which(water_yes==0),5])*5"
-r:eval "water_yes[which(water_yes==0)]<-rbinom(n=length(prob_water[which(water_yes==0),4]),size=1,prob=prob_water[which(water_yes==0),4])*4"
-r:eval "water_yes[which(water_yes==0)]<-rbinom(n=length(prob_water[which(water_yes==0),3]),size=1,prob=prob_water[which(water_yes==0),3])*3"
-r:eval "water_yes[which(water_yes==0)]<-rbinom(n=length(prob_water[which(water_yes==0),2]),size=1,prob=prob_water[which(water_yes==0),2])*2"
-r:eval "water_yes[which(water_yes==0)]<-rbinom(n=length(prob_water[which(water_yes==0),1]),size=1,prob=prob_water[which(water_yes==0),1])*1"
 
-  let sc r:get "pred_scarcity"
+  r:eval "water_yes<-rbinom(n=length(prob_water[,7]),size=1,prob=prob_water[,7]) * 7"
+  r:eval "water_yes[which(water_yes==0)]<-rbinom(n=length(prob_water[which(water_yes==0),6]),size=1,prob=prob_water[which(water_yes==0),6])*6"
+  r:eval "water_yes[which(water_yes==0)]<-rbinom(n=length(prob_water[which(water_yes==0),5]),size=1,prob=prob_water[which(water_yes==0),5])*5"
+  r:eval "water_yes[which(water_yes==0)]<-rbinom(n=length(prob_water[which(water_yes==0),4]),size=1,prob=prob_water[which(water_yes==0),4])*4"
+  r:eval "water_yes[which(water_yes==0)]<-rbinom(n=length(prob_water[which(water_yes==0),3]),size=1,prob=prob_water[which(water_yes==0),3])*3"
+  r:eval "water_yes[which(water_yes==0)]<-rbinom(n=length(prob_water[which(water_yes==0),2]),size=1,prob=prob_water[which(water_yes==0),2])*2"
+  r:eval "water_yes[which(water_yes==0)]<-rbinom(n=length(prob_water[which(water_yes==0),1]),size=1,prob=prob_water[which(water_yes==0),1])*1"
+
+  ;let sc r:get "pred_scarcity"
   let wy r:get "water_yes"
   ;print length sc
   ;print length wy
@@ -905,10 +908,10 @@ to Landscape_visualization ;;TO REPRESENT DIFFERENT INFORMATION IN THE LANDSCAPE
     if visualization = "Escasez" and ticks > 1 [
       ;set shape "drop"
       ;print scarcity_annual
-      set size factor_scale * scarcity_annual / 150
+      set size factor_scale * scarcity_annual
 
 ;     set color scale-color red days_wno_water days_wno_water_max 0
-      set color scale-color red scarcity_annual 360 0
+      set color scale-color red scarcity_annual 150 0
     ]
     ;############################################################################################
     if visualization = "Edad Infraestructura Ab." and ticks > 1 [
@@ -996,89 +999,62 @@ end
 ;end
 ;##############################################################################################################
 ;##############################################################################################################
-to-report supermatrix [matrix_weighed index1 index2 col value_scarcity]; procedure to change the weights from the alternative_namesto the criteria
-  let M_matrix_weighed matrix:from-row-list matrix_weighed
-  let new_matrix_parameter (1 - value_scarcity / 30)
+to supermatrix [M_matrix_weighed index1 index2 col value]; procedure to change the weights from the alternative_namesto the criteria
+  ;let M_matrix_weighed matrix:from-row-list matrix_weighed
   let dim item 0 matrix:dimensions M_matrix_weighed
   let v1 matrix:get M_matrix_weighed index1 col
   let v2 matrix:get M_matrix_weighed index2 col
-  matrix:set M_matrix_weighed index1 col (v1 + v2) * new_matrix_parameter     ;new_matrix_parameter controls between two weights from alternative_names(maintenance and new-infra) to criteria. together sum up to 1.
-  matrix:set M_matrix_weighed index2 col (v1 + v2) * (1 - new_matrix_parameter)
- ; print matrix:pretty-print-text M_matrix_weighed
-  let new_lim  (matrix:times M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed M_matrix_weighed)
+  matrix:set M_matrix_weighed index1 col v1 * (1 - value)     ;new_matrix_parameter controls between two weights from alternative_names(maintenance and new-infra) to criteria. together sum up to 1.
+  matrix:set M_matrix_weighed index2 col v2 + v1 * value
 
-  let a_m sublist (matrix:get-column new_lim 1) 0 5
-  let a_m_sum sum sublist (matrix:get-column new_lim 1) 0 5
-  let a_weights_new  map [i -> i / a_m_sum] a_m
+  let iii 0
+  ;let BB matrix:transpose matrix:from-column-list [[0.1 0.9 0][0.4 0   0.6][0   1   0]]
+  let BB M_matrix_weighed
+  let AA BB
+  while [iii < 1000][
+    if iii > 0 [
+    set AA AA matrix:* BB
+    ]
+    set iii iii + 1
+    if iii = 999 [print matrix:pretty-print-text AA]
+  ]
 
-  let mm  sublist (matrix:get-column new_lim 1) 5 dim
-  let mm_sum sum sublist (matrix:get-column new_lim 1) 5 dim
-  let c_weights_new map [i -> i / mm_sum] mm
+ let LLM map [jjj -> JJJ / sum (matrix:get-column AA 1)] matrix:get-column AA 1
+  let w_sum sum (list item 5 LLM
+     item 6 LLM
+     item 7 LLM
+     item 8 LLM
+     item 9 LLM
+     item 10 LLM
+     item 11 LLM
+     item 12 LLM
+     item 13 LLM
+     item 14 LLM
+     item 16 LLM
+      )
 
-report list a_weights_new c_weights_new
-  ;  let w_sum  map [i -> i / mm ] matrix:get-column new_lim col-j
-;  let w_sum sum (list matrix:get new_lim 2 2
-;    matrix:get MMSACMEX_limit_D_new 3 2
-;    matrix:get MMSACMEX_limit_D_new 4 2
-;    matrix:get MMSACMEX_limit_D_new 5 2
-;    matrix:get MMSACMEX_limit_D_new 6 2
-;    matrix:get MMSACMEX_limit_D_new 7 2
-;    matrix:get MMSACMEX_limit_D_new 8 2
-;    matrix:get MMSACMEX_limit_D_new 9 2
-;    matrix:get MMSACMEX_limit_D_new 10 2
-;    matrix:get MMSACMEX_limit_D_new 11 2
-;    matrix:get MMSACMEX_limit_D_new 12 2
-;    matrix:get MMSACMEX_limit_D_new 13 2
-;    matrix:get MMSACMEX_limit_D_new 14 2
-;    matrix:get MMSACMEX_limit_D_new 15 2
-
-;  matrix:set MMWaterOperator_weighted_D 0 14 new_matrix_parameter     ;new_matrix_parameter controls between two weights from alternative_names(maintenance and new-infra) to criteria. together sum up to 1.
-;  matrix:set MMWaterOperator_weighted_D 1 14 (1 - new_matrix_parameter)
-;
-;
-;  let MMWaterOperator_limit_D_new  (matrix:times MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D MMWaterOperator_weighted_D)
-;
-;  let w_sum sum (list matrix:get MMWaterOperator_limit_D_new 2 2
-;    matrix:get MMWaterOperator_limit_D_new 3 2
-;    matrix:get MMWaterOperator_limit_D_new 4 2
-;    matrix:get MMWaterOperator_limit_D_new 5 2
-;    matrix:get MMWaterOperator_limit_D_new 6 2
-;    matrix:get MMWaterOperator_limit_D_new 7 2
-;    matrix:get MMWaterOperator_limit_D_new 8 2
-;    matrix:get MMWaterOperator_limit_D_new 9 2
-;    matrix:get MMWaterOperator_limit_D_new 10 2
-;    matrix:get MMWaterOperator_limit_D_new 11 2
-;    matrix:get MMWaterOperator_limit_D_new 12 2
-;    matrix:get MMWaterOperator_limit_D_new 13 2
-;    matrix:get MMWaterOperator_limit_D_new 14 2
-;    matrix:get MMWaterOperator_limit_D_new 15 2
-;;>>>>>>> c74c88e51d1a64b89da88a3d28c9bf0ff2d08703
-;    )
-;  let jj 0
-;  foreach (list Alternatives_WaterOperator_D) [
+  let jj 0
+;  foreach (list Alternatives_WaterOperator_Ab) [
 ;? ->
-;    ask ?[
-;      set criteria_weights (list (matrix:get MMWaterOperator_limit_D_new 2 2 / w_sum)
-;        (matrix:get MMWaterOperator_limit_D_new 3 2 / w_sum)
-;        (matrix:get MMWaterOperator_limit_D_new 4 2 / w_sum)
-;        (matrix:get MMWaterOperator_limit_D_new 5 2 / w_sum)
-;        (matrix:get MMWaterOperator_limit_D_new 6 2 / w_sum)
-;        (matrix:get MMWaterOperator_limit_D_new 7 2 / w_sum)
-;        (matrix:get MMWaterOperator_limit_D_new 8 2 / w_sum)
-;        (matrix:get MMWaterOperator_limit_D_new 9 2 / w_sum)
-;        (matrix:get MMWaterOperator_limit_D_new 10 2 / w_sum)
-;        (matrix:get MMWaterOperator_limit_D_new 11 2 / w_sum)
-;        (matrix:get MMWaterOperator_limit_D_new 12 2 / w_sum)
-;        (matrix:get MMWaterOperator_limit_D_new 13 2 / w_sum)
-;        (matrix:get MMWaterOperator_limit_D_new 14 2 / w_sum)
-;        (matrix:get MMWaterOperator_limit_D_new 15 2 / w_sum))
-;
-;      set alternative_weights matrix:get MMWaterOperator_limit_D_new jj jj / (matrix:get MMWaterOperator_limit_D_new 0 0 + matrix:get MMWaterOperator_limit_D_new 1 1)
-;
-;      set jj jj + 1
-;    ]
-;  ]
-
+  ask Alternatives_WaterOperator_Ab [
+    set W_matrix M_matrix_weighed
+    set criteria_weights (
+      list (item 5 LLM / w_sum)
+      (item 6 LLM / w_sum)
+      (item 7 LLM / w_sum)
+      (item 8 LLM / w_sum)
+      (item 9 LLM / w_sum)
+      (item 10 LLM / w_sum)
+      (item 11 LLM / w_sum)
+      (item 12 LLM / w_sum)
+      (item 13 LLM / w_sum)
+      (item 14 LLM / w_sum)
+      (item 15 LLM / w_sum)
+      (item 16 LLM / w_sum))
+    set alternative_weights item jj LLM /(item 0 LLM + item 1 LLM + item 2 LLM  + item 3 LLM  + item 4 LLM)
+    set jj jj + 1
+  ]
+print [criteria_weights] of Alternatives_WaterOperator_Ab
 end
 
 ;##############################################################################################################
@@ -1664,7 +1640,7 @@ CHOOSER
 Visualization
 Visualization
 "Accion Colectiva" "Peticion ciudadana" "Captacion de Agua" "Compra de Agua" "Modificacion de la vivienda" "Areas prioritarias Mantenimiento" "Areas prioritarias Nueva Infraestructura" "Distribucion de Agua SACMEX" "GoogleEarth" "K_groups" "Salud" "Escasez" "Encharcamientos" "% houses with supply" "% houses with drainage" "P. Falla Ab" "P. Falla D" "Capacidad_D" "Zonas Aquifero" "Edad Infraestructura Ab." "Edad Infraestructura D" "Income-index" "hundimiento" "CalidadAgua" "value_function_edad_Ab" "value_function_Age_d" "value_function_scarcity" "value_function_floods" "value_function_falta_d" "value_function_falta_Ab" "value_function_capasity" "value_function_precipitation" "low_vs_high_land"
-15
+11
 
 BUTTON
 919
@@ -1724,7 +1700,7 @@ Budget_CDMX
 Budget_CDMX
 1
 2400
-325.0
+750.0
 1
 1
 NIL
@@ -1739,7 +1715,7 @@ Eficiencia_NuevaInfra
 Eficiencia_NuevaInfra
 0
 0.005
-0.002
+0.02
 0.0005
 1
 NIL
@@ -1846,10 +1822,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-275
-570
-433
-603
+253
+345
+423
+378
 n_runs
 n_runs
 0
@@ -1867,10 +1843,10 @@ SLIDER
 297
 factor_scale
 factor_scale
-0.000000000000000001
-4
-1.284
-0.001
+0.00000001
+0.1
+0.05980001
+0.0001
 1
 NIL
 HORIZONTAL
@@ -2084,15 +2060,15 @@ max [scarcity_annual] of census_blocks_CDMX
 11
 
 SLIDER
-192
-476
-365
-509
+251
+304
+424
+337
 tau_ndom
 tau_ndom
 0
 100
-46.0
+72.0
 1
 1
 NIL
@@ -2507,74 +2483,74 @@ NetLogo 6.0.1
     <go>go</go>
     <final>export-map</final>
     <timeLimit steps="480"/>
-    <metric>mean [Antiguedad-infra_Ab] of alternatives_CDMX</metric>
-    <metric>mean [Antiguedad-infra_D] of alternatives_CDMX</metric>
-    <metric>mean [scarcity_index] of alternatives_CDMX</metric>
-    <metric>mean [Presion_social_Index] of alternatives_CDMX</metric>
-    <metric>mean [Antiguedad-infra_Ab] of alternatives_CDMX with [CV_municipio = "002"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of alternatives_CDMX with [CV_municipio = "003"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of alternatives_CDMX with [CV_municipio = "004"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of alternatives_CDMX with [CV_municipio = "005"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of alternatives_CDMX with [CV_municipio = "006"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of alternatives_CDMX with [CV_municipio = "007"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of alternatives_CDMX with [CV_municipio = "008"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of alternatives_CDMX with [CV_municipio = "009"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of alternatives_CDMX with [CV_municipio = "010"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of alternatives_CDMX with [CV_municipio = "011"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of alternatives_CDMX with [CV_municipio = "012"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of alternatives_CDMX with [CV_municipio = "013"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of alternatives_CDMX with [CV_municipio = "014"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of alternatives_CDMX with [CV_municipio = "015"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of alternatives_CDMX with [CV_municipio = "016"]</metric>
-    <metric>mean [Antiguedad-infra_Ab] of alternatives_CDMX with [CV_municipio = "017"]</metric>
-    <metric>mean [scarcity_index] of alternatives_CDMX with [CV_municipio = "002"]</metric>
-    <metric>mean [scarcity_index] of alternatives_CDMX with [CV_municipio = "003"]</metric>
-    <metric>mean [scarcity_index] of alternatives_CDMX with [CV_municipio = "004"]</metric>
-    <metric>mean [scarcity_index] of alternatives_CDMX with [CV_municipio = "005"]</metric>
-    <metric>mean [scarcity_index] of alternatives_CDMX with [CV_municipio = "006"]</metric>
-    <metric>mean [scarcity_index] of alternatives_CDMX with [CV_municipio = "007"]</metric>
-    <metric>mean [scarcity_index] of alternatives_CDMX with [CV_municipio = "008"]</metric>
-    <metric>mean [scarcity_index] of alternatives_CDMX with [CV_municipio = "009"]</metric>
-    <metric>mean [scarcity_index] of alternatives_CDMX with [CV_municipio = "010"]</metric>
-    <metric>mean [scarcity_index] of alternatives_CDMX with [CV_municipio = "011"]</metric>
-    <metric>mean [scarcity_index] of alternatives_CDMX with [CV_municipio = "012"]</metric>
-    <metric>mean [scarcity_index] of alternatives_CDMX with [CV_municipio = "013"]</metric>
-    <metric>mean [scarcity_index] of alternatives_CDMX with [CV_municipio = "014"]</metric>
-    <metric>mean [scarcity_index] of alternatives_CDMX with [CV_municipio = "015"]</metric>
-    <metric>mean [scarcity_index] of alternatives_CDMX with [CV_municipio = "016"]</metric>
-    <metric>mean [scarcity_index] of alternatives_CDMX with [CV_municipio = "017"]</metric>
-    <metric>mean [flooding_index] of alternatives_CDMX with [CV_municipio = "002"]</metric>
-    <metric>mean [flooding_index] of alternatives_CDMX with [CV_municipio = "003"]</metric>
-    <metric>mean [flooding_index] of alternatives_CDMX with [CV_municipio = "004"]</metric>
-    <metric>mean [flooding_index] of alternatives_CDMX with [CV_municipio = "005"]</metric>
-    <metric>mean [flooding_index] of alternatives_CDMX with [CV_municipio = "006"]</metric>
-    <metric>mean [flooding_index] of alternatives_CDMX with [CV_municipio = "007"]</metric>
-    <metric>mean [flooding_index] of alternatives_CDMX with [CV_municipio = "008"]</metric>
-    <metric>mean [flooding_index] of alternatives_CDMX with [CV_municipio = "009"]</metric>
-    <metric>mean [flooding_index] of alternatives_CDMX with [CV_municipio = "010"]</metric>
-    <metric>mean [flooding_index] of alternatives_CDMX with [CV_municipio = "011"]</metric>
-    <metric>mean [flooding_index] of alternatives_CDMX with [CV_municipio = "012"]</metric>
-    <metric>mean [flooding_index] of alternatives_CDMX with [CV_municipio = "013"]</metric>
-    <metric>mean [flooding_index] of alternatives_CDMX with [CV_municipio = "014"]</metric>
-    <metric>mean [flooding_index] of alternatives_CDMX with [CV_municipio = "015"]</metric>
-    <metric>mean [flooding_index] of alternatives_CDMX with [CV_municipio = "016"]</metric>
-    <metric>mean [flooding_index] of alternatives_CDMX with [CV_municipio = "017"]</metric>
-    <metric>mean [Presion_social_Index] of alternatives_CDMX with [CV_municipio = "002"]</metric>
-    <metric>mean [Presion_social_Index] of alternatives_CDMX with [CV_municipio = "003"]</metric>
-    <metric>mean [Presion_social_Index] of alternatives_CDMX with [CV_municipio = "004"]</metric>
-    <metric>mean [Presion_social_Index] of alternatives_CDMX with [CV_municipio = "005"]</metric>
-    <metric>mean [Presion_social_Index] of alternatives_CDMX with [CV_municipio = "006"]</metric>
-    <metric>mean [Presion_social_Index] of alternatives_CDMX with [CV_municipio = "007"]</metric>
-    <metric>mean [Presion_social_Index] of alternatives_CDMX with [CV_municipio = "008"]</metric>
-    <metric>mean [Presion_social_Index] of alternatives_CDMX with [CV_municipio = "009"]</metric>
-    <metric>mean [Presion_social_Index] of alternatives_CDMX with [CV_municipio = "010"]</metric>
-    <metric>mean [Presion_social_Index] of alternatives_CDMX with [CV_municipio = "011"]</metric>
-    <metric>mean [Presion_social_Index] of alternatives_CDMX with [CV_municipio = "012"]</metric>
-    <metric>mean [Presion_social_Index] of alternatives_CDMX with [CV_municipio = "013"]</metric>
-    <metric>mean [Presion_social_Index] of alternatives_CDMX with [CV_municipio = "014"]</metric>
-    <metric>mean [Presion_social_Index] of alternatives_CDMX with [CV_municipio = "015"]</metric>
-    <metric>mean [Presion_social_Index] of alternatives_CDMX with [CV_municipio = "016"]</metric>
-    <metric>mean [Presion_social_Index] of alternatives_CDMX with [CV_municipio = "017"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of census_blocks_CDMX</metric>
+    <metric>mean [Antiguedad-infra_D] of census_blocks_CDMX</metric>
+    <metric>mean [scarcity_index] of census_blocks_CDMX</metric>
+    <metric>mean [Presion_social_Index] of census_blocks_CDMX</metric>
+    <metric>mean [Antiguedad-infra_Ab] of census_blocks_CDMX with [CV_municipio = "002"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of census_blocks_CDMX with [CV_municipio = "003"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of census_blocks_CDMX with [CV_municipio = "004"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of census_blocks_CDMX with [CV_municipio = "005"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of census_blocks_CDMX with [CV_municipio = "006"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of census_blocks_CDMX with [CV_municipio = "007"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of census_blocks_CDMX with [CV_municipio = "008"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of census_blocks_CDMX with [CV_municipio = "009"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of census_blocks_CDMX with [CV_municipio = "010"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of census_blocks_CDMX with [CV_municipio = "011"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of census_blocks_CDMX with [CV_municipio = "012"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of census_blocks_CDMX with [CV_municipio = "013"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of census_blocks_CDMX with [CV_municipio = "014"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of census_blocks_CDMX with [CV_municipio = "015"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of census_blocks_CDMX with [CV_municipio = "016"]</metric>
+    <metric>mean [Antiguedad-infra_Ab] of census_blocks_CDMX with [CV_municipio = "017"]</metric>
+    <metric>mean [scarcity_index] of census_blocks_CDMX with [CV_municipio = "002"]</metric>
+    <metric>mean [scarcity_index] of census_blocks_CDMX with [CV_municipio = "003"]</metric>
+    <metric>mean [scarcity_index] of census_blocks_CDMX with [CV_municipio = "004"]</metric>
+    <metric>mean [scarcity_index] of census_blocks_CDMX with [CV_municipio = "005"]</metric>
+    <metric>mean [scarcity_index] of census_blocks_CDMX with [CV_municipio = "006"]</metric>
+    <metric>mean [scarcity_index] of census_blocks_CDMX with [CV_municipio = "007"]</metric>
+    <metric>mean [scarcity_index] of census_blocks_CDMX with [CV_municipio = "008"]</metric>
+    <metric>mean [scarcity_index] of census_blocks_CDMX with [CV_municipio = "009"]</metric>
+    <metric>mean [scarcity_index] of census_blocks_CDMX with [CV_municipio = "010"]</metric>
+    <metric>mean [scarcity_index] of census_blocks_CDMX with [CV_municipio = "011"]</metric>
+    <metric>mean [scarcity_index] of census_blocks_CDMX with [CV_municipio = "012"]</metric>
+    <metric>mean [scarcity_index] of census_blocks_CDMX with [CV_municipio = "013"]</metric>
+    <metric>mean [scarcity_index] of census_blocks_CDMX with [CV_municipio = "014"]</metric>
+    <metric>mean [scarcity_index] of census_blocks_CDMX with [CV_municipio = "015"]</metric>
+    <metric>mean [scarcity_index] of census_blocks_CDMX with [CV_municipio = "016"]</metric>
+    <metric>mean [scarcity_index] of census_blocks_CDMX with [CV_municipio = "017"]</metric>
+    <metric>mean [flooding_index] of census_blocks_CDMX with [CV_municipio = "002"]</metric>
+    <metric>mean [flooding_index] of census_blocks_CDMX with [CV_municipio = "003"]</metric>
+    <metric>mean [flooding_index] of census_blocks_CDMX with [CV_municipio = "004"]</metric>
+    <metric>mean [flooding_index] of census_blocks_CDMX with [CV_municipio = "005"]</metric>
+    <metric>mean [flooding_index] of census_blocks_CDMX with [CV_municipio = "006"]</metric>
+    <metric>mean [flooding_index] of census_blocks_CDMX with [CV_municipio = "007"]</metric>
+    <metric>mean [flooding_index] of census_blocks_CDMX with [CV_municipio = "008"]</metric>
+    <metric>mean [flooding_index] of census_blocks_CDMX with [CV_municipio = "009"]</metric>
+    <metric>mean [flooding_index] of census_blocks_CDMX with [CV_municipio = "010"]</metric>
+    <metric>mean [flooding_index] of census_blocks_CDMX with [CV_municipio = "011"]</metric>
+    <metric>mean [flooding_index] of census_blocks_CDMX with [CV_municipio = "012"]</metric>
+    <metric>mean [flooding_index] of census_blocks_CDMX with [CV_municipio = "013"]</metric>
+    <metric>mean [flooding_index] of census_blocks_CDMX with [CV_municipio = "014"]</metric>
+    <metric>mean [flooding_index] of census_blocks_CDMX with [CV_municipio = "015"]</metric>
+    <metric>mean [flooding_index] of census_blocks_CDMX with [CV_municipio = "016"]</metric>
+    <metric>mean [flooding_index] of census_blocks_CDMX with [CV_municipio = "017"]</metric>
+    <metric>mean [Presion_social_Index] of census_blocks_CDMX with [CV_municipio = "002"]</metric>
+    <metric>mean [Presion_social_Index] of census_blocks_CDMX with [CV_municipio = "003"]</metric>
+    <metric>mean [Presion_social_Index] of census_blocks_CDMX with [CV_municipio = "004"]</metric>
+    <metric>mean [Presion_social_Index] of census_blocks_CDMX with [CV_municipio = "005"]</metric>
+    <metric>mean [Presion_social_Index] of census_blocks_CDMX with [CV_municipio = "006"]</metric>
+    <metric>mean [Presion_social_Index] of census_blocks_CDMX with [CV_municipio = "007"]</metric>
+    <metric>mean [Presion_social_Index] of census_blocks_CDMX with [CV_municipio = "008"]</metric>
+    <metric>mean [Presion_social_Index] of census_blocks_CDMX with [CV_municipio = "009"]</metric>
+    <metric>mean [Presion_social_Index] of census_blocks_CDMX with [CV_municipio = "010"]</metric>
+    <metric>mean [Presion_social_Index] of census_blocks_CDMX with [CV_municipio = "011"]</metric>
+    <metric>mean [Presion_social_Index] of census_blocks_CDMX with [CV_municipio = "012"]</metric>
+    <metric>mean [Presion_social_Index] of census_blocks_CDMX with [CV_municipio = "013"]</metric>
+    <metric>mean [Presion_social_Index] of census_blocks_CDMX with [CV_municipio = "014"]</metric>
+    <metric>mean [Presion_social_Index] of census_blocks_CDMX with [CV_municipio = "015"]</metric>
+    <metric>mean [Presion_social_Index] of census_blocks_CDMX with [CV_municipio = "016"]</metric>
+    <metric>mean [Presion_social_Index] of census_blocks_CDMX with [CV_municipio = "017"]</metric>
     <enumeratedValueSet variable="Eficiencia_NuevaInfra">
       <value value="0.02"/>
     </enumeratedValueSet>
