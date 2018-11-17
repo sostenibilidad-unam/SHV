@@ -1,0 +1,169 @@
+#site_suitability
+#1)update value functions sacmex
+#a) age infrastructure drainage
+cent= as.numeric(as.character(fv_antiguedad_drenaje$V2[2]))
+xmin_v= as.numeric(as.character(fv_antiguedad_drenaje$V2[3]))
+xmax_v=as.numeric(as.character(fv_antiguedad_drenaje$V2[4]))
+k_v=as.numeric(as.character(fv_antiguedad_drenaje$V2[5]))
+vf_A_D<-sapply(studyArea_CVG@data$antiguedad_D,FUN = logistic_invertida,center=cent,k=k_v,xmax=xmax_v,xmin=xmin_v)
+
+#b) age infrastructure Abastecimiento
+a= as.numeric(as.character(fv_antiguedad_escasez$V2[1]))
+cent= as.numeric(as.character(fv_antiguedad_escasez$V2[3]))
+xmin_v= as.numeric(as.character(fv_antiguedad_escasez$V2[4]))
+xmax_v=as.numeric(as.character(fv_antiguedad_escasez$V2[5]))
+
+vf_A_Ab<-sapply(studyArea_CVG@data$antiguedad_Ab,FUN = campana_invertida,center=cent,a=a,xmax=xmax_v,xmin=xmin_v)
+
+
+#c)Drainage capacity
+vf_Cap_D<-sapply(studyArea_CVG@data$capac_d,FUN = capasity_drainage_vf)
+
+#d)falta
+vf_falta_Ab<-sapply(studyArea_CVG@data$FALTA_IN,FUN=lack_of_infrastructure_vf)
+vf_falta_D<-sapply(studyArea_CVG@data$falta_dren,FUN=lack_of_infrastructure_vf)
+
+#c)potable water system capacity
+vf_Cap_Ab<-rep(1,length(studyArea_CVG@data$falta_dren))
+
+#d) falla Ab
+gamma_v= as.numeric(as.character(fv_falla_escasez$V2[4]))
+xmax_v= as.numeric(as.character(fv_falla_escasez$V2[3]))
+xmin_v =as.numeric(as.character(fv_falla_escasez$V2[2]))
+vf_falla<-sapply(studyArea_CVG@data$falla_in,FUN=convexa_creciente, gama=gamma_v, xmax=xmax_v, xmin=xmin_v)
+
+#falla D
+vf_fall_D<-rep(1,length(studyArea_CVG@data$falla_in))
+
+
+#e)water scarcity
+vf_scarcity_sacmex<-sapply(studyArea_CVG@data$days_wn_water_year,FUN=scarcity_sacmex_vf)#scarcity_annual is calculated dynamically
+#flooding
+vf_flood<-sapply(studyArea_CVG_B@data$PONDING,FUN=ponding_vf)
+#Ponding
+vf_pond<-sapply(studyArea_CVG_B@data$PONDING,FUN=ponding_vf)
+#social_pressure
+vf_SP <-sapply(studyArea_CVG_B@data$pres_soc,FUN=social_pressure_vf)
+
+#rainfall
+vf_rain<-sapply(studyArea_CVG_B@data$PR_2008,FUN=rainfall_vf)
+
+#run-off/escurrimiento
+vf_run_off<-sapply(studyArea_CVG@data$escurri,FUN=run_off_vf)
+
+#garbage
+vf_garbage<-sapply(studyArea_CVG@data$BASURA/10000,FUN=drainages_clogged_vf)
+
+#subsidance
+center_v=as.numeric(as.character(fv_subsidencia$V2[2]))
+xmin_v=as.numeric(as.character(fv_subsidencia$V2[3]))
+xmax_v=as.numeric(as.character(fv_subsidencia$V2[4]))
+k_v=as.numeric(as.character(fv_subsidencia$V2[5]))
+vf_subside<-sapply(studyArea_CVG@data$subsidenci,FUN=logistic_invertida,k=k_v,xmin=xmin_v,xmax=xmax_v,center=center_v)
+
+#hydraulic pressure
+cen<-as.numeric(as.character(fv_presion_hidraulica_escasez$V2[2]))
+min_v<-as.numeric(as.character(fv_presion_hidraulica_escasez$V2[3]))
+max_v<-as.numeric(as.character(fv_presion_hidraulica_escasez$V2[4]))
+k_v<-as.numeric(as.character(fv_presion_hidraulica_escasez$V2[5]))
+vf_hid_pressure<-sapply(studyArea_CVG_C@data$pres_hid,FUN=logistic_vf,k=k_v,center=cen,xmax=xmax_v,xmin=xmin_v)
+
+#monto
+vf_monto<-rep(1,length(studyArea_CVG_C@data$pres_hid))
+#gasto hidraulico
+vf_GH<-sapply(studyArea_CVG_C@data$gasto,FUN=Value_Function_cut_offs,xmax=max(studyArea_CVG_C@data$gasto))
+#abastecimiento
+vf_Abaste<-sapply(studyArea_CVG_C@data$abastecimi,FUN=Value_Function_cut_offs,xmax=max(studyArea_CVG_C@data$abastecimi,na.rm=T))
+#peticiones de delegaciones
+vf_pet_del_dr<-sapply(studyArea_CVG_C@data$pet_del_dr,FUN=Peticion_Delegaciones_vf)
+#peticiones de usuarions delegacionales
+vf_pet_us_d<-sapply(studyArea_CVG_C@data$pet_usr_d,FUN=Peticiones_usuarios_vf,xmax=max(studyArea_CVG_C@data$pet_usr_d,na.rm = T))
+
+#presion de medios
+vf_pres_medios<- sapply(studyArea_CVG_B@data$PRES_MED,FUN=pression_medios_vf)
+
+
+#2)update value functions residents
+
+#Crecimiento urbano
+vf_UG<-sapply(studyArea_CVG_C@data$crec_urb,FUN=Value_Function_cut_offs,xcuts=c(0.5, 0.75, 0.875, 0.937),xmax=max(studyArea_CVG_C@data$crec_urb,na.rm=T))
+
+#Water quality 
+vf_WQ<-sapply(studyArea_CVG_C@data$cal_agua,FUN=water_quality_residents_vf)
+
+#salud
+vf_H<-sapply(studyArea_CVG_B@data$ENF_14,FUN=health_vf)
+
+#water scarcity residents
+vf_scarcity_residents<-sapply(studyArea_CVG@data$days_wn_water,FUN=scarcity_residents_empirical_vf,tau=12) #days_wn_water need to be define
+
+#ponding residents
+vf_pond<-sapply(studyArea_CVG_B@data$PONDING,FUN=ponding_vf)
+
+#"Desviacion de agua" 
+vf_DA<-sapply(studyArea_CVG_C@data$desv_agua,FUN=Value_Function_cut_offs,xcuts=c(0.5, 0.75, 0.875, 0.937),ycuts=c(1, 0.8, 0.6, 0.4, 0.2),xmax=max(studyArea_CVG_C@data$desv_agua,na.rm=T))
+
+#"Desperdicio de agua" 
+vf_Desp_A<-sapply(studyArea_CVG_C@data$desp_agua,FUN=Value_Function_cut_offs,xcuts=c(0.5, 0.75, 0.875, 0.937),ycuts=c(1, 0.8, 0.6, 0.4, 0.2),xmax=max(studyArea_CVG_C@data$desp_agua,na.rm=T))
+
+#agua insuficiente
+fv_Agua_insu<-sapply(studyArea_CVG@data$days_wn_water_month,FUN=scarcity_residents_vf) #days_wn_water need to be define
+
+#falta infrastructura drenaje
+fv_falta<-sapply(100*(1 - studyArea_CVG_C@data$falta_dren),FUN=lack_of_infrastructure_vf)
+
+#crecimiento poblacional
+fv_crecimiento_pop<-sapply(studyArea_CVG_C@data$poblacion,FUN=urban_growth_f,xmax=max(studyArea_CVG_C@data$poblacion,na.rm=T))
+
+#fugas
+fv_fugas<-sapply(studyArea_CVG$fugas, FUN=Value_Function_cut_offs,xcuts=c(0.5, 0.75, 0.875, 0.937),ycuts=c(1, 0.8, 0.6, 0.4, 0.2),xmax=max(studyArea_CVG@data$fugas,na.rm=T))
+
+################################################################################################################
+#join all converted attributes into a single matrix
+all_C_ab<-cbind(vf_A_Ab,
+                vf_Cap_Ab,
+                vf_falla,
+                vf_falta_Ab,
+                vf_monto,
+                vf_hid_pressure,
+                vf_WQ,
+                vf_scarcity_sacmex,
+                vf_pond,
+                vf_Abaste,
+                vf_pet_del_dr,
+                vf_pres_medios,
+                vf_SP)
+
+
+all_C_D<-cbind(vf_garbage,
+               vf_run_off,
+               vf_subside,
+               vf_rain,
+               vf_A_D,
+               vf_Cap_D,
+               vf_fall_D,
+               vf_falta_D,
+               vf_pet_del_dr,
+               vf_pet_us_d,
+               vf_pres_medios,
+               vf_pond,
+               vf_flood
+               )              
+################################################################################################################
+#2)calculate distance for each census block for action mantainance and build new infrastructure
+distance_ideal_A1_D<-sweep(as.matrix(all_C_D),MARGIN=2,as.vector(Criteria_sacmcx_D),FUN=ideal_distance,z=alternative_weights_D[1]) #"Mantenimiento"
+distance_ideal_A2_D<-sweep(as.matrix(all_C_D),MARGIN=2,as.vector(Criteria_sacmcx_D),FUN=ideal_distance,z=alternative_weights_D[2]) # "Nueva_infraestructura"
+
+distance_ideal_A1_Ab<-sweep(as.matrix(all_C_ab),MARGIN=2,as.vector(Criteria_sacmcx_Ab),FUN=ideal_distance,z=alternative_weights_S[4])# "Mantenimiento"
+distance_ideal_A2_Ab<-sweep(as.matrix(all_C_ab),MARGIN=2,as.vector(Criteria_sacmcx_Ab),FUN=ideal_distance,z=alternative_weights_S[5])# "Nueva_infraestructura"
+
+
+#code to check
+#MM<-matrix(data = c(1,1,2,1,2,2),ncol=3)
+#vec=c(1,2,3)
+#sweep(MM,MARGIN = 2,vec ,`*`)
+
+################################################################################################################
+#3) save value function and distance matrix as a shape file
+Output_value_function<-studyArea_CVG
+Output_value_function@data<-cbind(Output_value_function@data,all_C_D,all_C_ab,distance_ideal_A1_D,distance_ideal_A2_D,distance_ideal_A1_Ab,distance_ideal_A2_Ab)
