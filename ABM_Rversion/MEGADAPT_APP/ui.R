@@ -10,6 +10,8 @@
 library(shiny)
 library(shinythemes)
 require(shinydashboard)
+library(leaflet)
+library(DT)
 #######################################################################################################
 navbarPage(title="MEGADAPT APP",
            # Application title
