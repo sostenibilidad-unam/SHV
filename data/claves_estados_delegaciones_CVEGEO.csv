@@ -1,0 +1,18 @@
+Delegation,ID,crecimiento_poblacional,DOTACION_AGUA_POTABLE_L_HAB_DIA_y2007
+Iztapalapa,007,0.4,238
+Gustavo A. Madero,005,-0.1,343
+Álvaro Obregón,010,0.7,391
+Tlalpan,012,1,249
+Coyoacán,003,-0.3,312
+Cuauhtémoc,015,0.2,480
+Venustiano Carranza,017,-0.2,337
+Benito Juárez,014,1.8,455
+Xochimilco,013,0.5,214
+Azcapotzalco,002,-0.7,326
+Iztacalco,006,0.4,317
+Miguel Hidalgo,016,-0.4,478
+Tláhuac,011,0.1,177
+La Magdalena Contreras,008,0.5,414
+Cuajimalpa de Morelos,004,1.4,525
+Milpa Alta,009,1.2,231
+test,"""000""",NA,NA

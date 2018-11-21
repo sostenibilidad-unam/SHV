@@ -43,7 +43,7 @@ vf_flood<-sapply(studyArea_CVG_B@data$PONDING,FUN=ponding_vf)
 #Ponding
 vf_pond<-sapply(studyArea_CVG_B@data$PONDING,FUN=ponding_vf)
 #social_pressure
-vf_SP <-sapply(studyArea_CVG_B@data$pres_soc,FUN=social_pressure_vf)
+vf_SP <-sapply(studyArea_CVG@data$social_pressure,FUN=social_pressure_vf)
 
 #rainfall
 vf_rain<-sapply(studyArea_CVG_B@data$PR_2008,FUN=rainfall_vf)
@@ -95,7 +95,7 @@ vf_WQ<-sapply(studyArea_CVG_C@data$cal_agua,FUN=water_quality_residents_vf)
 vf_H<-sapply(studyArea_CVG_B@data$ENF_14,FUN=health_vf)
 
 #water scarcity residents
-vf_scarcity_residents<-sapply(studyArea_CVG@data$days_wn_water,FUN=scarcity_residents_empirical_vf,tau=12) #days_wn_water need to be define
+vf_scarcity_residents<-sapply(studyArea_CVG@data$Nowater_and_protest,FUN=scarcity_residents_empirical_vf,tau=12) #days_wn_water need to be define
 
 #ponding residents
 vf_pond<-sapply(studyArea_CVG_B@data$PONDING,FUN=ponding_vf)
@@ -107,7 +107,7 @@ vf_DA<-sapply(studyArea_CVG_C@data$desv_agua,FUN=Value_Function_cut_offs,xcuts=c
 vf_Desp_A<-sapply(studyArea_CVG_C@data$desp_agua,FUN=Value_Function_cut_offs,xcuts=c(0.5, 0.75, 0.875, 0.937),ycuts=c(1, 0.8, 0.6, 0.4, 0.2),xmax=max(studyArea_CVG_C@data$desp_agua,na.rm=T))
 
 #agua insuficiente
-fv_Agua_insu<-sapply(studyArea_CVG@data$days_wn_water_month,FUN=scarcity_residents_vf) #days_wn_water need to be define
+vf_Agua_insu<-sapply(studyArea_CVG@data$days_wn_water_month,FUN=scarcity_residents_vf) #days_wn_water need to be define
 
 #falta infrastructura drenaje
 fv_falta<-sapply(100*(1 - studyArea_CVG_C@data$falta_dren),FUN=lack_of_infrastructure_vf)
@@ -116,7 +116,7 @@ fv_falta<-sapply(100*(1 - studyArea_CVG_C@data$falta_dren),FUN=lack_of_infrastru
 fv_crecimiento_pop<-sapply(studyArea_CVG_C@data$poblacion,FUN=urban_growth_f,xmax=max(studyArea_CVG_C@data$poblacion,na.rm=T))
 
 #fugas
-fv_fugas<-sapply(studyArea_CVG$fugas, FUN=Value_Function_cut_offs,xcuts=c(0.5, 0.75, 0.875, 0.937),ycuts=c(1, 0.8, 0.6, 0.4, 0.2),xmax=max(studyArea_CVG@data$fugas,na.rm=T))
+fv_fugas<-sapply(studyArea_CVG@data$FUGAS, FUN=Value_Function_cut_offs,xcuts=c(0.5, 0.75, 0.875, 0.937),ycuts=c(1, 0.8, 0.6, 0.4, 0.2),xmax=max(studyArea_CVG@data$FUGAS,na.rm=T))
 
 ################################################################################################################
 #join all converted attributes into a single matrix
@@ -148,7 +148,40 @@ all_C_D<-cbind(vf_garbage,
                vf_pres_medios,
                vf_pond,
                vf_flood
-               )              
+               )     
+
+C_R_HM<-cbind(vf_WQ,
+              vf_UG,
+              vf_Desp_A,
+              fv_fugas,
+              fv_falta,
+              rep(1,length(fv_falta)),
+              vf_Agua_insu,
+              rep(1,length(fv_falta)), #flooding do not influence protests or water capture
+              vf_H)
+
+C_R_protest<-cbind(vf_WQ,
+              vf_UG,
+              vf_Desp_A,
+              fv_fugas,
+              fv_falta,
+              rep(1,length(fv_falta)),
+              vf_scarcity_residents,
+              rep(1,length(fv_falta)), #flooding do not influence protests or water capture
+              vf_H)
+
+
+C_R_D<-cbind(vf_WQ,
+              vf_UG,
+              rep(1,length(fv_falta)),
+              rep(1,length(fv_falta)),
+              fv_falta,
+              vf_garbage,
+              rep(1,length(fv_falta)), #scarcity does not affect floding
+              vf_pond, 
+              vf_H)
+
+
 ################################################################################################################
 #2)calculate distance for each census block for action mantainance and build new infrastructure
 distance_ideal_A1_D<-sweep(as.matrix(all_C_D),MARGIN=2,as.vector(Criteria_sacmcx_D),FUN=ideal_distance,z=alternative_weights_D[1]) #"Mantenimiento"
@@ -156,6 +189,11 @@ distance_ideal_A2_D<-sweep(as.matrix(all_C_D),MARGIN=2,as.vector(Criteria_sacmcx
 
 distance_ideal_A1_Ab<-sweep(as.matrix(all_C_ab),MARGIN=2,as.vector(Criteria_sacmcx_Ab),FUN=ideal_distance,z=alternative_weights_S[4])# "Mantenimiento"
 distance_ideal_A2_Ab<-sweep(as.matrix(all_C_ab),MARGIN=2,as.vector(Criteria_sacmcx_Ab),FUN=ideal_distance,z=alternative_weights_S[5])# "Nueva_infraestructura"
+
+#Residents
+distance_ideal_protest<-sweep(as.matrix(C_R_protest),MARGIN=2,as.vector(Criteria_residents_Iz),FUN=ideal_distance,z=alternative_weights_Iz[5])# "Protests"
+distance_ideal_House_mod_lluvia<-sweep(as.matrix(C_R_D),MARGIN=2,as.vector(Criteria_residents_Iz),FUN=ideal_distance,z=alternative_weights_Iz[4])# "House modification"
+distance_ideal_House_mod_agua<-sweep(as.matrix(C_R_HM),MARGIN=2,as.vector(Criteria_residents_Iz),FUN=ideal_distance,z=alternative_weights_Iz[4])# "House modification"
 
 
 #code to check
@@ -166,4 +204,4 @@ distance_ideal_A2_Ab<-sweep(as.matrix(all_C_ab),MARGIN=2,as.vector(Criteria_sacm
 ################################################################################################################
 #3) save value function and distance matrix as a shape file
 Output_value_function<-studyArea_CVG
-Output_value_function@data<-cbind(Output_value_function@data,all_C_D,all_C_ab,distance_ideal_A1_D,distance_ideal_A2_D,distance_ideal_A1_Ab,distance_ideal_A2_Ab)
+Output_value_function@data<-cbind(Output_value_function@data,all_C_D,all_C_ab,distance_ideal_A1_D,distance_ideal_A2_D,distance_ideal_A1_Ab,distance_ideal_A2_Ab,distance_ideal_House_mod_lluvia,distance_ideal_House_mod_lluvia,distance_ideal_House_mod_agua)

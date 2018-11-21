@@ -17,7 +17,7 @@ run_GA<-function(){
   best_strategyC<-EvolutionStrategy.int(genomeLen = length_total, 
                                         genomeMin = rep(1,length_total), 
                                         genomeMax = rep(4,length_total), 
-                                        evalFunc = evalFunc,iterations = 1000,popSize = 200)
+                                        evalFunc = evalFunc,iterations = 400,popSize = 300)
   
 return(best_strategyC$best$genome)
 }
