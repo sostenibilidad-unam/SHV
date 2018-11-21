@@ -14,7 +14,7 @@ require(gridExtra)
 require(DT)
 
 #path to data
-path_td<-"c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/data/"
+path_td<-"../../data/"
 #path_td<-"home/abaeza/SHV/data/" #path patun
 ##read shape files
 studyArea_CVG_C<-readShapeSpatial(paste(path_td,'ageb_abm_full',sep=""))
