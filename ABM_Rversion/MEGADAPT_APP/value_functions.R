@@ -214,6 +214,7 @@ return(SM)
   
 #y: a vector of attributes converted to 0-1 scale using value functions
 #x a list of weights from the mental model
+#z=alaternative weight
 #exponent: to control the type of distance h_Cp=2 euclidian# h_Cp=1 manhattan
  
  ideal_distance<-function(x,y,exponent=1,z){
