@@ -1,5 +1,5 @@
-,,Acciones,,,,,,,,,Biof韘ico,,,,Fuentes de contaminacion,,,Infraestructura,,Meta,,Problemas,,,,,Uso de suelo / tierra
-,,Captacion de agua,Educacion,Gesti髇 de servicios,Limpieza,Movilizaciones,Reforestaci髇,Separar basura,Vigilancia,Deterioro de vegetaci髇,Mantos acuiferos,Ojos de agua secos,Basura,Falta de infraestructura,Fugas,meta,Crecimiento urbano,Escasez de agua,Falta de filtraci髇,Mala calidad de agua,Asentamientos,Cambio de uso de suelo,Crecimiento de poblacion,,,,
+,,Acciones,,,,,,,,,Biof铆sico,,,,Fuentes de contaminacion,,,Infraestructura,,Meta,,Problemas,,,,,Uso de suelo / tierra
+,,Captacion de agua,Educacion,Gesti贸n de servicios,Limpieza,Movilizaciones,Reforestaci贸n,Separar basura,Vigilancia,Deterioro de vegetaci贸n,Mantos acuiferos,Ojos de agua secos,Basura,Falta de infraestructura,Fugas,meta,Crecimiento urbano,Escasez de agua,Falta de filtraci贸n,Mala calidad de agua,Asentamientos,Cambio de uso de suelo,Crecimiento de poblacion,,,,
 Acciones,Captacion de agua,0,0,0,0,0,0,0,0,0.634272,0,0,0.456336,0,0,0.074151,0.139641,0,0.113124,0,0,0,0,,,,
 ,Educacion,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.001854,0,0.054046,0,0,0,0,0,,,,
 ,Gestion de servicios,0,0,0,0,0,0,0,0,0,0,0,0,0.126051,0,0.019458,0.010451,0.389413,0.010466,0.027537,0.078436,0,0,,,,
@@ -8,7 +8,7 @@ Acciones,Captacion de agua,0,0,0,0,0,0,0,0,0.634272,0,0,0.456336,0,0,0.074151,0.
 ,Reforestacion,0,0,0,0,0,0,0,0,0.117362,0,0,0,0,0,0.04106,0.014114,0,0.250337,0,0,0,0,,,,
 ,Separar basura,0,0,0,0,0,0,0,0,0,0,0,0.09128,0,0,0.005288,0.012675,0,0,0,0,0,0,,,,
 ,Vigilancia,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.037977,0.068046,0,0.064583,0.052574,0.484013,0,0,,,,
-Biof韘ico,Deterioro de vegetaci髇,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.075228,0.120256,0,0.178353,0,0,0,0,,,,
+Biof铆sico,Deterioro de vegetaci贸n,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.075228,0.120256,0,0.178353,0,0,0,0,,,,
 ,Mantos acuiferos,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.02031,0.027661,0,0.041493,0.299926,0,0,0,,,,
 ,Ojos de agua secos,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.004312,0.006331,0,0.009559,0.033408,0,0,0,,,,
 Fuentes de contaminacion,Basura,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.05793,0.138857,0,0,0,0,0,0,,,,
