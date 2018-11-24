@@ -12,7 +12,7 @@ path_to_source<-"c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/ABM_Rversion/MEGAD
 #path_to_source<-"../Patung/SHV/ABM_Rversion/MEGADAPT_APP/"
 setwd(path_to_source)
 #print(effectivity_newInfra)
-time_simulation=3
+time_simulation=as.numeric(args[4])
 #run_full_model<-function(,
   time_run=0
   source("setup.R")
