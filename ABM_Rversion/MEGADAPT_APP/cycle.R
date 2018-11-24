@@ -3,7 +3,8 @@
 #run Biophisical models
 #run Flooding model
 time_sim=time_run
-print(time_sim)
+#print(time_sim)
+print(effectivity_newInfra)
 source("update_ponding.R")
 #run Health model
 
@@ -12,7 +13,7 @@ source("site_suitability.R")
 #run Site selection
 source("site_selection.R")
 #take actions sacmex
-source("take_actions_sacmex.R")
+source("take_actions_sacmex.R",local = T)
 #Update age and condition of infrastructure
 source("update_age_infrastructure.R")
 
@@ -31,10 +32,11 @@ source("take_actions_residents.R")
 source("protests.R")
 #update sensitivity and adaptive capacity
 
-if (weeks==54){break}
+if (weeks==54){break()}
 
 }
 
 #save results
 TS_res<-save_TS(time_sim,TS_res)
-print(dim(TS_res))
+
+#print(dim(TS_res))

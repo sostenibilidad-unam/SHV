@@ -19,7 +19,7 @@ source("genetic_Algorithm.R")
 #Run optimization
 cromosoma_resultante<-run_GA()
 
-#Store ID of agebs that will be modify by sacmex 
+#Store ID of agebs that will be modified by sacmex 
 A1<-selected_agebs[which(cromosoma_resultante==1)] #"Mantenimiento" D
 A2<-selected_agebs[which(cromosoma_resultante==2)] #"Nueva_infraestructura" D
 A3<-selected_agebs[which(cromosoma_resultante==3)] #"Mantenimiento" Ab

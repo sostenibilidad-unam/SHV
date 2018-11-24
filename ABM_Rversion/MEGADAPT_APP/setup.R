@@ -71,16 +71,16 @@ source("site_suitability.R")
 source("save_results.R")
 
 #load google maps
-xl=c(-98.9, -99.3)
-yl=c(19, 19.6)
+#xl=c(-98.9, -99.3)
+#yl=c(19, 19.6)
 #ll<-c(-98.9,19,-99.3,19.6)#
 #add map of  mexico city
 
-m <- leaflet(data=studyArea_CVG) %>%
-  addTiles() %>%  # Add default OpenStreetMap map tiles
-  addMarkers(lng=-99.1398, lat=19.4249,popup="Mexico City") %>%
-   addPolygons(fillColor = topo.colors(10, alpha = NULL), stroke = FALSE) %>%
-  setView(lng=mean(xl), lat=mean(yl), zoom = 10)
+#m <- leaflet(data=studyArea_CVG) %>%
+#  addTiles() %>%  # Add default OpenStreetMap map tiles
+#  addMarkers(lng=-99.1398, lat=19.4249,popup="Mexico City") %>%
+#   addPolygons(fillColor = topo.colors(10, alpha = NULL), stroke = FALSE) %>%
+#  setView(lng=mean(xl), lat=mean(yl), zoom = 10)
 #m  # Print the map
 
 #map<-get_map(location = c(mean(xl),mean(yl)) ,zoom = 1) #
@@ -88,6 +88,9 @@ m <- leaflet(data=studyArea_CVG) %>%
 #map<-get_map(location = ll , maptype = "hybrid",source='google',zoom = 10) 
 
 #setup parameters
-effectivity_mantenimiento<-0.01
-effectivity_newInfra<-0.01
+#effectivity_mantenimiento=args[1]
+#effectivity_newInfra=args[2]
+
+#effectivity_mantenimiento<-0.01
+#effectivity_newInfra<-0.01
 Budget<-750
