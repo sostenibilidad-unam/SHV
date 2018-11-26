@@ -1,42 +1,37 @@
 #Decision cycle
-#simulate a yearly cycle of the model
-#run Biophisical models
-#run Flooding model
-time_sim=time_run
-#print(time_sim)
-print(effectivity_newInfra)
-source("update_ponding.R")
-#run Health model
+#simulate a yearly cycle of the model by week
 
-#run Site suitability
-source("site_suitability.R")
-#run Site selection
-source("site_selection.R")
-#take actions sacmex
-source("take_actions_sacmex.R",local = T)
-#Update age and condition of infrastructure
-source("update_age_infrastructure.R")
+TS_res<-cbind(subset(studyArea_CVG@data,select = var_selected),
+                    time_sim=rep(0,length(studyArea_CVG@data$AGEB_ID)),
+                    month_sim=rep(0,length(studyArea_CVG@data$AGEB_ID)),
+                    year=rep(0,length(studyArea_CVG@data$AGEB_ID)))
 
+for(i in 1: length(ini_date)){
+  if (year_change[i]==1){
+     source("update_ponding.R")
+     #run Health model
+  
+     #run Site suitability
+     source("site_suitability.R")
+     #run Site selection
+     source("site_selection.R")
+     #take actions sacmex
+     source("take_actions_sacmex.R")
+     #update the level of adaptation and sensitivity of residents
+     source("take_actions_residents.R")
+     source("adaptation_and_sensitivity.R")
+     #Update age and condition of infrastructure
+     source("update_age_infrastructure.R")
+  }
+  source("scarcity_update.R")
+  #update number of protests
+  source("protests.R")
+  
+  #Save results
+ # TS_res<-save_TS(TR = i,TS_res,year=year_ts[i],month=month_ts[i])
+  
+ # print(ini_date[i])
+  }
 
-#Update weekly scarcity 
-weeks=0
-repeat{
-weeks=weeks+1
-source("scarcity_update.R")
-#TS_week<-save_TS(weeks,TS_week)
-##Resident
-#take actions residents
-source("take_actions_residents.R")
-#protests
-#update number of protests
-source("protests.R")
-#update sensitivity and adaptive capacity
+#print(tail(TS_res))
 
-if (weeks==54){break()}
-
-}
-
-#save results
-TS_res<-save_TS(time_sim,TS_res)
-
-#print(dim(TS_res))

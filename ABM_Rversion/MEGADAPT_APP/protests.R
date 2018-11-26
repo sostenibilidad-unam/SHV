@@ -6,4 +6,9 @@
 
 
 #accumulate protests as social_pressure
-studyArea_CVG@data$social_pressure<-studyArea_CVG@data$social_pressure+studyArea_CVG@data$protesta
+ if(year_change[i]==1){
+   studyArea_CVG@data$social_pressure=studyArea_CVG@data$protesta
+ } else
+   {
+  studyArea_CVG@data$social_pressure<-studyArea_CVG@data$social_pressure+studyArea_CVG@data$protesta
+ }
