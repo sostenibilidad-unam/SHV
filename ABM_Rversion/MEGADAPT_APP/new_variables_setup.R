@@ -1,4 +1,6 @@
-#generate new variables in the data base that will store dinamic variables
+#generate new variables in the data base that will store new variables that are outcomes from the model simulation
+
+
 studyArea_CVG@data$antiguedad_D<-studyArea_CVG@data$antiguedad
 studyArea_CVG@data$antiguedad_Ab<-studyArea_CVG@data$antiguedad
 studyArea_CVG@data$days_wn_water_year<-rep(0,length(studyArea_CVG@data$AGEB_ID))
@@ -23,18 +25,17 @@ studyArea_CVG@data$vulnerability_Ab<-rep(1,length(studyArea_CVG@data$AGEB_ID))
 studyArea_CVG@data$vulnerability_D<-rep(1,length(studyArea_CVG@data$AGEB_ID))
 
 
-#population growth
-studyArea_CVG@data$pop_growth<-rep(1,length(studyArea_CVG@data$AGEB_ID))
 
 #data table to save output data
 #save variables:
-#age infra
-#capacity infra
-#average days with no water
-#flooding events
-#Protests
-#adaptations Ab
-#adaptations F
+ #Age infra
+ #capacity infra
+ #Number of days in a year without water supply
+ #flooding events
+ #Protests
+ #Adaptations Ab
+ #Adaptations F
+ #Vulneability Index
 var_selected<-c("AGEB_ID",
                 "municipio",
                 "antiguedad_D",

@@ -19,13 +19,8 @@ path_td<-"../../data/"
 #path_td<-"home/abaeza/SHV/data/" #path patun
 ##read shape files
 studyArea_CVG<-readShapeSpatial(paste(path_td,'Layer_MEGADAPT_Oct2018.shp',sep=""))#for flooding model
-clave_municipalities<-data.frame(read.csv(paste(path_td,"claves_estados_delegaciones_CVEGEO.csv",sep=""),header = T))
 #############################################################################
 #subset are for CDMX
-#new columns with information about municipality and state of the census blocks
-studyArea_CVG@data$municipio<-as.factor(substring(studyArea_CVG@data$cvgeo,3,5))
-studyArea_CVG@data$estado<-as.factor(substring(studyArea_CVG@data$cvgeo,1,2))
-
 #Simulation runs only for the city (CDMX) estado=="09"
 studyArea_CVG <- studyArea_CVG[studyArea_CVG$estado== "09",]
 source('new_variables_setup.R')
