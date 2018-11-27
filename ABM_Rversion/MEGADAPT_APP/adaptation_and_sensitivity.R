@@ -13,3 +13,7 @@ if (length(HM_Agua)>0){
   studyArea_CVG@data$house_modifications_Ab[HM_Agua]=studyArea_CVG@data$house_modifications_Ab[HM_Agua]+1
   studyArea_CVG@data$sensitivity_Ab[HM_Agua]<-1- (studyArea_CVG@data$house_modifications_Ab[HM_Agua]/(hsc_Ab+studyArea_CVG@data$house_modifications_Ab[HM_Agua]))
 }
+
+#update vulnerability
+studyArea_CVG@data$vulnerability_Ab=(studyArea_CVG@data$sensitivity_Ab * studyArea_CVG@data$days_wn_water_year)/(1+studyArea_CVG@data$ingreso)
+studyArea_CVG@data$vulnerability_D=(studyArea_CVG@data$sensitivity_D * studyArea_CVG@data$encharca)/(1+studyArea_CVG@data$ingreso)

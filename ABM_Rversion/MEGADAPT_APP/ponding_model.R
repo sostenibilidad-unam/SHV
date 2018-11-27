@@ -2,7 +2,7 @@
 studyArea_CVG@data$estado<-as.factor(substring(studyArea_CVG@data$cvgeo,1,2))
 IDD<-studyArea_CVG@data$AGEB_ID[which(studyArea_CVG@data$estado=='09')]
 
-studyArea_CVG@data$AveR<-studyArea_CVG@data[,8]
+studyArea_CVG@data$AveR<-studyArea_CVG@data$PR_2014
 studyArea_CVG@data$BASURA<-studyArea_CVG@data$BASURA/1000
 studyArea_CVG@data$encharca<-round(studyArea_CVG@data$encharca)
 studyArea_CVG@data$escurri<-studyArea_CVG@data$escurri/1000
