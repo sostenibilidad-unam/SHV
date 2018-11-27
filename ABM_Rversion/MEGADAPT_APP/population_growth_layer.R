@@ -7,5 +7,5 @@
 for(i in 1:(length(clave_municipalities$ID)-1)){
   
 agebs_indel<-which(as.character(studyArea_CVG@data$municipio)==as.character(clave_municipalities$ID[i]))
-studyArea_CVG@data$pop_growth[agebs_indel]<-rep(clave_municipalities$crecimiento_poblacional[i],length(agebs_indel))
+studyArea_CVG@data$pop_growth[agebs_indel]<-rep(clave_municipalities$crecimiento_poblacional[i]/100,length(agebs_indel))
 }

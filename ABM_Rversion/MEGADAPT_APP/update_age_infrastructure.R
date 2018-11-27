@@ -9,5 +9,5 @@ studyArea_CVG@data$capac_w<-studyArea_CVG@data$capac_w *(1- decay_infra)
 #FIDEL
 #The proportion of people without infrastructure increases proportionally to 
 #the growthof the population in each delegation
-studyArea_CVG@data$FALTA_IN=studyArea_CVG@data$FALTA_IN*(1+studyArea_CVG@data$pop_growth)
-studyArea_CVG@data$falta_dren=studyArea_CVG@data$falta_dren*(1+studyArea_CVG@data$pop_growth)
+studyArea_CVG@data$FALTA_IN=studyArea_CVG@data$FALTA_IN * (1+(1-studyArea_CVG@data$FALTA_IN)*studyArea_CVG@data$pop_growth)
+studyArea_CVG@data$falta_dren=studyArea_CVG@data$falta_dren* (1+(1-studyArea_CVG@data$falta_dren)*studyArea_CVG@data$pop_growth)
