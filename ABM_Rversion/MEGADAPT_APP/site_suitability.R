@@ -20,8 +20,8 @@ vf_A_Ab<-sapply(studyArea_CVG@data$antiguedad_Ab,FUN = campana_invertida,center=
 vf_Cap_D<-sapply(studyArea_CVG@data$capac_d,FUN = capasity_drainage_vf)
 
 #d)falta
-vf_falta_Ab<-sapply(studyArea_CVG@data$FALTA_IN,FUN=lack_of_infrastructure_vf)
-vf_falta_D<-sapply(studyArea_CVG@data$falta_dren,FUN=lack_of_infrastructure_vf)
+vf_falta_Ab<-sapply(100*studyArea_CVG@data$FALTA_IN,FUN=lack_of_infrastructure_vf)
+vf_falta_D<-sapply(100*studyArea_CVG@data$falta_dren,FUN=lack_of_infrastructure_vf)
 
 #c)potable water system capacity
 vf_Cap_Ab<-rep(1,length(studyArea_CVG@data$falta_dren))
@@ -30,7 +30,7 @@ vf_Cap_Ab<-rep(1,length(studyArea_CVG@data$falta_dren))
 gamma_v= as.numeric(as.character(fv_falla_escasez$V2[4]))
 xmax_v= as.numeric(as.character(fv_falla_escasez$V2[3]))
 xmin_v =as.numeric(as.character(fv_falla_escasez$V2[2]))
-vf_falla<-sapply(studyArea_CVG@data$falla_in,FUN=convexa_creciente, gama=gamma_v, xmax=xmax_v, xmin=xmin_v)
+vf_falla<- 1-sapply(studyArea_CVG@data$falla_in,FUN=convexa_creciente, gama=gamma_v, xmax=xmax_v, xmin=xmin_v)
 
 #falla D
 vf_fall_D<-rep(1,length(studyArea_CVG@data$falla_in))
@@ -72,7 +72,7 @@ vf_hid_pressure<-sapply(studyArea_CVG@data$pres_hid,FUN=logistic_vf,k=k_v,center
 #monto ##!!!#no information about this variable
 vf_monto<-rep(1,length(studyArea_CVG@data$AGEB_ID))
 #gasto hidraulico
-vf_GH<-sapply(studyArea_CVG@data$gasto,FUN=Value_Function_cut_offs,xmax=max(studyArea_CVG@data$gasto))
+vf_GH<-sapply(studyArea_CVG@data$gasto,FUN=Value_Function_cut_offs,xmax=max(studyArea_CVG@data$gasto),xcuts=c(0.5, 0.75, 0.875, 0.937),ycuts=c(1, 0.8, 0.6, 0.4, 0.2))
 #abastecimiento
 vf_Abaste<-sapply(studyArea_CVG@data$abastecimi,FUN=Value_Function_cut_offs,xmax=max(studyArea_CVG@data$abastecimi,na.rm=T))
 #peticiones de delegaciones
@@ -87,7 +87,7 @@ vf_pres_medios<- sapply(studyArea_CVG@data$PRES_MED,FUN=pression_medios_vf)
 #2)update value functions residents
 
 #Crecimiento urbano
-vf_UG<-sapply(studyArea_CVG@data$crec_urb,FUN=Value_Function_cut_offs,xcuts=c(0.5, 0.75, 0.875, 0.937),xmax=max(studyArea_CVG@data$crec_urb,na.rm=T))
+vf_UG<-sapply(studyArea_CVG@data$crec_urb,FUN=Value_Function_cut_offs,xcuts=c(0.5, 0.75, 0.875, 0.937),ycuts=c(1, 0.8, 0.6, 0.4, 0.2),xmax=max(studyArea_CVG@data$crec_urb,na.rm=T))
 
 #Water quality 
 vf_WQ<-sapply(studyArea_CVG@data$cal_agua,FUN=water_quality_residents_vf)

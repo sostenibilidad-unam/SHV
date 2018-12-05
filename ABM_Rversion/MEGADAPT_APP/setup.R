@@ -53,7 +53,7 @@ source("save_results.R")
 
 
 #adaptation: set parameters of sensitivity such that
-#10 years will take to a enighborhood to be  half sensitivity to hazard
+#10 years will take to a neighborhood to be  half sensitivity to hazards
 hsc_Ab<-10
 hsc_D<-10
 

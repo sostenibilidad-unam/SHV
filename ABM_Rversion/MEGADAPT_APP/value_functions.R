@@ -15,7 +15,7 @@ logistic_invertida<-function(x,k,center,xmax,xmin){
 gaussian<-function(x,a,center,xmax,xmin){
   x<-  max(c(x,xmin))
   x<-  min(c(x,xmax))
-  return(exp(0.0 - ((( (100 * ( x - xmin ) / ( xmax - xmin ) ) - (100 * ( x - xmin ) / ( xmax - xmin ) )) / (  a  ) ) * 2)))
+  return(exp(0.0 - ((( (100 * ( x - xmin ) / ( xmax - xmin ) ) - (100 * ( center - xmin ) / ( xmax - xmin ) )) / (  a  ) ) ^ 2)))
 }
 #######################################################################################################
 campana_invertida<-function(x,a,center,xmax,xmin){
@@ -57,7 +57,7 @@ convexa_creciente<-function(x, gama, xmax, xmin){
 drainages_clogged_vf<-function(x,p1 =2.6514,p2 =5000) {#;value function criterium: garbage or "drainages-clogged"
    y_vf<- (exp (- ((0 - p1) / p2) ^ 2))
    yy_vf <- (exp (- ((2.6514 - p1) / p2) ^ 2))
-  svf<- 1 - ((exp (- ((x - p1) / p2) ^ 2))  - y_vf) / (yy_vf - y_vf)
+  svf<- 1 - (((exp (- ((x - p1) / p2) ^ 2))  - y_vf) / (yy_vf - y_vf))
   if (svf>0){
     return(svf)
   }
@@ -84,7 +84,7 @@ scarcity_residents_empirical_vf<-function(x,tau=12){   #
 lack_of_infrastructure_vf<-function(x,p1 = 0.3457691){  #p1 scale parameter
   y_vf= exp(0 * p1)
   yy_vf= exp(100 * p1)
-  svf= ((exp(x * p1) - y_vf) / (yy_vf - y_vf))
+  svf=  1- ((exp(x * p1) - y_vf) / (yy_vf - y_vf))
   return(ifelse(test = svf>0,yes = svf,0))
 }
 
@@ -138,10 +138,10 @@ scarcity_sacmex_vf<-function(x,p1=0.020455577,xmax=336,xmin=0){   #p1=0.11552623
   return(ifelse(test = svf>0,yes = svf,0))
 }
 #######################################################################################################
-social_pressure_vf<-function(x,p1=20,p2=54){
+social_pressure_vf<-function(x,p1=20,p2=46){
   y_vf =(exp(- ((0 - p2) / p1) ^ 2))
   yy_vf=(exp(- ((54 - p2) / p1) ^ 2))
-  return(((exp (- ((x - p2) / p1) ^ 2))  - y_vf) / (yy_vf - y_vf))
+  return(1-((exp (- ((x - p2) / p1) ^ 2))  - y_vf) / (yy_vf - y_vf))
 }
 #######################################################################################################
 flooding_vf<-function(x){
@@ -162,10 +162,10 @@ rainfall_vf<-function(x,p1=742.8737773,xmax=1300,xmin=0){
    return(svf)
 }
 #######################################################################################################
-run_off_vf<-function(x,xmax=30000,xmin=20000){
+run_off_vf<-function(x,xmax=50,xmin=100){
    y_vf =exp(-(((0 - xmax) / xmin) ^ 2))
    yy_vf= exp(-(( (xmax - xmax) / xmin) ^ 2))
-  svf= 1 -(exp(-(((x - xmax) / xmin) ^ 2)) - y_vf) / (yy_vf + y_vf)
+  svf= 1 -(exp(-(((x - xmax) / xmin) ^ 2)) - y_vf) / (yy_vf - y_vf)
   if (x > xmax)  svf= 0 
   return(svf)  
 }
