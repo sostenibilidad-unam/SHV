@@ -5,7 +5,7 @@ require(maptools)
 require(ecr)
 require(pscl)
 #require(ggplot2)
-require(plyr)
+require(plyr) #Tools for Splitting, Applying and Combining Data
 #require(ggmap)
 #require(ahp) #Analitical hiererquical process package
 #require(ahpsurvey)
@@ -50,14 +50,12 @@ source("read_mental_models.R")
 source("site_suitability.R")
 #read function to save time-series
 source("save_results.R")
-
-
-#adaptation: set parameters of sensitivity such that
+#Adaptation: set parameters of sensitivity such that
 #10 years will take to a neighborhood to be  half sensitivity to hazards
 hsc_Ab<-10
 hsc_D<-10
 
-#create series of times in weeks from 2019 until the years of simulations
+#Create series of times in weeks from 2019 until the years of simulations
 ini_date=seq.Date(from =as.Date("2019/1/1"), to =as.Date(sprintf("20%s/1/1",(19+time_simulation))),by="week") 
 year_ts=format(as.Date(ini_date), "%Y")
 month_ts=format(as.Date(ini_date), "%m")

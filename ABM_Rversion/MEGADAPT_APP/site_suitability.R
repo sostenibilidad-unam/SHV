@@ -96,7 +96,7 @@ vf_WQ<-sapply(studyArea_CVG@data$cal_agua,FUN=water_quality_residents_vf)
 vf_H<-sapply(studyArea_CVG@data$ENF_14,FUN=health_vf)
 
 #water scarcity residents
-vf_scarcity_residents<-sapply(studyArea_CVG@data$Nowater_and_protest,FUN=scarcity_residents_empirical_vf,tau=12) #days_wn_water need to be define
+vf_scarcity_residents<-sapply(studyArea_CVG@data$NOWater_twoweeks,FUN=scarcity_residents_empirical_vf,tau=12) #days_wn_water need to be define
 
 #ponding residents
 vf_pond<-sapply(studyArea_CVG@data$encharca,FUN=ponding_vf)
@@ -193,7 +193,8 @@ distance_ideal_A1_Ab<-sweep(as.matrix(all_C_ab),MARGIN=2,as.vector(Criteria_sacm
 distance_ideal_A2_Ab<-sweep(as.matrix(all_C_ab),MARGIN=2,as.vector(Criteria_sacmcx_Ab)/sum(as.vector(Criteria_sacmcx_Ab)),FUN=ideal_distance,z=alternative_weights_S[5]/sum(alternative_weights_S[c(4,5)]))# "Nueva_infraestructura"
 
 #Residents
-distance_ideal_protest<-sweep(as.matrix(C_R_protest[,-c(6,8)]),MARGIN=2,as.vector(Criteria_residents_Iz[-c(6,8)])/sum(as.vector(Criteria_residents_Iz[-c(6,8)])),FUN=ideal_distance,z=alternative_weights_Iz[5]/sum(alternative_weights_Iz[c(4,5)]))# "Protests"
+#distance_ideal_protest<-sweep(as.matrix(C_R_protest[,-c(6,8)]),MARGIN=2,as.vector(Criteria_residents_Iz[-c(6,8)])/sum(as.vector(Criteria_residents_Iz[-c(6,8)])),FUN=ideal_distance,z=alternative_weights_Iz[5]/sum(alternative_weights_Iz[c(4,5)]))# "Protests"
+distance_ideal_protest= 1 - vf_scarcity_residents
 distance_ideal_House_mod_lluvia<-sweep(as.matrix(C_R_D[,-c(3,4,7)]),MARGIN=2,as.vector(Criteria_residents_Iz[-c(3,4,7)])/sum(as.vector(Criteria_residents_Iz[-c(3,4,7)])),FUN=ideal_distance,z=alternative_weights_Iz[4]/sum(alternative_weights_Iz[c(4,5)]))# "House modification"
 distance_ideal_House_mod_agua<-sweep(as.matrix(C_R_HM[,-c(6,8)]),MARGIN=2,as.vector(Criteria_residents_Iz[-c(6,8)])/sum(as.vector(Criteria_residents_Iz[-c(6,8)])),FUN=ideal_distance,z=alternative_weights_Iz[4]/sum(alternative_weights_Iz[c(4,5)]))# "House modification"
 ################################################################################################################
