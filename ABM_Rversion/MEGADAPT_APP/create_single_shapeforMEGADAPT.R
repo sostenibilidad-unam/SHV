@@ -27,5 +27,21 @@ source("population_growth_layer.R")
 studyArea_CVG@data=join(studyArea_CVG@data,subset(studyArea_CVG_C@data,select=c("AGEB_ID","ingreso","pres_hid","desv_agua","desp_agua","cal_agua","crec_urb","abastecimi","gasto","pet_usr_d")),by="AGEB_ID")
 studyArea_CVG@data=join(studyArea_CVG@data,subset(studyArea_CVG_B@data,select=c("AGEB_ID","PR_2008","ENF_14","PRES_MED")),by="AGEB_ID")
 
-#create/write new shape file
+
+#Read regions for flooding model
+  #"agebs_cuencas_cdmx_v2"
+regiones <- foreign::read.dbf("C:/Users/abaezaca/Dropbox (Personal)/modelo_ench_inund/arbol de regresion/agebs_cuencas_cdmx_v2.dbf") %>% 
+  dplyr::select(AGEB_ID, region)
+#Read data for ponding model
+data_ponding<-  read.csv("C:/Users/abaezaca/Dropbox (Personal)/modelo_ench_inund/arbol de regresion/bd_ench_inunda_aj.csv")
+studyArea_CVG@data=join(studyArea_CVG@data,subset(data_ponding,anio==17),by="cvgeo")
+studyArea_CVG@data=join(studyArea_CVG@data,regiones,by="AGEB_ID")
+
+#Create/write new shape file
+#Read the object of the model
+  #readRDS("object")
+
 writeSpatialShape(x = studyArea_CVG,fn = paste(path_td,'Layer_MEGADAPT_Oct2018',sep=""))
+
+
+
