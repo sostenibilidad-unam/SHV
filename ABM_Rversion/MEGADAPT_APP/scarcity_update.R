@@ -12,7 +12,6 @@ water_yes[which(water_yes==0)]<-rbinom(n=length(prob_water[which(water_yes==0),1
 
 # Here the accumulation of two weeks without water (are accumualted) 
 studyArea_CVG@data$NOWater_twoweeks <-studyArea_CVG@data$NOWater_week_pois+water_yes
-hist(studyArea_CVG@data$NOWater_twoweeks)
 #update value of days with not water in a week
 studyArea_CVG@data$NOWater_week_pois<-water_yes
 #update value of days with not water in a month

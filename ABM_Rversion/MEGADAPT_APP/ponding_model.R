@@ -2,24 +2,24 @@
 #studyArea_CVG@data$estado<-as.factor(substring(studyArea_CVG@data$cvgeo,1,2))
 #IDD<-studyArea_CVG@data$AGEB_ID[which(studyArea_CVG@data$estado=='09')]
 
-studyArea_CVG@data$AveR<-studyArea_CVG@data$PR_2014
-studyArea_CVG@data$BASURA<-studyArea_CVG@data$BASURA/1000
-studyArea_CVG@data$encharca<-round(studyArea_CVG@data$encharca)
-studyArea_CVG@data$escurri<-studyArea_CVG@data$escurri/1000
-fit_zinbinom <- glmmadmb(encharca~antiguedad_D+subsidenci+PR_2014+escurri+BASURA,data =studyArea_CVG@data,zeroInflation=TRUE, family='nbinom1')
-
+#studyArea_CVG@data$AveR<-studyArea_CVG@data$PR_2014
+#studyArea_CVG@data$BASURA<-studyArea_CVG@data$BASURA/1000
+#studyArea_CVG@data$encharca<-round(studyArea_CVG@data$encharca)
+#studyArea_CVG@data$escurri<-studyArea_CVG@data$escurri/1000
+#fit_zinbinom <- glmmadmb(encharca~antiguedad_D+subsidenci+PR_2014+escurri+BASURA,data =studyArea_CVG@data,zeroInflation=TRUE, family='nbinom1')
+###Sesmo model commented#####
 ##################################################################################
-#load regresion tree models developed by A. Medina UNAM
+#load regresion tree models developed by the LANCIS team at UNAM
 #https://github.com/sostenibilidad-unam/SHV/issues/83
-load(file = "c:/Users/abaezaca/Dropbox (Personal)/modelo_ench_inund/arbol de regresion/Modelos_region/encharcamientos/mod_en_reg1.rda")
-load(file = "c:/Users/abaezaca/Dropbox (Personal)/modelo_ench_inund/arbol de regresion/Modelos_region/encharcamientos/mod_en_reg2.rda")
-load(file = "c:/Users/abaezaca/Dropbox (Personal)/modelo_ench_inund/arbol de regresion/Modelos_region/encharcamientos/mod_en_reg3.rda")
-load(file = "c:/Users/abaezaca/Dropbox (Personal)/modelo_ench_inund/arbol de regresion/Modelos_region/encharcamientos/mod_en_reg4.rda")
-load(file = "c:/Users/abaezaca/Dropbox (Personal)/modelo_ench_inund/arbol de regresion/Modelos_region/encharcamientos/mod_en_reg5.rda")
-load(file = "c:/Users/abaezaca/Dropbox (Personal)/modelo_ench_inund/arbol de regresion/Modelos_region/encharcamientos/mod_en_reg6.rda")
-load(file = "c:/Users/abaezaca/Dropbox (Personal)/modelo_ench_inund/arbol de regresion/Modelos_region/encharcamientos/mod_en_reg7.rda")
-load(file = "c:/Users/abaezaca/Dropbox (Personal)/modelo_ench_inund/arbol de regresion/Modelos_region/encharcamientos/mod_en_reg8.rda")
-load(file = "c:/Users/abaezaca/Dropbox (Personal)/modelo_ench_inund/arbol de regresion/Modelos_region/encharcamientos/mod_en_reg9.rda")
+load(file = paste(path_to_model,"/encharcamientos/mod_en_reg1.rda",sep=""))
+load(file = paste(path_to_model,"/encharcamientos/mod_en_reg2.rda",sep=""))
+load(file = paste(path_to_model,"/encharcamientos/mod_en_reg3.rda",sep=""))
+load(file = paste(path_to_model,"/encharcamientos/mod_en_reg4.rda",sep=""))
+load(file = paste(path_to_model,"/encharcamientos/mod_en_reg5.rda",sep=""))
+load(file = paste(path_to_model,"/encharcamientos/mod_en_reg6.rda",sep=""))
+load(file = paste(path_to_model,"/encharcamientos/mod_en_reg7.rda",sep=""))
+load(file = paste(path_to_model,"/encharcamientos/mod_en_reg8.rda",sep=""))
+load(file = paste(path_to_model,"/encharcamientos/mod_en_reg9.rda",sep=""))
 
 
 Modelos<-list() #list to save the models

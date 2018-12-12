@@ -4,6 +4,7 @@ require(glmmADMB)
 require(maptools)
 require(ecr)
 require(pscl)
+require(gbm)
 #require(ggplot2)
 require(plyr) #Tools for Splitting, Applying and Combining Data
 #require(ggmap)
@@ -15,6 +16,7 @@ require(gramEvol) #genetic algorithm optimization
 
 #path to data
 path_td<-"../../data/"
+path_to_model<-"../../Statistical_Models/Modelos_region"
 #path_td<-"../data/"
 #path_td<-"home/abaeza/SHV/data/" #path patun
 ##read shape files
@@ -25,9 +27,7 @@ studyArea_CVG<-readShapeSpatial(paste(path_td,'Layer_MEGADAPT_Oct2018.shp',sep="
 studyArea_CVG <- studyArea_CVG[studyArea_CVG$estado== "09",]
 source('new_variables_setup.R')
 ######################################################################################################################
-##read data bases
-load(paste(path_td,"data_fugas",sep=""))#data scarcity model 
-studyArea_CVG@data<-join(studyArea_CVG@data,data.frame(dat_fugas),by="AGEB_ID") #add fugas to the database
+##read data contigency matrix
 contigency_matrix<-as.matrix(data.frame(read.csv(paste(path_td,"W_matrix_low.csv",sep=""),header = T)))
 ######################################################################################################################
 #Initiate biophsiical models

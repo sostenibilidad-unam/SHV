@@ -37,6 +37,11 @@ data_ponding<-  read.csv("C:/Users/abaezaca/Dropbox (Personal)/modelo_ench_inund
 studyArea_CVG@data=join(studyArea_CVG@data,subset(data_ponding,anio==17),by="cvgeo")
 studyArea_CVG@data=join(studyArea_CVG@data,regiones,by="AGEB_ID")
 
+#read layers scarcity model 
+load(paste(path_td,"data_fugas",sep=""))#data scarcity model 
+studyArea_CVG@data<-join(studyArea_CVG@data,data.frame(dat_fugas),by="AGEB_ID") #add fugas to the database
+
+
 #Create/write new shape file
 #Read the object of the model
   #readRDS("object")

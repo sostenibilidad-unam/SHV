@@ -2,8 +2,10 @@
 #simulate a yearly cycle of the model by week
 
 
-for(i in 1: length(ini_date)){
-  if (year_change[i]==1){
+for (i in 1:length(ini_date)){
+    source("scarcity_update.R")
+  
+    if (year_change[i]==1){
      source("update_ponding.R")
      #run Health model
   
@@ -19,9 +21,9 @@ for(i in 1: length(ini_date)){
      #Update age and condition of infrastructure
      source("update_age_infrastructure.R")
     #Save results
-      TS_res<-save_TS(TR = i,TS_res,year=year_ts[i],month=month_ts[i])
-  }
-  source("scarcity_update.R")
+      
+      TS_res<-save_TS(TR = i,result_prev_time=TS_res,year=year_ts[i],month=month_ts[i])
+    }
   #update number of protests
   source("protests.R")
 }
