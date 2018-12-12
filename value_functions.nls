@@ -510,7 +510,7 @@ end
 to-report gaussian [x a center xmax xmin]
   set x  min list xmax x
   set x  max list xmin x
-  report exp(0.0 - ((( (100 * ( x - xmin ) / ( xmax - xmin ) ) - (100 * ( x - xmin ) / ( xmax - xmin ) )) / (  a  ) ) * 2))
+  report exp(0.0 - ((( (100 * ( x - xmin ) / ( xmax - xmin ) ) - (100 * ( center - xmin ) / ( xmax - xmin ) )) / (  a  ) ) * 2))
 end
 ;#########################################################
 to-report campana_invertida [x a center xmax xmin]

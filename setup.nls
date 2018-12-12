@@ -432,8 +432,9 @@ to SETUP
 ;read data and statistical R objects to run biophisical models connecting R and Netlogo
 ;##############################################################################
 ;##############################################################################  
- r:eval "setwd('/srv/home/abaezacastro/SHV/data')"
- r:eval ".libPaths(\"/srv/home/abaezacastro/R/x86_64-pc-linux-gnu-library/3.5\")"
+; r:eval "setwd('/srv/home/abaezacastro/SHV/data')"
+r:eval "setwd('c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/data')"
+;  r:eval ".libPaths(\"/srv/home/abaezacastro/R/x86_64-pc-linux-gnu-library/3.5\")"
 
  ;data scarcity model 
  r:eval "load('data_fugas')"
@@ -882,13 +883,13 @@ end
 ;####################################################################################################### 
 ;####################################################################################################### 
 to read_value_functions
-  set fv_antiguedad_drenaje csv:from-file  "funciones_valor/csvs/fv_antiguedad_drenaje.csv"
-  set  fv_antiguedad_escasez csv:from-file  "funciones_valor/csvs/fv_antiguedad_escasez.csv"
-  set fv_calidad_agua_sodio_escasez csv:from-file  "funciones_valor/csvs/fv_calidad_agua_sodio_escasez.csv"
-  set fv_falla_escasez csv:from-file  "funciones_valor/csvs/fv_falla_escasez.csv"
-  set fv_horas_servicio_escasez csv:from-file  "funciones_valor/csvs/fv_horas_servicio_escasez.csv"
-  set fv_presion_hidraulica_escasez csv:from-file  "funciones_valor/csvs/fv_presion_hidraulica_escasez.csv"
-  set fv_subsidencia csv:from-file  "funciones_valor/csvs/fv_subsidencia.csv"
+  set fv_antiguedad_drenaje csv:from-file  "data/funciones_valor/csvs/fv_antiguedad_drenaje.csv"
+  set  fv_antiguedad_escasez csv:from-file  "data/funciones_valor/csvs/fv_antiguedad_escasez.csv"
+  set fv_calidad_agua_sodio_escasez csv:from-file  "data/funciones_valor/csvs/fv_calidad_agua_sodio_escasez.csv"
+  set fv_falla_escasez csv:from-file  "data/funciones_valor/csvs/fv_falla_escasez.csv"
+  set fv_horas_servicio_escasez csv:from-file  "data/funciones_valor/csvs/fv_horas_servicio_escasez.csv"
+  set fv_presion_hidraulica_escasez csv:from-file  "data/funciones_valor/csvs/fv_presion_hidraulica_escasez.csv"
+  set fv_subsidencia csv:from-file  "data/funciones_valor/csvs/fv_subsidencia.csv"
 end
 ;####################################################################################################### 
 ;####################################################################################################### 
