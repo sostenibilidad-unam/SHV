@@ -17,7 +17,7 @@ vf_A_Ab<-sapply(studyArea_CVG@data$antiguedad_Ab,FUN = campana_invertida,center=
 
 
 #c)Drainage capacity
-vf_Cap_D<-sapply(studyArea_CVG@data$q100,FUN = capasity_drainage_vf,sat=1,x_max=200,x_min=0)
+vf_Cap_D<-sapply(studyArea_CVG@data$q100,FUN = capacity_drainage_vf,sat=1,x_max=200,x_min=0)
 
 #d)falta
 vf_falta_Ab<-sapply(100*studyArea_CVG@data$V_SAGUA,FUN=lack_of_infrastructure_vf)

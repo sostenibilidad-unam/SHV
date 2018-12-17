@@ -108,7 +108,7 @@ scarcity_residents_empirical_vf<-function(x,tau){ #tau=12 for protesting #tau=6 
   return(ifelse(test = x>tau,yes = 0,no = 1))
 }
 #######################################################################################################
-capasity_drainage_vf<-function(x,sat,x_max,x_min){ #,p1=0.174916383
+capacity_drainage_vf<-function(x,sat,x_max,x_min){ #,p1=0.174916383
   if (is.na(x) == FALSE){
     p1=(-log10(log10(1.1+0.88*(10-sat))))/((log10(x_max))^2)
 #        x=x/10000000
