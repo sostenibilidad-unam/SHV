@@ -16,3 +16,6 @@ studyArea_CVG@data$encharca[which(studyArea_CVG@data$region==hh)]<-predict(Model
 print(studyArea_CVG@data$encharca[1708])   
 #for ageb 1708 with AGEB_ID =6420 the value of ponding is 10 time larger than the average
 #check
+
+
+subset(studyArea_CVG@data,select=c("f_prec_v", "f_esc", "n_tramos", "q100", "bombeo_tot", "rejillas"))[1708,]

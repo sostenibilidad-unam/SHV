@@ -33,8 +33,9 @@ studyArea_CVG@data=join(studyArea_CVG@data,subset(studyArea_CVG_B@data,select=c(
 regiones <- foreign::read.dbf("C:/Users/abaezaca/Dropbox (Personal)/modelo_ench_inund/arbol de regresion/agebs_cuencas_cdmx_v2.dbf") %>% 
   dplyr::select(AGEB_ID, region)
 #Read data for ponding model
-data_ponding<-  read.csv("C:/Users/abaezaca/Dropbox (Personal)/modelo_ench_inund/arbol de regresion/bd_ench_inunda_aj.csv")
-studyArea_CVG@data=join(studyArea_CVG@data,subset(data_ponding,anio==17),by="cvgeo")
+data_ponding<-  read.csv("C:/Users/abaezaca/Dropbox (Personal)/modelo_ench_inund/arbol de regresion/bd_ench_inunda_2007_2013.csv")
+data_ponding$AGEB_ID=data_ponding$ageb_id
+studyArea_CVG@data=join(studyArea_CVG@data,subset(data_ponding,anio==13),by="AGEB_ID")
 studyArea_CVG@data=join(studyArea_CVG@data,regiones,by="AGEB_ID")
 
 #read layers scarcity model 

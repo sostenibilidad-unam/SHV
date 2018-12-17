@@ -1,10 +1,10 @@
 #plot value functions again natural scale attributes
-
+source("MEGADAPT_APP/initial_parameter_values.R")
 source("setup.R")
 source("site_suitability.R")
 par(mfrow=c(3,3))
 plot(studyArea_CVG@data$antiguedad_Ab,vf_A_Ab,main="Age infrastructure")
-plot(studyArea_CVG@data$capac_d, vf_Cap_D,main="Drainage capacity",xlim=c(0,2e08))
+plot(studyArea_CVG@data$q100, vf_Cap_D,main="Drainage capacity",xlim=c(0,300))
 plot(studyArea_CVG@data$FALTA_IN,vf_falta_Ab,main="falta")
 plot(studyArea_CVG@data$falta_dren,vf_falta_D,main="falta D")
 plot(studyArea_CVG@data$falla_in,vf_falla,main="falla")

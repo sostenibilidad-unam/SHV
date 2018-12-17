@@ -79,7 +79,7 @@ source("save_results.R")
 #m <- leaflet(data=studyArea_CVG) %>%
 #  addTiles() %>%  # Add default OpenStreetMap map tiles
 #  addMarkers(lng=-99.1398, lat=19.4249,popup="Mexico City") %>%
-#   addPolygons(fillColor = topo.colors(10, alpha = NULL), stroke = FALSE) %>%
+#   addPolygons(fillColor = topo.colors(10, alpha = NULL), stroke = FALSE) %>%ne
 #  setView(lng=mean(xl), lat=mean(yl), zoom = 10)
 #m  # Print the map
 

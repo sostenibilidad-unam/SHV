@@ -17,14 +17,14 @@ vf_A_Ab<-sapply(studyArea_CVG@data$antiguedad_Ab,FUN = campana_invertida,center=
 
 
 #c)Drainage capacity
-vf_Cap_D<-sapply(studyArea_CVG@data$capac_d,FUN = capasity_drainage_vf)
+vf_Cap_D<-sapply(studyArea_CVG@data$q100,FUN = capasity_drainage_vf,sat=1,x_max=200,x_min=0)
 
 #d)falta
-vf_falta_Ab<-sapply(100*studyArea_CVG@data$FALTA_IN,FUN=lack_of_infrastructure_vf)
+vf_falta_Ab<-sapply(100*studyArea_CVG@data$V_SAGUA,FUN=lack_of_infrastructure_vf)
 vf_falta_D<-sapply(100*studyArea_CVG@data$falta_dren,FUN=lack_of_infrastructure_vf)
 
 #c)potable water system capacity
-vf_Cap_Ab<-rep(1,length(studyArea_CVG@data$falta_dren))
+vf_Cap_Ab<-rep(1,length(studyArea_CVG@data$V_SAGUA))
 
 #d) falla Ab
 gamma_v= as.numeric(as.character(fv_falla_escasez$V2[4]))
