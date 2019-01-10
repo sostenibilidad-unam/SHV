@@ -38,6 +38,10 @@ source("water_scarcity_model.R")
  #health
 
 ######################################################################################################################
+#read scenarios of climate change
+#read scenarios of rainfall and run-offs for emmisions 8.5.
+S_85=read.csv(paste(path_td,"df_prec_esc_85_85.csv",sep=""))
+######################################################################################################################
 ##define decision-makers agents
 #read file with value functions
 source("value_functions.R")
