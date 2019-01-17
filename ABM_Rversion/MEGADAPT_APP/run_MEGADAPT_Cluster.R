@@ -7,8 +7,8 @@ decay_infra=as.numeric(args[3])
 time_simulation=as.numeric(args[4])
 Budget=as.numeric(args[5])
 #climate scenario
-path_to_source<-"c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/ABM_Rversion/MEGADAPT_APP/"
-#path_to_source<-"../Patung/SHV/ABM_Rversion/MEGADAPT_APP/"
+#path_to_source<-"c:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/ABM_Rversion/MEGADAPT_APP/"
+path_to_source<-"."
 setwd(path_to_source)
 #run setup.R and cycle.R 
     source("setup.R")
