@@ -107,7 +107,7 @@ return(UWM_modified)
 }
 
 ######check for block 24 sacmex matrix######
-UWM_initial=read.csv(paste(path_td,'supermatrices/SACMEX_Drenaje modificada febrero 2017.unweighted.csv',sep=""),skip = 1,header = T)
+UWM_initial=read.csv(paste(path_td,'supermatrices/SACMEX_unweighted_SESMO.csv',sep=""),skip = 1,header = T)
 #print matrix before the tranformation for block 24
 ####call function####
 SM(x='supermatrices/SACMEX_Drenaje modificada febrero 2017.unweighted.csv',Block=24,col_to_modify=1,rows_in_block=c(1,2),arg_par=c(0.7,0.3))
