@@ -27,3 +27,5 @@ value_function_images
 packrat/lib*/
 .ABM-Empirical-MexicoCity_V6.tmp.nlogo
 .Rprofile
+ABM_Rversion/.Rhistory
+data/.~lock.I072816_OTR.weighted.csv#
