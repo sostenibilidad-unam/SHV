@@ -36,7 +36,6 @@ get_matrix <- function(path_td){
 
 x = get_matrix("../../data/I072816_OTR.weighted.csv")
 xm = modify_block_row("../../data/I072816_OTR.weighted.csv", x, c(1,1),1,c(0.2,0.2,0.2,0.2,0.2))
-xm = modify_block_row("../../data/I072816_OTR.weighted.csv", xm, c(1,1),2,c(0.2,0.2,0.2,0.2,0.2))
 xm = modify_block_row("../../data/I072816_OTR.weighted.csv", xm, c(1,1),3,c(0.2,0.2,0.2,0.2,0.2))
 xm = modify_block_row("../../data/I072816_OTR.weighted.csv", xm, c(1,2),1,c(0.1,0.1,0.2,0.3,0.3))
 xm = modify_block_row("../../data/I072816_OTR.weighted.csv", xm, c(1,2),2,c(0.1,0.1,0.2,0.3,0.3))
