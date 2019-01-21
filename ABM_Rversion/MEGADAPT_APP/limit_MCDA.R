@@ -10,7 +10,7 @@ mpot = function (UW_matrix, p) {
   # calculates A^p (matrix multiplied p times with itself)
   # inputes: A - real-valued square matrix, p - natural number.  
   # output:  A^p
-  
+##add while look using an threshold  
   UW_matrix_B = UW_matrix
   if (p>1) 
     for (i in 2:p) 

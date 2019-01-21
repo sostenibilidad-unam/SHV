@@ -6,7 +6,7 @@ for (i in 1:length(ini_date)){
     source("scarcity_update.R")
   
     if (year_change[i]==1){
-     source("read_Climate_scenarios.R")
+     source("read_Climate_from_scenarios.R")
      source("update_ponding.R")
      #run Health model
   
@@ -29,5 +29,10 @@ for (i in 1:length(ini_date)){
   source("protests.R")
 }
 
+#save data frame output in binay representation 
+#the function includes the value of the parameters to idenitfy each simulation
+##and the path to the output folder
+
+saveRDS(object = TS_res,file = paste(path_to_output,sim_id_output,sep=""))
 
 
