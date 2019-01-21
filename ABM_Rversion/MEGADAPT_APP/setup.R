@@ -7,11 +7,9 @@ require(pscl)
 require(gbm)
 #require(ggplot2)
 require(plyr) #Tools for Splitting, Applying and Combining Data
-#require(ggmap)
-#require(ahp) #Analitical hiererquical process package
+#require(ahp) #Analitical hierarquical process package (perhaps we will updated)
 #require(ahpsurvey)
 require(gramEvol) #genetic algorithm optimization
-#require(gridExtra)
 #require(DT)
 
 #path to data
@@ -40,6 +38,7 @@ source("water_scarcity_model.R")
 ######################################################################################################################
 #read scenarios of climate change
 #read scenarios of rainfall and run-offs for emmisions 8.5.
+
 S_85=read.csv(paste(path_td,"df_prec_esc_85_85.csv",sep=""))
 ######################################################################################################################
 ##define decision-makers agents

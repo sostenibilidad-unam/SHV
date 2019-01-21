@@ -210,7 +210,7 @@ return(SM)
 }
 
 #######################################################################################
-#this function calcualte a distance to ideal point using compromized programing metric
+#this function calculates the distance to ideal point using compromized programing metric
 #arguments:
   
 #y: a vector of attributes converted to 0-1 scale using value functions
