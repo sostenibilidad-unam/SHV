@@ -9,9 +9,12 @@ to GO
   ;profiler:start
 
 ;#############################################################################################################################################
-;calculate annual exposure to floods and GDI
-  if ticks = 20 and switch_MCDA = true [change_supermatrix]
-    flooding_InfPoiss
+;TRIGGER DOUBLE COUPLING
+  if Time_doubleCoupling > 0 [
+  if ticks = Time_doubleCoupling and switch_MCDA = true [change_supermatrix]
+  ]
+
+  flooding_InfPoiss
     ask agebs with [CV_estado = "09"][
       indicators
       condition_infra_change
@@ -33,7 +36,7 @@ to GO
 ; print profiler:report
 ; profiler:reset         ;pri; clear the data
   if ticks = 40 [stop]
-  if ticks = 1 [export-map_dvalues]
+ ; if ticks = 1 [export-map_dvalues]
 
 end
 ;#############################################################################################################################################
@@ -901,7 +904,7 @@ CHOOSER
 MCDA
 MCDA
 "Favors New Infrastructure" "Favors Mantainance"
-1
+0
 
 SWITCH
 292
@@ -913,6 +916,21 @@ switch_MCDA
 1
 1
 -1000
+
+SLIDER
+55
+535
+227
+568
+Time_doubleCoupling
+Time_doubleCoupling
+0
+30
+0.0
+10
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1283,7 +1301,9 @@ NetLogo 6.0.1
   <experiment name="SESMO_1" repetitions="1" runMetricsEveryStep="false">
     <setup>setup</setup>
     <go>go</go>
-    <final>export-map</final>
+    <final>export-map
+export-plot "Age_infra" (word MCDA (word "Infra" (word Time_doubleCoupling ".csv")))
+export-plot "ponding" (word MCDA (word "Exposure" (word Time_doubleCoupling ".csv")))</final>
     <timeLimit steps="40"/>
     <metric>mean [Antiguedad-infra_D] of agebs with [CV_estado = "09"]</metric>
     <metric>sum [flooding] of agebs with [CV_estado = "09"]</metric>
@@ -1323,7 +1343,9 @@ NetLogo 6.0.1
   <experiment name="SESMO_doublecouppling" repetitions="1" runMetricsEveryStep="false">
     <setup>setup</setup>
     <go>go</go>
-    <final>export-map</final>
+    <final>export-map
+export-plot "Age_infra" (word "Infra" (word Time_doubleCoupling ".csv"))
+export-plot "ponding" (word "Exposure" (word Time_doubleCoupling ".csv"))</final>
     <timeLimit steps="40"/>
     <metric>mean [Antiguedad-infra_D] of agebs with [CV_estado = "09"]</metric>
     <metric>sum [flooding] of agebs with [CV_estado = "09"]</metric>
@@ -1351,7 +1373,6 @@ NetLogo 6.0.1
     </enumeratedValueSet>
     <enumeratedValueSet variable="Eficiencia_Mantenimiento">
       <value value="0.2"/>
-      <value value="0.4"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="Eficiencia_NuevaInfra">
       <value value="0.1"/>
@@ -1360,8 +1381,13 @@ NetLogo 6.0.1
       <value value="&quot;Favors New Infrastructure&quot;"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="switch_MCDA">
-      <value value="false"/>
       <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Time_doubleCoupling">
+      <value value="0"/>
+      <value value="10"/>
+      <value value="20"/>
+      <value value="30"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>
