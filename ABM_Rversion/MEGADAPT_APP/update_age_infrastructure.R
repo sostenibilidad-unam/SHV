@@ -1,4 +1,4 @@
-#update infrastructure related atributes
+#update infrastructure-related atributes
 #update_age_infrastructure
 studyArea_CVG@data$antiguedad_D<-studyArea_CVG@data$antiguedad_D+1
 studyArea_CVG@data$antiguedad_Ab<-studyArea_CVG@data$antiguedad_Ab+1
