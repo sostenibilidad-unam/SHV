@@ -7,37 +7,30 @@ globals [
   ;;############################################################################################################################################
   SM   ;standarized measure from the value function
   dist ;the reported value of distance from the ideal point function
-       ;#####################################################################################
-       ;;Government decision-making process
-       ;#####################################################################################
-  
-  ;;RANGE of Biophisical variables
-  ;;Auxiliar variables that define range of value functions for all criteria
+   ;;Auxiliar variables that define range of value functions for all criteria
   fn
   Escurri_max
-  Antiguedad-infra_D_max       ;;the area with the oldest infrastructure
-  Antiguedad-infra_D_min
+  Age-infra_D_max       ;;the area with the oldest infrastructure
+  Age-infra_D_min
   peticion_usuarios_max         ;;maximal importance to the different users
   urban_growth_max              ;;max change of popualtion per ageb
   garbage_max                   ;;max level of garbage percived as intolerable
   Obstruccion_dren_max
-  hundimiento_max              ;;max level of subside
+  subsidence_max              ;;max level of subside
   infra_dranage_max             ;;max % of houses per ageb covered by the water dranage network
   flooding_max                  ;;max level of flooding (encharcamientos) recored over the last 10 years
   ponding_max
   precipitation_max             ;;max amount of precipitation recorded
   falla_d_max
   falta_d_max
-  max_water_in_mc                  ;;
   
   Capacidad_d_max
   poblacion_max
   Peticion_Delegacional_max
   Peticion_Delegacional_D_max
-  Presion_de_medios_max
-  monto_max
-  densidad_pop_max
-  Max_act
+  Presion_de_medios_max    
+  densidad_pop_max   ;Census block with the Max. population density 
+  Max_act   ;Census block with the Max. number of interventions by sacmex
   ;#####################################################################################
   ;;Residents decision metrics max ;variables for plotting distance
   d_mantenimiento_max                     ;;distance from ideal point for decision to repare infrastructure
@@ -53,7 +46,6 @@ globals [
   ;define geo coded GIS (maps) variables
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   Agebs_map                                                          ;includes economic index water-related infrastructure
-  Agebs_map_full
   Limites_delegacionales                                             ;limits of borrows
   Limites_cuenca                                                     ;limits of the watershed
   mascara                                                            ;mask of the area of the work showing in the plot
@@ -65,27 +57,17 @@ globals [
   counter
   days
   IDD
-  weeks
-  months
   years
   ;MCDA imput files
   MMWaterOperator_D
   MMWaterOperator_D_limit
   MMWaterOperator_weighted_D
-  ;;tables
-  contiguous_matrix
-  ;read_data_flooding
-  flood_rain           ;table with probabilities of flooding based on frequqncies and rainfall
-  flood_capacity_riskOldCity
-  flood_capacity_riskNewCity
-  ;read_data_waterscarcity
-  average_day_nowater_perweek
+
+  
 ]  ; /globals
 
 ;define-type-of-agents
 breed [Agebs Ageb]
-breed [Rain_stations station]
-;infrastructure
 breed [Alternatives_WaterOperator_D alternative_WaterOperator_D]
 
 ;#############################################################################################################################################
@@ -109,11 +91,11 @@ Agebs-own[
   AGEB_key                     ; to represent ageb using CVEGEO
   ID                           ;;ID from shape file
   Monto                        ;; resources designated to each ageb (delegations?)
-  Antiguedad-infra_D           ;;average Age of infra for water dranage
+  Age-infra_D           ;;average Age of infra for water dranage
   falla_d
   falta_d                      ;;Lack of connection to sewer system
  ; Mantenimiento?               ;; what is the probability this patch is under maitnance
-  hundimiento
+  subsidence
   presion_hidraulica           ;;or an index of low volume of water in the pipes (mean_days_withNo_water)
   Escurri             ;;water the enter the sewage system in each ageb
   poblacion                    ;; Population size ageb
@@ -152,7 +134,6 @@ Agebs-own[
   flooding_index
 ]
 
-rain_Stations-own[name p_rain shp_gamma rate_gamma Rain_t]
 
 
 Alternatives_WaterOperator_D-own[ID name_action criteria_names criteria_values criteria_max criteria_weights rescaled_criteria_values v_scale_S v_scale_F alternative_weights domain]  ;value obtained for the action when calcualting the limiting matrix in super decition
@@ -161,38 +142,17 @@ Alternatives_WaterOperator_D-own[ID name_action criteria_names criteria_values c
 
 to SETUP
   clear-all
-  ;profiler:start
-  ;r:eval "require(pscl)"
-;  r:eval "setwd('/srv/home/rgarcia/SHV/')"
-  ;r:eval ".libPaths(c(.libPaths(), 'packrat/lib/x86_64-debian-linux-gnu/3.3.1'))"
- ; r:eval ".libPaths(c(.libPaths(), 'packrat/lib-ext/x86_64-debian-linux-gnu/3.3.1'))"
- ; r:eval ".libPaths(c(.libPaths(), 'packrat/lib-R/x86_64-debian-linux-gnu/3.3.1'))"
   
   r:eval "require(glmmADMB)"
   r:eval "require(maptools)"
-  ;r:eval "studyArea_CVG<-readShapeSpatial('C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/data/agebs_abm')"
-  ;r:eval "studyArea_CVG<-readShapeSpatial('~/data/agebs_abm')"
+  r:eval "studyArea_CVG<-readShapeSpatial('C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/data/agebs_abm')"
   
-;<<<<<<< HEAD
-  r:eval "studyArea_CVG<-readShapeSpatial('C:/Users/abaezaca/Dropbox (Personal)/Layers/sesmo/agebs_abm')"
-;   r:eval "studyArea_CVG<-readShapeSpatial('~/data/agebs_abm')"
-;  r:eval "studyArea_CVG<-readShapeSpatial('C:/Users/abaezaca/Dropbox (Personal)/Layers/sesmo/agebs_abm')"
-;   r:eval "studyArea_CVG<-readShapeSpatial('data/agebs_abm')"
-
-;>>>>>>> 14f15bac144ad2268263afc30f0fd76728d962f7
-  ;
   r:eval "studyArea_CVG@data$estado<-as.factor(substring(studyArea_CVG@data$cvgeo,1,2))"
   set IDD r:get "studyArea_CVG@data$AGEB_ID"
-  ;r:eval "studyArea_CVG@data$municipio<-as.factor(substring(studyArea_CVG@data$cvgeo,3,5))"
-  ;r:eval "studyArea_CVG@data$AveR<-rowMeans(studyArea_CVG@data[,18:33])"
   r:eval "studyArea_CVG@data$BASURA<-studyArea_CVG@data$BASURA/1000"
   r:eval "studyArea_CVG@data$encharca<-round(studyArea_CVG@data$encharca)"
   r:eval "studyArea_CVG@data$escurri<-studyArea_CVG@data$escurri/1000"
- ; r:eval "glm_ponds_zip<-zeroinfl(encharca~1+antiguedad+subsidenci+PR_2014, data=studyArea_CVG@data)"
-  ;r:eval "glm_ponds_qp<-glm(formula = encharca~antiguedad+subsidenci+PR_2014,data =studyArea_CVG@data ,family = quasipoisson(link=log))"
   r:eval "fit_zinbinom <- glmmadmb(encharca~antiguedad+subsidenci+PR_2014+escurri+BASURA,data =studyArea_CVG@data,zeroInflation=TRUE, family='nbinom1')"
-  ;  r:eval "p <- predict(glm_ponds_zip, type = 'zero')"
- ; r:eval "lambda <- predict(glm_ponds_zip, type = 'count')"
  
 ;4)#################################################################################################################################
   load-GIS-data
@@ -203,46 +163,27 @@ to SETUP
   set-initial-values-globals
 
   set_maximum "09"
-  ;profiler:stop          ;; stop profiling
-  ;print profiler:report  ;; view the results
-  ;profiler:reset         ;; clear the data
+  show_limitesDelegaciones
+  
   reset-ticks
 end
 
 to load-GIS-data
   set Limites_delegacionales gis:load-dataset  "data/limites_deleg_DF_2013.shp"
-  set Agebs_map_full gis:load-dataset "data/ageb_abm_full.shp"
-  ;set Agebs_map gis:load-dataset "data/agebs_abm.shp"
-;    set Agebs_map gis:load-dataset "c:/Users/abaezaca/Dropbox (Personal)/Layers/sesmo/agebs_abm.shp"
    set Agebs_map gis:load-dataset "data/agebs_abm.shp"
-
-  ;set Agebs_map gis:load-dataset "/agebs_abm_B.shp"
   set mascara gis:load-dataset "data/Mask.shp"                  ;Mask of study area                                                                                                                         ;set Asentamientos_Irr gis:load-dataset "/GIS_layers/Asentamientos_Humanos_Irregulares_DF.shp"
-  ;define city or watersheed scale                                                                             
-  set limits_world (gis:envelope-of Agebs_map_full)
-  if escala = "ciudad"[
-    gis:set-world-envelope-ds gis:envelope-of mascara ;ageb13;mascara;Limites_delegacionales
-  
-  ]
-  
-  if escala = "cuenca"[
-    gis:set-world-envelope-ds gis:envelope-of Agebs_map_full ;mascara ;ageb13;mascara;Limites_delegacionales
-    ]
-
-  set city_image  bitmap:import "data/image_googleEarth_cuencaMexicoB.jpg";"data/DF_googleB.jpg"                                                   ; google earth image
-  bitmap:copy-to-pcolors City_image false
+  gis:set-world-envelope-ds gis:envelope-of mascara 
 
 end
   to define_neighborhoods
-  ;  define_neighborhoods_full ;;REFERS TO THE FULL AREA OF STUDY. THAT IS THE ENTIRE WATERSHED OF MEXICO CITY VALEY  (need to complete information for other areas)
   
   
-  foreach (gis:feature-list-of Agebs_map); "ID_ZONA" "0"
+  foreach (gis:feature-list-of Agebs_map);
     [ ? ->
       let centroid gis:location-of gis:centroid-of ?
       if not empty? centroid[
         create-agebs 1 [
-          set xcor item 0 centroid              ;define coodeantes of ageb at the center of the polygone
+          set xcor item 0 centroid              ;define coodenates of cencus blocks at the center of the polygone
           set ycor item 1 centroid
           set ID gis:property-value ? "AGEB_ID"
           set CVEGEO gis:property-value ? "cvgeo"
@@ -252,25 +193,23 @@ end
           set AGEB_key (substring CVEGEO 9 13)
           set color grey
           set shape "circle"
-          set size 0.5
+          set size 1
           set hidden? false
-          set Antiguedad-infra_D (gis:property-value ? "antiguedad")
+          set Age-infra_D (gis:property-value ? "antiguedad")
           set Capacidad_d ifelse-value(gis:property-value ? "capac_d" != nobody)[(gis:property-value ? "capac_d") / 10000000][0]
           set Falla_d 1
           set precipitation ifelse-value (gis:property-value ? "PR_2014" != nobody)[gis:property-value ? "PR_2014"][1]       
           set falta_d gis:property-value ? "falta_dren"
           set houses_with_dranage 1 - falta_d
-          set hundimiento gis:property-value ? "subsidenci"
+          set subsidence gis:property-value ? "subsidenci"
           set presion_de_medios gis:property-value ? "PRES_MED"
           set Escurri gis:property-value ? "escurri"
           set Peticion_Delegacional gis:property-value ? "pet_del_dr"
           set poblacion gis:property-value ? "POBTOT_10"
-          ;set Income-index ifelse-value(gis:property-value ? "ingreso" != nobody)[gis:property-value ?2 "ingreso"][random-float 1]
           set ponding ifelse-value(gis:property-value ? "encharca" != nobody)[gis:property-value ?  "encharca"][0]
-          
           set flooding ifelse-value(gis:property-value ? "inunda" != nobody)[gis:property-value ?  "inunda"][0]
           set garbage (gis:property-value ? "BASURA") / 10000
-          set peticion_usuarios (gis:property-value ? "POBTOT_10") ;index densidad de infra por cuanca * falta de conexiones por ageb.
+          set peticion_usuarios (gis:property-value ? "POBTOT_10") ;assumed proportional to popualtion
         ]
       ]
   ]
@@ -299,7 +238,7 @@ end
   let cc 2
   let cri 2
   
-  while [cri < 17][   ;tranfor the data from.csv to a matrix to manipulte using matrix extention
+  while [cri < 17][   
     set cc 2
     while [cc < 17][
       set VWaterOperator_limit_D lput (item cc item cri MMWaterOperator_D_limit) VWaterOperator_limit_D
@@ -321,33 +260,6 @@ end
       set criteria_max (list 0 0 0 0 0 0 0 0 0 0 0 0 0)
       set rescaled_criteria_values (list 0 0 0 0 0 0 0 0 0 0 0 0 0)
       
-;      let w_sum sum (list matrix:get MMWaterOperator_limit_D 2 2
-;        matrix:get MMWaterOperator_limit_D 3 2
-;        matrix:get MMWaterOperator_limit_D 4 2
-;        matrix:get MMWaterOperator_limit_D 5 2
-;        matrix:get MMWaterOperator_limit_D 6 2
-;        matrix:get MMWaterOperator_limit_D 7 2
-;        matrix:get MMWaterOperator_limit_D 8 2
-;        matrix:get MMWaterOperator_limit_D 9 2
-;        matrix:get MMWaterOperator_limit_D 10 2
-;        matrix:get MMWaterOperator_limit_D 11 2
-;        matrix:get MMWaterOperator_limit_D 12 2
-;        matrix:get MMWaterOperator_limit_D 13 2
-;        matrix:get MMWaterOperator_limit_D 14 2
-;      )
-;      set criteria_weights (list precision (matrix:get MMWaterOperator_limit_D 2 2 / w_sum) 3
-;        precision (matrix:get MMWaterOperator_limit_D 3 2 / w_sum) 3
-;        precision (matrix:get MMWaterOperator_limit_D 4 2 / w_sum) 3
-;        precision (matrix:get MMWaterOperator_limit_D 5 2 / w_sum) 3
-;        precision (matrix:get MMWaterOperator_limit_D 6 2 / w_sum) 3
-;        precision (matrix:get MMWaterOperator_limit_D 7 2 / w_sum) 3
-;        precision (matrix:get MMWaterOperator_limit_D 8 2 / w_sum) 3
-;        precision (matrix:get MMWaterOperator_limit_D 9 2 / w_sum) 3
-;        precision (matrix:get MMWaterOperator_limit_D 10 2 / w_sum) 3
-;        precision (matrix:get MMWaterOperator_limit_D 11 2 / w_sum) 3
-;        precision (matrix:get MMWaterOperator_limit_D 12 2 / w_sum) 3
-;        precision (matrix:get MMWaterOperator_limit_D 13 2 / w_sum) 3
-;        precision (matrix:get MMWaterOperator_limit_D 14 2 / w_sum) 3)
       ifelse(MCDA = "Favors New Infrastructure")[
         set criteria_weights [
           0.01
@@ -397,49 +309,43 @@ end
         item 1 item 15 MMWaterOperator_D
         item 1 item 16 MMWaterOperator_D)
       
-        ;set alternative_weights matrix:get MMWaterOperator_limit_D jj jj / (matrix:get MMWaterOperator_limit_D 0 0 + matrix:get MMWaterOperator_limit_D 1 1)
       ifelse name_action = "Mantenimiento"[
         set alternative_weights ifelse-value (MCDA = "Favors New Infrastructure")[0.48][0.509] ][
         set alternative_weights ifelse-value (MCDA = "Favors New Infrastructure")[0.52][0.49]
-      ] ;it favors new infrastructure
+      ] 
     ]
     set jj jj + 1
   ]
 end
 
  to set-initial-values-globals
-  set weeks 0                                          
-  set months 1
   set years 1
   set garbage_max 1
   set infra_dranage_max 1
   set flooding_max 1
   set falla_d_max 1
   set precipitation_max 1
-  set monto_max 1
   set peticion_usuarios_max 1
   set d_mantenimiento_D_max 1
   set d_new_max 1
   set densidad_pop_max 1
-  ;names and CVEGEO of municipalities inside DF
 end
 
 ;#############################################################################################################################################
 to set_maximum [estado]   ;; update the maximum or minimum of values use by the model to calculate range of the value functions this time relative to the domain of the agent who needs the inforamtion to take decition
-  set Antiguedad-infra_D_max 60
-  set Antiguedad-infra_D_min min [Antiguedad-infra_D] of agebs with [CV_estado = estado]
+  set Age-infra_D_max 60
+  set Age-infra_D_min min [Age-infra_D] of agebs with [CV_estado = estado]
   set Escurri_max max [Escurri] of agebs with [CV_estado = estado]
   set Capacidad_d_max max [Capacidad_d] of agebs with [CV_estado = estado]
   set garbage_max max [garbage] of agebs  with [CV_estado = estado]
   set Obstruccion_dren_max max[Obstruccion_dren] of agebs  with [CV_estado = estado]
-  set hundimiento_max max [hundimiento] of agebs with [CV_estado = estado]
+  set subsidence_max max [subsidence] of agebs with [CV_estado = estado]
   set poblacion_max max [poblacion] of agebs with [CV_estado = estado]
   set peticion_usuarios_max max [peticion_usuarios] of agebs with [CV_estado = estado]
   set infra_dranage_max max [houses_with_dranage] of agebs with [CV_estado = estado]
-  set ponding_max 30;0.5 * max [flooding] of agebs with [CV_estado = estado];;max level of flooding (encharcamientos) recored over the last 10 years
+  set ponding_max 30
   set precipitation_max max [precipitation] of agebs  with [CV_estado = estado]
   set falla_d_max max [Falla_d] of agebs with [CV_estado = estado]
-  set monto_max max [monto] of agebs with [CV_estado = estado]
   set falta_d_max 1
   set d_mantenimiento_D_max max [d_mantenimiento_D] of agebs with [CV_estado = estado]
   set d_new_max max [d_new_d] of agebs with [CV_estado = estado]

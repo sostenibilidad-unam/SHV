@@ -43,7 +43,7 @@ to update_criteria_and_valueFunctions_WaterOperator    ;;update the biphisical v
       ;###########################################################
       if ? = "Antiguedad"[
      
-        let attribute [Antiguedad-infra_d] of myself
+        let attribute [Age-infra_D] of myself
         set criteria_values replace-item i criteria_values attribute
         let min_x 120
         let alpha_vf 80
@@ -96,7 +96,7 @@ to update_criteria_and_valueFunctions_WaterOperator    ;;update the biphisical v
       ]
       ;###########################################################
       if ? = "Hundimientos"  [
-        let attribute [hundimiento] of myself
+        let attribute [subsidence] of myself
         set criteria_values replace-item i criteria_values attribute
           let p1 26.06766112					
           let y_vf 1 - exp ((35 - 10) / p1 )
@@ -135,6 +135,7 @@ to update_criteria_and_valueFunctions_WaterOperator    ;;update the biphisical v
         ask myself [set value_function_precipitation [item i rescaled_criteria_values] of myself]      
      
       ]
+
         ;###########################################################
         if ? = "Escurrimiento"[
          let attribute  [Escurri] of myself
@@ -172,7 +173,7 @@ to update_criteria_and_valueFunctions_WaterOperator    ;;update the biphisical v
           set criteria_values replace-item i criteria_values attribute      
         let svf 1 - (attribute / peticion_usuarios_max)   
         set rescaled_criteria_values replace-item i rescaled_criteria_values  svf   ;(Value-Function (item i criteria_values) [0.0625 0.125 0.25 0.5] ["" "" "" ""] (item i criteria_max)  [0.2 0.4 0.6 0.8 1])
-        print list attribute svf
+        ;print list attribute svf
       ]
       ;###########################################################
         if ? = "Presion de medios"[
