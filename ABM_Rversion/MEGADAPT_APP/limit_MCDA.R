@@ -6,19 +6,19 @@
 #2) the power to elevate the matrix 
 #With a sufficiently large value for p, the the outcome of this function 
 #is a new matrix that should be the limit matrix
-mpot = function (UW_matrix, tolerance=0.0001) {
+mpot = function (W_matrix, tolerance=0.0001) {
   # calculates A^p (matrix multiplied p times with itself)
   # inputes: A - real-valued square matrix, p - natural number.  
   # output:  A^p
-##add while look using an threshold  
-  UW_matrix_B = UW_matrix
+##add while loop using tolerance  
+  W_matrix_B = W_matrix
 #  browser()
-   while(any(abs(UW_matrix_B[,1]-UW_matrix_B[,2])>tolerance)){
+   while(any(abs(W_matrix_B[,1]-W_matrix_B[,2])>tolerance)){
   
 
   #if (p>1) 
   #  for (i in 2:p) 
-      UW_matrix_B = UW_matrix_B%*%UW_matrix 
+      W_matrix_B = W_matrix_B%*%W_matrix 
     
       
     }

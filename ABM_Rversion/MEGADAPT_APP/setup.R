@@ -13,9 +13,10 @@ require(gramEvol) #genetic algorithm optimization
 #require(DT)
 
 #path to data
-path_td<-"../../data/"
-path_to_model<-"../../Statistical_Models/Modelos_region"
-#path_td<-"../data/"
+#path_td<-"../../data/"
+#path_to_model<-"../../Statistical_Models/Modelos_region"
+
+path_td<-"../data/"
 #path_td<-"home/abaeza/SHV/data/" #path patun
 ##read shape files
 studyArea_CVG<-readShapeSpatial(paste(path_td,'Layer_MEGADAPT_Oct2018.shp',sep=""))#for flooding model
@@ -30,9 +31,9 @@ contigency_matrix<-as.matrix(data.frame(read.csv(paste(path_td,"W_matrix_low.csv
 ######################################################################################################################
 #Initiate biophsiical models
  #floding
-source("ponding_model.R")
+source(paste(getwd(),"/MEGADAPT_APP/system_models/flooding_ponding/ponding_model.R",sep=""))
  #scarcity
-source("water_scarcity_model.R")
+source(paste(getwd(),"/MEGADAPT_APP/system_models/scarcity/water_scarcity_model.R",sep=""))
  #health
 
 ######################################################################################################################
