@@ -17,4 +17,4 @@ print(scenario_name)
 #to test I added to scenrio 1 the following path
 #"../../data/" which is the same as "path_td" variable
 #read the file and save it inside the run
-runoff_scenario=read.csv(paste0("geosimulation/runoff/outputs/", scenario_name),sep="")
+runoff_scenario=read.csv(paste0("geosimulation/runoff/outputs/", scenario_name),sep=",")

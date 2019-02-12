@@ -3,7 +3,7 @@
 year_sampled_from_Scenario=sample(size = 1,x = 1993:2013)
  
 #subset the data.frame of scenario for the year sampled
-sampled_rain_runoff_scenario=subset(S_85,year==year_sampled_from_Scenario)
+sampled_rain_runoff_scenario=subset(runoff_scenario,year==year_sampled_from_Scenario)
 
 #Every year of simulation, sample with a uniform distribution a single year of estimations from the N columns posible (2001-20013?)
 

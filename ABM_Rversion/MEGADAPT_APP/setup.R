@@ -26,7 +26,7 @@ contigency_matrix<-as.matrix(data.frame(read.csv("system_models/health/inputs/W_
 ######################################################################################################################
 #Initiate biophsiical models
  #floding
-source("ponding_model.R")
+source("system_models/flooding_ponding/load_region_models.R")
  #scarcity
 source("water_scarcity_model.R")
  #health
@@ -35,7 +35,7 @@ source("water_scarcity_model.R")
 #read scenarios of climate change
 #read scenarios of rainfall and run-offs for emmisions 8.5.
 
-S_85=read.csv("geosimulation/runoff/outputs/df_prec_escorrentias_excl_total_ff85_c.csv")
+source("read_Climate_scenarios.R")
 ######################################################################################################################
 ##define decision-makers agents
 #read file with value functions
