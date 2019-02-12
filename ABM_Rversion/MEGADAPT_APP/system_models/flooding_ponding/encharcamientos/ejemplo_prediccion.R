@@ -1,12 +1,12 @@
 # Ejemplo de prediccion
 
 ## se carga el modelo
-
-load(file = "c:/Users/abaezaca/Dropbox (Personal)/modelo_ench_inund/arbol de regresion/Modelos_region/encharcamientos/mod_en_reg1.rda")
+library(caret)
+load(file = "mod_en_reg1.rda")
 
 ## Se crean datos de prueba
-datos_prueba <- structure(list(f_prec_v = 194941, f_esc = 0, n_tramos = 0, 
-                               q100 = 6.87, bombeo_tot = 0, rejillas = 0), 
+datos_prueba <- structure(list(f_prec_v = 194941, f_esc = 0, n_tramos = 34, 
+                               q100 = 6.87, bombeo_tot = 0.1, rejillas = 0.3), 
                           row.names = c(NA, -1L), class = c("data.frame"))
 head(datos_prueba)
 
