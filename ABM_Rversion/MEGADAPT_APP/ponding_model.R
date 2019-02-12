@@ -11,18 +11,19 @@
 ##################################################################################
 #load regresion tree models developed by the LANCIS team at UNAM
 #https://github.com/sostenibilidad-unam/SHV/issues/83
-load(file = paste(path_to_model,"/encharcamientos/mod_en_reg1.rda",sep=""))
-load(file = paste(path_to_model,"/encharcamientos/mod_en_reg2.rda",sep=""))
-load(file = paste(path_to_model,"/encharcamientos/mod_en_reg3.rda",sep=""))
-load(file = paste(path_to_model,"/encharcamientos/mod_en_reg4.rda",sep=""))
-load(file = paste(path_to_model,"/encharcamientos/mod_en_reg5.rda",sep=""))
-load(file = paste(path_to_model,"/encharcamientos/mod_en_reg6.rda",sep=""))
-load(file = paste(path_to_model,"/encharcamientos/mod_en_reg7.rda",sep=""))
-load(file = paste(path_to_model,"/encharcamientos/mod_en_reg8.rda",sep=""))
-load(file = paste(path_to_model,"/encharcamientos/mod_en_reg9.rda",sep=""))
+
+for (i in 1:9){
+  load(file = sprintf("system_models/flooding_ponding/encharcamientos/mod_en_reg%s.rda", i))
+  
+}
 
 
+for (i in 1:9){
+  load(file = sprintf("system_models/flooding_ponding/inundaciones/mod_inund_reg%s.rda", i))
+} 
 Modelos<-list() #list to save the models
+Modelos_in<-list() #list to save the models
+
 Modelos[[1]]<-modelo_en_region_1
 Modelos[[2]]<-modelo_en_region_2
 Modelos[[3]]<-modelo_en_region_3
@@ -32,3 +33,14 @@ Modelos[[6]]<-modelo_en_region_6
 Modelos[[7]]<-modelo_en_region_7
 Modelos[[8]]<-modelo_en_region_8
 Modelos[[9]]<-modelo_en_region_9
+
+
+Modelos_in[[1]]<-modelo_in_region_1
+Modelos_in[[2]]<-modelo_in_region_2
+Modelos_in[[3]]<-modelo_in_region_3
+Modelos_in[[4]]<-modelo_in_region_4
+Modelos_in[[5]]<-modelo_in_region_5
+Modelos_in[[6]]<-modelo_in_region_6
+Modelos_in[[7]]<-modelo_in_region_7
+Modelos_in[[8]]<-modelo_in_region_8
+Modelos_in[[9]]<-modelo_in_region_9

@@ -12,14 +12,9 @@ require(plyr) #Tools for Splitting, Applying and Combining Data
 require(gramEvol) #genetic algorithm optimization
 #require(DT)
 
-#path to data
-#path_td<-"../../data/"
-#path_to_model<-"../../Statistical_Models/Modelos_region"
 
-path_td<-"../data/"
-#path_td<-"home/abaeza/SHV/data/" #path patun
 ##read shape files
-studyArea_CVG<-readShapeSpatial(paste(path_td,'Layer_MEGADAPT_Oct2018.shp',sep=""))#for flooding model
+studyArea_CVG<-readShapeSpatial('data/Layer_MEGADAPT_Oct2018.shp')  # for flooding model
 #############################################################################
 #subset are for CDMX
 #Simulation runs only for the city (CDMX) estado=="09"
@@ -27,20 +22,20 @@ studyArea_CVG <- studyArea_CVG[studyArea_CVG$estado== "09",]
 source('new_variables_setup.R')
 ######################################################################################################################
 ##read data contigency matrix
-contigency_matrix<-as.matrix(data.frame(read.csv(paste(path_td,"W_matrix_low.csv",sep=""),header = T)))
+contigency_matrix<-as.matrix(data.frame(read.csv("system_models/health/inputs/W_matrix_low.csv",header = T)))
 ######################################################################################################################
 #Initiate biophsiical models
  #floding
-source(paste(getwd(),"/MEGADAPT_APP/system_models/flooding_ponding/ponding_model.R",sep=""))
+source("ponding_model.R")
  #scarcity
-source(paste(getwd(),"/MEGADAPT_APP/system_models/scarcity/water_scarcity_model.R",sep=""))
+source("water_scarcity_model.R")
  #health
 
 ######################################################################################################################
 #read scenarios of climate change
 #read scenarios of rainfall and run-offs for emmisions 8.5.
 
-S_85=read.csv(paste(path_td,"df_prec_esc_85_85.csv",sep=""))
+S_85=read.csv("geosimulation/runoff/outputs/df_prec_escorrentias_excl_total_ff85_c.csv")
 ######################################################################################################################
 ##define decision-makers agents
 #read file with value functions

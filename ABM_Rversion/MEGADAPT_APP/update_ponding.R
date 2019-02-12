@@ -12,10 +12,14 @@ studyArea_CVG@data$encharca[which(studyArea_CVG@data$region==hh)]<-predict(Model
                                                                            subset(studyArea_CVG@data,select=c("f_prec_v", "f_esc", "n_tramos", "q100", "bombeo_tot", "rejillas"))[which(studyArea_CVG@data$region==hh),], # observaciones de todas las variables de la region
                                                                             n.trees = 9566, # Número de árboles que usa el modelo 
                                                                             type = "response")
+studyArea_CVG@data$inunda[which(studyArea_CVG@data$region==hh)]<-predict(Modelos_in[[hh]],
+                                                                           subset(studyArea_CVG@data,select=c("f_prec_v", "f_esc", "n_tramos", "q100", "bombeo_tot", "rejillas"))[which(studyArea_CVG@data$region==hh),], # observaciones de todas las variables de la region
+                                                                           n.trees = 9566, # Número de árboles que usa el modelo 
+                                                                           type = "response")
 }
-print(studyArea_CVG@data$encharca[1708])   
+#print(studyArea_CVG@data$encharca[1708])   
 #for ageb 1708 with AGEB_ID =6420 the value of ponding is 10 time larger than the average
 #check
 
 
-subset(studyArea_CVG@data,select=c("f_prec_v", "f_esc", "n_tramos", "q100", "bombeo_tot", "rejillas"))[1708,]
+#subset(studyArea_CVG@data,select=c("f_prec_v", "f_esc", "n_tramos", "q100", "bombeo_tot", "rejillas"))[1708,]
