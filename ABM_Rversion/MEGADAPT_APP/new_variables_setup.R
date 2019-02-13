@@ -68,6 +68,7 @@ TS_res<-cbind(subset(studyArea_CVG@data,select = var_selected),
               year_sim=rep(2018,length(studyArea_CVG@data$AGEB_ID)),
               month_sim=rep(12,length(studyArea_CVG@data$AGEB_ID)))
 
+path_to_output<-"../../outputs/" #change path to use it in patung
 
 
 
