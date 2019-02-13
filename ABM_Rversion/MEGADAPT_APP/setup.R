@@ -12,7 +12,7 @@ require(plyr) #Tools for Splitting, Applying and Combining Data
 require(gramEvol) #genetic algorithm optimization
 #require(DT)
 
-
+#setwd("C:/Users/abaezaca/Dropbox (ASU)/MEGADAPT/SHV/ABM_Rversion/MEGADAPT_APP")
 ##read shape files
 studyArea_CVG<-readShapeSpatial('data/Layer_MEGADAPT_Oct2018.shp')  # for flooding model
 #############################################################################
@@ -39,7 +39,7 @@ S_85=read.csv("geosimulation/runoff/outputs/df_prec_escorrentias_excl_total_ff85
 ######################################################################################################################
 ##define decision-makers agents
 #read file with value functions
-source("value_functions.R")
+source("integrated_model/value_functions.R")
 #read value function from workshop with sacmex
 source("value_functions_empirical_parameters.R")
 #read mental models as limit and weighted matrices outputs from SUPERDECITION
