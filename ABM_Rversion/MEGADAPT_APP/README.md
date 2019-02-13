@@ -1,17 +1,20 @@
 # MEGADAPT Integrated model
 
 ## Folder structure
-- MEGADAPT_APP
-      - systems_models
-            - flooding_ponding
-            - scarcity
-            - health
-      - geosimulation
-            - urbanization
-            - runoff
-      - mcda
-            - residents
-            - SACMEX
+
+* MEGADAPT_APP<br/><br/>
+  * systems_models
+    * flooding_ponding
+    * scarcity
+    * health
+  * geosimulation
+    * urbanization
+    * runoff
+  * mcda
+    * residents
+    * SACMEX
+  * Integrated_model
+    
 
 
 ## Requirements
