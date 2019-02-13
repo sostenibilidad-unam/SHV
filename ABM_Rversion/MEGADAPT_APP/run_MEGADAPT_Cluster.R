@@ -10,8 +10,8 @@ scenario=as.numeric(args[6])
 
 #Generate and id for the simulation based on the value
 #of the argument
-sim_id_output=sprintf("effectivity_newInfra=%s-effectivity_mantenimiento=%s-decay_infra=%s-Budget=%s-scenario=%s.rds",effectivity_newInfra,effectivity_mantenimiento,decay_infra,Budget,scenario)
-path_to_output<-"../outputs/" #change path to use it in patung
+sim_id_output=sprintf("effectivity_newInfra=%s-effectivity_mantenimiento=%s-decay_infra=%s-Budget=%s-scenario=%s",effectivity_newInfra,effectivity_mantenimiento,decay_infra,Budget,scenario)
+path_to_output<-"../../outputs/" #change path to use it in patung
 
 #climate scenario
 path_to_source<-"."

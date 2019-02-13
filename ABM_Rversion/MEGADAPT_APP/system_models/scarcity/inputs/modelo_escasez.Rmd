@@ -1,0 +1,192 @@
+---
+title: "Modelo de Escasez SACMEX"
+date: "09 agosto de 2018"
+output:
+  html_document: default
+  latex_engine: xelatex
+  word_document: default
+  pdf_document: null
+Authors: Alejandra Estrada, Ileana Grave, Alfonso Medina y Josué Mendoza
+---
+#Objetivo general
+##Objetivos:
+1. Ajustar un modelo de escasez, desde el punto de vista de SACMEX.
+
+##Archivos generados:
+###Nombre:
+###Geometría
+###Sistema de referencia
+###Ubicación del archivo:
+MEGADAPT/mega_procesamiento/input_modelos/modelo_escasez/scripts
+
+
+###Linaje:
+
+###Responsable:
+Alejandra Estrada
+
+###Número de issue en GitHub:
+Issue SHV $\# 41$
+
+##Metodología
+
+###Software empleado
+R studio Version 1.1.383
+
+### Procedimiento
+1. Considerar los datos de escasez por AGEB creados por Yosune, en el que se modela $\lambda's$ (número promedio de días sin agua) para cada AGEB en función del número de días sin agua por delegación. Se generaron tantos $\lambda's$ aleatorios como AGEBS en cada delegación utilizando la $\lambda$ calculada por delegación.
+2. Realizar gráficas diagnósticas.
+3. Correr un modelo  en el que se modele la escasez.
+4. Correr modelo Zero Inflated Negative Binomial (ZINB) frecuentista, para modelar el número promedio de días sin agua por AGEB en función de, zonas críticas, fugas, faltas, antigüedad,\% de viviendas sin conexión, subsidencia, y la interacción entre fugas y subsidencia.
+
+
+## Cargar paquetes
+```{r paquetes, message=FALSE, warning=FALSE, paged.print=FALSE}
+#install.packages("countreg")
+#install.packages("blogdown")
+library(ggplot2)
+library(pscl)
+library(boot)
+library(fields)
+library(vcd)
+library(MASS)
+library(rstan)
+pacman::p_load(fitdistr,tidyverse, 
+               brms, ggmcmc,countreg)
+
+#session_info('blogdown')
+#tinytex:::is_tinytex()
+#tinytex::install_tinytex()
+```
+## Cargar archivos
+
+Se consideran los datos de escasez por AGEB creados por Yosune, en el que se modela $\lambda's$ (número promedio de días sin agua) para cada AGEB en función del número de días sin agua por delegación. Se generaron tantos $\lambda's$ aleatorios como AGEBS en cada delegación utilizando la $\lambda$ calculada por delegación.
+
+```{r datos}
+data <- read.csv("C:/Dropbox (LANCIS)/MEGADAPT/mega_procesamiento/input_modelos/modelo_escasez/datos/datos_final2.csv",header=TRUE,sep=",")
+#data <- read.csv("C:/Users/abaezaca/Dropbox (Personal)/modelo_escasez/datos/datos_final2.csv",header=TRUE,sep=",")
+datos <- as.data.frame(data)
+attach(datos)
+head(datos)
+```
+
+## Graficas diagnosticas
+
+Se raealizan gráficas diagnósticas de las variables que se van a considerar en el modelo, con el objetivo de observar su comportamiento.
+
+```{r graficas, echo=FALSE, message=FALSE, warning=FALSE}
+
+ggplot(datos, aes(x=FUGAS))+
+  geom_histogram(color="darkblue", fill="lightblue")+
+  labs(title="Histograma de reportes de fugas",x="Fugas", y = "Frecuencia")
+
+ggplot(datos, aes(x=FALTAS))+
+  geom_histogram(color="darkblue", fill="lightblue")+
+  labs(title="Histograma de reportes de faltas",x="Faltas", y = "Frecuencia")
+
+ggplot(datos, aes(x=D_FALTA))+
+  geom_histogram(color="darkblue", fill="lightblue")+
+  labs(title="Histograma de reportes de días sn agua",x="Días", y = "Frecuencia")
+
+ggplot(datos, aes(x=V_SAGUA))+
+  geom_histogram(color="darkblue", fill="lightblue")+
+  labs(title="Histograma de razón de viviendas sin conexión a la red de agua",x="Viviendas sin agua", y = "Frecuencia")
+
+ggplot(datos, aes(x=CRITICO))+
+  geom_histogram(color="darkblue", fill="lightblue")+
+  labs(title="Histograma de viviendas en situación crítica",x="Viviendas en situaci?n cr?tica", y = "Frecuencia")
+
+ggplot(datos, aes(x=SUBSID))+
+  geom_histogram(color="darkblue", fill="lightblue")+
+  labs(title="Histograma de subsidencias",x="Disrupci?n", y = "Frecuencia")
+
+ggplot(datos, aes(x=ANTIGUEDAD))+
+  geom_histogram(color="darkblue", fill="lightblue")+
+  labs(title="Histograma de la antigüedad de la infraestructura",x="Antigüedad", y = "Frecuencia")
+```
+
+##Correr modelo zero inflated
+Debido a que los datos sobre disrupción tienen un exceso de ceros se decidió utilizar un modelo 
+_Zero inflated Negative Binomial_ (ZINB). El modelo ZINB supone que los ceros en las observaciones son generados por dos procesos. Uno de ellos modela los ceros estructurales.
+Este modelo sugiere que el exceso de ceros es generado por un proceso distinto al de los datos per se; y que por lo tanto, puede ser modelado de forma independiente, en este sentido el _ZINB_ modela $Y_{i} como:
+
+$Y_{i}=0$, con una probabilidad $\pi_{i}$
+Y ~ negative binnomial ($\lambda_{1}$,k) con probabilidad (1-\pi_{i})
+
+En este sentodo, el modelo _ZINB_ tiene dos partes,  las cuales se describen a continuación:
+
+* Un modelo logit, para predecir el exceso de ceros:
+
+Este modelo está dado por una distribución binomial que genera ceros estructurales
+
+$$Pr(Y_{i}=0)=\pi_{i}+(1-\pi_{i})e^\mu$$
+
+* Un modelo de conteos Negative Binomial
+
+$$Pr(Y_{i}=y_{i}) =(1-\pi)\frac{\Gamma(y_{i})+\frac{1}{k}(k\mu_{i})^{y_{i}}}{\Gamma(y_{i}+1)\Gamma\left(\frac{1}{k}\right)(1+k\mu_{i})^{y_{i}+\frac{1}{k}}}$$
+con $y_{i}=1,2...$ 
+
+## Modelo _ZINB_ frecuentista
+
+Se corre un modelo de escasez _ZINB_ frecuentista, con todas las variables explicativas.
+
+###Tomamos una muestra de tamaño 200 para probar los diferentes modelos lineales 
+
+```{r}
+dat_fugas <- read_csv("C:/Dropbox (LANCIS)/MEGADAPT/mega_procesamiento/input_modelos/modelo_escasez/datos/datos_final2.csv") %>%
+     group_by(DEL) %>%
+     mutate(AntMax = max(ANTIGUEDAD))
+
+dat_fugas$N_ANTIGUEDAD=numeric(length(dat_fugas$AGEB_ID)) 
+  dat_fugas$N_ANTIGUEDAD= (dat_fugas$ANTIGUEDAD/dat_fugas$AntMax)
+
+dat_fugas <- dat_fugas  %>% 
+         mutate(fugas_flor = floor(FUGAS), 
+                fugas_tech = ceiling(FUGAS)) #%>% 
+         #select(-DEL)
+
+summary(dat_fugas)
+muestra <- dat_fugas[sample(1:nrow(dat_fugas), 200), ]
+```
+
+```{r zi}
+
+summary(modelo_zip_escasez <- zeroinfl(lambdas ~   FUGAS+N_ANTIGUEDAD+V_SAGUA  |N_ANTIGUEDAD+ V_SAGUA+CRITICO , dist = "negbin", data = dat_fugas))
+
+ESZ_1 <- zeroinfl(lambdas ~   CRITICO+ANTIGUEDAD | V_SAGUA , dist = "negbin", data = dat_fugas)
+a <- predict(ESZ_1,type="count")
+
+pred <- predict(modelo_zip_escasez, type = "prob")
+dim(pred)
+sum(pred[,1])
+#summary(a)
+#plot(a)
+
+hist(a)
+```
+
+### En términos de exponenciales
+```{r coef}
+expCoef <- exp(coef(modelo_zip_escasez))
+expCoef <- matrix(expCoef, ncol = 2)
+colnames(expCoef) <-c("Count_model", "Zero_inflated_NB")
+expCoef
+```
+
+###Interpretación
+Modelo ajustado para la parte binomial negativa (conteos)
+
+$$ \lambda = exp\left\{ 0.7045 + 0.4465 \times Critico - 0.0244 \times Antiguedad \right\}$$
+$$ \lambda = 2.0227 + 1.5628 \times Critico + 0.9759 \times Antiguedad $$
+El conteo promedido de días sin agua, cuando las varibles Critico (proporción) y Antiguedad se mantienen en 0, es de 2.0227; el aumentar las áreas críticas en un 1\% representa un incremento de 1.5628 en el conteo promedio de días sin agua de la AGEB; mientras que aumentar la edad de la infraestructura en un año lo incrementa dicho promedio en 0.9759. 
+
+El modelo ajustado para la parte binomial (modelo de ceros)
+
+$$ \frac{\theta}{1 - \theta} = exp \left\{ -1.4803 - 129.7058 \times V\_SAGUA \right\}$$
+El momio de pertenecer a aquellas AGEBs que siempre tiene agua, i.e. no tienen escasez, es de 0.2276; el valor ajustdo del coeficiente para la variable Viviendas sin Agua es cercano a $0$, por lo que no se considerará. 
+
+
+##Comentarios
+
+* Se requiere realizar un análisis más profundo, ya que si bien el modelo ajusta a los datos, se considera que no modela adecuadamente la heterogeneidad extrema de la Ciudad.
+* Se propone realizar un modelo multinivel bayesinano, con el objetivo de capturar la heterogeneidad de la CDMX. Sin embargo, es importante considerar que esta opción requiere un mayor tiempo de anáñisis y de estimación.

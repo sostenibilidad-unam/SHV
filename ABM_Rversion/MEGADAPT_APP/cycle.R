@@ -27,7 +27,6 @@ for (i in 1:length(ini_date)){
     }
   #update number of protests
   source("protests.R")
-  print(".")
 }
 
 #save data frame output in binay representation 

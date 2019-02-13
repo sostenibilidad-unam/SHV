@@ -14,7 +14,7 @@ require(gramEvol) #genetic algorithm optimization
 
 
 ##read shape files
-studyArea_CVG<-readShapeSpatial('../data/Layer_MEGADAPT_Oct2018.shp')  # for flooding model
+studyArea_CVG<-readShapeSpatial('data/Layer_MEGADAPT_Oct2018.shp')  # for flooding model
 #############################################################################
 #subset are for CDMX
 #Simulation runs only for the city (CDMX) estado=="09"
@@ -22,20 +22,20 @@ studyArea_CVG <- studyArea_CVG[studyArea_CVG$estado== "09",]
 source('new_variables_setup.R')
 ######################################################################################################################
 ##read data contigency matrix
-contigency_matrix<-as.matrix(data.frame(read.csv("../system_models/health/inputs/W_matrix_low.csv",header = T)))
+contigency_matrix<-as.matrix(data.frame(read.csv("system_models/health/inputs/W_matrix_low.csv",header = T)))
 ######################################################################################################################
 #Initiate biophsiical models
  #floding
-source("../system_models/flooding_ponding/load_region_models.R")
+source("ponding_model.R")
  #scarcity
-source("../system_models/scarcity/water_scarcity_model.R")
+source("water_scarcity_model.R")
  #health
 
 ######################################################################################################################
 #read scenarios of climate change
 #read scenarios of rainfall and run-offs for emmisions 8.5.
 
-source("read_Climate_scenarios.R")
+S_85=read.csv("geosimulation/runoff/outputs/df_prec_escorrentias_excl_total_ff85_c.csv")
 ######################################################################################################################
 ##define decision-makers agents
 #read file with value functions

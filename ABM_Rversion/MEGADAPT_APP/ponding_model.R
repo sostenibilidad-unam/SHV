@@ -13,13 +13,13 @@
 #https://github.com/sostenibilidad-unam/SHV/issues/83
 
 for (i in 1:9){
-  load(file = sprintf("../system_models/flooding_ponding/encharcamientos/mod_en_reg%s.rda", i))
+  load(file = sprintf("system_models/flooding_ponding/encharcamientos/mod_en_reg%s.rda", i))
   
 }
 
 
 for (i in 1:9){
-  load(file = sprintf("../system_models/flooding_ponding/inundaciones/mod_inund_reg%s.rda", i))
+  load(file = sprintf("system_models/flooding_ponding/inundaciones/mod_inund_reg%s.rda", i))
 } 
 Modelos<-list() #list to save the models
 Modelos_in<-list() #list to save the models

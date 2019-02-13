@@ -1,10 +1,10 @@
 #read Mental model matrix
-MM_WaterOperator_S<-data.frame(read.csv('../mcda/sacmex/supermatrices/DF101215_GOV_AP modificado PNAS.weighted.csv',skip = 1,header = T))[,-c(1,2,21)]
-MM_WaterOperator_D <-data.frame(read.csv('../mcda/sacmex/supermatrices/SACMEX_Drenaje__weighted_SESMO.csv',skip = 1,header = T))[,-c(1,2)]
-MM_WaterOperator_C <-data.frame(read.csv('../mcda/sacmex/supermatrices/DF101215_GOV_AP modificado PNAS.cluster.csv',skip = 1,header = F))
+MM_WaterOperator_S<-data.frame(read.csv('mcda/sacmex/supermatrices/DF101215_GOV_AP modificado PNAS.weighted.csv',skip = 1,header = T))[,-c(1,2,21)]
+MM_WaterOperator_D <-data.frame(read.csv('mcda/sacmex/supermatrices/SACMEX_Drenaje__weighted_SESMO.csv',skip = 1,header = T))[,-c(1,2)]
+MM_WaterOperator_C <-data.frame(read.csv('mcda/sacmex/supermatrices/DF101215_GOV_AP modificado PNAS.cluster.csv',skip = 1,header = F))
 
-MM_WaterOperator_S_lim<-data.frame(read.csv('../mcda/sacmex/supermatrices/DF101215_GOV_AP modificado PNAS.limit.csv',skip = 1,header = T))[,-c(1,2,21)]
-MM_WaterOperator_D_lim <-data.frame(read.csv('../mcda/sacmex/supermatrices/SACMEX_Drenaje_limit_SESMO.csv',skip = 1,header = T))[,-c(1,2)]
+MM_WaterOperator_S_lim<-data.frame(read.csv('mcda/sacmex/supermatrices/DF101215_GOV_AP modificado PNAS.limit.csv',skip = 1,header = T))[,-c(1,2,21)]
+MM_WaterOperator_D_lim <-data.frame(read.csv('mcda/sacmex/supermatrices/SACMEX_Drenaje_limit_SESMO.csv',skip = 1,header = T))[,-c(1,2)]
 
 #name criteria
 Names_criteria_sacmex_S<-colnames(MM_WaterOperator_S_lim)[-c(1:5)]
@@ -22,7 +22,7 @@ alternative_weights_S=MM_WaterOperator_S_lim$Antiguedad[c(1:5)]
 alternative_weights_D=MM_WaterOperator_D_lim$Antiguedad[c(1:2)]
 
 #Resident Iztapalapa
-MM_Iz <-data.frame(read.csv("../mcda/residents/I080316_OTR.limit.csv",skip = 1,header = T))[,-c(1,2)]
+MM_Iz <-data.frame(read.csv("mcda/residents/I080316_OTR.limit.csv",skip = 1,header = T))[,-c(1,2)]
 Names_criteria_Resident_Iz<-colnames(MM_Iz)[-c(1:5)]
 Names_Alternative_Resident_Iz<-colnames(MM_Iz)[c(1:5)]
 
