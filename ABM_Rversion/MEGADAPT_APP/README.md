@@ -62,6 +62,46 @@ To run the integrated model in a cluster with condor_ht:
       condor_submit trial.sub
       
 
-## Inputs and outputs
+## Inputs
 
-## Model description
+### Initial values for census blocks
+
+The initial values for every census block in a shpaefile located in data/
+
+example:
+
+data/Layer_MEGADAPT_Oct2018.shp
+
+Nota: esto debe estandarizarse a input_census_blocks.shp
+
+### Supermatrixes 
+
+* The matrixes for residents 
+  * The supermatrix for every kind of resident
+* The supermatrixes for the water authority (SACMEX) 
+  * Distribution
+    * The limit supermatrix 
+    * The unweighted supermatrix 
+    * The cluster supermatrix
+  * Drainage
+    * The limit supermatrix 
+    * The unweighted supermatrix 
+    * The cluster supermatrix
+    
+    
+### Runoff scenarios
+
+  * The runoff and precipitation for every census block for every combination of urban scenario and climate change scenario
+
+
+## Outputs
+
+The model gives as output a dataframe that is stored in a .rds object that contains all the variables that where used to run that specific run in the name
+
+example:
+
+effectivity_newInfra=0.25-effectivity_mantenimiento=0.25-decay_infra=0.25-Budget=1000-scenario=1-repetition=0.rds
+
+
+
+
