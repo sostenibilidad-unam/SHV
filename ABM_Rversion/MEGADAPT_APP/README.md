@@ -4,7 +4,7 @@
 
 ## Requirements
 
-Libraries need to run the MEGADAPT integrated model:
+Libraries needed to run the MEGADAPT integrated model:
 
 "assertthat", "backports", "base64enc", "BBmisc", "BH", "bindr", "bindrcpp", "broom", "callr", "cellranger", "checkmate",
 "cli", "clipr", "coda", "colorspace", "crayon", "crosstalk", "curl", "data.table", "DBI", "dbplyr", "digest", "dplyr", 
