@@ -1,0 +1,12 @@
+install.packages('glmm')
+install.packages('pscl')
+install.packages('gramEvol')
+install.packages('ecr')
+install.packages('maptools')
+install.packages('plyr')
+install.packages("R2admb")
+install.packages('gbm')
+install.packages("glmmADMB",
+    repos=c("http://glmmadmb.r-forge.r-project.org/repos",
+	    getOption("repos")),
+    type="source")
