@@ -104,8 +104,9 @@ Id of census block | AGEB_ID
 Municipality of each census block | municipio
 Age of the infrastructure | antiguedad_D
 Age of the infrastructure | antiguedad_Ab
-missing desc | f_en
+frequency of ponding used to fit the ponding model | f_en
 Number of events per year | encharca
+Number of flooding events predicted by the flooding model  | nunda
 Proportion of houses not connected to the potable water system | FALTA_IN
 Capacity of the sewer/storm water system | capac_w
 Proportion of houses not connected to the drainage system | falta_dren
@@ -117,7 +118,7 @@ Number of days in a year without water | days_wn_water_year
 Number of protests in a year | social_pressure
 Sensitivity of residents to potable water scarcity. It reflects the number of interventions by the residents to modify their neighborhood | sensitivity_Ab
 Sensitivity of residents to flooding. It reflects the number of interventions by the residents to modify their neighborhood | sensitivity_D
-"Indicator that combines the sensitivity to potable water scarcity |  the exposure to water scarcity and the income" | vulnerability_Ab
-"Indicator that combines the sensitivity to flooding |  the exposure to flooding and the income" | vulnerability_D
+Indicator that combines the sensitivity to potable water scarcity, the exposure to water scarcity, and income | vulnerability_Ab
+Indicator that combines the sensitivity to flooding, the exposure to flooding, and income | vulnerability_D
 Indicator of the number interventions from sacmex associated to potable water infrastructure | Interventions_Ab
 Indicator of the number interventions from sacmex associated to sewer and storm water infrastructure | Interventions_D
