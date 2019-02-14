@@ -104,7 +104,7 @@ Id of census block | AGEB_ID
 Municipality of each census block | municipio
 Age of the infrastructure | antiguedad_D
 Age of the infrastructure | antiguedad_Ab
-f_en | missing desc
+missing desc | f_en
 Number of events per year | encharca
 Proportion of houses not connected to the potable water system | FALTA_IN
 Capacity of the sewer/storm water system | capac_w
