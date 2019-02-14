@@ -94,3 +94,30 @@ The model gives as output a dataframe that is stored in a .rds object that conta
 example:
 
 effectivity_newInfra=0.25-effectivity_mantenimiento=0.25-decay_infra=0.25-Budget=1000-scenario=1-repetition=0.rds
+
+the columns in these dataframes are:
+
+
+Indicator | Name in output data-frame
+-- | --
+Id of census block | AGEB_ID
+Municipality of each census block | municipio
+Age of the infrastructure | antiguedad_D
+Age of the infrastructure | antiguedad_Ab
+f_en | missing desc
+Number of events per year | encharca
+Proportion of houses not connected to the potable water system | FALTA_IN
+Capacity of the sewer/storm water system | capac_w
+Proportion of houses not connected to the drainage system | falta_dren
+Average number of days without piped water in a week | lambdas
+Number of days without water in a week predicted by the water scarcity model | NOWater_week_pois
+Number of  days during two weeks without piped water | NOWater_twoweeks
+Number of  days during a month without piped water | days_wn_water_month
+Number of days in a year without water | days_wn_water_year
+Number of protests in a year | social_pressure
+Sensitivity of residents to potable water scarcity. It reflects the number of interventions by the residents to modify their neighborhood | sensitivity_Ab
+Sensitivity of residents to flooding. It reflects the number of interventions by the residents to modify their neighborhood | sensitivity_D
+"Indicator that combines the sensitivity to potable water scarcity |  the exposure to water scarcity and the income" | vulnerability_Ab
+"Indicator that combines the sensitivity to flooding |  the exposure to flooding and the income" | vulnerability_D
+Indicator of the number interventions from sacmex associated to potable water infrastructure | Interventions_Ab
+Indicator of the number interventions from sacmex associated to sewer and storm water infrastructure | Interventions_D
