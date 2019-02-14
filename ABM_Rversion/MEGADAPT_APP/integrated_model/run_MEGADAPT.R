@@ -14,8 +14,6 @@ sim_id_output=sprintf("effectivity_newInfra=%s-effectivity_mantenimiento=%s-deca
 path_to_output<-"../outputs/" #change path to use it in patung
 
 #climate scenario
-path_to_source<-"."
-setwd(path_to_source)
 #run setup.R and cycle.R
 source("setup.R")
 source("cycle.R")
