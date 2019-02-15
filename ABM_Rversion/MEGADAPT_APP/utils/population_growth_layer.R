@@ -1,6 +1,6 @@
-#this file generate a layer with the population growth of each
+#this file generates a layer with the population growth of each
 #census block.
-#the values are obtained from the inter cencus survey  (INEGI)
+#the values are obtained from the inter census survey  (INEGI)
 #source:
 #http://internet.contenidos.inegi.org.mx/contenidos/Productos/prod_serv/contenidos/espanol/bvinegi/productos/nueva_estruc/inter_censal/estados2015/702825079741.pdf
 

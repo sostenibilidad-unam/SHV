@@ -71,14 +71,18 @@ vf_hid_pressure<-sapply(studyArea_CVG@data$pres_hid,FUN=logistic_vf,k=k_v,center
 
 #monto ##!!!#no information about this variable
 vf_monto<-rep(1,length(studyArea_CVG@data$AGEB_ID))
-#gasto hidraulico
-vf_GH<-sapply(studyArea_CVG@data$gasto,FUN=Value_Function_cut_offs,xmax=max(studyArea_CVG@data$gasto),xcuts=c(0.5, 0.75, 0.875, 0.937),ycuts=c(1, 0.8, 0.6, 0.4, 0.2))
-#abastecimiento
+
+#gasto hidraulico (use q100)
+  vf_GH<-sapply(studyArea_CVG@data$q100,FUN=Value_Function_cut_offs,xmax=max(studyArea_CVG@data$q100),xcuts=c(0.5, 0.75, 0.875, 0.937),ycuts=c(1, 0.8, 0.6, 0.4, 0.2))
+
+  #abastecimiento
 vf_Abaste<-sapply(studyArea_CVG@data$abastecimi,FUN=Value_Function_cut_offs,xmax=max(studyArea_CVG@data$abastecimi,na.rm=T))
+
 #peticiones de delegaciones
 vf_pet_del_dr<-sapply(studyArea_CVG@data$pet_del_dr,FUN=Peticion_Delegaciones_vf)
-#peticiones de usuarions delegacionales
-vf_pet_us_d<-sapply(studyArea_CVG@data$pet_usr_d,FUN=Peticiones_usuarios_vf,xmax=max(studyArea_CVG@data$pet_usr_d,na.rm = T))
+
+#peticiones de usuarios delegacionales (usar capa de falta_dren)
+vf_pet_us_d<-sapply(studyArea_CVG@data$falta_dren,FUN=Peticiones_usuarios_vf,xmax=max(studyArea_CVG@data$falta_dren,na.rm = T))
 
 #presion de medios
 vf_pres_medios<- sapply(studyArea_CVG@data$PRES_MED,FUN=pression_medios_vf)
@@ -86,7 +90,7 @@ vf_pres_medios<- sapply(studyArea_CVG@data$PRES_MED,FUN=pression_medios_vf)
 
 #2)update value functions residents
 
-#Crecimiento urbano
+#Crecimiento urbano (make it proportional to the population growth)
 vf_UG<-sapply(studyArea_CVG@data$crec_urb,FUN=Value_Function_cut_offs,xcuts=c(0.5, 0.75, 0.875, 0.937),ycuts=c(1, 0.8, 0.6, 0.4, 0.2),xmax=max(studyArea_CVG@data$crec_urb,na.rm=T))
 
 #Water quality 

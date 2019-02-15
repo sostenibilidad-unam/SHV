@@ -1,5 +1,5 @@
 #statistical model of water scarcity. Developed by Ale Estrada and Yozune Miquelajauregui
-library("pscl")
+library("pscl") # guardar el objeto de prediccion para no leer estas variables 
 modelo_zip_escasez <- zeroinfl(lambdas ~   CRITICO + antiguedad_Ab | V_SAGUA , dist = 'negbin', data = studyArea_CVG@data)
 
 prob_water<-predict(modelo_zip_escasez,newdata=studyArea_CVG@data,type='prob')
