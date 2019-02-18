@@ -1,7 +1,7 @@
 #read Mental model matrix
-MM_WaterOperator_S<-data.frame(read.csv('../mcda/sacmex/supermatrices/DF101215_GOV_AP modificado PNAS.weighted.csv',skip = 1,header = T))[,-c(1,2,21)]
-MM_WaterOperator_D <-data.frame(read.csv('../mcda/sacmex/supermatrices/SACMEX_Drenaje__weighted_SESMO.csv',skip = 1,header = T))[,-c(1,2)]
-MM_WaterOperator_C <-data.frame(read.csv('../mcda/sacmex/supermatrices/DF101215_GOV_AP modificado PNAS.cluster.csv',skip = 1,header = F))
+MM_WaterOperator_S<-data.frame(read.csv('../mcda/sacmex/supermatrices/DF101215_GOV_AP modificado PNAS.weighted.csv',skip = 1,header = T))[,-c(1,2,21)] #limit matrix
+MM_WaterOperator_D <-data.frame(read.csv('../mcda/sacmex/supermatrices/SACMEX_Drenaje__weighted_SESMO.csv',skip = 1,header = T))[,-c(1,2)]  #weighted matrix
+MM_WaterOperator_C <-data.frame(read.csv('../mcda/sacmex/supermatrices/DF101215_GOV_AP modificado PNAS.cluster.csv',skip = 1,header = F))#cluster matrix
 
 MM_WaterOperator_S_lim<-data.frame(read.csv('../mcda/sacmex/supermatrices/DF101215_GOV_AP modificado PNAS.limit.csv',skip = 1,header = T))[,-c(1,2,21)]
 MM_WaterOperator_D_lim <-data.frame(read.csv('../mcda/sacmex/supermatrices/SACMEX_Drenaje_limit_SESMO.csv',skip = 1,header = T))[,-c(1,2)]

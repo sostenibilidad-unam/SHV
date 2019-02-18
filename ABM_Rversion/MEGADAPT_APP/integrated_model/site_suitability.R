@@ -39,14 +39,14 @@ vf_fall_D<-rep(1,length(studyArea_CVG@data$falla_in))
 #e)water scarcity
 vf_scarcity_sacmex<-sapply(studyArea_CVG@data$days_wn_water_year,FUN=scarcity_sacmex_vf)#scarcity_annual is calculated dynamically
 #flooding #cchange to flooding
-vf_flood<-sapply(studyArea_CVG@data$encharca,FUN=ponding_vf)
+vf_flood<-sapply(studyArea_CVG@data$inunda,FUN=ponding_vf)#check this vf
 #Ponding
 vf_pond<-sapply(studyArea_CVG@data$encharca,FUN=ponding_vf)
 #social_pressure
 vf_SP <-sapply(studyArea_CVG@data$social_pressure,FUN=social_pressure_vf)
 
 #rainfall
-vf_rain<-sapply(studyArea_CVG@data$PR_2008,FUN=rainfall_vf)
+vf_rain<-sapply(studyArea_CVG@data$f_prec_v,FUN=rainfall_vf)
 
 #run-off/escurrimiento
 vf_run_off<-sapply(studyArea_CVG@data$escurri,FUN=run_off_vf)
@@ -70,7 +70,7 @@ k_v<-as.numeric(as.character(fv_presion_hidraulica_escasez$V2[5]))
 vf_hid_pressure<-sapply(studyArea_CVG@data$pres_hid,FUN=logistic_vf,k=k_v,center=cen,xmax=xmax_v,xmin=xmin_v)
 
 #monto ##!!!#no information about this variable
-vf_monto<-rep(1,length(studyArea_CVG@data$AGEB_ID))
+vf_monto<-rep(1,length(studyArea_CVG@data$ageb_id))
 
 #gasto hidraulico (use q100)
   vf_GH<-sapply(studyArea_CVG@data$q100,FUN=Value_Function_cut_offs,xmax=max(studyArea_CVG@data$q100),xcuts=c(0.5, 0.75, 0.875, 0.937),ycuts=c(1, 0.8, 0.6, 0.4, 0.2))
@@ -112,6 +112,7 @@ vf_DA<-sapply(studyArea_CVG@data$desv_agua,FUN=Value_Function_cut_offs,xcuts=c(0
 vf_Desp_A<-sapply(studyArea_CVG@data$desp_agua,FUN=Value_Function_cut_offs,xcuts=c(0.5, 0.75, 0.875, 0.937),ycuts=c(1, 0.8, 0.6, 0.4, 0.2),xmax=max(studyArea_CVG@data$desp_agua,na.rm=T))
 
 #agua insuficiente
+
 vf_Agua_insu<-sapply(studyArea_CVG@data$days_wn_water_month,FUN=scarcity_residents_vf) #days_wn_water need to be define
 
 #falta infrastructura drenaje
@@ -119,7 +120,7 @@ fv_falta<-sapply(100*(1 - studyArea_CVG@data$falta_dren),FUN=lack_of_infrastruct
 
 #crecimiento poblacional
 fv_crecimiento_pop<-sapply(studyArea_CVG@data$pop_growth,FUN=urban_growth_f,xmax=max(studyArea_CVG@data$pop_growth,na.rm=T))
-
+fv_crecimiento_pop[which(fv_crecimiento_pop<0)] =0
 #fugas
 fv_fugas<-sapply(studyArea_CVG@data$FUGAS, FUN=Value_Function_cut_offs,xcuts=c(0.5, 0.75, 0.875, 0.937),ycuts=c(1, 0.8, 0.6, 0.4, 0.2),xmax=max(studyArea_CVG@data$FUGAS,na.rm=T))
 

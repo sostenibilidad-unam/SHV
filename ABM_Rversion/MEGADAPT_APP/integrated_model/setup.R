@@ -14,7 +14,8 @@ require(gramEvol) #genetic algorithm optimization
 
 
 ##read shape files
-studyArea_CVG<-readShapeSpatial('../data/Layer_MEGADAPT_Oct2018.shp')  # for flooding model
+#studyArea_CVG<-readShapeSpatial('../data/Layer_MEGADAPT_Oct2018.shp')  # for flooding model
+studyArea_CVG<-readShapeSpatial('../data/input_layer.shp')  # for flooding model
 #############################################################################
 #subset are for CDMX
 #Simulation runs only for the city (CDMX) estado=="09"
