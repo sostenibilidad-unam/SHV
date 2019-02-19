@@ -20,11 +20,11 @@ vf_A_Ab<-sapply(studyArea_CVG@data$antiguedad_Ab,FUN = campana_invertida,center=
 vf_Cap_D<-sapply(studyArea_CVG@data$q100,FUN = capacity_drainage_vf,sat=1,x_max=200,x_min=0)
 
 #d)falta
-vf_falta_Ab<-sapply(100*studyArea_CVG@data$V_SAGUA,FUN=lack_of_infrastructure_vf)
+vf_falta_Ab<-sapply(100*studyArea_CVG@data$v_sagua,FUN=lack_of_infrastructure_vf)
 vf_falta_D<-sapply(100*studyArea_CVG@data$falta_dren,FUN=lack_of_infrastructure_vf)
 
 #c)potable water system capacity
-vf_Cap_Ab<-rep(1,length(studyArea_CVG@data$V_SAGUA))
+vf_Cap_Ab<-rep(1,length(studyArea_CVG@data$v_sagua))
 
 #d) falla Ab
 gamma_v= as.numeric(as.character(fv_falla_escasez$V2[4]))
@@ -49,10 +49,10 @@ vf_SP <-sapply(studyArea_CVG@data$social_pressure,FUN=social_pressure_vf)
 vf_rain<-sapply(studyArea_CVG@data$f_prec_v,FUN=rainfall_vf)
 
 #run-off/escurrimiento
-vf_run_off<-sapply(studyArea_CVG@data$escurri,FUN=run_off_vf)
+vf_run_off<-sapply(studyArea_CVG@data$q100,FUN=run_off_vf)
 
 #garbage
-vf_garbage<-sapply(studyArea_CVG@data$BASURA/10000,FUN=drainages_clogged_vf)
+vf_garbage<-sapply(studyArea_CVG@data$basura/10000,FUN=drainages_clogged_vf)
 
 #subsidance
 center_v=as.numeric(as.character(fv_subsidencia$V2[2]))
@@ -85,7 +85,7 @@ vf_pet_del_dr<-sapply(studyArea_CVG@data$pet_del_dr,FUN=Peticion_Delegaciones_vf
 vf_pet_us_d<-sapply(studyArea_CVG@data$falta_dren,FUN=Peticiones_usuarios_vf,xmax=max(studyArea_CVG@data$falta_dren,na.rm = T))
 
 #presion de medios
-vf_pres_medios<- sapply(studyArea_CVG@data$PRES_MED,FUN=pression_medios_vf)
+vf_pres_medios<- sapply(studyArea_CVG@data$pres_med,FUN=pression_medios_vf)
 
 
 #2)update value functions residents
@@ -97,7 +97,7 @@ vf_UG<-sapply(studyArea_CVG@data$crec_urb,FUN=Value_Function_cut_offs,xcuts=c(0.
 vf_WQ<-sapply(studyArea_CVG@data$cal_agua,FUN=water_quality_residents_vf)
 
 #salud
-vf_H<-sapply(studyArea_CVG@data$ENF_14,FUN=health_vf)
+vf_H<-sapply(studyArea_CVG@data$enf_14,FUN=health_vf)
 
 #water scarcity residents
 vf_scarcity_residents<-sapply(studyArea_CVG@data$NOWater_twoweeks,FUN=scarcity_residents_empirical_vf,tau=12) #days_wn_water need to be define
@@ -122,10 +122,11 @@ fv_falta<-sapply(100*(1 - studyArea_CVG@data$falta_dren),FUN=lack_of_infrastruct
 fv_crecimiento_pop<-sapply(studyArea_CVG@data$pop_growth,FUN=urban_growth_f,xmax=max(studyArea_CVG@data$pop_growth,na.rm=T))
 fv_crecimiento_pop[which(fv_crecimiento_pop<0)] =0
 #fugas
-fv_fugas<-sapply(studyArea_CVG@data$FUGAS, FUN=Value_Function_cut_offs,xcuts=c(0.5, 0.75, 0.875, 0.937),ycuts=c(1, 0.8, 0.6, 0.4, 0.2),xmax=max(studyArea_CVG@data$FUGAS,na.rm=T))
+fv_fugas<-sapply(studyArea_CVG@data$fugas, FUN=Value_Function_cut_offs,xcuts=c(0.5, 0.75, 0.875, 0.937),ycuts=c(1, 0.8, 0.6, 0.4, 0.2),xmax=max(studyArea_CVG@data$FUGAS,na.rm=T))
 
 ################################################################################################################
 #join all converted attributes into a single matrix
+##from sacmex potable water system matrix
 all_C_ab<-cbind(vf_A_Ab,
                 vf_Cap_Ab,
                 vf_falla,
@@ -140,7 +141,7 @@ all_C_ab<-cbind(vf_A_Ab,
                 vf_pres_medios,
                 vf_SP)
 
-
+##from sacmex drainage /sewer matrix
 all_C_D<-cbind(vf_garbage,
                vf_run_off,
                vf_subside,
