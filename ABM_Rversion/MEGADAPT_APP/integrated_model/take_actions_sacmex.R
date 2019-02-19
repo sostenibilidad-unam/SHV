@@ -1,5 +1,5 @@
 #take actions sacmex
-#cahnge value of atributes in agebs selected for action
+#change value of attributes in agebs selected for action
 #action 1 mantainance D
 if(length(A1)>0){
   studyArea_CVG@data$antiguedad_D[A1]=studyArea_CVG@data$antiguedad_D[A1]-studyArea_CVG@data$antiguedad_D[A1]*effectivity_mantenimiento
@@ -24,7 +24,7 @@ if(length(A3)>0){
 
 #action 4 New infra Ab.
 if(length(A4)>0){
-  studyArea_CVG@data$V_SAGUA[A4]=studyArea_CVG@data$V_SAGUA[A4]*(1-effectivity_newInfra)
+  studyArea_CVG@data$v_sagua[A4]=studyArea_CVG@data$v_sagua[A4]*(1-effectivity_newInfra)
   studyArea_CVG@data$Interventions_Ab[A4]=studyArea_CVG@data$Interventions_Ab[A4]+1
   
 }

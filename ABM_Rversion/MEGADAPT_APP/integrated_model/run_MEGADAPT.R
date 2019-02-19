@@ -3,7 +3,7 @@
 effectivity_newInfra=0.1
 effectivity_mantenimiento=0.2
 decay_infra=0.1
-time_simulation=5
+time_simulation=1
 Budget=1500
 scenario=1
 repetition=1

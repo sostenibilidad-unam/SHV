@@ -122,7 +122,7 @@ fv_falta<-sapply(100*(1 - studyArea_CVG@data$falta_dren),FUN=lack_of_infrastruct
 fv_crecimiento_pop<-sapply(studyArea_CVG@data$pop_growth,FUN=urban_growth_f,xmax=max(studyArea_CVG@data$pop_growth,na.rm=T))
 fv_crecimiento_pop[which(fv_crecimiento_pop<0)] =0
 #fugas
-fv_fugas<-sapply(studyArea_CVG@data$fugas, FUN=Value_Function_cut_offs,xcuts=c(0.5, 0.75, 0.875, 0.937),ycuts=c(1, 0.8, 0.6, 0.4, 0.2),xmax=max(studyArea_CVG@data$FUGAS,na.rm=T))
+fv_fugas<-sapply(studyArea_CVG@data$fugas, FUN=Value_Function_cut_offs,xcuts=c(0.5, 0.75, 0.875, 0.937),ycuts=c(1, 0.8, 0.6, 0.4, 0.2),xmax=max(studyArea_CVG@data$fugas,na.rm=T))
 
 ################################################################################################################
 #join all converted attributes into a single matrix
