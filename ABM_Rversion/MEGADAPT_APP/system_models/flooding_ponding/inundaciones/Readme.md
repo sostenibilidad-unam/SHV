@@ -1,4 +1,4 @@
-A model for flooding in Mexico City was adjusted using the XGBoost algorithm (see [here](http://uc-r.github.io/gbm_regression) for an explanation of how it works) based on reports provided by SACMEX. A model was adjusted (the model's development and evaluation of  fit can be seen in the document `GBM_encharcamientos.Rmd`) for each of the 9 regions defined previosuly (based on expert criteria). The adjusted models were then saved in `.rda` format, which are the objects used to predict floods within the MEGADAPT APP.
+A model for flooding in Mexico City was adjusted using the XGBoost algorithm (see [here](http://uc-r.github.io/gbm_regression) for an explanation of how it works) based on reports provided by SACMEX. A model was adjusted (the model's development and evaluation of  fit can be seen in the document `GBM_inundaciones.Rmd`) for each of the 9 regions defined previosuly (based on expert criteria). The adjusted models were then saved in `.rda` format, which are the objects used to predict floods within the MEGADAPT APP.
 
 The inputs of the model are the following (must be specified by AGEB):
 
