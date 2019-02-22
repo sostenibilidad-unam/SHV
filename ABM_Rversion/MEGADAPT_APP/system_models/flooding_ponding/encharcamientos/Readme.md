@@ -24,8 +24,8 @@ datos_prueba <- structure(list(f_prec_v = 353947,
 
 # Prediction using the model of the corresponding region (in this case, region 1)
 
-predict(modelo_en_region_1, # model corresponding to region 1
-        datos_prueba, # data frame with selected values for each variable
-        n.trees = 9566, # number of trees used to fit the model (fixed)
+predict(modelo_en_region_1,  # model corresponding to region 1
+        datos_prueba,        # data frame with selected values for each variable
+        n.trees = 9566,      # number of trees used to fit the model (fixed)
          type = "response")
 ```
