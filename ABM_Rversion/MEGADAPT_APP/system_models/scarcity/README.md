@@ -38,13 +38,13 @@ Due to the significance of the predictive value of some variables the final mode
 
 The only predictive variables is `V_SAGUA`, number of houses without water. 
 
-$$ \frac{\theta}{1 - \theta} = exp \left\{ \beta_0 + \beta_1 \times V\_SAGUA \right\} $$
+<a href="https://www.codecogs.com/eqnedit.php?latex=\frac{\theta}{1&space;-&space;\theta}&space;=&space;exp&space;\left\{&space;\beta_0&space;&plus;&space;\beta_1&space;\times&space;V\_SAGUA&space;\right\}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\frac{\theta}{1&space;-&space;\theta}&space;=&space;exp&space;\left\{&space;\beta_0&space;&plus;&space;\beta_1&space;\times&space;V\_SAGUA&space;\right\}" title="\frac{\theta}{1 - \theta} = exp \left\{ \beta_0 + \beta_1 \times V\_SAGUA \right\}" /></a>
 
 #### For the count model (negative binomial model)
 
 The predictive variables are `CRITICO`, if the ageb has less than 4 hours of water per day, and `N_ANTIGUEDAD`, oldness of the infrastructure (standardized).
 
-$$ \lambda = exp \left\{ \beta_0 + \beta_1 \times CRITICO + \beta_2 \times N|\_ANTIGUEDAD \right\} $$
+<a href="https://www.codecogs.com/eqnedit.php?latex=\lambda&space;=&space;exp&space;\left\{&space;\beta_0&space;&plus;&space;\beta_1&space;\times&space;CRITICO&space;&plus;&space;\beta_2&space;\times&space;N\_ANTIGUEDAD&space;\right\}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\lambda&space;=&space;exp&space;\left\{&space;\beta_0&space;&plus;&space;\beta_1&space;\times&space;CRITICO&space;&plus;&space;\beta_2&space;\times&space;N\_ANTIGUEDAD&space;\right\}" title="\lambda = exp \left\{ \beta_0 + \beta_1 \times CRITICO + \beta_2 \times N\_ANTIGUEDAD \right\}" /></a>
 
     > modelo_zip_escasez <- zeroinfl(lambdas ~ FUGAS + N_ANTIGUEDAD + V_SAGUA | N_ANTIGUEDAD + V_SAGUA + CRITICO, 
       dist = "negbin", data = dat_fugas)
@@ -70,12 +70,11 @@ The model, as a generalized linear model, return the coeficientes for both the z
 
 ### Binomial Model (Zeros)
 
-$$ \frac{\theta}{1 - \theta} = exp \left\{ -1.4803 - 129.7058 \times V\_SAGUA \right\} $$
-
+<a href="https://www.codecogs.com/eqnedit.php?latex=\frac{\theta}{1&space;-&space;\theta}&space;=&space;exp&space;\left\{&space;-1.48033&space;-&space;129.70579&space;\times&space;V\_SAGUA&space;\right\}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\frac{\theta}{1&space;-&space;\theta}&space;=&space;exp&space;\left\{&space;-1.48033&space;-&space;129.70579&space;\times&space;V\_SAGUA&space;\right\}" title="\frac{\theta}{1 - \theta} = exp \left\{ -1.48033 - 129.70579 \times V\_SAGUA \right\}" /></a>
 
 ### Negative Binomial Model (Counts)
 
-$$ \lambda = exp\left\{ 0.7045 + 0.4465 \times CRITICO - 0.0244 \times N\_ANTIGUEDAD \right\} $$
+<a href="https://www.codecogs.com/eqnedit.php?latex=\lambda&space;=&space;exp\left\{&space;0.70446&space;&plus;&space;0.44646&space;\times&space;CRITICO&space;-&space;0.02439&space;\times&space;N\_ANTIGUEDAD&space;\right\}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\lambda&space;=&space;exp\left\{&space;0.70446&space;&plus;&space;0.44646&space;\times&space;CRITICO&space;-&space;0.02439&space;\times&space;N\_ANTIGUEDAD&space;\right\}" title="\lambda = exp\left\{ 0.70446 + 0.44646 \times CRITICO - 0.02439 \times N\_ANTIGUEDAD \right\}" /></a>
 
 
 
