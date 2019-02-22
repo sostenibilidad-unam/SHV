@@ -1,7 +1,3 @@
----
-output:
-  html_document: default
----
 # MEGADAPT Scarcity Model
 
 ## Folder structure
