@@ -13,6 +13,7 @@ After selecting values for each variable, the model of the region corresponding 
 
 ```
 # Creation of test data
+
 datos_prueba <- structure(list(f_prec_v = 353947,
                                f_esc = 0,
                                n_tramos = 194,
@@ -24,8 +25,8 @@ datos_prueba <- structure(list(f_prec_v = 353947,
 
 # Prediction using the model of the corresponding region (in this case, region 1)
 
-predict(modelo_in_region_1, # Modelo de region 1
-        datos_prueba, # Una fila con observaciones de todas las variables 
-        n.trees = 9566, # Número de árboles que usa el modelo 
-        type = "response")
+predict(modelo_in_region_1,  # model corresponding to region 1
+        datos_prueba,        # data frame with selected values for each variable
+        n.trees = 9566,      # number of trees used to fit the model (fixed)
+         type = "response")
 ```
