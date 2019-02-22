@@ -53,7 +53,7 @@ The predictive variables are `CRITICO`, if the ageb has less than 4 hours of wat
 
 ### Scarcity data
 
-The model only consider scarcity data by AGEB. A $\lambda$ (average number of days without water) is modeled for each AGEB according to the number of days without water per **deputation**. 
+The model only consider scarcity data by AGEB. A <a href="https://www.codecogs.com/eqnedit.php?latex=\lambda" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\lambda" title="\lambda" /></a> (average number of days without water) is modeled for each AGEB according to the number of days without water per **deputation**. 
 
 input/datos_final2.csv
 
