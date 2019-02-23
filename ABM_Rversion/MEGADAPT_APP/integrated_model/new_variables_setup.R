@@ -7,7 +7,7 @@ studyArea_CVG@data$antiguedad_Ab<-studyArea_CVG@data$antiguedad
 #water scarcity (week, month year)
 studyArea_CVG@data$days_wn_water_year<-rep(0,length(studyArea_CVG@data$ageb_id))
 studyArea_CVG@data$days_wn_water_month<-rep(0,length(studyArea_CVG@data$ageb_id))
-studyArea_CVG@data$NOWater_week_pois<-rep(0,length(studyArea_CVG@data$ageb_id))
+studyArea_CVG@data$NOWater_week<-rep(0,length(studyArea_CVG@data$ageb_id))
 # here we calculate the consecutive accumulation of days without water
 #If this accumulation surpass a threshold, a protest is triggered and social pressure accumulated
 

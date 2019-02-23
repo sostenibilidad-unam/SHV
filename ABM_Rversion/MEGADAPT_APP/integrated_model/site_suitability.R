@@ -32,13 +32,13 @@ xmax_v= as.numeric(as.character(fv_falla_escasez$V2[3]))
 xmin_v =as.numeric(as.character(fv_falla_escasez$V2[2]))
 vf_falla<- 1-sapply(studyArea_CVG@data$falla_in,FUN=convexa_creciente, gama=gamma_v, xmax=xmax_v, xmin=xmin_v)
 
-#falla D
+#falla D  # need to create the layer from the frequency of ponding reports that
+#that the causes is related to failure of the infrastructure
 vf_fall_D<-rep(1,length(studyArea_CVG@data$falla_in))
-
 
 #e)water scarcity
 vf_scarcity_sacmex<-sapply(studyArea_CVG@data$days_wn_water_year,FUN=scarcity_sacmex_vf)#scarcity_annual is calculated dynamically
-#flooding #cchange to flooding
+#flooding #change to flooding
 vf_flood<-sapply(studyArea_CVG@data$inunda,FUN=ponding_vf)#check this vf
 #Ponding
 vf_pond<-sapply(studyArea_CVG@data$encharca,FUN=ponding_vf)
@@ -200,7 +200,7 @@ distance_ideal_A2_Ab<-sweep(as.matrix(all_C_ab),MARGIN=2,as.vector(Criteria_sacm
 
 #Residents
 #distance_ideal_protest<-sweep(as.matrix(C_R_protest[,-c(6,8)]),MARGIN=2,as.vector(Criteria_residents_Iz[-c(6,8)])/sum(as.vector(Criteria_residents_Iz[-c(6,8)])),FUN=ideal_distance,z=alternative_weights_Iz[5]/sum(alternative_weights_Iz[c(4,5)]))# "Protests"
-distance_ideal_protest= 1 - vf_scarcity_residents
+distance_ideal_protest= 1 - vf_scarcity_residents # residents only consider the scarcity to generate a protest
 distance_ideal_House_mod_lluvia<-sweep(as.matrix(C_R_D[,-c(3,4,7)]),MARGIN=2,as.vector(Criteria_residents_Iz[-c(3,4,7)])/sum(as.vector(Criteria_residents_Iz[-c(3,4,7)])),FUN=ideal_distance,z=alternative_weights_Iz[4]/sum(alternative_weights_Iz[c(4,5)]))# "House modification"
 distance_ideal_House_mod_agua<-sweep(as.matrix(C_R_HM[,-c(6,8)]),MARGIN=2,as.vector(Criteria_residents_Iz[-c(6,8)])/sum(as.vector(Criteria_residents_Iz[-c(6,8)])),FUN=ideal_distance,z=alternative_weights_Iz[4]/sum(alternative_weights_Iz[c(4,5)]))# "House modification"
 ################################################################################################################
