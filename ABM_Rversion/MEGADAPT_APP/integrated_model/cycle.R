@@ -17,7 +17,8 @@ for (i in 1:length(ini_date)){
      #take actions sacmex
      source("take_actions_sacmex.R")
      #update the level of adaptation and sensitivity of residents
-     source("take_actions_residents.R")
+      source("site_suitability_residents.R")
+      source("take_actions_residents.R")
      source("adaptation_and_sensitivity.R")
      #Update age and condition of infrastructure
      source("update_age_infrastructure.R")
@@ -26,6 +27,8 @@ for (i in 1:length(ini_date)){
       TS_res<-save_TS(TR = i,result_prev_time=TS_res,year=year_ts[i],month=month_ts[i])
     }
   #update number of protests
+  source("site_suitability_residents.R")
+  source("take_actions_residents.R")
   source("protests.R")
   print(ini_date[i])
 }

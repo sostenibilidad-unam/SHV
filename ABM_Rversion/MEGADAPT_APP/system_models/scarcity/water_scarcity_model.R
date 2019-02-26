@@ -19,7 +19,7 @@ water_no<-water_no*(prob_NOPRoblemwater>runif(n = length(water_no)))
 #update value of days with not water in a week
 studyArea_CVG@data$NOWater_week<-water_no
 #update value of days with not water in a month
-studyArea_CVG@data$days_wn_water_month<-studyArea_CVG@data$NOWater_week_pois
+studyArea_CVG@data$days_wn_water_month<-studyArea_CVG@data$NOWater_week
 #update value of days with not water in a year
-studyArea_CVG@data$days_wn_water_year<-studyArea_CVG@data$NOWater_week_pois
+studyArea_CVG@data$days_wn_water_year<-studyArea_CVG@data$NOWater_week
 
