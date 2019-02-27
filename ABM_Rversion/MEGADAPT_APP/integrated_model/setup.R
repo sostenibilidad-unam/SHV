@@ -63,5 +63,5 @@ month_ts=format(as.Date(ini_date), "%m")
 #Generate a bollean series, with value 1 when month or year change and 0 otherwise
 month_change=c(0,diff(as.numeric(month_ts)))
 month_change[which(month_change==(-11))]=1 #this change the values when the difference whas from december (12) to january (1) (-11) 
-year_change=c(1,diff(as.numeric(year_ts)))
+year_change=c(1,diff(as.numeric(year_ts)),1)
 

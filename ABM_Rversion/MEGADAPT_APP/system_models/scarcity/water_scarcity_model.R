@@ -4,7 +4,7 @@ modelo_zip_escasez <- zeroinfl(lambdas ~   critico + antiguedad_Ab | v_sagua , d
 
 #predict probabilities 
 prob_water<-predict(modelo_zip_escasez,newdata=studyArea_CVG@data,type='prob')
-#predict binomial probability
+#predict binomial part of the probability
 prob_NOPRoblemwater<-predict(modelo_zip_escasez,newdata=studyArea_CVG@data,type="zero")
 
 water_no<-rbinom(n=length(prob_water[,7]),size=1,prob=prob_water[,7]) * 7

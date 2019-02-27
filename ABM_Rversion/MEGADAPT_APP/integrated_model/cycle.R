@@ -5,7 +5,7 @@
 for (i in 1:length(ini_date)){
     source("scarcity_update.R")
   
-    if (year_change[i]==1){
+    if (year_change[(i+1)]==1){
      source("read_Climate_from_scenarios.R")
      source("update_ponding.R")
      #run Health model
