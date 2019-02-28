@@ -1032,7 +1032,7 @@ end
       let VMMIz_b_limit []
       let cc 2
       let cri 2
-      while [cri < 17][   ;tranfor the data from.csv to a matrix to manipulte using matrix extention
+      while [cri < 17][   ;transfor the data from.csv to a matrix to manipulte using matrix extention
         set cc 2
         while [cc < 17][
       set VMMIz_b_limit lput (item cc item cri MMIz_b) VMMIz_b_limit

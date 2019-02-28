@@ -70,7 +70,10 @@ C_R_D<-cbind(vf_WQ,
              vf_H)
 
 #Residents
-#distance_ideal_protest<-sweep(as.matrix(C_R_protest[,-c(6,8)]),MARGIN=2,as.vector(Criteria_residents_Iz[-c(6,8)])/sum(as.vector(Criteria_residents_Iz[-c(6,8)])),FUN=ideal_distance,z=alternative_weights_Iz[5]/sum(alternative_weights_Iz[c(4,5)]))# "Protests"
+
 distance_ideal_protest= 1 - vf_scarcity_residents # residents only consider the scarcity to generate a protest
+#alternative use the combined metric for protests
+#distance_ideal_protest<-sweep(as.matrix(C_R_protest[,-c(6,8)]),MARGIN=2,as.vector(Criteria_residents_Iz[-c(6,8)])/sum(as.vector(Criteria_residents_Iz[-c(6,8)])),FUN=ideal_distance,z=alternative_weights_Iz[5]/sum(alternative_weights_Iz[c(4,5)]))# "Protests"
+
 distance_ideal_House_mod_lluvia<-sweep(as.matrix(C_R_D[,-c(3,4,7)]),MARGIN=2,as.vector(Criteria_residents_Iz[-c(3,4,7)])/sum(as.vector(Criteria_residents_Iz[-c(3,4,7)])),FUN=ideal_distance,z=alternative_weights_Iz[4]/sum(alternative_weights_Iz[c(4,5)]))# "House modification"
 distance_ideal_House_mod_agua<-sweep(as.matrix(C_R_HM[,-c(6,8)]),MARGIN=2,as.vector(Criteria_residents_Iz[-c(6,8)])/sum(as.vector(Criteria_residents_Iz[-c(6,8)])),FUN=ideal_distance,z=alternative_weights_Iz[4]/sum(alternative_weights_Iz[c(4,5)]))# "House modification"
